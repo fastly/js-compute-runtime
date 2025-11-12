@@ -72,6 +72,17 @@ bool install(api::Engine *engine) {
 #define FASTLY_END_IMAGE_OPTIMIZER_OPTION_TYPE(type)
 #include "image-optimizer-options.inc"
 
+  auto options_to_query_string_fn = JS_NewFunction(
+      engine->cx(), &ImageOptimizerOptions::optionsToQueryString, 1, 0, "optionsToQueryString");
+  RootedObject options_to_query_string_obj(engine->cx(),
+                                           JS_GetFunctionObject(options_to_query_string_fn));
+  RootedValue options_to_query_string_val(engine->cx(),
+                                          JS::ObjectValue(*options_to_query_string_obj));
+  if (!JS_SetProperty(engine->cx(), image_optimizer_ns, "optionsToQueryString",
+                      options_to_query_string_val)) {
+    return false;
+  }
+
   RootedValue image_optimizer_ns_val(engine->cx(), JS::ObjectValue(*image_optimizer_ns));
   if (!engine->define_builtin_module("fastly:image-optimizer", image_optimizer_ns_val)) {
     return false;
@@ -194,6 +205,20 @@ std::unique_ptr<ImageOptimizerOptions> ImageOptimizerOptions::create(JSContext *
       height_opt, std::move(level_opt), metadata_opt, optimize_opt, orient_opt, pad_opt,
       precrop_opt, profile_opt, quality_opt, resize_filter_opt, saturation_opt, sharpen_opt,
       trim_opt, std::move(trim_color_opt), viewbox_opt, width_opt)};
+}
+
+bool ImageOptimizerOptions::optionsToQueryString(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, "optionsToQueryString", 1)) {
+    return false;
+  }
+  auto options = create(cx, args.get(0));
+  if (!options) {
+    return false;
+  }
+  auto query = options->to_string();
+  args.rval().setString(JS_NewStringCopyZ(cx, query.data()));
+  return true;
 }
 
 std::string ImageOptimizerOptions::to_string() const {
@@ -731,7 +756,8 @@ ImageOptimizerOptions::to_trim_color(JSContext *cx, JS::HandleValue val) {
     return name;                                                                                   \
   }
 #define FASTLY_END_IMAGE_OPTIMIZER_OPTION_TYPE(type)                                               \
-  JS_ReportErrorUTF8(cx, #type " out of range");                                                   \
+  api::throw_error(cx, api::Errors::TypeError, "imageOptimizerOptions", #type,                     \
+                   "be one of the allowed string values");                                         \
   return std::nullopt;                                                                             \
   }
 #include "image-optimizer-options.inc"

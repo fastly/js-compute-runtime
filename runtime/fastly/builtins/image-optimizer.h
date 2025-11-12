@@ -31,6 +31,7 @@ class ImageOptimizerOptions {
 public:
   fastly_image_optimizer_transform_config to_config();
   static std::unique_ptr<ImageOptimizerOptions> create(JSContext *cx, JS::HandleValue opts_val);
+  static bool optionsToQueryString(JSContext *cx, unsigned argc, JS::Value *vp);
   std::string to_string() const;
 
 #define FASTLY_BEGIN_IMAGE_OPTIMIZER_OPTION_TYPE(type, lowercase, str) enum class type {
@@ -259,11 +260,11 @@ private:
       std::optional<Saturation> saturation, std::optional<Sharpen> sharpen,
       std::optional<Trim> trim, std::optional<TrimColor> trim_color, std::optional<Viewbox> viewbox,
       std::optional<Width> width)
-      : region_(region), auto_(auto_val), bg_color_(std::move(bg_color)), blur_(blur), bw_(bw),
-        canvas_(canvas), contrast_(contrast), crop_(crop), disable_(disable), dpr_(dpr),
-        enable_(enable), fit_(fit), format_(format), frame_(frame), height_(height),
-        level_(std::move(level)), metadata_(metadata), optimize_(optimize), orient_(orient),
-        pad_(pad), precrop_(precrop), profile_(profile), quality_(quality),
+      : region_(region), auto_(auto_val), bg_color_(std::move(bg_color)), blur_(blur),
+        brightness_(brightness), bw_(bw), canvas_(canvas), contrast_(contrast), crop_(crop),
+        disable_(disable), dpr_(dpr), enable_(enable), fit_(fit), format_(format), frame_(frame),
+        height_(height), level_(std::move(level)), metadata_(metadata), optimize_(optimize),
+        orient_(orient), pad_(pad), precrop_(precrop), profile_(profile), quality_(quality),
         resizeFilter_(resize_filter), saturation_(saturation), sharpen_(sharpen), trim_(trim),
         trim_color_(std::move(trim_color)), viewbox_(viewbox), width_(width) {}
   Region region_;

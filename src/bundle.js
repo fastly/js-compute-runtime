@@ -134,7 +134,7 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
           return {
             contents: `export const { 
               Region, Auto, Format, BWAlgorithm, Disable, Enable, Fit, Metadata, 
-              Optimize, Orient, Profile, ResizeFilter, CropMode 
+              Optimize, Orient, Profile, ResizeFilter, CropMode, optionsToQueryString
             } = globalThis.fastly.imageOptimizer;`,
           };
         }

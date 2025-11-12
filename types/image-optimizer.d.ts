@@ -125,11 +125,11 @@ declare module 'fastly:image-optimizer' {
         /**
          * Set the blurriness of the output image (0.5-1000).
          */
-        blur?: number | string;
+        blur?: number | Percentage;
         /**
-         * Set the brightness of the output image.
+         * Set the brightness of the output image (-100,100).
          */
-        brightness?: number | string;
+        brightness?: number;
         /**
         * Convert an image to black and white using a given algorithm.   
         */
@@ -261,4 +261,8 @@ declare module 'fastly:image-optimizer' {
          */
         width?: number | Percentage;
     }
+    /**
+     * Convert image optimizer options into the query string that is sent to the image optimizer, for logging and debugging purposes.
+     */
+    function optionsToQueryString(options: ImageOptimizerOptions): string;
 }
