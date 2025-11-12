@@ -1,0 +1,34 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# `ResizeFilter`
+
+Enumerator options for [`imageOptimizerOptions.resizeFilter`](./imageOptimizerOptions.mdx).
+
+## Constants
+
+- `Nearest` (`"nearest"`) Uses the value of nearby translated pixel values.
+- `Bilinear` (`"bilinear"`) Uses an average of a 2x2 environment of pixels.
+- `Linear` (`"linear"`) Same as `Bilenear`.
+- `Bicubic` (`"bicubic"`) Uses an average of a 4x4 environment of pixels, weighing the innermost pixels higher.
+- `Cubic` (`"cubic"`) Same as `Bicubic`.
+- `Lanczos2` (`"lanczos2"`) Uses the Lanczos filter to increase the ability to detect edges and linear features within an image and uses sinc resampling to provide the best possible reconstruction.
+- `Lanczos3` (`"lanczos3"`) Lanczos3 uses a better approximation of the sinc resampling function. (Default)
+- `Lanczos` (`"lanczos"`) Same as `Lanczos3`.
+
+## Examples
+
+```js
+import { Profile, Region } from 'fastly:image-optimizer';
+new Request(
+    "https://my.image.host/image.png",
+    imageOptimizerOptions: {
+        region: Region.UsEast,
+        resizeFilter: ResizeFilter.Linear
+    }
+)
+```

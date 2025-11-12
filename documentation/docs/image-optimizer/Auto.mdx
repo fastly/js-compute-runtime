@@ -1,0 +1,28 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# `Auto`
+
+Enumerator options for [`imageOptimizerOptions.auto`](./imageOptimizerOptions.mdx).
+
+## Constants
+
+- `AVIF` (`"avif"`) If the browser's Accept header indicates compatibility, deliver an AVIF image.
+- `WEBP` (`"webp"`)	If the browser's Accept header indicates compatibility, deliver a WebP image.
+
+## Examples
+
+```js
+import { Auto, Region } from 'fastly:image-optimizer';
+new Request(
+    "https://my.image.host/image.png",
+    imageOptimizerOptions: {
+        region: Region.UsEast,
+        auto: Auto.AVIF
+    }
+)
+```

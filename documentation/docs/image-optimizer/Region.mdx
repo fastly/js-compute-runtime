@@ -1,0 +1,33 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# `Region`
+
+Enumerator options for [`imageOptimizerOptions.region`](./imageOptimizerOptions.mdx).
+
+## Constants
+
+- `UsEast` (`"us_east"`)
+- `UsCentral` (`"us_central"`)
+- `UsWest` (`"us_west"`)
+- `EuCentral` (`"eu_central"`)
+- `EuWest` (`"eu_west"`)
+- `Asia` (`"asia"`)
+- `Australia` (`"australia"`)
+
+
+## Examples
+
+```js
+import { Region } from 'fastly:image-optimizer';
+new Request(
+    "https://my.image.host/image.png",
+    imageOptimizerOptions: {
+        region: Region.UsEast
+    }
+)
+```

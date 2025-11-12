@@ -1,0 +1,29 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# `Profile`
+
+Enumerator options for [`imageOptimizerOptions.profile`](./imageOptimizerOptions.mdx).
+
+## Constants
+
+- `Baseline` (`"baseline"`) The profile recommended for video conferencing and mobile applications. (Default)
+- `Main` (`"main"`) The profile recommended for standard-definition broadcasts.
+- `High` (`"high"`) The profile recommended for high-definition broadcasts.
+
+## Examples
+
+```js
+import { Profile, Region } from 'fastly:image-optimizer';
+new Request(
+    "https://my.image.host/image.png",
+    imageOptimizerOptions: {
+        region: Region.UsEast,
+        orient: Orient.FlipHorizontal
+    }
+)
+```

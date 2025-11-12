@@ -1,0 +1,41 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# `Format`
+
+Enumerator options for [`imageOptimizerOptions.format`](./imageOptimizerOptions.mdx).
+
+## Constants
+
+- `Auto` (`"auto"`) Automatically use the best format based on browser support and image/transform characteristics
+- `AVIF` (`"avif"`) AVIF
+- `BJPG` (`"bjpg"`) Baseline JPEG 
+- `GIF` (`"gif"`) Graphics Interchange Format
+- `JPG` (`"jpg"`) JPEG 
+- `JXL` (`"jxl"`) JPEGXL 
+- `MP4` (`"mp4"`) MP4 (H.264)
+- `PJPG` (`"pjpg"`) Progressive JPEG 
+- `PJXL` (`"pjxl"`) Progressive JPEGXL
+- `PNG` (`"png"`) Portable Network Graphics
+- `PNG8` (`"png8"`) Portable Network Graphics palette image with 256 colors and 8-bit transparency
+- `SVG` (`"svg"`) Scalable Vector Graphics
+- `WEBP` (`"webp"`) WebP
+- `WEBPLL` (`"webpll"`) WebP (Lossless)
+- `WEBPLY` (`"webply"`) WebP (Lossy)
+
+## Examples
+
+```js
+import { Format, Region } from 'fastly:image-optimizer';
+new Request(
+    "https://my.image.host/image.png",
+    imageOptimizerOptions: {
+        region: Region.UsEast,
+        format: Format.PNG,
+    }
+)
+```

@@ -1,0 +1,29 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# `Optimize`
+
+Enumerator options for [`imageOptimizerOptions.optimize`](./imageOptimizerOptions.mdx).
+
+## Constants
+
+- `Low` (`"low"`) Output image quality will be similar to the input image quality.
+- `Medium` (`"medium"`) More optimization is allowed. We attempt to preserve the visual quality of the input image.
+- `High` (`"high"`) Minor visual artifacts may be visible. This produces the smallest file.
+
+## Examples
+
+```js
+import { Optimize, Region } from 'fastly:image-optimizer';
+new Request(
+    "https://my.image.host/image.png",
+    imageOptimizerOptions: {
+        region: Region.UsEast,
+        optimize: Optimize.High
+    }
+)
+```

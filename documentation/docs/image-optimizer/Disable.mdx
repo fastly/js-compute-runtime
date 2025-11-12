@@ -1,0 +1,28 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# `Disable`
+
+Enumerator options for [`imageOptimizerOptions.disable`](./imageOptimizerOptions.mdx).
+
+## Constants
+
+- `Upscale` (`"upscale"`) Prevent images being resized such that the output image's dimensions are larger than the source image.
+
+## Examples
+
+```js
+import { Disable, Region } from 'fastly:image-optimizer';
+new Request(
+    "https://my.image.host/image.png",
+    imageOptimizerOptions: {
+        region: Region.UsEast,
+        width: 2560,
+        disable: Disable.Upscale,
+    }
+)
+```

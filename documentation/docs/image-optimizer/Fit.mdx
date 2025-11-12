@@ -1,0 +1,31 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# `Fit`
+
+Enumerator options for [`imageOptimizerOptions.fit`](./imageOptimizerOptions.mdx).
+
+## Constants
+
+- `Bounds` (`"bounds"`) Resize the image to fit entirely within the specified region, making one dimension smaller if needed.
+- `Cover` (`"cover"`) Resize the image to entirely cover the specified region, making one dimension larger if needed.
+- `Crop` (`"crop"`) Resize and crop the image centrally to exactly fit the specified region.
+
+## Examples
+
+```js
+import { Fit, Region } from 'fastly:image-optimizer';
+new Request(
+    "https://my.image.host/image.png",
+    imageOptimizerOptions: {
+        region: Region.UsEast,
+        width: 150,
+        height: 150,
+        fit: Fit.Bounds,
+    }
+)
+```
