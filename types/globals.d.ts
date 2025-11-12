@@ -136,24 +136,24 @@ declare interface BackendConfiguration {
    * Setting to boolean true enables keepalive with the default options.
    */
   tcpKeepalive?:
-    | boolean
-    | {
-        /**
-         * Configure how long to wait after the last sent data over the TCP connection before
-         * starting to send TCP keepalive probes.
-         */
-        timeSecs?: number;
+  | boolean
+  | {
+    /**
+     * Configure how long to wait after the last sent data over the TCP connection before
+     * starting to send TCP keepalive probes.
+     */
+    timeSecs?: number;
 
-        /**
-         * Configure how long to wait between each TCP keepalive probe sent to the backend to determine if it is still active.
-         */
-        intervalSecs?: number;
+    /**
+     * Configure how long to wait between each TCP keepalive probe sent to the backend to determine if it is still active.
+     */
+    intervalSecs?: number;
 
-        /**
-         * Number of probes to send to the backend before it is considered dead.
-         */
-        probes?: number;
-      };
+    /**
+     * Number of probes to send to the backend before it is considered dead.
+     */
+    probes?: number;
+  };
 }
 
 /**
@@ -413,7 +413,7 @@ declare interface CacheOverride extends CacheOverrideInit {
  */
 declare var CacheOverride: {
   prototype: CacheOverride;
-  new (mode: CacheOverrideMode, init?: CacheOverrideInit): CacheOverride;
+  new(mode: CacheOverrideMode, init?: CacheOverrideInit): CacheOverride;
 };
 
 /**
@@ -1182,7 +1182,7 @@ interface Blob {
 
 declare var Blob: {
   prototype: Blob;
-  new (blobParts?: BlobPart[], options?: BlobPropertyBag): Blob;
+  new(blobParts?: BlobPart[], options?: BlobPropertyBag): Blob;
 };
 
 /**
@@ -1201,7 +1201,7 @@ interface File extends Blob {
 
 declare var File: {
   prototype: File;
-  new (fileBits: BlobPart[], fileName: string, options?: FilePropertyBag): File;
+  new(fileBits: BlobPart[], fileName: string, options?: FilePropertyBag): File;
 };
 
 /**
@@ -1238,7 +1238,7 @@ interface FormData {
 
 declare var FormData: {
   prototype: FormData;
-  new (
+  new(
     form?: any /*form?: HTMLFormElement, submitter?: HTMLElement | null*/,
   ): FormData;
 };
@@ -1322,14 +1322,15 @@ declare interface RequestInit {
   /** The Fastly configured backend name or instance the request should be sent to. */
   backend?: string | import('fastly:backend').Backend;
   cacheOverride?:
-    | import('fastly:cache-override').CacheOverride
-    | import('fastly:cache-override').ICacheOverride
-    | Exclude<import('fastly:cache-override').CacheOverrideMode, 'override'>;
+  | import('fastly:cache-override').CacheOverride
+  | import('fastly:cache-override').ICacheOverride
+  | Exclude<import('fastly:cache-override').CacheOverrideMode, 'override'>;
   cacheKey?: string;
   fastly?: {
     decompressGzip?: boolean;
   };
   manualFramingHeaders?: boolean;
+  imageOptimizerOptions?: import('fastly:image-optimizer').ImageOptimizerOptions;
 }
 
 /**
@@ -1398,7 +1399,7 @@ interface Request extends Body {
  */
 declare var Request: {
   prototype: Request;
-  new (input: RequestInfo | URL, init?: RequestInit): Request;
+  new(input: RequestInfo | URL, init?: RequestInit): Request;
 };
 
 /**
@@ -1520,7 +1521,7 @@ interface Response extends Body {
  */
 declare var Response: {
   prototype: Response;
-  new (body?: BodyInit | null, init?: ResponseInit): Response;
+  new(body?: BodyInit | null, init?: ResponseInit): Response;
   // error(): Response;
   redirect(url: string | URL, status?: number): Response;
   json(data: any, init?: ResponseInit): Response;
@@ -1751,7 +1752,7 @@ interface ReadableStreamDefaultController<R = any> {
  */
 declare var ReadableStreamDefaultController: {
   prototype: ReadableStreamDefaultController;
-  new (): ReadableStreamDefaultController;
+  new(): ReadableStreamDefaultController;
 };
 
 /**
@@ -1816,7 +1817,7 @@ interface WritableStreamDefaultController {
  */
 declare var WritableStreamDefaultController: {
   prototype: WritableStreamDefaultController;
-  new (): WritableStreamDefaultController;
+  new(): WritableStreamDefaultController;
 };
 
 /**
@@ -1880,7 +1881,7 @@ interface TransformStreamDefaultController<O = any> {
  */
 declare var TransformStreamDefaultController: {
   prototype: TransformStreamDefaultController;
-  new (): TransformStreamDefaultController;
+  new(): TransformStreamDefaultController;
 };
 
 /**
@@ -1952,7 +1953,7 @@ interface Headers {
  */
 declare var Headers: {
   prototype: Headers;
-  new (init?: HeadersInit): Headers;
+  new(init?: HeadersInit): Headers;
 };
 
 /**
@@ -2106,7 +2107,7 @@ interface WorkerLocation {
  */
 declare var WorkerLocation: {
   prototype: WorkerLocation;
-  new (): WorkerLocation;
+  new(): WorkerLocation;
 };
 
 /**
@@ -2233,7 +2234,7 @@ interface Crypto {
  */
 declare var Crypto: {
   prototype: Crypto;
-  new (): Crypto;
+  new(): Crypto;
 };
 
 /**
@@ -2260,7 +2261,7 @@ interface CryptoKey {
 
 declare var CryptoKey: {
   prototype: CryptoKey;
-  new (): CryptoKey;
+  new(): CryptoKey;
 };
 
 interface KeyAlgorithm {
@@ -2420,7 +2421,7 @@ interface Event {
 
 declare var Event: {
   prototype: Event;
-  new (type: string, eventInitDict?: EventInit): Event;
+  new(type: string, eventInitDict?: EventInit): Event;
   readonly NONE: 0;
   readonly CAPTURING_PHASE: 1;
   readonly AT_TARGET: 2;
@@ -2484,7 +2485,7 @@ interface EventTarget {
 
 declare var EventTarget: {
   prototype: EventTarget;
-  new (): EventTarget;
+  new(): EventTarget;
 };
 
 /**
@@ -2505,7 +2506,7 @@ interface Performance extends EventTarget {
  */
 declare var Performance: {
   prototype: Performance;
-  new (): Performance;
+  new(): Performance;
 };
 
 /**
