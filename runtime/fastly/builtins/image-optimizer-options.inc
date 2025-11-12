@@ -1,3 +1,5 @@
+// Defines X-Macros (https://en.wikipedia.org/wiki/X_macro) for enumerator image optimizer options
+
 #if !defined(FASTLY_DEFINE_IMAGE_OPTIMIZER_OPTION) &&                                              \
     !defined(FASTLY_BEGIN_IMAGE_OPTIMIZER_OPTION_TYPE) &&                                          \
     !defined(FASTLY_END_IMAGE_OPTIMIZER_OPTION_TYPE)
@@ -93,7 +95,7 @@ FASTLY_BEGIN_IMAGE_OPTIMIZER_OPTION_TYPE(Profile, profile, "profile")
 FASTLY_DEFINE_IMAGE_OPTIMIZER_OPTION(Baseline, "baseline")
 FASTLY_DEFINE_IMAGE_OPTIMIZER_OPTION(Main, "main")
 FASTLY_DEFINE_IMAGE_OPTIMIZER_OPTION(High, "high")
-FASTLY_END_IMAGE_OPTIMIZER_OPTION_TYPE(Optimize)
+FASTLY_END_IMAGE_OPTIMIZER_OPTION_TYPE(Profile)
 
 FASTLY_BEGIN_IMAGE_OPTIMIZER_OPTION_TYPE(ResizeFilter, resize_filter, "resize-filter")
 FASTLY_DEFINE_IMAGE_OPTIMIZER_OPTION(Nearest, "nearest")

@@ -236,9 +236,6 @@ std::string ImageOptimizerOptions::to_string() const {
   return ret;
 }
 
-// TODO
-// pad
-
 fastly_image_optimizer_transform_config ImageOptimizerOptions::to_config() {
   fastly_image_optimizer_transform_config config;
   auto str = this->to_string();
@@ -676,12 +673,6 @@ ImageOptimizerOptions::to_trim_color(JSContext *cx, JS::HandleValue val) {
   };
 
   if (val.isString()) {
-    auto str = core::encode(cx, val);
-    // We also support "auto" as a color
-    if (str == std::string_view("auto")) {
-      return TrimColor{Color{std::move(str)}};
-    }
-
     auto color = to_color(cx, val);
     if (!color) {
       return throw_error();
