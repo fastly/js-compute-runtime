@@ -2962,9 +2962,11 @@ std::optional<host_api::HttpReq> Response::websocket_upgrade_request(JSObject *o
   MOZ_ASSERT(is_instance(obj));
   auto websocket_upgrade_request =
       JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::WebsocketUpgradeRequest));
+
   if (websocket_upgrade_request.isUndefined()) {
     return std::nullopt;
   }
+
   return host_api::HttpReq(websocket_upgrade_request.toInt32());
 }
 

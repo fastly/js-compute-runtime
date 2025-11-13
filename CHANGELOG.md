@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.35.2 (2025-11-07)
+
+### Fixed
+
+* **compute-file-server:** bump MSRV to fix ICU build issues ([#1221](https://github.com/fastly/js-compute-runtime/issues/1221)) ([379e511](https://github.com/fastly/js-compute-runtime/commit/379e51153e07962972b8a69e645e0f55912122d0))
+* surrogateKeys not being added when using CoreCache ([#1219](https://github.com/fastly/js-compute-runtime/issues/1219)) ([b0efe20](https://github.com/fastly/js-compute-runtime/commit/b0efe20c2f6f96755bb450d139e002797b376802))
+* **ws:** commit ws request headers before upgrading ([#1216](https://github.com/fastly/js-compute-runtime/issues/1216)) ([a15fa61](https://github.com/fastly/js-compute-runtime/commit/a15fa6148427801bbaf4d862b9a21884f21758f9))
+
+## 3.35.1 (2025-09-29)
+
+### Fixed
+
+* Root HTML rewriter variables to ensure no GC ([#1202](https://github.com/fastly/js-compute-runtime/issues/1202)) ([6aaf9f3](https://github.com/fastly/js-compute-runtime/commit/6aaf9f391acccfb68c5a012d92bf324df04d4230))
+
 ## 3.35.0 (2025-09-26)
 
 ### Added
