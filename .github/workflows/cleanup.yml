@@ -12,5 +12,5 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 'lts/*'
-    - run: npm install
+    - run: cd ./integration-tests/js-compute && npm install
     - run: node integration-tests/js-compute/cleanupAll.js
