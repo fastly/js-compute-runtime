@@ -3,22 +3,14 @@
     "downstream_response": {
       "status": 200,
       "headers": [
-        [
-          "FooName",
-          "FooValue"
-        ],
-        [
-          "BarName",
-          "BarValue"
-        ]
+        ["FooName", "FooValue"],
+        ["BarName", "BarValue"]
       ],
       "body": "pong"
     }
   },
   "GET /btoa": {
-    "environments": [
-      "viceroy"
-    ],
+    "environments": ["viceroy"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
@@ -27,18 +19,13 @@
   "GET /byob": {
     "downstream_response": {
       "status": 200,
-      "body": [
-        "hey3"
-      ]
+      "body": ["hey3"]
     }
   },
   "GET /byte-repeater": {
     "downstream_response": {
       "status": 200,
-      "body": [
-        "11223344",
-        "5566778899001122\n\n"
-      ]
+      "body": ["11223344", "5566778899001122\n\n"]
     }
   },
   "GET /cache-override/constructor/called-as-regular-function": {},
@@ -122,508 +109,340 @@
   "GET /simple-cache/interface": {},
   "GET /simple-store/constructor/called-as-regular-function": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/constructor/throws": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/purge/called-as-constructor": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/purge/key-parameter-calls-7.1.17-ToString": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/purge/key-parameter-not-supplied": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/purge/key-parameter-empty-string": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/purge/key-parameter-8135-character-string": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/purge/key-parameter-8136-character-string": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/purge/options-parameter": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/purge/returns-undefined": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/called-as-constructor": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/key-parameter-calls-7.1.17-ToString": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/tll-parameter-7.1.4-ToNumber": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/no-parameters-supplied": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/key-parameter-empty-string": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/key-parameter-8135-character-string": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/key-parameter-8136-character-string": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/ttl-parameter-negative-number": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/ttl-parameter-NaN": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/ttl-parameter-Infinity": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-as-undefined": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-readablestream-missing-length-parameter": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-readablestream-negative-length-parameter": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-readablestream-nan-length-parameter": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-readablestream-negative-infinity-length-parameter": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-readablestream-positive-infinity-length-parameter": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/length-parameter-7.1.4-ToNumber": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-readablestream-empty": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-readablestream-locked": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-readablestream": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-URLSearchParams": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-strings": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-calls-7.1.17-ToString": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-buffer": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-arraybuffer": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-typed-arrays": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/value-parameter-dataview": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/set/returns-undefined": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/get/called-as-constructor": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/get/key-parameter-calls-7.1.17-ToString": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/get/key-parameter-not-supplied": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/get/key-parameter-empty-string": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/get/key-parameter-8135-character-string": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/get/key-parameter-8136-character-string": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/get/key-does-not-exist-returns-null": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/get/key-exists": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache-entry/interface": {},
   "GET /simple-cache-entry/text/valid": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache-entry/json/valid": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache-entry/json/invalid": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache-entry/arrayBuffer/valid": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache-entry/body": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache-entry/bodyUsed": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache-entry/readablestream": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/rejection-rejects-outer": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/called-as-constructor": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/no-parameters-supplied": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/key-parameter-calls-7.1.17-ToString": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/key-parameter-empty-string": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/key-parameter-8135-character-string": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/key-parameter-8136-character-string": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/ttl-field-7.1.4-ToNumber": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/ttl-field-negative-number": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/ttl-field-NaN": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/ttl-field-Infinity": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-as-undefined": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-readablestream-missing-length-field": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-readablestream-negative-length-field": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-readablestream-nan-length-field": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-readablestream-negative-infinity-length-field": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-readablestream-positive-infinity-length-field": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/length-field-7.1.4-ToNumber": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-readablestream-empty": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-readablestream-locked": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-readablestream": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-URLSearchParams": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-strings": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-calls-7.1.17-ToString": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-buffer": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-typed-arrays": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/value-field-dataview": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/returns-SimpleCacheEntry": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/executes-the-set-method-when-key-not-in-cache": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/does-not-execute-the-set-method-when-key-is-in-cache": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /simple-cache/getOrSet/does-not-freeze-when-called-after-a-get": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /client/tlsJA3MD5": {},
   "GET /client/tlsClientHello": {},
@@ -1252,74 +1071,48 @@
     "flake": true
   },
   "GET /env": {
-    "environments": [
-      "viceroy"
-    ]
+    "environments": ["viceroy"]
   },
   "GET /createFanoutHandoff": {},
   "GET /createWebsocketHandoff": {},
   "GET /fastly/now": {},
   "GET /fastly/version": {},
   "GET /fastly/getgeolocationforipaddress/interface": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /fastly/getgeolocationforipaddress/called-as-constructor": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /fastly/getgeolocationforipaddress/parameter-calls-7.1.17-ToString": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /fastly/getgeolocationforipaddress/parameter-not-supplied": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /fastly/getgeolocationforipaddress/parameter-empty-string": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /fastly/getgeolocationforipaddress/bad-ip": {},
   "GET /fastly/getgeolocationforipaddress/parameter-ipv4-string": {},
   "GET /fastly/getgeolocationforipaddress/parameter-compressed-ipv6-string": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /fastly/getgeolocationforipaddress/parameter-shortened-ipv6-string": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /fastly/getgeolocationforipaddress/parameter-expanded-ipv6-string": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /fastly/getgeolocationforipaddress/called-unbound": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /fastly:geolocation": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /includeBytes": {},
   "GET /logger": {
-    "environments": [
-      "viceroy"
-    ],
-    "logs": [
-      "ComputeLog :: Hello!"
-    ]
+    "environments": ["viceroy"],
+    "logs": ["ComputeLog :: Hello!"]
   },
   "GET /missing-backend": {},
   "GET /multiple-set-cookie/response-init": {
@@ -1330,46 +1123,16 @@
           "Set-Cookie",
           "test=1; expires=Tue, 06-Dec-2022 12:34:56 GMT; Max-Age=60; Path=/; HttpOnly; Secure, test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT, test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"
         ],
-        [
-          "Set-Cookie",
-          "test2=2"
-        ],
-        [
-          "Set-Cookie",
-          "test3=3"
-        ],
-        [
-          "Set-Cookie",
-          "test4=4"
-        ],
-        [
-          "Set-Cookie",
-          "test5=5"
-        ],
-        [
-          "Set-Cookie",
-          "test6=6"
-        ],
-        [
-          "Set-Cookie",
-          "test7=7"
-        ],
-        [
-          "Set-Cookie",
-          "test8=8"
-        ],
-        [
-          "Set-Cookie",
-          "test9=9"
-        ],
-        [
-          "Set-Cookie",
-          "test10=10"
-        ],
-        [
-          "Set-Cookie",
-          "test11=11"
-        ]
+        ["Set-Cookie", "test2=2"],
+        ["Set-Cookie", "test3=3"],
+        ["Set-Cookie", "test4=4"],
+        ["Set-Cookie", "test5=5"],
+        ["Set-Cookie", "test6=6"],
+        ["Set-Cookie", "test7=7"],
+        ["Set-Cookie", "test8=8"],
+        ["Set-Cookie", "test9=9"],
+        ["Set-Cookie", "test10=10"],
+        ["Set-Cookie", "test11=11"]
       ]
     }
   },
@@ -1381,46 +1144,16 @@
           "Set-Cookie",
           "test=1; expires=Tue, 06-Dec-2022 12:34:56 GMT; Max-Age=60; Path=/; HttpOnly; Secure, test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT, test_id=1; Max-Age=60; Path=/; expires=Tue, 06-Dec-2022 12:34:56 GMT"
         ],
-        [
-          "Set-Cookie",
-          "test2=2"
-        ],
-        [
-          "Set-Cookie",
-          "test3=3"
-        ],
-        [
-          "Set-Cookie",
-          "test4=4"
-        ],
-        [
-          "Set-Cookie",
-          "test5=5"
-        ],
-        [
-          "Set-Cookie",
-          "test6=6"
-        ],
-        [
-          "Set-Cookie",
-          "test7=7"
-        ],
-        [
-          "Set-Cookie",
-          "test8=8"
-        ],
-        [
-          "Set-Cookie",
-          "test9=9"
-        ],
-        [
-          "Set-Cookie",
-          "test10=10"
-        ],
-        [
-          "Set-Cookie",
-          "test11=11"
-        ]
+        ["Set-Cookie", "test2=2"],
+        ["Set-Cookie", "test3=3"],
+        ["Set-Cookie", "test4=4"],
+        ["Set-Cookie", "test5=5"],
+        ["Set-Cookie", "test6=6"],
+        ["Set-Cookie", "test7=7"],
+        ["Set-Cookie", "test8=8"],
+        ["Set-Cookie", "test9=9"],
+        ["Set-Cookie", "test10=10"],
+        ["Set-Cookie", "test11=11"]
       ]
     }
   },
@@ -1428,84 +1161,43 @@
     "downstream_response": {
       "status": 302,
       "headers": [
-        [
-          "Set-Cookie",
-          "1=1; Path=/"
-        ],
-        [
-          "Set-Cookie",
-          "2=2; Path=/"
-        ],
-        [
-          "Set-Cookie",
-          "3=3; Path=/"
-        ],
-        [
-          "Set-Cookie",
-          "4=4; Path=/"
-        ],
-        [
-          "Set-Cookie",
-          "5=5; Path=/"
-        ],
-        [
-          "Set-Cookie",
-          "6=6; Path=/"
-        ],
-        [
-          "Set-Cookie",
-          "7=7; Path=/"
-        ],
-        [
-          "Set-Cookie",
-          "8=8; Path=/"
-        ],
-        [
-          "Set-Cookie",
-          "9=9; Path=/"
-        ],
-        [
-          "Set-Cookie",
-          "10=10; Path=/"
-        ],
-        [
-          "Set-Cookie",
-          "11=11; Path=/"
-        ]
+        ["Set-Cookie", "1=1; Path=/"],
+        ["Set-Cookie", "2=2; Path=/"],
+        ["Set-Cookie", "3=3; Path=/"],
+        ["Set-Cookie", "4=4; Path=/"],
+        ["Set-Cookie", "5=5; Path=/"],
+        ["Set-Cookie", "6=6; Path=/"],
+        ["Set-Cookie", "7=7; Path=/"],
+        ["Set-Cookie", "8=8; Path=/"],
+        ["Set-Cookie", "9=9; Path=/"],
+        ["Set-Cookie", "10=10; Path=/"],
+        ["Set-Cookie", "11=11; Path=/"]
       ]
     }
   },
   "GET /Performance/interface": {
-    "environments": [
-      "viceroy"
-    ],
+    "environments": ["viceroy"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
   "GET /globalThis.performance": {
-    "environments": [
-      "viceroy"
-    ],
+    "environments": ["viceroy"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
   "GET /globalThis.performance/now": {
-    "environments": [
-      "viceroy"
-    ],
+    "environments": ["viceroy"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
   "GET /globalThis.performance/timeOrigin": {
-    "environments": [
-      "viceroy"
-    ],
+    "environments": ["viceroy"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
@@ -1531,9 +1223,7 @@
       "headers": {
         "content-type": "text/html"
       },
-      "body": [
-        "<h1>blob</h1>"
-      ]
+      "body": ["<h1>blob</h1>"]
     }
   },
   "GET /response/stall": {
@@ -1549,120 +1239,14 @@
     "downstream_response": {
       "status": 200,
       "body_prefix": [
-        123,
-        10,
-        32,
-        32,
-        34,
-        97,
-        114,
-        103,
-        115,
-        34,
-        58,
-        32,
-        123,
-        125,
-        44,
-        32,
-        10,
-        32,
-        32,
-        34,
-        100,
-        97,
-        116,
-        97,
-        34,
-        58,
-        32,
-        34,
-        100,
-        97,
-        116,
-        97,
-        58,
-        97,
-        112,
-        112,
-        108,
-        105,
-        99,
-        97,
-        116,
-        105,
-        111,
-        110,
-        47,
-        111,
-        99,
-        116,
-        101,
-        116,
-        45,
-        115,
-        116,
-        114,
-        101,
-        97,
-        109,
-        59,
-        98,
-        97,
-        115,
-        101,
-        54,
-        52,
-        44,
-        85,
-        107,
-        108,
-        71,
-        82,
-        107,
-        65,
-        112,
-        65,
-        65,
-        66,
-        88,
-        82,
-        85,
-        74,
-        81,
-        86,
-        108,
-        65,
-        52,
-        87,
-        65,
-        111,
-        65,
-        65,
-        65,
-        65,
-        69,
-        65,
-        65,
-        65,
-        65,
-        69,
-        81
+        123, 10, 32, 32, 34, 97, 114, 103, 115, 34, 58, 32, 123, 125, 44, 32,
+        10, 32, 32, 34, 100, 97, 116, 97, 34, 58, 32, 34, 100, 97, 116, 97, 58,
+        97, 112, 112, 108, 105, 99, 97, 116, 105, 111, 110, 47, 111, 99, 116,
+        101, 116, 45, 115, 116, 114, 101, 97, 109, 59, 98, 97, 115, 101, 54, 52,
+        44, 85, 107, 108, 71, 82, 107, 65, 112, 65, 65, 66, 88, 82, 85, 74, 81,
+        86, 108, 65, 52, 87, 65, 111, 65, 65, 65, 65, 69, 65, 65, 65, 65, 69, 81
       ],
-      "body_suffix": [
-        123,
-        10,
-        32,
-        32,
-        34,
-        97,
-        114,
-        103,
-        115,
-        34,
-        58,
-        32
-      ]
+      "body_suffix": [123, 10, 32, 32, 34, 97, 114, 103, 115, 34, 58, 32]
     }
   },
   "GET /response/ip-port-undefined": {},
@@ -1693,9 +1277,7 @@
   "GET /setTimeout/200-ms": {
     "downstream_response": {
       "status": 200,
-      "body": [
-        "START\nEND\n"
-      ]
+      "body": ["START\nEND\n"]
     }
   },
   "GET /setTimeout/fetch-timeout": {
@@ -1738,10 +1320,7 @@
     "downstream_request": {
       "method": "POST",
       "pathname": "/tee",
-      "headers": [
-        "Content-Type",
-        "application/json"
-      ],
+      "headers": ["Content-Type", "application/json"],
       "body": "hello world!"
     },
     "downstream_response": {
@@ -1753,10 +1332,7 @@
     "downstream_request": {
       "method": "GET",
       "pathname": "/tee/error",
-      "headers": [
-        "Content-Type",
-        "application/json"
-      ]
+      "headers": ["Content-Type", "application/json"]
     },
     "downstream_response": {
       "status": 200,
@@ -1764,54 +1340,42 @@
     }
   },
   "GET /override-content-length/request/init/object-literal/true": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
   "GET /override-content-length/request/init/object-literal/false": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
   "GET /override-content-length/request/clone/true": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
   "GET /override-content-length/request/clone/false": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
   "GET /override-content-length/fetch/init/object-literal/true": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
   "GET /override-content-length/fetch/init/object-literal/false": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
@@ -1819,20 +1383,14 @@
   },
   "/override-content-length/response/clone/true": {
     "skip": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "/override-content-length/response/clone/false": {
     "skip": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /override-content-length/response/init/object-literal/true": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "status": 200,
       "body": "meow",
@@ -1842,18 +1400,14 @@
     }
   },
   "GET /override-content-length/response/init/object-literal/false": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "status": 200,
       "body": "meow"
     }
   },
   "GET /override-content-length/response/init/response-instance/true": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "status": 200,
       "body": "meow",
@@ -1863,23 +1417,17 @@
     }
   },
   "GET /override-content-length/response/init/response-instance/false": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "status": 200,
       "body": "meow"
     }
   },
   "GET /override-content-length/response/method/false": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /override-content-length/response/method/true": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "status": 200,
       "headers": {
@@ -1890,14 +1438,7 @@
   "GET /headers/getsetcookie": {
     "downstream_response": {
       "status": 200,
-      "headers": [
-        [
-          "name1=value1"
-        ],
-        [
-          "name2=value2"
-        ]
-      ]
+      "headers": [["name1=value1"], ["name2=value2"]]
     }
   },
   "GET /headers/construct": {
@@ -1912,12 +1453,7 @@
     "flake": true,
     "downstream_response": {
       "status": 200,
-      "headers": [
-        [
-          "cuStom",
-          "test"
-        ]
-      ]
+      "headers": [["cuStom", "test"]]
     }
   },
   "GET /headers/from-response/delete-invalid": {
@@ -1927,1411 +1463,940 @@
     "flake": true,
     "downstream_response": {
       "status": 200,
-      "headers": [
-        [
-          "cuStom",
-          "test"
-        ]
-      ]
+      "headers": [["cuStom", "test"]]
     }
   },
   "GET /FastlyBody/interface": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/constructor/called-as-regular-function": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/constructor/called-as-constructor": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/append/called-as-constructor": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/append/data-parameter-not-supplied": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/append/data-parameter-wrong-type": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/append/data-parameter-readablestream-guest-backed": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/append/data-parameter-readablestream-host-backed": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/append/data-parameter-URLSearchParams": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/append/data-parameter-strings": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/append/data-parameter-calls-7.1.17-ToString": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/append/data-parameter-buffer": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/append/data-parameter-arraybuffer": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/append/data-parameter-typed-arrays": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/append/data-parameter-dataview": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/prepend/called-as-constructor": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/prepend/data-parameter-not-supplied": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/prepend/data-parameter-wrong-type": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/prepend/data-parameter-readablestream-guest-backed": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/prepend/data-parameter-readablestream-host-backed": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/prepend/data-parameter-readablestream-locked": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/prepend/data-parameter-URLSearchParams": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/prepend/data-parameter-strings": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/prepend/data-parameter-calls-7.1.17-ToString": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/prepend/data-parameter-buffer": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/prepend/data-parameter-arraybuffer": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/prepend/data-parameter-typed-arrays": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/prepend/data-parameter-dataview": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/concat/called-as-constructor": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/concat/dest-parameter-not-supplied": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/concat/dest-parameter-wrong-type": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/concat/concat-same-fastlybody-twice": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/concat/happy-path": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/read/called-as-constructor": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/read/chunkSize-parameter-not-supplied": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/read/chunkSize-parameter-wrong-type": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/read/chunkSize-parameter-negative": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/read/chunkSize-parameter-infinity": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/read/chunkSize-parameter-NaN": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/read/happy-path": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/close/called-as-constructor": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/close/called-once": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /FastlyBody/close/called-twice": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /core-cache/interface": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /core-cache/constructor/called-as-regular-function": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /core-cache/constructor/throws": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /core-cache/lookup/called-as-constructor": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /core-cache/lookup/key-parameter-calls-7.1.17-ToString": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /core-cache/lookup/key-parameter-not-supplied": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /core-cache/lookup/key-parameter-empty-string": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /core-cache/lookup/key-parameter-8135-character-string": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /core-cache/lookup/key-parameter-8136-character-string": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /core-cache/lookup/key-does-not-exist-returns-null": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /core-cache/lookup/key-exists": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /core-cache/lookup/options-parameter-wrong-type": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
     }
   },
   "GET /core-cache/lookup/options-parameter-none": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/lookup/options-parameter-headers-field-wrong-type": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/lookup/options-parameter-headers-field-undefined": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/lookup/options-parameter-headers-field-valid-sequence": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/lookup/options-parameter-headers-field-valid-record": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/lookup/options-parameter-headers-field-valid-Headers-instance": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/called-as-constructor": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/key-parameter-calls-7.1.17-ToString": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/key-parameter-not-supplied": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/key-parameter-empty-string": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/key-parameter-8135-character-string": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/key-parameter-8136-character-string": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-wrong-type": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-headers-field-wrong-type": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-headers-field-undefined": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-headers-field-valid-sequence": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-headers-field-valid-record": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-headers-field-valid-Headers-instance": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-maxAge-field-valid-record": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-maxAge-field-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-maxAge-field-postitive-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-maxAge-field-negative-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-maxAge-field-negative-number": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-initialAge-field-valid-record": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-initialAge-field-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-initialAge-field-postitive-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-initialAge-field-negative-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-initialAge-field-negative-number": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-staleWhileRevalidate-field-valid-record": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-staleWhileRevalidate-field-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-staleWhileRevalidate-field-postitive-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-staleWhileRevalidate-field-negative-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-staleWhileRevalidate-field-negative-number": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-length-field-valid-record": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-length-field-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-length-field-postitive-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-length-field-negative-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-length-field-negative-number": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-sensitive-field": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-vary-field": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-userMetadata-field/arraybuffer/empty": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-userMetadata-field/arraybuffer/not-empty": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-userMetadata-field/URLSearchParams": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-userMetadata-field/string": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/transactionLookup/called-as-constructor": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/transactionLookup/key-parameter-calls-7.1.17-ToString": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/transactionLookup/key-parameter-not-supplied": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/transactionLookup/key-parameter-empty-string": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/transactionLookup/key-parameter-8135-character-string": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/transactionLookup/key-parameter-8136-character-string": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/transactionLookup/key-does-not-exist": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/transactionLookup/key-exists": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/transactionLookup/options-parameter-wrong-type": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/transactionLookup/options-parameter-headers-field-wrong-type": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/transactionLookup/options-parameter-headers-field-undefined": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/transactionLookup/options-parameter-headers-field-valid-sequence": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/transactionLookup/options-parameter-headers-field-valid-record": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /core-cache/transactionLookup/options-parameter-headers-field-valid-Headers-instance": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/interface": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/constructor/called-as-regular-function": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/constructor/throws": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/close/called-as-constructor": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/close/called-unbound": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/close/called-on-instance": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/state/called-as-constructor": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/state/called-unbound": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/state/called-on-instance": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/userMetadata/called-as-constructor": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/userMetadata/called-unbound": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/userMetadata/called-on-instance": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/userMetadata/basic": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/body/called-as-constructor": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/body/called-unbound": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/body/called-on-instance": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/body/options-start-negative": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/body/options-start-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/body/options-start-Infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/body/options-start-valid": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/body/options-start-longer-than-body": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/body/options-end-negative": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/body/options-end-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/body/options-end-Infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/body/options-end-valid": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/body/options-end-zero": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/length/called-as-constructor": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/length/called-unbound": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/length/called-on-instance": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/maxAge/called-as-constructor": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/maxAge/called-unbound": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/maxAge/called-on-instance": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/staleWhileRevalidate/called-as-constructor": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/staleWhileRevalidate/called-unbound": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/staleWhileRevalidate/called-on-instance": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/age/called-as-constructor": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/age/called-unbound": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/age/called-on-instance": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/hits/called-as-constructor": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/hits/called-unbound": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /cache-entry/hits/called-on-instance": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/interface": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/called-as-constructor": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/entry-parameter-not-supplied": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-maxAge-field-valid-record": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-maxAge-field-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-maxAge-field-postitive-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-maxAge-field-negative-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-maxAge-field-negative-number": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-initialAge-field-valid-record": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-initialAge-field-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-initialAge-field-postitive-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-initialAge-field-negative-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-initialAge-field-negative-number": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-valid-record": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-postitive-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-negative-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-negative-number": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-length-field-valid-record": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-length-field-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-length-field-postitive-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-length-field-negative-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-length-field-negative-number": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-sensitive-field": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-vary-field": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/called-as-constructor": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/entry-parameter-not-supplied": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-valid-record": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-postitive-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-negative-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-negative-number": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-valid-record": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-postitive-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-negative-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-negative-number": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-valid-record": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-postitive-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-negative-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-negative-number": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-valid-record": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-postitive-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-negative-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-negative-number": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-sensitive-field": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/write-to-writer-and-read-from-reader": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-vary-field": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/called-as-constructor": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/entry-parameter-not-supplied": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-maxAge-field-valid-record": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-maxAge-field-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-maxAge-field-postitive-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-maxAge-field-negative-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-maxAge-field-negative-number": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-initialAge-field-valid-record": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-initialAge-field-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-initialAge-field-postitive-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-initialAge-field-negative-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-initialAge-field-negative-number": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-valid-record": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-postitive-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-negative-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-negative-number": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-length-field-valid-record": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-length-field-NaN": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-length-field-postitive-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-length-field-negative-infinity": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-length-field-negative-number": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/write-to-writer-and-read-from-reader": {
     "flake": true,
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-vary-field": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-userMetadata-field": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/cancel/called-as-constructor": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/cancel/called-once": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/cancel/makes-entry-cancelled": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /transaction-cache-entry/cancel/called-twice-throws": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /rate-counter/interface": {
     "downstream_response": {
@@ -3784,36 +2849,28 @@
     }
   },
   "GET /device/lookup/useragent-does-not-exist-returns-null": {
-    "environments": [
-      "viceroy"
-    ],
+    "environments": ["viceroy"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
   "GET /device/lookup/useragent-exists-all-fields-identified": {
-    "environments": [
-      "viceroy"
-    ],
+    "environments": ["viceroy"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
   "GET /device/lookup/useragent-exists-all-fields-identified-tojson": {
-    "environments": [
-      "viceroy"
-    ],
+    "environments": ["viceroy"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
   "GET /device/lookup/useragent-exists-some-fields-identified": {
-    "environments": [
-      "viceroy"
-    ],
+    "environments": ["viceroy"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
@@ -3827,18 +2884,14 @@
   },
   "GET /core-cache/transaction-lookup-transaction-insert-vary-works": {
     "flake": true,
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
     }
   },
   "GET /core-cache/lookup-insert-vary-works": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
@@ -3848,252 +2901,147 @@
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "GET"
-        ]
-      ]
+      "headers": [["result", "GET"]]
     }
   },
   "get /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "GET"
-        ]
-      ]
+      "headers": [["result", "GET"]]
     }
   },
   "GeT /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "GET"
-        ]
-      ]
+      "headers": [["result", "GET"]]
     }
   },
   "HEAD /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "HEAD"
-        ]
-      ]
+      "headers": [["result", "HEAD"]]
     }
   },
   "head /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "HEAD"
-        ]
-      ]
+      "headers": [["result", "HEAD"]]
     }
   },
   "HeAd /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "HEAD"
-        ]
-      ]
+      "headers": [["result", "HEAD"]]
     }
   },
   "OPTIONS /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "OPTIONS"
-        ]
-      ]
+      "headers": [["result", "OPTIONS"]]
     }
   },
   "OPTioNS /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "OPTIONS"
-        ]
-      ]
+      "headers": [["result", "OPTIONS"]]
     }
   },
   "options /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "OPTIONS"
-        ]
-      ]
+      "headers": [["result", "OPTIONS"]]
     }
   },
   "POST /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "POST"
-        ]
-      ]
+      "headers": [["result", "POST"]]
     }
   },
   "post /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "POST"
-        ]
-      ]
+      "headers": [["result", "POST"]]
     }
   },
   "PosT /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "POST"
-        ]
-      ]
+      "headers": [["result", "POST"]]
     }
   },
   "PUT /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "PUT"
-        ]
-      ]
+      "headers": [["result", "PUT"]]
     }
   },
   "put /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "PUT"
-        ]
-      ]
+      "headers": [["result", "PUT"]]
     }
   },
   "Put /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "PUT"
-        ]
-      ]
+      "headers": [["result", "PUT"]]
     }
   },
   "DELETE /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "DELETE"
-        ]
-      ]
+      "headers": [["result", "DELETE"]]
     }
   },
   "DeLeTe /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "DELETE"
-        ]
-      ]
+      "headers": [["result", "DELETE"]]
     }
   },
   "delete /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "DELETE"
-        ]
-      ]
+      "headers": [["result", "DELETE"]]
     }
   },
   "HELLO /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "HELLO"
-        ]
-      ]
+      "headers": [["result", "HELLO"]]
     }
   },
   "hello /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "hello"
-        ]
-      ]
+      "headers": [["result", "hello"]]
     }
   },
   "heLLo /request/method/host": {
     "downstream_response": {
       "status": 200,
       "body": "",
-      "headers": [
-        [
-          "result",
-          "heLLo"
-        ]
-      ]
+      "headers": [["result", "heLLo"]]
     }
   },
   "!*+-.^_`|~1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ /request/method/host": {
@@ -4116,9 +3064,7 @@
   },
   "GET /compute/get-vcpu-ms": {
     "flake": true,
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
@@ -4126,14 +3072,10 @@
   },
   "GET /compute/purge-surrogate-key-invalid": {},
   "GET /compute/purge-surrogate-key-hard": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /compute/purge-surrogate-key-soft": {
-    "environments": [
-      "compute"
-    ]
+    "environments": ["compute"]
   },
   "GET /html-rewriter/set-attribute": {},
   "GET /html-rewriter/get-attribute": {},
@@ -4151,9 +3093,7 @@
   "GET /html-rewriter/insertion-order": {},
   "GET /html-rewriter/escape-html": {},
   "GET /early-hints/manual-response": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
@@ -4166,9 +3106,7 @@
     }
   },
   "GET /early-hints/send-early-hints": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
@@ -4181,9 +3119,7 @@
     }
   },
   "GET /early-hints/send-early-hints-multiple-headers": {
-    "environments": [
-      "compute"
-    ],
+    "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
       "status": 200
@@ -4191,14 +3127,8 @@
     "downstream_info": {
       "status": 103,
       "headers": [
-        [
-          "link",
-          "</style.css>; rel=preload; as=style"
-        ],
-        [
-          "link",
-          "</style2.css>; rel=preload; as=style"
-        ]
+        ["link", "</style.css>; rel=preload; as=style"],
+        ["link", "</style2.css>; rel=preload; as=style"]
       ]
     }
   }

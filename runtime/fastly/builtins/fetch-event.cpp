@@ -767,18 +767,18 @@ bool FetchEvent::respondWith(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool FetchEvent::sendEarlyHint(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool FetchEvent::sendEarlyHints(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
   MOZ_RELEASE_ASSERT(state(self) == State::unhandled || state(self) == State::waitToRespond);
 
   if (!is_dispatching(self)) {
-    JS_ReportErrorUTF8(cx, "FetchEvent#sendEarlyHint must be called synchronously from "
+    JS_ReportErrorUTF8(cx, "FetchEvent#sendEarlyHints must be called synchronously from "
                            "within a FetchEvent handler");
     return false;
   }
   if (state(self) != State::unhandled && state(self) != State::waitToRespond) {
     JS_ReportErrorUTF8(
-        cx, "FetchEvent#sendEarlyHint can't be called after the main response has been sent");
+        cx, "FetchEvent#sendEarlyHints can't be called after the main response has been sent");
     return false;
   }
 
@@ -905,7 +905,7 @@ const JSPropertySpec FetchEvent::static_properties[] = {
 const JSFunctionSpec FetchEvent::methods[] = {
     JS_FN("respondWith", respondWith, 1, JSPROP_ENUMERATE),
     JS_FN("waitUntil", waitUntil, 1, JSPROP_ENUMERATE),
-    JS_FN("sendEarlyHint", sendEarlyHint, 1, JSPROP_ENUMERATE),
+    JS_FN("sendEarlyHints", sendEarlyHints, 1, JSPROP_ENUMERATE),
     JS_FS_END,
 };
 
