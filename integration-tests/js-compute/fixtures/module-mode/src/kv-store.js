@@ -35,7 +35,7 @@ const debug = sdkVersion.endsWith('-debug');
     const store = new KVStore(KV_STORE_NAME);
     try {
       await store.delete('c');
-    } catch { }
+    } catch {}
     // bad metadata
     await store.put('a', 'b');
     const aEntry = await store.get('a');
