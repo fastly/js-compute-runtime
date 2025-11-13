@@ -4165,7 +4165,7 @@
       }
     }
   },
-  "GET /early-hints/send-early-hint": {
+  "GET /early-hints/send-early-hints": {
     "environments": [
       "compute"
     ],
@@ -4178,6 +4178,28 @@
       "headers": {
         "link": "</style.css>; rel=preload; as=style"
       }
+    }
+  },
+  "GET /early-hints/send-early-hints-multiple-headers": {
+    "environments": [
+      "compute"
+    ],
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    },
+    "downstream_info": {
+      "status": 103,
+      "headers": [
+        [
+          "link",
+          "</style.css>; rel=preload; as=style"
+        ],
+        [
+          "link",
+          "</style2.css>; rel=preload; as=style"
+        ]
+      ]
     }
   }
 }

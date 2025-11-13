@@ -24,3 +24,14 @@ sendEarlyHints(headers)
 ### Return value
 
 Always returns `undefined`.
+
+### Examples
+
+```js
+event.sendEarlyHints({ link: '</style.css>; rel=preload; as=style' });
+
+event.sendEarlyHints([
+        ['link', '</style.css>; rel=preload; as=style'],
+        ['link', '</style2.css>; rel=preload; as=style']
+    ]);
+```
