@@ -1,0 +1,14 @@
+name: 'Cleanup'
+on: workflow_dispatch
+
+jobs:
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 'lts/*'
+    - run: npm install
+    - run: node integration-tests/js-compute/cleanupAll.js

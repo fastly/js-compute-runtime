@@ -7,3 +7,14 @@ export function getEnv(serviceName) {
     ACL_NAME: `exampleacl${serviceName ? '__' + serviceName.replace(/-/g, '_') : ''}`,
   };
 }
+
+export function getPrefixes() {
+  return {
+    SERVICE_PREFIX: `app-`,
+    DICTIONARY_PREFIX: `aZ2__2`,
+    CONFIG_STORE_PREFIX: `testconfig`,
+    KV_STORE_PREFIX: `example-test-kv-store`,
+    SECRET_STORE_PREFIX: `example-test-secret-store`,
+    ACL_PREFIX: `exampleacl`,
+  };
+}
