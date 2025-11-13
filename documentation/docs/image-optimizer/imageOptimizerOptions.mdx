@@ -102,8 +102,11 @@ An `Object` containing either:
 
 ```js
 import { Format, Orient, CropMode, Region } from 'fastly:image-optimizer';
-new Request(
-    "https://my.image.host/image.png",
+
+addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
+
+async function handleRequest(event) {
+  return await fetch('https://www.w3.org/Graphics/PNG/text2.png', {
     imageOptimizerOptions: {
       region: Region.UsEast,
       format: Format.PNG,
@@ -126,5 +129,7 @@ new Request(
       trim: { top: 10, left: 10, right: 10, bottom: 10 },
       pad: { top: 30, left: 30, right: "1%", bottom: 30 }
     },
-);
+    backend: 'w3'
+  });
+}
 ```

@@ -18,11 +18,16 @@ Enumerator options for [`imageOptimizerOptions.auto`](./imageOptimizerOptions.md
 
 ```js
 import { Auto, Region } from 'fastly:image-optimizer';
-new Request(
-    "https://my.image.host/image.png",
+
+addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
+
+async function handleRequest(event) {
+  return await fetch('https://www.w3.org/Graphics/PNG/text2.png', {
     imageOptimizerOptions: {
-        region: Region.UsEast,
-        auto: Auto.AVIF
-    }
-)
+      region: Region.UsEast,
+      auto: Auto.AVIF
+    },
+    backend: 'w3'
+  });
+}
 ```

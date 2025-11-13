@@ -23,12 +23,18 @@ Enumerator options for [`imageOptimizerOptions.resizeFilter`](./imageOptimizerOp
 ## Examples
 
 ```js
-import { Profile, Region } from 'fastly:image-optimizer';
-new Request(
-    "https://my.image.host/image.png",
+import { ResizeFilter, Region } from 'fastly:image-optimizer';
+
+addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
+
+async function handleRequest(event) {
+  return await fetch('https://www.w3.org/Graphics/PNG/text2.png', {
     imageOptimizerOptions: {
-        region: Region.UsEast,
-        resizeFilter: ResizeFilter.Linear
-    }
-)
+      region: Region.UsEast,
+      width: 2560,
+      resizeFilter: ResizeFilter.Linear
+    },
+    backend: 'w3'
+  });
+}
 ```

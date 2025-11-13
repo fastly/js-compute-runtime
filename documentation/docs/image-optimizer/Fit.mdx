@@ -19,13 +19,18 @@ Enumerator options for [`imageOptimizerOptions.fit`](./imageOptimizerOptions.mdx
 
 ```js
 import { Fit, Region } from 'fastly:image-optimizer';
-new Request(
-    "https://my.image.host/image.png",
+
+addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
+
+async function handleRequest(event) {
+  return await fetch('https://www.w3.org/Graphics/PNG/text2.png', {
     imageOptimizerOptions: {
-        region: Region.UsEast,
-        width: 150,
-        height: 150,
-        fit: Fit.Bounds,
-    }
-)
+      region: Region.UsEast,
+      width: 150,
+      height; 150,
+      fit: Fit.Bounds
+    },
+    backend: 'w3'
+  });
+}
 ```

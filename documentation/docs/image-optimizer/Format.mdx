@@ -31,11 +31,16 @@ Enumerator options for [`imageOptimizerOptions.format`](./imageOptimizerOptions.
 
 ```js
 import { Format, Region } from 'fastly:image-optimizer';
-new Request(
-    "https://my.image.host/image.png",
+
+addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
+
+async function handleRequest(event) {
+  return await fetch('https://www.w3.org/Graphics/PNG/text2.png', {
     imageOptimizerOptions: {
-        region: Region.UsEast,
-        format: Format.PNG,
-    }
-)
+      region: Region.UsEast,
+      format: Format.PNG
+    },
+    backend: 'w3'
+  });
+}
 ```

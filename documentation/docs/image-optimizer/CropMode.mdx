@@ -18,14 +18,19 @@ Enumerator options for [`imageOptimizerOptions.crop.mode`](./imageOptimizerOptio
 
 ```js
 import { CropMode, Region } from 'fastly:image-optimizer';
-new Request(
-    "https://my.image.host/image.png",
+
+addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
+
+async function handleRequest(event) {
+  return await fetch('https://www.w3.org/Graphics/PNG/text2.png', {
     imageOptimizerOptions: {
-        region: Region.UsEast,
-        crop: {
-            size: { ratio: { width: 4, height: 3 } },
-            mode: CropMode.Smart,
-        }
-    }
-)
+      region: Region.UsEast,
+      crop: {
+        size: { ratio: { width: 4, height: 3 } },
+        mode: CropMode.Smart,
+      }
+    },
+    backend: 'w3'
+  });
+}
 ```
