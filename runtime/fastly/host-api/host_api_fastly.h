@@ -846,6 +846,7 @@ public:
   static Result<ConfigStore> open(std::string_view name);
 
   Result<std::optional<HostString>> get(std::string_view name);
+  Result<std::optional<HostString>> get(std::string_view name, uint32_t initial_buf_len);
 };
 
 class ObjectStorePendingLookup final {
@@ -918,6 +919,7 @@ public:
   explicit Secret(Handle handle) : handle{handle} {}
 
   Result<std::optional<HostBytes>> plaintext() const;
+  Result<std::optional<HostBytes>> plaintext(uint32_t initial_buf_len) const;
 };
 
 class SecretStore final {
