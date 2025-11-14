@@ -12,7 +12,7 @@ routes.set('/headers/construct', async () => {
 
 routes.set('/headers/getsetcookie', async () => {
   let response = await fetch(
-    'https://http-me.glitch.me/meow?header=Set-Cookie:name1=value1',
+    'https://http-me.fastly.dev/meow?header=Set-Cookie:name1=value1',
     {
       backend: 'httpme',
     },
