@@ -1,0 +1,30 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# DecompressionStream()
+
+The **`DecompressionStream()`** constructor creates a new `DecompressionStream` object which decompresses a stream of data.
+
+## Syntax
+
+```js
+new DecompressionStream(format)
+```
+
+### Parameters
+
+- `format`
+
+  - : One of the following compression formats:
+
+    - `"gzip"`
+    - `"deflate"`
+    - `"deflate-raw"`
+
+## Exceptions
+
+- `TypeError`
+  - : Thrown if the format passed to the constructor is not supported.

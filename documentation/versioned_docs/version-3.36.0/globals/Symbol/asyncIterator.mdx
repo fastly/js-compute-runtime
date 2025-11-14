@@ -1,0 +1,17 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Symbol.asyncIterator
+
+The **`Symbol.asyncIterator`** well-known symbol specifies the default [async iterator](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Iteration_protocols#the_async_iterator_and_async_iterable_protocols) for an object. If this property is set on an object, it is an async iterable and can be used in a [`for await...of`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/for-await...of) loop.
+
+## Value
+
+The well-known symbol `Symbol.asyncIterator`.
+
+## Description
+
+The `Symbol.asyncIterator` symbol is a builtin symbol that is used to access an object's `Symbol.asyncIterator` method. In order for an object to be async iterable, it must have a `Symbol.asyncIterator` key.
