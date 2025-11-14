@@ -698,8 +698,7 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
   if (streaming) {
     ENGINE->incr_event_loop_interest();
   }
-  FetchEvent::set_state(event, streaming ? FetchEvent::State::responseStreaming
-                                         : FetchEvent::State::responseDone);
+  FetchEvent::mark_done(event, streaming, Response::status(response_obj));
   return start_response(cx, response_obj, streaming);
 }
 
@@ -737,7 +736,7 @@ bool FetchEvent::respondWith(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   // Step 3
-  if (state(self) != State::unhandled) {
+  if (state(self) != State::unhandled && state(self) != State::waitToRespond) {
     JS_ReportErrorUTF8(cx, "FetchEvent#respondWith can't be called twice on the same event");
     return false;
   }
@@ -766,6 +765,63 @@ bool FetchEvent::respondWith(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   args.rval().setUndefined();
   return true;
+}
+
+bool FetchEvent::sendEarlyHints(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(1)
+  MOZ_RELEASE_ASSERT(state(self) == State::unhandled || state(self) == State::waitToRespond);
+
+  if (!is_dispatching(self)) {
+    JS_ReportErrorUTF8(cx, "FetchEvent#sendEarlyHints must be called synchronously from "
+                           "within a FetchEvent handler");
+    return false;
+  }
+  if (state(self) != State::unhandled && state(self) != State::waitToRespond) {
+    JS_ReportErrorUTF8(
+        cx, "FetchEvent#sendEarlyHints can't be called after the main response has been sent");
+    return false;
+  }
+
+  JS::RootedObject headers(cx, Headers::create(cx, args.get(0), Headers::HeadersGuard::None));
+  // Calling get_list() transitions to Mode::ContentOnly or Mode::CachedInContent.
+  if (!Headers::get_list(cx, headers)) {
+    return false;
+  }
+
+  auto response_handle = host_api::HttpResp::make();
+  if (auto *err = response_handle.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  // 103: Early Hint
+  auto set_res = response_handle.unwrap().set_status(103);
+  if (auto *err = set_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  auto body_handle = host_api::HttpBody::make();
+  if (auto *err = body_handle.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  JS::RootedObject response_instance(
+      cx, JS_NewObjectWithGivenProto(cx, &Response::class_, Response::proto_obj));
+  if (!response_instance) {
+    return false;
+  }
+  RootedObject response_obj(cx, Response::create(cx, response_instance, response_handle.unwrap(),
+                                                 body_handle.unwrap(), false, nullptr, nullptr,
+                                                 nullptr));
+  RootedValue headers_val(cx, JS::ObjectValue(*headers));
+  JS::SetReservedSlot(response_obj, static_cast<uint32_t>(Response::Slots::Headers), headers_val);
+  JS::SetReservedSlot(response_obj, static_cast<uint32_t>(Response::Slots::Status),
+                      JS::Int32Value(103));
+  RequestOrResponse::set_url(response_obj, JS_GetEmptyStringValue(cx));
+
+  args.rval().setUndefined();
+  return start_response(cx, response_obj, false);
 }
 
 bool FetchEvent::respondWithError(JSContext *cx, JS::HandleObject self) {
@@ -849,6 +905,7 @@ const JSPropertySpec FetchEvent::static_properties[] = {
 const JSFunctionSpec FetchEvent::methods[] = {
     JS_FN("respondWith", respondWith, 1, JSPROP_ENUMERATE),
     JS_FN("waitUntil", waitUntil, 1, JSPROP_ENUMERATE),
+    JS_FN("sendEarlyHints", sendEarlyHints, 1, JSPROP_ENUMERATE),
     JS_FS_END,
 };
 
@@ -923,9 +980,24 @@ FetchEvent::State FetchEvent::state(JSObject *self) {
       JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::State)).toInt32());
 }
 
+void FetchEvent::mark_done(JSObject *self, bool streaming, uint16_t status_code) {
+  MOZ_ASSERT(is_instance(self));
+  auto new_state = [&] {
+    // 103: Early Hint
+    if (status_code == 103) {
+      return State::unhandled;
+    }
+    if (streaming) {
+      return State::responseStreaming;
+    }
+    return State::responseDone;
+  }();
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::State),
+                      JS::Int32Value(static_cast<int32_t>(new_state)));
+}
+
 void FetchEvent::set_state(JSObject *self, State new_state) {
   MOZ_ASSERT(is_instance(self));
-  MOZ_ASSERT((uint8_t)new_state > (uint8_t)state(self));
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::State),
                       JS::Int32Value(static_cast<int32_t>(new_state)));
 }

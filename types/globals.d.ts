@@ -328,6 +328,13 @@ declare interface FetchEvent {
   respondWith(response: Response | PromiseLike<Response>): void;
 
   /**
+   * Send a 103 Early Hints response back to the client.
+   *
+   * @param headers - Headers to send back down to the client
+   */
+  sendEarlyHints(headers: HeadersInit): void;
+
+  /**
    * Extend the service's lifetime to ensure asynchronous operations succeed.
    *
    * By default, a service will shut down as soon as the response passed to
@@ -843,7 +850,7 @@ declare class TextEncoder {
    * UTF-8 encodes the `input` string and returns a `Uint8Array` containing the encoded bytes.
    * @param [input='an empty string'] The text to encode.
    */
-  encode(input?: string): Uint8Array;
+  encode(input?: string): Uint8Array<ArrayBuffer>;
   // /**
   //  * UTF-8 encodes the `src` string to the `dest` Uint8Array and returns an object
   //  * containing the read Unicode code units and written UTF-8 bytes.
@@ -998,7 +1005,7 @@ declare interface Fastly {
    * @hidden
    * @experimental
    */
-  includeBytes(path: string): Uint8Array;
+  includeBytes(path: string): Uint8Array<ArrayBuffer>;
 }
 
 /**
@@ -1055,7 +1062,7 @@ declare class CompressionStream {
    * console.log(stream.readable instanceof ReadableStream); // true
    * ```
    */
-  readonly readable: ReadableStream<Uint8Array>;
+  readonly readable: ReadableStream<Uint8Array<ArrayBuffer>>;
   /**
    * @example
    * ```js
@@ -1063,7 +1070,7 @@ declare class CompressionStream {
    * console.log(stream.writable instanceof WritableStream); // true
    * ```
    */
-  readonly writable: WritableStream<Uint8Array>;
+  readonly writable: WritableStream<Uint8Array<ArrayBuffer>>;
 }
 
 /**
@@ -1110,7 +1117,7 @@ declare class DecompressionStream {
    * console.log(stream.readable instanceof ReadableStream); // true
    * ```
    */
-  readonly readable: ReadableStream<Uint8Array>;
+  readonly readable: ReadableStream<Uint8Array<ArrayBuffer>>;
   /**
    * @example
    * ```js
@@ -1118,7 +1125,7 @@ declare class DecompressionStream {
    * console.log(stream.writable instanceof WritableStream); // true
    * ```
    */
-  readonly writable: WritableStream<Uint8Array>;
+  readonly writable: WritableStream<Uint8Array<ArrayBuffer>>;
 }
 
 // Note: the contents below here are, partially modified, copies of content from TypeScript's
@@ -1175,7 +1182,7 @@ interface Blob {
   /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/slice) */
   slice(start?: number, end?: number, contentType?: string): Blob;
   /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/stream) */
-  stream(): ReadableStream<Uint8Array>;
+  stream(): ReadableStream<Uint8Array<ArrayBuffer>>;
   /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/text) */
   text(): Promise<string>;
 }
@@ -1265,7 +1272,7 @@ declare type XMLHttpRequestBodyInit =
  * @group Fetch API
  */
 declare interface Body {
-  readonly body: ReadableStream<Uint8Array> | null;
+  readonly body: ReadableStream<Uint8Array<ArrayBuffer>> | null;
   readonly bodyUsed: boolean;
   arrayBuffer(): Promise<ArrayBuffer>;
   blob(): Promise<Blob>;
