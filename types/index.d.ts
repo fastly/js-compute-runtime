@@ -18,3 +18,4 @@
 /// <reference path="logger.d.ts" />
 /// <reference path="secret-store.d.ts" />
 /// <reference path="html-rewriter.d.ts" />
+/// <reference path="image-optimizer.d.ts" />

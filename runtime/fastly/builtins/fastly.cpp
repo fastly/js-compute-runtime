@@ -595,7 +595,8 @@ bool install(api::Engine *engine) {
 
   JS::SetOutOfMemoryCallback(engine->cx(), oom_callback, nullptr);
 
-  JS::RootedObject fastly(engine->cx(), JS_NewPlainObject(engine->cx()));
+  JS::RootedObject fastly(engine->cx());
+  get_fastly_object(engine, &fastly);
   if (!fastly) {
     return false;
   }
@@ -607,10 +608,6 @@ bool install(api::Engine *engine) {
 
   Fastly::baseURL.init(engine->cx());
   Fastly::defaultBackend.init(engine->cx());
-
-  if (!JS_DefineProperty(engine->cx(), engine->global(), "fastly", fastly, 0)) {
-    return false;
-  }
 
   JSFunctionSpec nowfn = JS_FN("now", Fastly::now, 0, JSPROP_ENUMERATE);
   JSFunctionSpec end = JS_FS_END;

@@ -896,6 +896,31 @@ FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error,
   return err;
 }
 
+FastlyImageOptimizerError
+make_fastly_image_optimizer_error(fastly::fastly_image_optimizer_error_detail im_err) {
+  FastlyImageOptimizerError::detail det;
+  switch (im_err.tag) {
+  case FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_UNINITIALIZED:
+    det = FastlyImageOptimizerError::uninitialized;
+    break;
+  case FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_OK:
+    det = FastlyImageOptimizerError::ok;
+    break;
+  case FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_ERROR:
+    det = FastlyImageOptimizerError::error;
+    break;
+  case FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_WARNING:
+    det = FastlyImageOptimizerError::warning;
+    break;
+  }
+
+  return {det, std::string(im_err.message, im_err.message_len)};
+}
+
+FastlyImageOptimizerError make_fastly_image_optimizer_error(fastly::fastly_host_error err) {
+  return {err};
+}
+
 } // namespace
 
 Result<HttpBody> HttpBody::make() {
@@ -1456,6 +1481,35 @@ Result<HttpPendingReq> HttpReq::send_async_without_caching(HttpBody body, std::s
     res.emplace_err(err);
   } else {
     res.emplace(ret);
+  }
+
+  return res;
+}
+
+FastlyResult<Response, FastlyImageOptimizerError>
+HttpReq::send_image_optimizer(HttpBody body, std::string_view backend,
+                              std::string_view config_str) {
+  TRACE_CALL()
+  FastlyResult<Response, FastlyImageOptimizerError> res;
+
+  fastly::fastly_host_error err;
+  HttpReq::Handle orig_req_body_handle = INVALID_HANDLE;
+  fastly::fastly_world_string backend_str = string_view_to_world_string(backend);
+  auto opts = FASTLY_IMAGE_OPTIMIZER_SDK_CLAIMS_OPTS;
+  fastly::fastly_image_optimizer_transform_config config{config_str.data(), config_str.size()};
+  fastly::fastly_image_optimizer_error_detail io_err_out{};
+  uint32_t resp_handle_out = INVALID_HANDLE, body_handle_out = INVALID_HANDLE;
+  auto host_call_success = convert_result(
+      fastly::image_optimizer_transform_image_optimizer_request(
+          this->handle, orig_req_body_handle, reinterpret_cast<char *>(backend_str.ptr),
+          backend_str.len, opts, &config, &io_err_out, &resp_handle_out, &body_handle_out),
+      &err);
+  if (!host_call_success) {
+    res.emplace_err(make_fastly_image_optimizer_error(err));
+  } else if (false && io_err_out.tag != FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_OK) {
+    res.emplace_err(make_fastly_image_optimizer_error(io_err_out));
+  } else {
+    res.emplace(HttpResp(resp_handle_out), HttpBody(body_handle_out));
   }
 
   return res;
@@ -3610,6 +3664,22 @@ const std::optional<std::string> FastlySendError::message() const {
   }
   }
   return "NetworkError when attempting to fetch resource.";
+}
+
+const std::optional<std::string> FastlyImageOptimizerError::message() const {
+  if (is_host_error)
+    return std::nullopt;
+  switch (err) {
+  case ok:
+    return std::nullopt;
+  case uninitialized:
+    return "Uninitialized: " + msg;
+  case warning:
+    return "Warning: " + msg;
+  case error:
+    return "Error: " + msg;
+  }
+  return std::nullopt;
 }
 
 bool BackendHealth::is_unknown() const {

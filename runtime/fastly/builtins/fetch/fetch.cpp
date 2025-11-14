@@ -7,6 +7,7 @@
 #include "../cache-override.h"
 #include "../fastly.h"
 #include "../fetch-event.h"
+#include "../image-optimizer.h"
 #include "./request-response.h"
 #include "builtin.h"
 #include "encode.h"
@@ -119,8 +120,46 @@ bool must_use_guest_caching(JSContext *cx, HandleObject request) {
 }
 
 bool http_caching_unsupported = false;
-bool should_use_guest_caching(JSContext *cx, HandleObject request, bool *should_use_cache) {
-  *should_use_cache = true;
+enum CachingMode { Guest, Host, ImageOptimizer };
+bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_mode) {
+  *caching_mode = CachingMode::Guest;
+
+  // Check for pass cache override
+  MOZ_ASSERT(Request::is_instance(request));
+  JS::RootedObject cache_override(
+      cx, JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::CacheOverride))
+              .toObjectOrNull());
+  if (cache_override) {
+    if (CacheOverride::mode(cache_override) == CacheOverride::CacheOverrideMode::Pass) {
+      // Pass requests have to go through the host for now
+      *caching_mode = CachingMode::Host;
+      return true;
+    }
+  }
+
+  // Check for PURGE method
+  RootedString method_str(cx, Request::method(cx, request));
+  bool is_purge = false;
+  if (method_str && !JS_StringEqualsLiteral(cx, method_str, "PURGE", &is_purge)) {
+    return false;
+  }
+  if (is_purge) {
+    // We don't yet implement guest-side URL purges
+    *caching_mode = CachingMode::Host;
+    return true;
+  }
+
+  // Requests meant for Image Optimizer should not be cached at this point,
+  // as the caching behavior is determined by the origin image, which is
+  // fetched after the request reaches the Image Optimizer WASM service.
+  // The WASM service uses cache_on_behalf to insert the result into
+  // the service's cache.
+  auto image_optimizer_opts =
+      JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ImageOptimizerOptions));
+  if (!image_optimizer_opts.isNullOrUndefined()) {
+    *caching_mode = CachingMode::ImageOptimizer;
+    return true;
+  }
 
   // If we previously found guest caching unsupported then remember that
   if (http_caching_unsupported || !fastly::fastly::ENABLE_EXPERIMENTAL_HTTP_CACHE) {
@@ -136,32 +175,7 @@ bool should_use_guest_caching(JSContext *cx, HandleObject request, bool *should_
       }
       return false;
     }
-    *should_use_cache = false;
-    return true;
-  }
-
-  // Check for pass cache override
-  MOZ_ASSERT(Request::is_instance(request));
-  JS::RootedObject cache_override(
-      cx, JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::CacheOverride))
-              .toObjectOrNull());
-  if (cache_override) {
-    if (CacheOverride::mode(cache_override) == CacheOverride::CacheOverrideMode::Pass) {
-      // Pass requests have to go through the host for now
-      *should_use_cache = false;
-      return true;
-    }
-  }
-
-  // Check for PURGE method
-  RootedString method_str(cx, Request::method(cx, request));
-  bool is_purge = false;
-  if (method_str && !JS_StringEqualsLiteral(cx, method_str, "PURGE", &is_purge)) {
-    return false;
-  }
-  if (is_purge) {
-    // We don't yet implement guest-side URL purges
-    *should_use_cache = false;
+    *caching_mode = CachingMode::Host;
     return true;
   }
 
@@ -177,7 +191,7 @@ bool should_use_guest_caching(JSContext *cx, HandleObject request, bool *should_
         JS_ReportErrorASCII(cx, "HTTP caching API is not enabled; please contact support for help");
         return false;
       }
-      *should_use_cache = false;
+      *caching_mode = CachingMode::Host;
       return true;
     }
     HANDLE_ERROR(cx, *err);
@@ -188,8 +202,7 @@ bool should_use_guest_caching(JSContext *cx, HandleObject request, bool *should_
 }
 
 // Sends the request body, resolving the response promise with the response
-// The without_caching case is effectively pass semantics without cache hooks
-template <bool without_caching>
+template <CachingMode caching_mode>
 bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue ret) {
   RootedString backend(cx, get_backend(cx, request));
   if (!backend) {
@@ -216,7 +229,7 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
   }
 
   // cache override only applies to requests with caching
-  if (!without_caching) {
+  if (caching_mode == CachingMode::Host) {
     if (!Request::apply_cache_override(cx, request)) {
       return false;
     }
@@ -236,8 +249,10 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
     return false;
   }
 
+  // The image optimizer does not support streaming, so never stream in this case
   bool streaming = false;
-  if (!RequestOrResponse::maybe_stream_body(cx, request, &streaming)) {
+  if (caching_mode != CachingMode::ImageOptimizer &&
+      !RequestOrResponse::maybe_stream_body(cx, request, &streaming)) {
     return false;
   }
 
@@ -245,10 +260,40 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
   {
     auto request_handle = Request::request_handle(request);
     auto body = RequestOrResponse::body_handle(request);
-    auto res = !without_caching
-                   ? streaming ? request_handle.send_async_streaming(body, backend_chars)
-                               : request_handle.send_async(body, backend_chars)
-                   : request_handle.send_async_without_caching(body, backend_chars, streaming);
+    host_api::Result<host_api::HttpPendingReq> res;
+    switch (caching_mode) {
+    case CachingMode::Host: {
+      if (streaming) {
+        res = request_handle.send_async_streaming(body, backend_chars);
+      } else {
+        res = request_handle.send_async(body, backend_chars);
+      }
+      break;
+    }
+    case CachingMode::Guest:
+      res = request_handle.send_async_without_caching(body, backend_chars, streaming);
+      break;
+    case CachingMode::ImageOptimizer: {
+      auto config = reinterpret_cast<fastly::image_optimizer::ImageOptimizerOptions *>(
+          JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ImageOptimizerOptions))
+              .toPrivate());
+      auto config_str = config->to_string();
+      auto res = request_handle.send_image_optimizer(body, backend_chars, config_str);
+      if (auto *err = res.to_err()) {
+        HANDLE_IMAGE_OPTIMIZER_ERROR(cx, *err);
+        ret.setObject(*PromiseRejectedWithPendingError(cx));
+        return true;
+      }
+
+      JS::RootedObject response(cx, Response::create(cx, request, res.unwrap()));
+      JS::RootedValue response_val(cx, JS::ObjectValue(*response));
+      if (!JS::ResolvePromise(cx, response_promise, response_val)) {
+        return false;
+      }
+      ret.setObject(*response_promise);
+      return true;
+    }
+    }
 
     if (auto *err = res.to_err()) {
       if (host_api::error_is_generic(*err) || host_api::error_is_invalid_argument(*err)) {
@@ -1075,13 +1120,15 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   }
 
   // Determine if we should use guest-side caching
-  bool should_use_guest_caching_out;
-  if (!should_use_guest_caching(cx, request, &should_use_guest_caching_out)) {
+  CachingMode caching_mode;
+  if (!get_caching_mode(cx, request, &caching_mode)) {
     return false;
   }
-  if (!should_use_guest_caching_out) {
+  if (caching_mode == CachingMode::Host) {
     DEBUG_LOG("HTTP Cache: Using traditional fetch without cache API")
-    return fetch_send_body<false>(cx, request, args.rval());
+    return fetch_send_body<CachingMode::Host>(cx, request, args.rval());
+  } else if (caching_mode == CachingMode::ImageOptimizer) {
+    return fetch_send_body<CachingMode::ImageOptimizer>(cx, request, args.rval());
   }
 
   // Check if request is actually cacheable
@@ -1104,7 +1151,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   // If not cacheable, fallback to non-caching path
   if (!is_cacheable) {
     DEBUG_LOG("HTTP Cache: Request not cacheable, using non-caching fetch")
-    return fetch_send_body<true>(cx, request, args.rval());
+    return fetch_send_body<CachingMode::Guest>(cx, request, args.rval());
   }
 
   // Lookup in cache
@@ -1224,7 +1271,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     }
     // request collapsing has been disabled: pass the original request to the origin without
     // updating the cache and without caching
-    return fetch_send_body<true>(cx, request, args.rval());
+    return fetch_send_body<CachingMode::Guest>(cx, request, args.rval());
   } else {
     JS::RootedValue stream_back_promise(cx, JS::ObjectValue(*JS::NewPromiseObject(cx, nullptr)));
     if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry, &stream_back_promise)) {
