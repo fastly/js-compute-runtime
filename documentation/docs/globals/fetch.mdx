@@ -37,9 +37,9 @@ Backends are configured using the Fastly service backend configuration, see the 
 
 ## Dynamic Backends
 
-Dynamic backends are a compute feature that allow services to define backends for themselves. This is a service-level Fastly feature that must be enabled through [Fastly Support](https://support.fastly.com/hc/en-us/requests/new?ticket_form_id=360000269711).
+Dynamic backends are a compute feature that allow services to define backends for themselves.
 
-When dynamic backends are enabled at the service level, the explicit `backend` option is no longer required for `fetch()` requests, and will instead be automatically created.
+If the `backend` option is not provided when making `fetch()` requests, a backend will be automatically created by extracting the protocol, host, and port from the provided URL.
 
 In addition, custom backend configuration options can then also be provided through the [`Backend()`](../fastly:backend/Backend/Backend.mdx) constructor.
 

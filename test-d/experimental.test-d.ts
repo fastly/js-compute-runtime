@@ -8,7 +8,7 @@ import {
 } from 'fastly:experimental';
 import { expectType } from 'tsd';
 
-expectType<(path: string) => Uint8Array>(includeBytes);
+expectType<(path: string) => Uint8Array<ArrayBuffer>>(includeBytes);
 expectType<(enabled: boolean) => void>(enableDebugLogging);
 expectType<(base: URL | null | undefined) => void>(setBaseURL);
 expectType<(backend: string) => void>(setDefaultBackend);
