@@ -262,7 +262,7 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
     auto body = RequestOrResponse::body_handle(request);
     host_api::Result<host_api::HttpPendingReq> res;
     switch (caching_mode) {
-    case CachingMode::Guest: {
+    case CachingMode::Host: {
       if (streaming) {
         res = request_handle.send_async_streaming(body, backend_chars);
       } else {
@@ -270,7 +270,7 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
       }
       break;
     }
-    case CachingMode::Host:
+    case CachingMode::Guest:
       res = request_handle.send_async_without_caching(body, backend_chars, streaming);
       break;
     case CachingMode::ImageOptimizer: {
