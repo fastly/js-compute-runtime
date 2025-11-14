@@ -229,7 +229,7 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
   }
 
   // cache override only applies to requests with caching
-  if (caching_mode == CachingMode::Guest) {
+  if (caching_mode == CachingMode::Host) {
     if (!Request::apply_cache_override(cx, request)) {
       return false;
     }
