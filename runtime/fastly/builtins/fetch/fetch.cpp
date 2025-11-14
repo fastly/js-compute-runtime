@@ -1151,7 +1151,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   // If not cacheable, fallback to non-caching path
   if (!is_cacheable) {
     DEBUG_LOG("HTTP Cache: Request not cacheable, using non-caching fetch")
-    return fetch_send_body<CachingMode::Host>(cx, request, args.rval());
+    return fetch_send_body<CachingMode::Guest>(cx, request, args.rval());
   }
 
   // Lookup in cache
