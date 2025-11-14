@@ -10,7 +10,7 @@ import { existsSync } from 'node:fs';
 import { copyFile, readFile, writeFile } from 'node:fs/promises';
 import core from '@actions/core';
 import TOML from '@iarna/toml';
-import { getEnv } from './env.js';
+import { getEnv, GLOBAL_PREFIX } from './env.js';
 
 // test environment variable handling
 process.env.LOCAL_TEST = 'local val';
@@ -81,7 +81,7 @@ const branchName = (await zx`git branch --show-current`).stdout
 const fixture = !moduleMode ? 'app' : 'module-mode';
 
 // Service names are carefully unique to support parallel runs
-const serviceName = `app-${branchName}${aot ? '--aot' : ''}${httpCache ? '--http' : ''}${process.env.SUFFIX_STRING ? '--' + process.env.SUFFIX_STRING : ''}`;
+const serviceName = `${GLOBAL_PREFIX}app-${branchName}${aot ? '--aot' : ''}${httpCache ? '--http' : ''}${process.env.SUFFIX_STRING ? '--' + process.env.SUFFIX_STRING : ''}`;
 let domain, serviceId;
 const fixturePath = join(__dirname, 'fixtures', fixture);
 let localServer;
