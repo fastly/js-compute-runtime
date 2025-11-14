@@ -1,11 +1,11 @@
 import parseRange from 'range-parser'
 
 /**
- * Attempt to locate the requested resource from a Fastly Object-Store,
- * If the request is a GET or HEAD request and a resource was found in the Object-Store, this will return a `Response`.
- * If request is not GET or HEAD, or no resource was found in the Object-Store, this will return `null`
- * @param {string} store_name The name of the Fastly Object-Store to search within.
- * @param {Request} request The request to attempt to match against a resource within the Object-Store.
+ * Attempt to locate the requested resource from a Fastly KV Store,
+ * If the request is a GET or HEAD request and a resource was found in the KV Store, this will return a `Response`.
+ * If request is not GET or HEAD, or no resource was found in the KV Store, this will return `null`
+ * @param {string} store_name The name of the Fastly KV Store to search within.
+ * @param {Request} request The request to attempt to match against a resource within the KV Store.
  * @returns {Promise<Response | null>} Returns a `Response` if a resource was found, else returns `null`.
  */
 export async function get(store_name, request) {

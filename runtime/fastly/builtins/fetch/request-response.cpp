@@ -1646,7 +1646,7 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
     return false;
 
   if (done_val.toBoolean()) {
-    // The only response we ever send is the one passed to
+    // The only response with a body we ever send is the one passed to
     // `FetchEvent#respondWith` to send to the client. As such, we can be
     // certain that if we have a response here, we can advance the FetchState to
     // `responseDone`.
@@ -1734,7 +1734,7 @@ bool RequestOrResponse::body_reader_catch_handler(JSContext *cx, JS::HandleObjec
   fprintf(stderr, "Warning: body ReadableStream closed during body streaming. Exception: ");
   ENGINE->dump_value(args.get(0), stderr);
 
-  // The only response we ever send is the one passed to
+  // The only response with a body we ever send is the one passed to
   // `FetchEvent#respondWith` to send to the client. As such, we can be certain
   // that if we have a response here, we can advance the FetchState to
   // `responseDone`. (Note that even though we encountered an error,
@@ -2962,9 +2962,11 @@ std::optional<host_api::HttpReq> Response::websocket_upgrade_request(JSObject *o
   MOZ_ASSERT(is_instance(obj));
   auto websocket_upgrade_request =
       JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::WebsocketUpgradeRequest));
+
   if (websocket_upgrade_request.isUndefined()) {
     return std::nullopt;
   }
+
   return host_api::HttpReq(websocket_upgrade_request.toInt32());
 }
 
@@ -3205,11 +3207,13 @@ bool Response::status_set(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // If it _is_ a CandidateResponse, then support the status set, with validation
   bool valid_status = true;
-  uint16_t status;
+  uint16_t status = 0;
   if (!args[0].isNumber() || !JS::ToUint16(cx, args[0], &status)) {
     valid_status = false;
   }
-  if (!valid_status || status < 200 || status > 599) {
+  // Allow 103: Early Hints
+  bool status_in_range = status == 103 || (status >= 200 && status < 600);
+  if (!valid_status || !status_in_range) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                               JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS, status);
     return false;
@@ -3523,7 +3527,7 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
 
-    if (status == 204 || status == 205 || status == 304) {
+    if (status == 103 || status == 204 || status == 205 || status == 304) {
       JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                                 JSMSG_RESPONSE_NULL_BODY_STATUS_WITH_BODY);
       return false;
@@ -4311,8 +4315,8 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   // 1.  If `init`["status"] is not in the range 200 to 599, inclusive, then
-  // `throw` a ``RangeError``.
-  if (status < 200 || status > 599) {
+  // `throw` a ``RangeError``. (We allow 103 Early Hints as an extension)
+  if (status != 103 && !(status >= 200 && status < 600)) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                               JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS, status);
     return false;
@@ -4416,7 +4420,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if ((!body_val.isNullOrUndefined())) {
     //     1.  If `init`["status"] is a `null body status`, then `throw` a
     //     ``TypeError``.
-    if (status == 204 || status == 205 || status == 304) {
+    if (status == 103 || status == 204 || status == 205 || status == 304) {
       JS_ReportErrorNumberLatin1(cx, FastlyGetErrorMessage, nullptr,
                                  JSMSG_RESPONSE_CONSTRUCTOR_BODY_WITH_NULL_BODY_STATUS);
       return false;
@@ -4595,7 +4599,7 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
     JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Status), JS::Int32Value(status));
     set_status_message_from_code(cx, response, status);
 
-    if (!(status == 204 || status == 205 || status == 304)) {
+    if (!(status == 103 || status == 204 || status == 205 || status == 304)) {
       JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::HasBody), JS::TrueValue());
     }
   }
