@@ -300,6 +300,26 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
           clearTimeout(downstreamTimeout);
           return bodyChunks;
         }
+        let onInfoHandler = test.downstream_info
+          ? async (status, headers) => {
+              if (
+                test.downstream_info.status !== undefined &&
+                test.downstream_info.status != status
+              ) {
+                throw new Error(
+                  `[DownstreamInfo: Status mismatch] Expected: ${configResponse.status} - Got: ${status}}`,
+                );
+              }
+              if (headers) {
+                compareHeaders(
+                  configResponse.headers,
+                  headers,
+                  configResponse.headersExhaustive,
+                );
+              }
+            }
+          : undefined;
+
         if (local) {
           if (test.environments.includes('viceroy')) {
             return (bail || !test.flake ? (_, __, fn) => fn() : retry)(
@@ -354,6 +374,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
                     method: test.downstream_request.method || 'GET',
                     headers: test.downstream_request.headers || undefined,
                     body: test.downstream_request.body || undefined,
+                    onInfo: onInfoHandler,
                   });
                   const bodyChunks = await getBodyChunks(response);
                   await compareDownstreamResponse(

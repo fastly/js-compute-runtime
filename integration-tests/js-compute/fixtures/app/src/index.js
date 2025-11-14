@@ -18,6 +18,7 @@ import './config-store.js';
 import './crypto.js';
 import './device.js';
 import './dictionary.js';
+import './early-hints.js';
 import './edge-rate-limiter.js';
 import './env.js';
 import './fanout.js';

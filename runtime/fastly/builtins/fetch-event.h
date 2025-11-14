@@ -65,6 +65,7 @@ class FetchEvent final : public builtins::BuiltinNoConstructor<FetchEvent> {
   static bool request_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool server_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool waitUntil(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool sendEarlyHints(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:
   static constexpr const char *class_name = "FetchEvent";
@@ -116,6 +117,7 @@ public:
   static void stop_dispatching(JSObject *self);
 
   static State state(JSObject *self);
+  static void mark_done(JSObject *self, bool streaming, uint16_t status_code);
   static void set_state(JSObject *self, State state);
   static bool response_started(JSObject *self);
 

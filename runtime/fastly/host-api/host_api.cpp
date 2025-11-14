@@ -1863,7 +1863,7 @@ Result<uint16_t> HttpResp::get_status() const {
 }
 
 Result<Void> HttpResp::set_status(uint16_t status) {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(status)))
   Result<Void> res;
 
   fastly::fastly_host_error err;
