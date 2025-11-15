@@ -14,9 +14,9 @@ export function swallowTopLevelExportsPlugin(opts) {
     name,
     setup(build) {
       build.onResolve({ filter: /.*/ }, (args) => {
-        const maybeEntry = isAbsolute(args.path) ?
-          args.path :
-          resolve(args.resolveDir || process.cwd(), args.path);
+        const maybeEntry = isAbsolute(args.path)
+          ? args.path
+          : resolve(args.resolveDir || process.cwd(), args.path);
         if (args.kind === 'entry-point' && maybeEntry === normalizedEntry) {
           return { path: normalizedEntry, namespace };
         }

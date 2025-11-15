@@ -145,19 +145,17 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
   },
 };
 
-export async function bundle(input, outfile, {
-  moduleMode = false,
-  enableStackTraces = false,
-}) {
-
+export async function bundle(
+  input,
+  outfile,
+  { moduleMode = false, enableStackTraces = false },
+) {
   // Build output file in cwd first to build sourcemap with correct paths
   const bundle = resolve(basename(outfile));
 
-  const plugins = [
-    fastlyPlugin,
-  ];
+  const plugins = [fastlyPlugin];
   if (moduleMode) {
-    plugins.push(swallowTopLevelExportsPlugin({entry: input}));
+    plugins.push(swallowTopLevelExportsPlugin({ entry: input }));
   }
 
   const inject = [];

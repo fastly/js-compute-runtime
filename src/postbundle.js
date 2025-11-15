@@ -5,11 +5,11 @@ import { parse } from 'acorn';
 import MagicString from 'magic-string';
 import { simple as simpleWalk } from 'acorn-walk';
 
-export async function postbundle(input, outfile, {
-  moduleMode = false,
-  enableStackTraces = false,
-}) {
-
+export async function postbundle(
+  input,
+  outfile,
+  { moduleMode = false, enableStackTraces = false },
+) {
   const source = await readFile(input, { encoding: 'utf8' });
   const magicString = new MagicString(source);
 
@@ -118,7 +118,7 @@ globalThis.__fastlyMapError = (e) => {
     const map = magicString.generateMap({
       source: basename(input),
       hires: true,
-      includeContent: true
+      includeContent: true,
     });
 
     await writeFile(outfile + '.map', map.toString());
