@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.27)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 include("../StarlingMonkey/cmake/add_as_subproject.cmake")
 
 add_builtin(
