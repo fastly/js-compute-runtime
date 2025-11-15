@@ -25,6 +25,9 @@ OPTIONS:
     --enable-aot                                            Enable AOT compilation for performance
     --enable-experimental-high-resolution-time-methods      Enable experimental fastly.now() method
     --enable-experimental-top-level-await                   Enable experimental top level await
+    --enable-stack-traces                                   Enable stack traces
+    --exclude-sources                                       Don't include sources in stack traces                
+    --debug-intermediate-files <dir>                        Output intermediate files in directory                
 
 ARGS:
     <input>     The input JS script's file path [default: bin/index.js]
