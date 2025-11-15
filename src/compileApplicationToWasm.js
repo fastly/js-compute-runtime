@@ -232,10 +232,12 @@ export async function compileApplicationToWasm({
     } else {
       // the bundled output is now the Wizer input
       input = postbundleOutputFilepath;
-      await copyFile(
-        postbundleOutputFilepath,
-        resolve(debugIntermediateFilesDir, 'fastly_bundle.js'),
-      );
+      if (debugIntermediateFilesDir != null) {
+        await copyFile(
+          postbundleOutputFilepath,
+          resolve(debugIntermediateFilesDir, 'fastly_bundle.js'),
+        );
+      }
     }
   }
 
