@@ -40,5 +40,7 @@ It provides the [`event.respondWith()`](./prototype/respondWith.mdx) method, whi
 
 - [`FetchEvent.respondWith()`](./prototype/respondWith.mdx)
     - : Provide (a promise for) a response for this request.
+- [`FetchEvent.sendEarlyHint()`](./prototype/sendEarlyHint.mdx)
+    - : Send a [103 Early Hints](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/103) response for this request.
 - [`FetchEvent.waitUntil()`](./prototype/waitUntil.mdx)
     - : Extends the lifetime of the event. Used to notify the host environment of tasks that extend beyond the returning of a response, such as streaming and caching.
