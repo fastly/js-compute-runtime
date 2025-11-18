@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.36.0](https://github.com/fastly/js-compute-runtime/compare/v3.35.2...v3.36.0) (2025-11-18)
+
+
+### Features
+
+* Image Optimizer support ([#1224](https://github.com/fastly/js-compute-runtime/issues/1224)) ([c3dd3de](https://github.com/fastly/js-compute-runtime/commit/c3dd3de7436f999055eb0b3d83a1f59c1c26b5d1))
+* Implement 103 Early Hints ([#1217](https://github.com/fastly/js-compute-runtime/issues/1217)) ([fda6ad3](https://github.com/fastly/js-compute-runtime/commit/fda6ad31d6f8ceee16cd950217be770a4f794bb3))
+
+
+### Bug Fixes
+
+* **fanout:** commit request headers before fanout handoff ([#1222](https://github.com/fastly/js-compute-runtime/issues/1222)) ([8dfefad](https://github.com/fastly/js-compute-runtime/commit/8dfefadec46a2714be010c4a8c7e59cd43537fec))
+* Fix broken KVStore test ([#1223](https://github.com/fastly/js-compute-runtime/issues/1223)) ([6055d88](https://github.com/fastly/js-compute-runtime/commit/6055d884f617336d8d6326bf26dcfb49265f5ae2))
+
 ## 3.35.2 (2025-11-07)
 
 ### Fixed
