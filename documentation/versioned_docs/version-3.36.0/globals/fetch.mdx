@@ -1,0 +1,86 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# fetch()
+
+The global **`fetch()`** method starts the process of fetching a
+resource from the network, returning a promise which is fulfilled once the response is
+available.
+
+The promise resolves to the `Response` object
+representing the response to your request.
+
+A `fetch()` promise only rejects when a
+network error is encountered (which is usually when there's a permissions issue or
+similar). A `fetch()` promise _does
+not_ reject on HTTP errors (`404`, etc.). Instead, a
+`then()` handler must check the `Response.ok` and/or
+`Response.status` properties.
+
+> **Note:** The `fetch()` method's parameters are identical to
+> those of the `Request()` constructor.
+
+## Explicit Backends
+
+Internally, Fastly uses named backends to handle fetch requests, which need to be explicitly defined to enable custom HTTP origins to be fetched by the service.
+
+This `backend` option is then a special Fastly-specific fetch option that is provided to the `fetch()` call:
+
+```js
+fetch('https://origin.com/path', { backend: 'origin' });
+```
+
+Backends are configured using the Fastly service backend configuration, see the [Backend documentation](https://developer.fastly.com/reference/api/services/backend/) for more information.
+
+## Dynamic Backends
+
+Dynamic backends are a compute feature that allow services to define backends for themselves.
+
+If the `backend` option is not provided when making `fetch()` requests, a backend will be automatically created by extracting the protocol, host, and port from the provided URL.
+
+In addition, custom backend configuration options can then also be provided through the [`Backend()`](../fastly:backend/Backend/Backend.mdx) constructor.
+
+## Syntax
+
+```js
+fetch(resource)
+fetch(resource, options)
+```
+
+### Parameters
+
+- `resource`
+
+  - : This defines the resource that you wish to fetch. This can either be:
+
+    - A string or any other object with a "toString" method.
+    - A `Request` object.
+
+- `options` _**optional**_
+
+  - : An object containing any custom settings that you want to apply to the request. The
+    possible options are:
+
+    - `method`
+      - : The request method, e.g., `GET`, `POST`.
+    - `headers`
+      - : Any headers you want to add to your request, contained within a
+        `Headers` object or an object literal with `String`
+        values.
+    - `body`
+      - : Any body that you want to add to your request: this can be an `ArrayBuffer`, a `TypedArray`, a `DataView`, a `URLSearchParams`, string object or literal, or a `ReadableStream` object.
+    - `backend` _**Fastly-specific**_
+      - *Fastly-specific*
+    - `cacheOverride` _**Fastly-specific**_
+    - `cacheKey` _**Fastly-specific**_
+    - `imageOptimizerOptions` _**Fastly-specific**_, see [`imageOptimizerOptions`](../../fastly:image-optimizer/imageOptimizerOptions.mdx).
+    - `fastly` _**Fastly-specific**_
+      - `decompressGzip`_: boolean_ _**optional**_
+        - Whether to automatically gzip decompress the Response or not.
+
+### Return value
+
+A `Promise` that resolves to a `Response` object.
