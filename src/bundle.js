@@ -140,6 +140,14 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
             contents: `export const HTMLRewritingStream = globalThis.HTMLRewritingStream;`,
           };
         }
+        case 'image-optimizer': {
+          return {
+            contents: `export const { 
+              Region, Auto, Format, BWAlgorithm, Disable, Enable, Fit, Metadata, 
+              Optimize, Orient, Profile, ResizeFilter, CropMode, optionsToQueryString
+            } = globalThis.fastly.imageOptimizer;`,
+          };
+        }
       }
     });
   },
