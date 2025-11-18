@@ -1337,6 +1337,7 @@ declare interface RequestInit {
     decompressGzip?: boolean;
   };
   manualFramingHeaders?: boolean;
+  imageOptimizerOptions?: import('fastly:image-optimizer').ImageOptimizerOptions;
 }
 
 /**

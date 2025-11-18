@@ -29,6 +29,7 @@ import './geoip.js';
 import './headers.js';
 import './html-rewriter.js';
 import './include-bytes.js';
+import './image-optimizer.js';
 import './logger.js';
 import './manual-framing-headers.js';
 import './missing-backend.js';
