@@ -8,9 +8,9 @@ pagination_prev: null
 
 The **`mapError()`** function extracts information from an `Error` object as a human-readable array of strings. This includes the error name, message, and a call stack.
 
-If `--enable-stack-traces` is specified during build, the call stack will be mapped using source maps.
+If `--enable-stack-traces` is specified during the build, the call stack will be mapped using source maps.
 
-If `--enable-stack-traces` is specified and `--exclude-sources` is not specified during build, then this will also include a code dump of neighboring lines of user code.
+If `--enable-stack-traces` is specified and `--exclude-sources` is not specified during the build, then this will also include a code dump of neighboring lines of user code.
 
 ## Syntax
 
@@ -25,7 +25,7 @@ mapError(error)
 
 ### Return value
 
-Returns an array of `string`
+Returns an array of `string`s.
 
 ## Examples
 
