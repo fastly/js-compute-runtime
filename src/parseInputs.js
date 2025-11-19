@@ -19,6 +19,9 @@ export async function parseInputs(cliInputs) {
   let input = join(process.cwd(), 'bin/index.js');
   let customOutputSet = false;
   let output = join(process.cwd(), 'bin/main.wasm');
+  let enableStackTraces = false;
+  let excludeSources = false;
+  let debugIntermediateFilesDir = undefined;
   let cliInput;
 
   const envParser = new EnvParser();
@@ -120,6 +123,23 @@ export async function parseInputs(cliInputs) {
         }
         break;
       }
+      case '--enable-stack-traces': {
+        enableStackTraces = true;
+        break;
+      }
+      case '--exclude-sources': {
+        excludeSources = true;
+        break;
+      }
+      case '--debug-intermediate-files': {
+        const value = cliInputs.shift();
+        if (isAbsolute(value)) {
+          debugIntermediateFilesDir = value;
+        } else {
+          debugIntermediateFilesDir = join(process.cwd(), value);
+        }
+        break;
+      }
       default: {
         if (cliInput.startsWith('--engine-wasm=')) {
           if (customEngineSet) {
@@ -173,6 +193,9 @@ export async function parseInputs(cliInputs) {
     bundle,
     enableAOT,
     aotCache,
+    enableStackTraces,
+    excludeSources,
+    debugIntermediateFilesDir,
     input,
     output,
     wasmEngine,
