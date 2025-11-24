@@ -328,6 +328,13 @@ declare interface FetchEvent {
   respondWith(response: Response | PromiseLike<Response>): void;
 
   /**
+   * Send a 103 Early Hints response back to the client.
+   *
+   * @param headers - Headers to send back down to the client
+   */
+  sendEarlyHints(headers: HeadersInit): void;
+
+  /**
    * Extend the service's lifetime to ensure asynchronous operations succeed.
    *
    * By default, a service will shut down as soon as the response passed to
@@ -1330,6 +1337,7 @@ declare interface RequestInit {
     decompressGzip?: boolean;
   };
   manualFramingHeaders?: boolean;
+  imageOptimizerOptions?: import('fastly:image-optimizer').ImageOptimizerOptions;
 }
 
 /**
