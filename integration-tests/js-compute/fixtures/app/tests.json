@@ -3160,6 +3160,6 @@
       ]
     }
   },
-  "GET /shielding/encrypted": {},
-  "GET /shielding/unencrypted": {}
+  "GET /shielding/encrypted": { "environments": ["compute"] },
+  "GET /shielding/invalid-shield": { "environments": ["compute"] }
 }

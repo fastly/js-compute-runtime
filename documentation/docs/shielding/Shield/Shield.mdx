@@ -1,0 +1,60 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# `Shield()`
+
+Load information about the given shield.
+
+Returns an object representing the shield if it is active, or throws an exception if the string is malformed or the shield doesn’t exist.
+
+Shield names are defined on [this webpage](https://www.fastly.com/documentation/guides/concepts/shielding/#shield-locations), in the “shield code” column. For example, the string “pdx-or-us” will look up our Portland, OR, USA shield site, while “paris-fr” will look up our Paris site.
+
+If you are using a major cloud provider for your primary origin site, consider looking at the “Recommended for” column, to find the Fastly POP most closely located to the given cloud provider.
+
+## Syntax
+
+```js
+new SecretStore(name)
+```
+
+> **Note:** `Shield()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.mdx).
+
+### Parameters
+
+- `name` _: string_
+  - Define a Shield instance using the resource link name.
+  
+### Return value
+
+A new `Shield` object.
+
+### Exceptions
+
+- `TypeError`
+  - Thrown if no Shield exists with the provided name
+
+
+## Examples
+
+In this example, we create a Shield instance for the Sydney, Australia shield POP. If the code is running on that shield POP, it fetches directly from origin. Otherwise, it routes the request through the shield using an encrypted connection.
+
+```js
+/// <reference types="@fastly/js-compute" />
+    
+import { Shield } from "fastly:shielding";
+
+async function app(event) {
+    const shield = new Shield('wsi-australia-au');
+    // If running on the shield POP, fetch from the origin directly
+    if (shield.runningOn()) {
+        return await fetch('https://http-me.fastly.com/anything', { backend: 'httpme' });
+    }
+    // Otherwise, route the request through the shield using an encrypted connection
+    return await fetch(event.request, { backend: shield.encryptedBackend() });
+}
+
+addEventListener("fetch", (event) => event.respondWith(app(event)))
+```
