@@ -142,8 +142,8 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
           return {
             contents: `export const {
               Shield
-            } = globalThis.fastly.shielding;`
-          }
+            } = globalThis.fastly.shielding;`,
+          };
         }
       }
     });
