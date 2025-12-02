@@ -1129,6 +1129,26 @@ int image_optimizer_transform_image_optimizer_request(
     fastly_image_optimizer_error_detail *io_error_detail, uint32_t *resp_handle_out,
     uint32_t *resp_body_handle_out);
 
+#define FASTLY_SHIELDING_SHIELD_BACKEND_OPTIONS_RESERVED (1 << 0)
+#define FASTLY_SHIELDING_SHIELD_BACKEND_OPTIONS_CACHE_KEY (1 << 1)
+#define FASTLY_SHIELDING_SHIELD_BACKEND_OPTIONS_FIRST_BYTE_TIMEOUT (1 << 2)
+
+struct fastly_shielding_shield_backend_config {
+  const char *cache_key;
+  uint32_t cache_key_len;
+  uint32_t first_byte_timeout_ms;
+};
+
+WASM_IMPORT("fastly_shielding", "shield_info")
+int fastly_shielding_shield_info(const char *name, size_t name_len, char *info_block,
+                                 size_t info_block_len, uint32_t *nwritten_out);
+
+WASM_IMPORT("fastly_shielding", "backend_for_shield")
+int fastly_shielding_backend_for_shield(
+    const char *name, size_t name_len, uint32_t options_mask,
+    const fastly_shielding_shield_backend_config *backend_config, char *backend_name,
+    size_t backend_name_len, uint32_t *nwritten_out);
+
 #ifdef __cplusplus
 } // namespace fastly
 } // extern C

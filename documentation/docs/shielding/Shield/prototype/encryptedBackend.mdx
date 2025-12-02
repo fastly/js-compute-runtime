@@ -1,0 +1,13 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Shield.prototype.encryptedBackend
+
+▸ **encryptedBackend**(): `Backend`
+
+Returns a `Backend` representing an encrypted connection to the POP.
+
+For reference, this is almost always the backend that you want to use. Only use [`Shield::unencryptedBackend`](./unencryptedBackend.mdx) in situations in which you are 100% sure that all the data you will send and receive over the backend is already encrypted.
