@@ -4,7 +4,6 @@
 #include "../host-api/host_api_fastly.h"
 #include "backend.h"
 #include "fastly.h"
-#include <iostream>
 
 namespace fastly::shielding {
 const JSFunctionSpec Shield::static_methods[] = {
@@ -57,7 +56,6 @@ bool Shield::backend_for_shield(JSContext *cx, JS::HandleString target,
   }
   backend_name_out.resize(backend_name_size_out);
   host_api::HostString backend_name(backend_name_out);
-  std::cout << "BACKEND" << std::string_view(backend_name) << std::endl;
   return backend::Backend::get_from_valid_name(cx, std::move(backend_name), rval);
 }
 
