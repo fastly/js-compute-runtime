@@ -13,5 +13,5 @@ routes.set('/shielding/encrypted', async (event) => {
 });
 
 routes.set('/shielding/invalid-shield', () => {
-    assertThrows(new Shield('i-am-not-a-real-shield'));
+    assertThrows(() => new Shield('i-am-not-a-real-shield'));
 });
