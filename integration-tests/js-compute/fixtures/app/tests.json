@@ -3159,5 +3159,7 @@
         ["link", "</style2.css>; rel=preload; as=style"]
       ]
     }
-  }
+  },
+  "GET /shielding/encrypted": {},
+  "GET /shielding/unencrypted": {}
 }

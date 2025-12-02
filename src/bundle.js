@@ -138,6 +138,13 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
             } = globalThis.fastly.imageOptimizer;`,
           };
         }
+        case 'shielding': {
+          return {
+            contents: `export const {
+              Shield
+            } = globalThis.fastly.shielding;`
+          }
+        }
       }
     });
   },
