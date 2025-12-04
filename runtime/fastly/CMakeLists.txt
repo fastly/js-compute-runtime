@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.27)
 
+#FIXME(1243)
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../rust-toolchain.toml" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/../StarlingMonkey")
+
 include("../StarlingMonkey/cmake/add_as_subproject.cmake")
 
 add_builtin(
