@@ -89,10 +89,10 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: true
-    - name: Install Rust 1.83.0
+    - name: Install Rust 1.81.0
       run: |
-        rustup toolchain install 1.83.0
-        rustup target add wasm32-wasi --toolchain 1.83.0
+        rustup toolchain install 1.81.0
+        rustup target add wasm32-wasi --toolchain 1.81.0
     - name: Restore wasm-tools from cache
       uses: actions/cache@v3
       id: wasm-tools
