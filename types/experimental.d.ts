@@ -67,4 +67,21 @@ declare module 'fastly:experimental' {
     firstByteTimeout?: number;
     betweenBytesTimeout?: number;
   }): void;
+
+  /**
+   * Get information about an error as a ready-to-print array of strings.
+   * This includes the error name, message, and a call stack.
+   * If --enable-stack-traces is specified during the build, the call stack
+   * will be mapped using source maps.
+   * If --enable-stack-traces is specified and --exclude-sources is not specified,
+   * then this will also include a code dump of neighboring lines of user code.
+   * @param error
+   */
+  export function mapError(error: Error | string): (Error | string)[];
+
+  /**
+   * Calls mapError(error) and outputs the results to stderr output.
+   * @param error
+   */
+  export function mapAndLogError(error: Error | string): void;
 }
