@@ -44,15 +44,17 @@
     "format:check": "prettier --check *.js src/*.js integration-tests"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
     "@jakechampion/cli-testing-library": "^1.0.0",
     "brittle": "^3.5.2",
-    "eslint": "^9.6.0",
+    "eslint": "^9.39.1",
     "get-bin-path": "^11.0.0",
     "prettier": "^3.3.3",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
     "tsd": "^0.33.0",
-    "typescript": "^5.9.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.48.1",
     "unified": "^11.0.5"
   },
   "dependencies": {
