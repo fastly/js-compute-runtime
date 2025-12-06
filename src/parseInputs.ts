@@ -4,23 +4,23 @@ import { tooManyEngines, unknownArgument } from './printHelp.js';
 import { EnvParser } from './env.js';
 
 export type ParsedInputs =
-| 'help'
-| 'version'
-| {
-  enableAOT: boolean,
-  aotCache: string,
-  enableHttpCache: boolean,
-  enableExperimentalHighResolutionTimeMethods: boolean,
-  moduleMode: boolean,
-  bundle: boolean,
-  enableStackTraces: boolean,
-  excludeSources: boolean,
-  debugIntermediateFilesDir: string | undefined,
-  wasmEngine: string,
-  input: string,
-  output: string,
-  env: Record<string, string>,
-};
+  | 'help'
+  | 'version'
+  | {
+      enableAOT: boolean;
+      aotCache: string;
+      enableHttpCache: boolean;
+      enableExperimentalHighResolutionTimeMethods: boolean;
+      moduleMode: boolean;
+      bundle: boolean;
+      enableStackTraces: boolean;
+      excludeSources: boolean;
+      debugIntermediateFilesDir: string | undefined;
+      wasmEngine: string;
+      input: string;
+      output: string;
+      env: Record<string, string>;
+    };
 
 export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
   const __dirname = dirname(fileURLToPath(import.meta.url));

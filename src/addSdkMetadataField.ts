@@ -9,7 +9,10 @@ export async function addSdkMetadataField(wasmPath: string, usingAOT: boolean) {
     encoding: 'utf-8',
   });
 
-  const { name, version } = JSON.parse(packageJson) as { name: string, version: string, };
+  const { name, version } = JSON.parse(packageJson) as {
+    name: string;
+    version: string;
+  };
 
   let sdkName: string;
   if (usingAOT) {

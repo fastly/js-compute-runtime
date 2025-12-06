@@ -10,8 +10,8 @@ import picomatch from 'picomatch';
 export type ExcludePattern = string | ((file: string) => boolean);
 
 export type SourceMapInfo = {
-  f: string, // Filename
-  s: string, // Sourcemap filename
+  f: string; // Filename
+  s: string; // Sourcemap filename
 };
 
 async function readSourcemap(e: SourceMapInfo) {
@@ -19,10 +19,15 @@ async function readSourcemap(e: SourceMapInfo) {
   return JSON.parse(sourceMapJson) as SourceMapInput;
 }
 
-export async function composeSourcemaps(sourceMaps: SourceMapInfo[], excludePatterns: ExcludePattern[] = []) {
+export async function composeSourcemaps(
+  sourceMaps: SourceMapInfo[],
+  excludePatterns: ExcludePattern[] = [],
+) {
   const topSourceMap = sourceMaps.pop();
   if (topSourceMap == null) {
-    throw new Error('Unexpected: composeSourcemaps received empty sourceMaps array.');
+    throw new Error(
+      'Unexpected: composeSourcemaps received empty sourceMaps array.',
+    );
   }
 
   const top = new TraceMap(await readSourcemap(topSourceMap));

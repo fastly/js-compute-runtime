@@ -1,6 +1,9 @@
 import { dirname, resolve, sep, normalize } from 'node:path';
 import { tmpdir, freemem } from 'node:os';
-import { spawnSync, type SpawnSyncOptionsWithStringEncoding } from 'node:child_process';
+import {
+  spawnSync,
+  type SpawnSyncOptionsWithStringEncoding,
+} from 'node:child_process';
 import {
   mkdir,
   readFile,
@@ -29,23 +32,24 @@ async function getTmpDir() {
 }
 
 export type CompileApplicationToWasmParams = {
-  input: string,
-  output: string,
-  wasmEngine: string,
-  enableHttpCache: boolean,
-  enableExperimentalHighResolutionTimeMethods: boolean,
-  enableAOT: boolean,
-  aotCache: string,
-  enableStackTraces: boolean,
-  excludeSources: boolean,
-  debugIntermediateFilesDir: string | undefined,
-  moduleMode: boolean,
-  doBundle: boolean,
-  env: Record<string, string>,
+  input: string;
+  output: string;
+  wasmEngine: string;
+  enableHttpCache: boolean;
+  enableExperimentalHighResolutionTimeMethods: boolean;
+  enableAOT: boolean;
+  aotCache: string;
+  enableStackTraces: boolean;
+  excludeSources: boolean;
+  debugIntermediateFilesDir: string | undefined;
+  moduleMode: boolean;
+  doBundle: boolean;
+  env: Record<string, string>;
 };
 
-export async function compileApplicationToWasm(params: CompileApplicationToWasmParams) {
-
+export async function compileApplicationToWasm(
+  params: CompileApplicationToWasmParams,
+) {
   const {
     output,
     wasmEngine,
@@ -80,7 +84,8 @@ export async function compileApplicationToWasm(params: CompileApplicationToWasmP
   try {
     await readFile(input, { encoding: 'utf-8' });
   } catch (maybeError: unknown) {
-    const error = maybeError instanceof Error ? maybeError : new Error(String(maybeError));
+    const error =
+      maybeError instanceof Error ? maybeError : new Error(String(maybeError));
     console.error(
       `Error: Failed to open the \`input\` (${input})`,
       error.message,
@@ -138,7 +143,10 @@ export async function compileApplicationToWasm(params: CompileApplicationToWasmP
         recursive: true,
       });
     } catch (maybeError: unknown) {
-      const error = maybeError instanceof Error ? maybeError : new Error(String(maybeError));
+      const error =
+        maybeError instanceof Error
+          ? maybeError
+          : new Error(String(maybeError));
       console.error(
         `Error: Failed to create the \`debug-intermediate-files\` (${debugIntermediateFilesDir}) directory`,
         error.message,
@@ -164,7 +172,10 @@ export async function compileApplicationToWasm(params: CompileApplicationToWasmP
         enableStackTraces,
       });
     } catch (maybeError: unknown) {
-      const error = maybeError instanceof Error ? maybeError : new Error(String(maybeError));
+      const error =
+        maybeError instanceof Error
+          ? maybeError
+          : new Error(String(maybeError));
       console.error(`Error:`, error.message);
       process.exit(1);
     }
@@ -215,7 +226,10 @@ export async function compileApplicationToWasm(params: CompileApplicationToWasmP
     if (enableStackTraces) {
       // Compose source maps
       const replaceSourceMapToken = '__FINAL_SOURCE_MAP__';
-      let excludePatterns: ExcludePattern[] = ['forbid-entry:/**', 'node_modules/**'];
+      let excludePatterns: ExcludePattern[] = [
+        'forbid-entry:/**',
+        'node_modules/**',
+      ];
       if (excludeSources) {
         excludePatterns = [() => true];
       }
@@ -274,7 +288,9 @@ export async function compileApplicationToWasm(params: CompileApplicationToWasmP
       ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
         enableExperimentalHighResolutionTimeMethods ? '1' : '0',
       ENABLE_EXPERIMENTAL_HTTP_CACHE: enableHttpCache ? '1' : '0',
-      RUST_MIN_STACK: String(Math.max(8 * 1024 * 1024, Math.floor(freemem() * 0.1))),
+      RUST_MIN_STACK: String(
+        Math.max(8 * 1024 * 1024, Math.floor(freemem() * 0.1)),
+      ),
     },
   } satisfies SpawnSyncOptionsWithStringEncoding;
 
@@ -364,7 +380,8 @@ export async function compileApplicationToWasm(params: CompileApplicationToWasmP
       }
     }
   } catch (maybeError: unknown) {
-    const error = maybeError instanceof Error ? maybeError : new Error(String(maybeError));
+    const error =
+      maybeError instanceof Error ? maybeError : new Error(String(maybeError));
     throw new Error(
       `Error: Failed to compile JavaScript to Wasm:\n${error.message}`,
     );

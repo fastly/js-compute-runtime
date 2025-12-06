@@ -5,7 +5,9 @@ export type SwallowTopLevelExportsPluginParams = {
   entry?: string;
 };
 
-export function swallowTopLevelExportsPlugin(opts?: SwallowTopLevelExportsPluginParams) {
+export function swallowTopLevelExportsPlugin(
+  opts?: SwallowTopLevelExportsPluginParams,
+) {
   const { entry } = opts ?? {};
 
   const name = 'swallow-top-level-exports';
