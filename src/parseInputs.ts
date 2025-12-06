@@ -1,7 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { dirname, join, isAbsolute } from 'node:path';
-import { unknownArgument } from './unknownArgument.js';
-import { tooManyEngines } from './tooManyEngines.js';
+import { tooManyEngines, unknownArgument } from './printHelp.js';
 import { EnvParser } from './env.js';
 
 export type ParsedInputs =

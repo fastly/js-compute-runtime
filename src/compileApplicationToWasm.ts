@@ -12,8 +12,7 @@ import { rmSync } from 'node:fs';
 import weval from '@bytecodealliance/weval';
 import wizer from '@bytecodealliance/wizer';
 
-import { isFile } from './isFile.js';
-import { isFileOrDoesNotExist } from './isFileOrDoesNotExist.js';
+import { isDirectory, isFile } from './isFile.js';
 import { postbundle } from './postbundle.js';
 import { bundle } from './bundle.js';
 import { composeSourcemaps, ExcludePattern } from './composeSourcemaps.js';
@@ -102,30 +101,29 @@ export async function compileApplicationToWasm(params: CompileApplicationToWasmP
     );
     process.exit(1);
   }
+
+  // If output exists already, make sure it's not a directory
+  // (we'll try to overwrite it if it's a file)
+  try {
+    if (await isDirectory(output)) {
+      console.error(
+        `Error: The \`output\` path points to a directory: ${output}`,
+      );
+      process.exit(1);
+    }
+  } catch {
+    // Output doesn't exist
+  }
+
   try {
     await mkdir(dirname(output), {
       recursive: true,
     });
   } catch (maybeError: unknown) {
-    const error = maybeError instanceof Error ? maybeError : new Error(String(maybeError));
+    const error =
+      maybeError instanceof Error ? maybeError : new Error(String(maybeError));
     console.error(
-      `Error: Failed to create the \`output\` (${output}) directory`,
-      error.message,
-    );
-    process.exit(1);
-  }
-
-  try {
-    if (!(await isFileOrDoesNotExist(output))) {
-      console.error(
-        `Error: The \`output\` path does not point to a file: ${output}`,
-      );
-      process.exit(1);
-    }
-  } catch (maybeError: unknown) {
-    const error = maybeError instanceof Error ? maybeError : new Error(String(maybeError));
-    console.error(
-      `Error: Failed to check whether the \`output\` (${output}) is a file path`,
+      `Error: Failed to create the \`output\` (${dirname(output)}) directory: ${output}`,
       error.message,
     );
     process.exit(1);

@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 
 import { parseInputs } from '../parseInputs.js';
-import { printVersion } from '../printVersion.js';
-import { printHelp } from '../printHelp.js';
+import { printHelp, printVersion } from '../printHelp.js';
 import { addSdkMetadataField } from '../addSdkMetadataField.js';
 
 const parsedInputs = await parseInputs(process.argv.slice(2));
