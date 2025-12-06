@@ -1,7 +1,12 @@
 import { dirname, isAbsolute, resolve } from 'node:path';
+import { type Plugin } from 'esbuild';
 
-export function swallowTopLevelExportsPlugin(opts) {
-  const { entry } = opts;
+export type SwallowTopLevelExportsPluginParams = {
+  entry?: string;
+};
+
+export function swallowTopLevelExportsPlugin(opts?: SwallowTopLevelExportsPluginParams) {
+  const { entry } = opts ?? {};
 
   const name = 'swallow-top-level-exports';
   const namespace = 'swallow-top-level';
@@ -33,5 +38,5 @@ export function swallowTopLevelExportsPlugin(opts) {
         };
       });
     },
-  };
+  } satisfies Plugin;
 }

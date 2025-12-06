@@ -1,6 +1,6 @@
 import { dirname, resolve, sep, normalize } from 'node:path';
 import { tmpdir, freemem } from 'node:os';
-import { spawnSync } from 'node:child_process';
+import { spawnSync, type SpawnSyncOptionsWithStringEncoding } from 'node:child_process';
 import {
   mkdir,
   readFile,
@@ -9,41 +9,61 @@ import {
   copyFile,
 } from 'node:fs/promises';
 import { rmSync } from 'node:fs';
-import wizer from '@bytecodealliance/wizer';
 import weval from '@bytecodealliance/weval';
+import wizer from '@bytecodealliance/wizer';
 
 import { isFile } from './isFile.js';
 import { isFileOrDoesNotExist } from './isFileOrDoesNotExist.js';
 import { postbundle } from './postbundle.js';
 import { bundle } from './bundle.js';
-import { composeSourcemaps } from './composeSourcemaps.js';
+import { composeSourcemaps, ExcludePattern } from './composeSourcemaps.js';
 
 const maybeWindowsPath =
   process.platform === 'win32'
-    ? (path) => {
+    ? (path: string) => {
         return '//?/' + path.replace(/\\/g, '/');
       }
-    : (path) => path;
+    : (path: string) => path;
 
 async function getTmpDir() {
   return await mkdtemp(normalize(tmpdir() + sep));
 }
 
-export async function compileApplicationToWasm({
-  input,
-  output,
-  wasmEngine,
-  enableHttpCache = false,
-  enableExperimentalHighResolutionTimeMethods = false,
-  enableAOT = false,
-  aotCache = '',
-  enableStackTraces,
-  excludeSources,
-  debugIntermediateFilesDir,
-  moduleMode = false,
-  doBundle = false,
-  env,
-}) {
+export type CompileApplicationToWasmParams = {
+  input: string,
+  output: string,
+  wasmEngine: string,
+  enableHttpCache: boolean,
+  enableExperimentalHighResolutionTimeMethods: boolean,
+  enableAOT: boolean,
+  aotCache: string,
+  enableStackTraces: boolean,
+  excludeSources: boolean,
+  debugIntermediateFilesDir: string | undefined,
+  moduleMode: boolean,
+  doBundle: boolean,
+  env: Record<string, string>,
+};
+
+export async function compileApplicationToWasm(params: CompileApplicationToWasmParams) {
+
+  const {
+    output,
+    wasmEngine,
+    enableHttpCache = false,
+    enableExperimentalHighResolutionTimeMethods = false,
+    enableAOT = false,
+    aotCache = '',
+    enableStackTraces,
+    excludeSources,
+    debugIntermediateFilesDir,
+    moduleMode = false,
+    doBundle = false,
+    env,
+  } = params;
+
+  let input = params.input;
+
   try {
     if (!(await isFile(input))) {
       console.error(
@@ -60,7 +80,8 @@ export async function compileApplicationToWasm({
 
   try {
     await readFile(input, { encoding: 'utf-8' });
-  } catch (error) {
+  } catch (maybeError: unknown) {
+    const error = maybeError instanceof Error ? maybeError : new Error(String(maybeError));
     console.error(
       `Error: Failed to open the \`input\` (${input})`,
       error.message,
@@ -85,7 +106,8 @@ export async function compileApplicationToWasm({
     await mkdir(dirname(output), {
       recursive: true,
     });
-  } catch (error) {
+  } catch (maybeError: unknown) {
+    const error = maybeError instanceof Error ? maybeError : new Error(String(maybeError));
     console.error(
       `Error: Failed to create the \`output\` (${output}) directory`,
       error.message,
@@ -100,7 +122,8 @@ export async function compileApplicationToWasm({
       );
       process.exit(1);
     }
-  } catch (error) {
+  } catch (maybeError: unknown) {
+    const error = maybeError instanceof Error ? maybeError : new Error(String(maybeError));
     console.error(
       `Error: Failed to check whether the \`output\` (${output}) is a file path`,
       error.message,
@@ -116,7 +139,8 @@ export async function compileApplicationToWasm({
       await mkdir(debugIntermediateFilesDir, {
         recursive: true,
       });
-    } catch (error) {
+    } catch (maybeError: unknown) {
+      const error = maybeError instanceof Error ? maybeError : new Error(String(maybeError));
       console.error(
         `Error: Failed to create the \`debug-intermediate-files\` (${debugIntermediateFilesDir}) directory`,
         error.message,
@@ -141,7 +165,8 @@ export async function compileApplicationToWasm({
         moduleMode,
         enableStackTraces,
       });
-    } catch (error) {
+    } catch (maybeError: unknown) {
+      const error = maybeError instanceof Error ? maybeError : new Error(String(maybeError));
       console.error(`Error:`, error.message);
       process.exit(1);
     }
@@ -192,7 +217,7 @@ export async function compileApplicationToWasm({
     if (enableStackTraces) {
       // Compose source maps
       const replaceSourceMapToken = '__FINAL_SOURCE_MAP__';
-      let excludePatterns = ['forbid-entry:/**', 'node_modules/**'];
+      let excludePatterns: ExcludePattern[] = ['forbid-entry:/**', 'node_modules/**'];
       if (excludeSources) {
         excludePatterns = [() => true];
       }
@@ -251,17 +276,16 @@ export async function compileApplicationToWasm({
       ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
         enableExperimentalHighResolutionTimeMethods ? '1' : '0',
       ENABLE_EXPERIMENTAL_HTTP_CACHE: enableHttpCache ? '1' : '0',
-      RUST_MIN_STACK: Math.max(8 * 1024 * 1024, Math.floor(freemem() * 0.1)),
+      RUST_MIN_STACK: String(Math.max(8 * 1024 * 1024, Math.floor(freemem() * 0.1))),
     },
-  };
+  } satisfies SpawnSyncOptionsWithStringEncoding;
 
   try {
     if (!doBundle) {
-      // assert(moduleMode);
       if (enableAOT) {
         const wevalBin = await weval();
 
-        let wevalProcess = spawnSync(
+        const wevalProcess = spawnSync(
           `"${wevalBin}"`,
           [
             'weval',
@@ -279,7 +303,7 @@ export async function compileApplicationToWasm({
         }
         process.exitCode = wevalProcess.status;
       } else {
-        let wizerProcess = spawnSync(
+        const wizerProcess = spawnSync(
           `"${wizer}"`,
           [
             '--allow-wasi',
@@ -302,7 +326,7 @@ export async function compileApplicationToWasm({
       if (enableAOT) {
         const wevalBin = await weval();
 
-        let wevalProcess = spawnSync(
+        const wevalProcess = spawnSync(
           `"${wevalBin}"`,
           [
             'weval',
@@ -321,7 +345,7 @@ export async function compileApplicationToWasm({
         }
         process.exitCode = wevalProcess.status;
       } else {
-        let wizerProcess = spawnSync(
+        const wizerProcess = spawnSync(
           `"${wizer}"`,
           [
             '--inherit-env=true',
@@ -341,12 +365,13 @@ export async function compileApplicationToWasm({
         process.exitCode = wizerProcess.status;
       }
     }
-  } catch (error) {
+  } catch (maybeError: unknown) {
+    const error = maybeError instanceof Error ? maybeError : new Error(String(maybeError));
     throw new Error(
       `Error: Failed to compile JavaScript to Wasm:\n${error.message}`,
     );
   } finally {
-    if (doBundle) {
+    if (doBundle && tmpDir != null) {
       rmSync(tmpDir, { recursive: true });
     }
   }

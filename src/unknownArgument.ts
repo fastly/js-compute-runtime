@@ -1,4 +1,4 @@
-export function unknownArgument(cliInput) {
+export function unknownArgument(cliInput: string) {
   console.error(`error: Found argument '${cliInput}' which wasn't expected, or isn't valid in this context
 
 USAGE:

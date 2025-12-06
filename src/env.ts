@@ -1,5 +1,5 @@
 // env.js
-function parseEnvPair(pair) {
+function parseEnvPair(pair: string) {
   const trimmedPair = pair.trim();
 
   // If no '=', treat as a variable to inherit
@@ -14,7 +14,7 @@ function parseEnvPair(pair) {
     return [trimmedPair, value];
   }
 
-  const matches = trimmedPair.match(/^([^=]+)=(.*)$/);
+  const matches = /^([^=]+)=(.*)$/.exec(trimmedPair);
   if (!matches) {
     throw new Error(
       `Invalid environment variable format: ${trimmedPair}\nMust be in format KEY=VALUE or an existing environment variable name`,
@@ -33,8 +33,8 @@ function parseEnvPair(pair) {
   return [key, value];
 }
 
-function parseEnvString(envString) {
-  const result = {};
+function parseEnvString(envString: string) {
+  const result: Record<string, string> = {};
 
   // Split on unescaped commas and filter out empty strings
   const pairs = envString
@@ -56,6 +56,8 @@ function parseEnvString(envString) {
 }
 
 export class EnvParser {
+  env: Record<string, string>;
+
   constructor() {
     this.env = {};
   }
@@ -65,7 +67,7 @@ export class EnvParser {
    * or names of environment variables to inherit
    * @param {string} value - The environment variable string to parse
    */
-  parse(value) {
+  parse(value: string) {
     if (!value) {
       throw new Error(
         'Invalid environment variable format: \nMust be in format KEY=VALUE or an existing environment variable name',

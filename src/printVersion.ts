@@ -8,6 +8,6 @@ export async function printVersion() {
   const packageJson = await readFile(join(__dirname, '../package.json'), {
     encoding: 'utf-8',
   });
-  const version = JSON.parse(packageJson).version;
+  const version = (JSON.parse(packageJson) as { version: string }).version;
   console.log(`${basename(argv[1])} ${version}`);
 }
