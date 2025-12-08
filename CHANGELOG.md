@@ -1,13 +1,5 @@
 # Changelog
 
-## 3.37.0 (2025-12-08)
-
-### Added
-
-* Add `tlsJA4` property to `ClientInfo` for JA4 TLS fingerprint
-* Add `h2Fingerprint` property to `ClientInfo` for HTTP/2 fingerprint
-* Add `ohFingerprint` property to `ClientInfo` for Original Header fingerprint
-
 ## 3.36.0 (2025-11-18)
 
 ### Added
