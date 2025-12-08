@@ -2210,4 +2210,14 @@ async function simpleCacheEntryInterfaceTests() {
       }
     },
   );
+  routes.set('/simple-cache/getOrSet/integers-1-to-50', async () => {
+    await Promise.all(
+      Array.from({ length: 50 }, (_, i) => i + 1).map((i) =>
+        SimpleCache.getOrSet(`key-${i}`, async () => ({
+          value: await fetch("https://http-me.glitch.me/time", { backend: 'httpme', cacheOverride: new CacheOverride('pass') }),
+          ttl: 10,
+        })),
+      ),
+    );
+  });
 }
