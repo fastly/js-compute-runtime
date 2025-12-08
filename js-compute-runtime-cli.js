@@ -12,6 +12,9 @@ const {
   enableExperimentalHighResolutionTimeMethods,
   moduleMode,
   bundle,
+  enableStackTraces,
+  excludeSources,
+  debugIntermediateFilesDir,
   wasmEngine,
   input,
   output,
@@ -34,7 +37,7 @@ if (version) {
   const { compileApplicationToWasm } = await import(
     './src/compileApplicationToWasm.js'
   );
-  await compileApplicationToWasm(
+  await compileApplicationToWasm({
     input,
     output,
     wasmEngine,
@@ -42,9 +45,12 @@ if (version) {
     enableExperimentalHighResolutionTimeMethods,
     enableAOT,
     aotCache,
+    enableStackTraces,
+    excludeSources,
+    debugIntermediateFilesDir,
     moduleMode,
-    bundle,
+    doBundle: bundle,
     env,
-  );
+  });
   await addSdkMetadataField(output, enableAOT);
 }

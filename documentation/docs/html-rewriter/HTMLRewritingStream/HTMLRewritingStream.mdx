@@ -25,7 +25,7 @@ In this example, we fetch an HTML page and use the HTML rewriter to add an attri
 ```js
 /// <reference types="@fastly/js-compute" />
 
-import { HTMLRewritingStream } from 'fastly/html-rewriter';
+import { HTMLRewritingStream } from 'fastly:html-rewriter';
 
 async function handleRequest(event) {
   let transformer = new HTMLRewritingStream()

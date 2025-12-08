@@ -1,6 +1,14 @@
+import { rename } from 'node:fs/promises';
+import { dirname, basename, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 
-let fastlyPlugin = {
+import { swallowTopLevelExportsPlugin } from './swallowTopLevelExportsPlugin.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const fastlyPlugin = {
   name: 'fastly',
   setup(build) {
     build.onResolve({ filter: /^fastly:.*/ }, (args) => {
@@ -74,6 +82,8 @@ export const setBaseURL = Object.getOwnPropertyDescriptor(globalThis.fastly, 'ba
 export const setDefaultBackend = Object.getOwnPropertyDescriptor(globalThis.fastly, 'defaultBackend').set;
 export const allowDynamicBackends = Object.getOwnPropertyDescriptor(globalThis.fastly, 'allowDynamicBackends').set;
 export const sdkVersion = globalThis.fastly.sdkVersion;
+export const mapAndLogError = (e) => globalThis.__fastlyMapAndLogError(e);
+export const mapError = (e) => globalThis.__fastlyMapError(e);
 `,
           };
         }
@@ -150,14 +160,40 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
   },
 };
 
-export async function bundle(input, moduleMode = false) {
-  return await build({
+export async function bundle(
+  input,
+  outfile,
+  { moduleMode = false, enableStackTraces = false },
+) {
+  // Build output file in cwd first to build sourcemap with correct paths
+  const bundle = resolve(basename(outfile));
+
+  const plugins = [fastlyPlugin];
+  if (moduleMode) {
+    plugins.push(swallowTopLevelExportsPlugin({ entry: input }));
+  }
+
+  const inject = [];
+  if (enableStackTraces) {
+    inject.push(resolve(__dirname, './rsrc/trace-mapping.inject.js'));
+  }
+
+  await build({
     conditions: ['fastly'],
     entryPoints: [input],
     bundle: true,
-    write: false,
+    write: true,
+    outfile: bundle,
+    sourcemap: 'external',
+    sourcesContent: true,
     format: moduleMode ? 'esm' : 'iife',
     tsconfig: undefined,
-    plugins: [fastlyPlugin],
+    plugins,
+    inject,
   });
+
+  await rename(bundle, outfile);
+  if (enableStackTraces) {
+    await rename(bundle + '.map', outfile + '.map');
+  }
 }
