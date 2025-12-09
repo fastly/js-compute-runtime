@@ -466,7 +466,10 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
     });
     strictEqual(calledAfterSend, true);
     // verify we get a proper response (url included in response)
-    strictEqual('https://http-me.glitch.me/anything' + (await res.json()).url, url);
+    strictEqual(
+      'https://http-me.glitch.me/anything' + (await res.json()).url,
+      url,
+    );
   });
 
   // Test response property mutations
