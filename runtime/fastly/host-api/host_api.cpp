@@ -1634,7 +1634,7 @@ Result<HostBytes> HttpReq::downstream_client_ip_addr() {
   fastly::fastly_world_list_u8 octets;
   octets.ptr = static_cast<uint8_t *>(cabi_malloc(16, 1));
   fastly::fastly_host_error err;
-  if (!convert_result(fastly::req_downstream_client_ip_addr_get(octets.ptr, &octets.len), &err)) {
+  if (!convert_result(fastly::downstream_client_ip_addr(this->handle, octets.ptr, &octets.len), &err)) {
     cabi_free(octets.ptr);
     res.emplace_err(err);
   } else {
@@ -1651,7 +1651,7 @@ Result<HostBytes> HttpReq::downstream_server_ip_addr() {
   fastly::fastly_world_list_u8 octets;
   octets.ptr = static_cast<uint8_t *>(cabi_malloc(16, 1));
   fastly::fastly_host_error err;
-  if (!convert_result(fastly::req_downstream_server_ip_addr_get(octets.ptr, &octets.len), &err)) {
+  if (!convert_result(fastly::downstream_server_ip_addr(this->handle, octets.ptr, &octets.len), &err)) {
     cabi_free(octets.ptr);
     res.emplace_err(err);
   } else {
@@ -1661,8 +1661,8 @@ Result<HostBytes> HttpReq::downstream_server_ip_addr() {
   return res;
 }
 
-// http-req-downstream-tls-cipher-openssl-name: func() -> result<string, error>
-Result<std::optional<HostString>> HttpReq::http_req_downstream_tls_cipher_openssl_name() {
+// downstream-tls-cipher-openssl-name: func(req_handle) -> result<string, error>
+Result<std::optional<HostString>> HttpReq::downstream_tls_cipher_openssl_name() {
   TRACE_CALL()
   Result<std::optional<HostString>> res;
 
@@ -1670,12 +1670,14 @@ Result<std::optional<HostString>> HttpReq::http_req_downstream_tls_cipher_openss
   fastly::fastly_world_string ret;
   auto default_size = 128;
   ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
-  auto status = fastly::req_downstream_tls_cipher_openssl_name(reinterpret_cast<char *>(ret.ptr),
-                                                               default_size, &ret.len);
+  auto status = fastly::downstream_tls_cipher_openssl_name(this->handle,
+                                                           reinterpret_cast<char *>(ret.ptr),
+                                                           default_size, &ret.len);
   if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
-    status = fastly::req_downstream_tls_cipher_openssl_name(reinterpret_cast<char *>(ret.ptr),
-                                                            ret.len, &ret.len);
+    status = fastly::downstream_tls_cipher_openssl_name(this->handle,
+                                                        reinterpret_cast<char *>(ret.ptr),
+                                                        ret.len, &ret.len);
   }
 
   if (!convert_result(status, &err)) {
@@ -1692,8 +1694,8 @@ Result<std::optional<HostString>> HttpReq::http_req_downstream_tls_cipher_openss
   return res;
 }
 
-// http-req-downstream-tls-protocol: func() -> result<string, error>
-Result<std::optional<HostString>> HttpReq::http_req_downstream_tls_protocol() {
+// downstream-tls-protocol: func(req_handle) -> result<string, error>
+Result<std::optional<HostString>> HttpReq::downstream_tls_protocol() {
   TRACE_CALL()
   Result<std::optional<HostString>> res;
 
@@ -1701,12 +1703,13 @@ Result<std::optional<HostString>> HttpReq::http_req_downstream_tls_protocol() {
   fastly::fastly_world_string ret;
   auto default_size = 32;
   ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
-  auto status = fastly::req_downstream_tls_protocol(reinterpret_cast<char *>(ret.ptr), default_size,
-                                                    &ret.len);
+  auto status = fastly::downstream_tls_protocol(this->handle,
+                                                reinterpret_cast<char *>(ret.ptr), default_size,
+                                                &ret.len);
   if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
-    status =
-        fastly::req_downstream_tls_protocol(reinterpret_cast<char *>(ret.ptr), ret.len, &ret.len);
+    status = fastly::downstream_tls_protocol(this->handle,
+                                             reinterpret_cast<char *>(ret.ptr), ret.len, &ret.len);
   }
   if (!convert_result(status, &err)) {
     cabi_free(ret.ptr);
@@ -1722,8 +1725,8 @@ Result<std::optional<HostString>> HttpReq::http_req_downstream_tls_protocol() {
   return res;
 }
 
-// http-req-downstream-tls-client-hello: func() -> result<list<u8>, error>
-Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_client_hello() {
+// downstream-tls-client-hello: func(req_handle) -> result<list<u8>, error>
+Result<std::optional<HostBytes>> HttpReq::downstream_tls_client_hello() {
   TRACE_CALL()
   Result<std::optional<HostBytes>> res;
 
@@ -1731,10 +1734,10 @@ Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_client_hello()
   fastly::fastly_host_error err;
   auto default_size = 512;
   ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
-  auto status = fastly::req_downstream_tls_client_hello(ret.ptr, default_size, &ret.len);
+  auto status = fastly::downstream_tls_client_hello(this->handle, ret.ptr, default_size, &ret.len);
   if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
-    status = fastly::req_downstream_tls_client_hello(ret.ptr, ret.len, &ret.len);
+    status = fastly::downstream_tls_client_hello(this->handle, ret.ptr, ret.len, &ret.len);
   }
 
   if (!convert_result(status, &err)) {
@@ -1751,8 +1754,8 @@ Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_client_hello()
   return res;
 }
 
-// http-req-downstream-tls-raw-client-certificate: func() -> result<list<u8>, error>
-Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_raw_client_certificate() {
+// downstream-tls-raw-client-certificate: func(req_handle) -> result<list<u8>, error>
+Result<std::optional<HostBytes>> HttpReq::downstream_tls_raw_client_certificate() {
   TRACE_CALL()
   Result<std::optional<HostBytes>> res;
 
@@ -1760,10 +1763,10 @@ Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_raw_client_cer
   fastly::fastly_host_error err;
   auto default_size = 4096;
   ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
-  auto status = fastly::req_downstream_tls_raw_client_certificate(ret.ptr, default_size, &ret.len);
+  auto status = fastly::downstream_tls_raw_client_certificate(this->handle, ret.ptr, default_size, &ret.len);
   if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
-    status = fastly::req_downstream_tls_raw_client_certificate(ret.ptr, ret.len, &ret.len);
+    status = fastly::downstream_tls_raw_client_certificate(this->handle, ret.ptr, ret.len, &ret.len);
   }
   if (!convert_result(status, &err)) {
     cabi_free(ret.ptr);
@@ -1779,8 +1782,8 @@ Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_raw_client_cer
   return res;
 }
 
-// http-req-downstream-tls-ja3-md5: func() -> result<list<u8>, error>
-Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_ja3_md5() {
+// downstream-tls-ja3-md5: func(req_handle) -> result<list<u8>, error>
+Result<std::optional<HostBytes>> HttpReq::downstream_tls_ja3_md5() {
   TRACE_CALL()
   Result<std::optional<HostBytes>> res;
 
@@ -1788,10 +1791,10 @@ Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_ja3_md5() {
   fastly::fastly_host_error err;
   auto default_size = 16;
   ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
-  auto status = fastly::req_downstream_tls_ja3_md5(ret.ptr, &ret.len);
+  auto status = fastly::downstream_tls_ja3_md5(this->handle, ret.ptr, &ret.len);
   if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
-    status = fastly::req_downstream_tls_ja3_md5(ret.ptr, &ret.len);
+    status = fastly::downstream_tls_ja3_md5(this->handle, ret.ptr, &ret.len);
   }
   if (!convert_result(status, &err)) {
     cabi_free(ret.ptr);
@@ -1807,8 +1810,8 @@ Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_ja3_md5() {
   return res;
 }
 
-// http-req-downstream-tls-ja4: func() -> result<option<string>, error>
-Result<std::optional<HostString>> HttpReq::http_req_downstream_tls_ja4() {
+// downstream-tls-ja4: func(req_handle) -> result<option<string>, error>
+Result<std::optional<HostString>> HttpReq::downstream_tls_ja4() {
   TRACE_CALL()
   Result<std::optional<HostString>> res;
 
@@ -1816,10 +1819,10 @@ Result<std::optional<HostString>> HttpReq::http_req_downstream_tls_ja4() {
   fastly::fastly_world_string ret;
   auto default_size = 128;
   ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
-  auto status = fastly::req_downstream_tls_ja4(ret.ptr, default_size, &ret.len);
+  auto status = fastly::downstream_tls_ja4(this->handle, ret.ptr, default_size, &ret.len);
   if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
-    status = fastly::req_downstream_tls_ja4(ret.ptr, ret.len, &ret.len);
+    status = fastly::downstream_tls_ja4(this->handle, ret.ptr, ret.len, &ret.len);
   }
   if (!convert_result(status, &err)) {
     cabi_free(ret.ptr);
@@ -1835,8 +1838,8 @@ Result<std::optional<HostString>> HttpReq::http_req_downstream_tls_ja4() {
   return res;
 }
 
-// http-req-downstream-client-h2-fingerprint: func() -> result<option<string>, error>
-Result<std::optional<HostString>> HttpReq::http_req_downstream_client_h2_fingerprint() {
+// downstream-client-h2-fingerprint: func(req_handle) -> result<option<string>, error>
+Result<std::optional<HostString>> HttpReq::downstream_client_h2_fingerprint() {
   TRACE_CALL()
   Result<std::optional<HostString>> res;
 
@@ -1844,10 +1847,10 @@ Result<std::optional<HostString>> HttpReq::http_req_downstream_client_h2_fingerp
   fastly::fastly_world_string ret;
   auto default_size = 128;
   ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
-  auto status = fastly::req_downstream_client_h2_fingerprint(ret.ptr, default_size, &ret.len);
+  auto status = fastly::downstream_client_h2_fingerprint(this->handle, ret.ptr, default_size, &ret.len);
   if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
-    status = fastly::req_downstream_client_h2_fingerprint(ret.ptr, ret.len, &ret.len);
+    status = fastly::downstream_client_h2_fingerprint(this->handle, ret.ptr, ret.len, &ret.len);
   }
   if (!convert_result(status, &err)) {
     cabi_free(ret.ptr);
@@ -1863,8 +1866,8 @@ Result<std::optional<HostString>> HttpReq::http_req_downstream_client_h2_fingerp
   return res;
 }
 
-// http-req-downstream-client-oh-fingerprint: func() -> result<option<string>, error>
-Result<std::optional<HostString>> HttpReq::http_req_downstream_client_oh_fingerprint() {
+// downstream-client-oh-fingerprint: func(req_handle) -> result<option<string>, error>
+Result<std::optional<HostString>> HttpReq::downstream_client_oh_fingerprint() {
   TRACE_CALL()
   Result<std::optional<HostString>> res;
 
@@ -1872,10 +1875,38 @@ Result<std::optional<HostString>> HttpReq::http_req_downstream_client_oh_fingerp
   fastly::fastly_world_string ret;
   auto default_size = 128;
   ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
-  auto status = fastly::req_downstream_client_oh_fingerprint(ret.ptr, default_size, &ret.len);
+  auto status = fastly::downstream_client_oh_fingerprint(this->handle, ret.ptr, default_size, &ret.len);
   if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
-    status = fastly::req_downstream_client_oh_fingerprint(ret.ptr, ret.len, &ret.len);
+    status = fastly::downstream_client_oh_fingerprint(this->handle, ret.ptr, ret.len, &ret.len);
+  }
+  if (!convert_result(status, &err)) {
+    cabi_free(ret.ptr);
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(make_host_string(ret));
+  }
+
+  return res;
+}
+
+// downstream-tls-client-servername: func(req_handle) -> result<option<string>, error>
+Result<std::optional<HostString>> HttpReq::downstream_tls_client_servername() {
+  TRACE_CALL()
+  Result<std::optional<HostString>> res;
+
+  fastly::fastly_host_error err;
+  fastly::fastly_world_string ret;
+  auto default_size = 256;
+  ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
+  auto status = fastly::downstream_tls_client_servername(this->handle, ret.ptr, default_size, &ret.len);
+  if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
+    status = fastly::downstream_tls_client_servername(this->handle, ret.ptr, ret.len, &ret.len);
   }
   if (!convert_result(status, &err)) {
     cabi_free(ret.ptr);

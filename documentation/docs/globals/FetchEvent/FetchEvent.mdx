@@ -37,6 +37,8 @@ It provides the [`event.respondWith()`](./prototype/respondWith.mdx) method, whi
         - : Either `null` or a string representation of the HTTP/2 fingerprint for HTTP/2 connections. Returns `null` for HTTP/1.1 connections.
     - `FetchEvent.client.ohFingerprint` _**readonly**_
         - : Either `null` or a string representation of the Original Header fingerprint based on the order and presence of request headers.
+    - `FetchEvent.client.tlsClientServername` _**readonly**_
+        - : Either `null` or a string representation of the SNI (Server Name Indication) hostname from the TLS handshake.
 - `FetchEvent.server` _**readonly**_
     - : Information about the server receiving the request for the Fastly Compute service.
     - `FetchEvent.server.address` _**readonly**_

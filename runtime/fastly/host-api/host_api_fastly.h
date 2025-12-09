@@ -558,26 +558,38 @@ public:
   /// Fetch the downstream request/body pair
   static Result<Request> downstream_get();
 
-  /// Get the downstream ip address.
-  static Result<HostBytes> downstream_client_ip_addr();
+  /// Get the downstream client ip address.
+  Result<HostBytes> downstream_client_ip_addr();
 
-  static Result<HostBytes> downstream_server_ip_addr();
+  /// Get the downstream server ip address.
+  Result<HostBytes> downstream_server_ip_addr();
 
-  static Result<std::optional<HostString>> http_req_downstream_tls_cipher_openssl_name();
+  /// Get the TLS cipher OpenSSL name.
+  Result<std::optional<HostString>> downstream_tls_cipher_openssl_name();
 
-  static Result<std::optional<HostString>> http_req_downstream_tls_protocol();
+  /// Get the TLS protocol version.
+  Result<std::optional<HostString>> downstream_tls_protocol();
 
-  static Result<std::optional<HostBytes>> http_req_downstream_tls_client_hello();
+  /// Get the TLS ClientHello.
+  Result<std::optional<HostBytes>> downstream_tls_client_hello();
 
-  static Result<std::optional<HostBytes>> http_req_downstream_tls_raw_client_certificate();
+  /// Get the raw client certificate.
+  Result<std::optional<HostBytes>> downstream_tls_raw_client_certificate();
 
-  static Result<std::optional<HostBytes>> http_req_downstream_tls_ja3_md5();
+  /// Get the JA3 MD5 hash.
+  Result<std::optional<HostBytes>> downstream_tls_ja3_md5();
 
-  static Result<std::optional<HostString>> http_req_downstream_tls_ja4();
+  /// Get the JA4 fingerprint.
+  Result<std::optional<HostString>> downstream_tls_ja4();
 
-  static Result<std::optional<HostString>> http_req_downstream_client_h2_fingerprint();
+  /// Get the HTTP/2 fingerprint.
+  Result<std::optional<HostString>> downstream_client_h2_fingerprint();
 
-  static Result<std::optional<HostString>> http_req_downstream_client_oh_fingerprint();
+  /// Get the Original Header fingerprint.
+  Result<std::optional<HostString>> downstream_client_oh_fingerprint();
+
+  /// Get the TLS client servername (SNI).
+  Result<std::optional<HostString>> downstream_tls_client_servername();
 
   Result<Void> auto_decompress_gzip();
 

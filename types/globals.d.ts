@@ -441,6 +441,7 @@ declare interface ClientInfo {
   readonly ohFingerprint: string | null;
   readonly tlsCipherOpensslName: string | null;
   readonly tlsProtocol: string | null;
+  readonly tlsClientServername: string | null;
   readonly tlsClientCertificate: ArrayBuffer | null;
   readonly tlsClientHello: ArrayBuffer | null;
 }

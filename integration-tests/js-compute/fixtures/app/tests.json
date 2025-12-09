@@ -452,6 +452,7 @@
   "GET /client/tlsJA4": {},
   "GET /client/h2Fingerprint": {},
   "GET /client/ohFingerprint": {},
+  "GET /client/tlsClientServername": {},
   "GET /config-store": {
     "flake": true
   },
