@@ -31,6 +31,14 @@ It provides the [`event.respondWith()`](./prototype/respondWith.mdx) method, whi
         - : Either `null` or an ArrayBuffer containing the raw client certificate in the mutual TLS handshake message. It is in PEM format. Returns an empty ArrayBuffer if this is not mTLS or available.
     - `FetchEvent.client.tlsClientHello` _**readonly**_
         - : Either `null` or an ArrayBuffer containing the raw bytes sent by the client in the TLS ClientHello message.
+    - `FetchEvent.client.tlsJA4` _**readonly**_
+        - : Either `null` or a string representation of the JA4 fingerprint of the TLS ClientHello message.
+    - `FetchEvent.client.h2Fingerprint` _**readonly**_
+        - : Either `null` or a string representation of the HTTP/2 fingerprint for HTTP/2 connections. Returns `null` for HTTP/1.1 connections.
+    - `FetchEvent.client.ohFingerprint` _**readonly**_
+        - : Either `null` or a string representation of the Original Header fingerprint based on the order and presence of request headers.
+    - `FetchEvent.client.tlsClientServername` _**readonly**_
+        - : Either `null` or a string representation of the SNI (Server Name Indication) hostname from the TLS handshake.
 - `FetchEvent.server` _**readonly**_
     - : Information about the server receiving the request for the Fastly Compute service.
     - `FetchEvent.server.address` _**readonly**_

@@ -15,19 +15,28 @@ class ClientInfo final : public builtins::BuiltinNoConstructor<ClientInfo> {
   static bool tls_protocol_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool tls_client_hello_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool tls_ja3_md5_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool tls_ja4_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool h2_fingerprint_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool oh_fingerprint_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool tls_client_certificate_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool tls_client_servername_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:
   static constexpr const char *class_name = "ClientInfo";
 
   enum class Slots {
+    RequestHandle,
     Address,
     GeoInfo,
     Cipher,
     Protocol,
     ClientHello,
     JA3,
+    JA4,
+    H2Fingerprint,
+    OHFingerprint,
     ClientCert,
+    Servername,
     Count,
   };
   static const JSFunctionSpec static_methods[];
@@ -35,7 +44,7 @@ public:
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 
-  static JSObject *create(JSContext *cx);
+  static JSObject *create(JSContext *cx, uint32_t req_handle);
 };
 
 class ServerInfo final : public builtins::BuiltinNoConstructor<ServerInfo> {
@@ -45,6 +54,7 @@ public:
   static constexpr const char *class_name = "ServerInfo";
 
   enum class Slots {
+    RequestHandle,
     Address,
     Count,
   };
@@ -53,7 +63,7 @@ public:
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 
-  static JSObject *create(JSContext *cx);
+  static JSObject *create(JSContext *cx, uint32_t req_handle);
 };
 
 void dispatch_fetch_event(HandleObject event);

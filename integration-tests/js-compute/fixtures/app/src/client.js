@@ -74,3 +74,53 @@ routes.set('/client/tlsProtocol', (event) => {
     );
   }
 });
+
+routes.set('/client/tlsJA4', (event) => {
+  if (isRunningLocally()) {
+    strictEqual(event.client.tlsJA4, null);
+  } else {
+    strictEqual(
+      typeof event.client.tlsJA4,
+      'string',
+      'typeof event.client.tlsJA4',
+    );
+  }
+});
+
+routes.set('/client/h2Fingerprint', (event) => {
+  if (isRunningLocally()) {
+    strictEqual(event.client.h2Fingerprint, null);
+  } else {
+    // h2Fingerprint may be null for HTTP/1.1 connections
+    const fp = event.client.h2Fingerprint;
+    strictEqual(
+      fp === null || typeof fp === 'string',
+      true,
+      'event.client.h2Fingerprint is null or string',
+    );
+  }
+});
+
+routes.set('/client/ohFingerprint', (event) => {
+  if (isRunningLocally()) {
+    strictEqual(event.client.ohFingerprint, null);
+  } else {
+    strictEqual(
+      typeof event.client.ohFingerprint,
+      'string',
+      'typeof event.client.ohFingerprint',
+    );
+  }
+});
+
+routes.set('/client/tlsClientServername', (event) => {
+  if (isRunningLocally()) {
+    strictEqual(event.client.tlsClientServername, null);
+  } else {
+    strictEqual(
+      typeof event.client.tlsClientServername,
+      'string',
+      'typeof event.client.tlsClientServername',
+    );
+  }
+});
