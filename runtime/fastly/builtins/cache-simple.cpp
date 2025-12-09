@@ -17,6 +17,10 @@ using fastly::FastlyGetErrorMessage;
 using fastly::fastly::convertBodyInit;
 using fastly::fetch::RequestOrResponse;
 
+namespace {
+api::Engine *GLOBAL_ENGINE;
+}
+
 namespace fastly::cache_simple {
 
 template <RequestOrResponse::BodyReadResult result_type>
@@ -394,6 +398,105 @@ bool get_or_set_catch_handler(JSContext *cx, JS::HandleObject lookup_state,
   return true;
 }
 
+bool process_pending_cache_lookup(JSContext *cx, host_api::CacheHandle::Handle handle,
+                                  JS::HandleObject context_obj, JS::HandleValue) {
+  host_api::CacheHandle pending_lookup(handle);
+  JS::RootedValue key_val(cx);
+  if (!JS_GetProperty(cx, context_obj, "key", &key_val)) {
+    return false;
+  }
+  auto key_chars = core::encode(cx, key_val);
+  JS::RootedValue set_function_val(cx);
+  if (!JS_GetProperty(cx, context_obj, "set_function", &set_function_val)) {
+    return false;
+  }
+  JS::RootedValue promise_val(cx);
+  if (!JS_GetProperty(cx, context_obj, "promise", &promise_val)) {
+    return false;
+  }
+  JS::RootedObject promise_obj(cx, &promise_val.toObject());
+
+  BEGIN_TRANSACTION(transaction, cx, promise_obj, pending_lookup);
+
+  // Check if a fresh cache item was found, if that's the case, then we will resolve
+  // with a SimpleCacheEntry containing the value. Else, call the content-provided
+  // function in the `set` parameter and insert it's returned value property into the
+  // cache under the provided `key`, and then we will resolve with a SimpleCacheEntry
+  // containing the value.
+  auto state_res = pending_lookup.get_state();
+  if (auto *err = state_res.to_err()) {
+    return false;
+  }
+
+  auto state = state_res.unwrap();
+  if (state.is_usable()) {
+    auto body_res = pending_lookup.get_body(host_api::CacheGetBodyOptions{});
+    if (auto *err = body_res.to_err()) {
+      return false;
+    }
+
+    JS::RootedObject entry(cx, SimpleCacheEntry::create(cx, body_res.unwrap()));
+    if (!entry) {
+      return false;
+    }
+
+    JS::RootedValue result(cx);
+    result.setObject(*entry);
+    JS::ResolvePromise(cx, promise_obj, result);
+    return true;
+  } else {
+    if (!set_function_val.isObject() || !JS::IsCallable(&set_function_val.toObject())) {
+      JS_ReportErrorLatin1(cx, "SimpleCache.getOrSet: set argument is not a function");
+      return false;
+    }
+    JS::RootedValueArray<0> fnargs(cx);
+    JS::RootedObject fn(cx, &set_function_val.toObject());
+    JS::RootedValue result(cx);
+    if (!JS::Call(cx, JS::NullHandleValue, fn, fnargs, &result)) {
+      return false;
+    }
+    // Coercion of `result` to a Promise<typeof result>
+    JS::RootedObject result_promise(cx, JS::CallOriginalPromiseResolve(cx, result));
+    if (!result_promise) {
+      return false;
+    }
+
+    // JS::RootedObject owner(cx, JS_NewPlainObject(cx));
+    JS::RootedObject lookup_state(cx, JS_NewPlainObject(cx));
+    JS::RootedValue handle_val(cx, JS::NumberValue(handle));
+    if (!JS_SetProperty(cx, lookup_state, "handle", handle_val)) {
+      return false;
+    }
+    JS::RootedValue keyVal(
+        cx, JS::StringValue(JS_NewStringCopyN(cx, key_chars.begin(), key_chars.len)));
+    if (!JS_SetProperty(cx, lookup_state, "key", keyVal)) {
+      return false;
+    }
+    JS::RootedValue promise_val(cx, JS::ObjectValue(*promise_obj));
+    if (!JS_SetProperty(cx, lookup_state, "promise", promise_val)) {
+      return false;
+    }
+
+    JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+    JS::RootedObject then_handler(
+        cx, create_internal_method<get_or_set_then_handler>(cx, lookup_state));
+    if (!then_handler) {
+      return false;
+    }
+    JS::RootedValue result_promise_val(cx, JS::ObjectValue(*result_promise));
+    JS::RootedObject catch_handler(
+        cx, create_internal_method<get_or_set_catch_handler>(cx, lookup_state, result_promise_val));
+    if (!then_handler) {
+      return false;
+    }
+    if (!JS::AddPromiseReactions(cx, result_promise, then_handler, catch_handler)) {
+      return false;
+    }
+    transaction.commit();
+    return true;
+  }
+}
+
 } // namespace
 
 // static getOrSet(key: string, set: () => Promise<{value: BodyInit,  ttl: number}>):
@@ -433,88 +536,32 @@ bool SimpleCache::getOrSet(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto handle = res.unwrap();
-  BEGIN_TRANSACTION(transaction, cx, promise, handle);
-
-  // Check if a fresh cache item was found, if that's the case, then we will resolve
-  // with a SimpleCacheEntry containing the value. Else, call the content-provided
-  // function in the `set` parameter and insert it's returned value property into the
-  // cache under the provided `key`, and then we will resolve with a SimpleCacheEntry
-  // containing the value.
-  auto state_res = handle.get_state();
-  if (auto *err = state_res.to_err()) {
+  // The async task requires some extra state: the key, the `set` function, and the promise.
+  // We wrap this all up into one object, so `process_pending_cache_lookup` can retrieve everything.
+  // This could be avoided with some changes to `FastlyAsyncTask`, see
+  // (https://github.com/fastly/js-compute-runtime/issues/1245)
+  JS::RootedObject context_obj(cx, JS_NewPlainObject(cx));
+  if (!context_obj) {
     return false;
   }
-
-  auto state = state_res.unwrap();
-  args.rval().setObject(*promise);
-  if (state.is_usable()) {
-    auto body_res = handle.get_body(host_api::CacheGetBodyOptions{});
-    if (auto *err = body_res.to_err()) {
-      return false;
-    }
-
-    JS::RootedObject entry(cx, SimpleCacheEntry::create(cx, body_res.unwrap()));
-    if (!entry) {
-      return false;
-    }
-
-    JS::RootedValue result(cx);
-    result.setObject(*entry);
-    JS::ResolvePromise(cx, promise, result);
-    return true;
-  } else {
-    auto arg1 = args.get(1);
-    if (!arg1.isObject() || !JS::IsCallable(&arg1.toObject())) {
-      JS_ReportErrorLatin1(cx, "SimpleCache.getOrSet: set argument is not a function");
-      return false;
-    }
-    JS::RootedValueArray<0> fnargs(cx);
-    JS::RootedObject fn(cx, &arg1.toObject());
-    JS::RootedValue result(cx);
-    if (!JS::Call(cx, JS::NullHandleValue, fn, fnargs, &result)) {
-      return false;
-    }
-    // Coercion of `result` to a Promise<typeof result>
-    JS::RootedObject result_promise(cx, JS::CallOriginalPromiseResolve(cx, result));
-    if (!result_promise) {
-      return false;
-    }
-
-    // JS::RootedObject owner(cx, JS_NewPlainObject(cx));
-    JS::RootedObject lookup_state(cx, JS_NewPlainObject(cx));
-    JS::RootedValue handle_val(cx, JS::NumberValue(handle.handle));
-    if (!JS_SetProperty(cx, lookup_state, "handle", handle_val)) {
-      return false;
-    }
-    JS::RootedValue keyVal(
-        cx, JS::StringValue(JS_NewStringCopyN(cx, key_chars.begin(), key_chars.len)));
-    if (!JS_SetProperty(cx, lookup_state, "key", keyVal)) {
-      return false;
-    }
-    JS::RootedValue promise_val(cx, JS::ObjectValue(*promise));
-    if (!JS_SetProperty(cx, lookup_state, "promise", promise_val)) {
-      return false;
-    }
-
-    JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-    JS::RootedObject then_handler(
-        cx, create_internal_method<get_or_set_then_handler>(cx, lookup_state));
-    if (!then_handler) {
-      return false;
-    }
-    JS::RootedValue result_promise_val(cx, JS::ObjectValue(*result_promise));
-    JS::RootedObject catch_handler(
-        cx, create_internal_method<get_or_set_catch_handler>(cx, lookup_state, result_promise_val));
-    if (!then_handler) {
-      return false;
-    }
-    if (!JS::AddPromiseReactions(cx, result_promise, then_handler, catch_handler)) {
-      return false;
-    }
-    transaction.commit();
-    return true;
+  JS::RootedValue key_val(cx, args.get(0));
+  if (!JS_SetProperty(cx, context_obj, "key", key_val)) {
+    return false;
   }
+  JS::RootedValue set_func_val(cx, args.get(1));
+  if (!JS_SetProperty(cx, context_obj, "set_function", set_func_val)) {
+    return false;
+  }
+  JS::RootedValue promise_val(cx, JS::ObjectValue(*promise));
+  if (!JS_SetProperty(cx, context_obj, "promise", promise_val)) {
+    return false;
+  }
+  auto handle = res.unwrap();
+  GLOBAL_ENGINE->queue_async_task(new FastlyAsyncTask(
+      handle.handle, context_obj, JS::UndefinedHandleValue, process_pending_cache_lookup));
+
+  args.rval().setObject(*promise);
+  return true;
 }
 
 // static set(key: string, value: BodyInit, ttl: number): undefined;
@@ -791,6 +838,8 @@ const JSPropertySpec SimpleCache::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "SimpleCache", JSPROP_READONLY), JS_PS_END};
 
 bool install(api::Engine *engine) {
+  GLOBAL_ENGINE = engine;
+
   if (!SimpleCacheEntry::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
