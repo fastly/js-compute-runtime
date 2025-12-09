@@ -21,6 +21,7 @@
 #include "../cache-simple.h"
 #include "../fastly.h"
 #include "../fetch-event.h"
+#include "../image-optimizer.h"
 #include "../kv-store.h"
 #include "extension-api.h"
 #include "fetch.h"
@@ -1646,7 +1647,7 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
     return false;
 
   if (done_val.toBoolean()) {
-    // The only response we ever send is the one passed to
+    // The only response with a body we ever send is the one passed to
     // `FetchEvent#respondWith` to send to the client. As such, we can be
     // certain that if we have a response here, we can advance the FetchState to
     // `responseDone`.
@@ -1734,7 +1735,7 @@ bool RequestOrResponse::body_reader_catch_handler(JSContext *cx, JS::HandleObjec
   fprintf(stderr, "Warning: body ReadableStream closed during body streaming. Exception: ");
   ENGINE->dump_value(args.get(0), stderr);
 
-  // The only response we ever send is the one passed to
+  // The only response with a body we ever send is the one passed to
   // `FetchEvent#respondWith` to send to the client. As such, we can be certain
   // that if we have a response here, we can advance the FetchState to
   // `responseDone`. (Note that even though we encountered an error,
@@ -1986,6 +1987,19 @@ bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValu
     return false;
   }
 
+  return true;
+}
+
+bool Request::set_image_optimizer_options(JSContext *cx, JS::HandleObject self,
+                                          JS::HandleValue opts_val) {
+  MOZ_ASSERT(is_instance(self));
+
+  auto opts = image_optimizer::ImageOptimizerOptions::create(cx, opts_val);
+  if (!opts) {
+    return false;
+  }
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Request::Slots::ImageOptimizerOptions),
+                      JS::PrivateValue(opts.release()));
   return true;
 }
 
@@ -2331,6 +2345,17 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
                         cache_override);
   }
 
+  JS::RootedValue image_optimizer_options(
+      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ImageOptimizerOptions)));
+  if (!image_optimizer_options.isNullOrUndefined()) {
+    if (!set_image_optimizer_options(cx, requestInstance, image_optimizer_options)) {
+      return false;
+    }
+  } else {
+    JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::ImageOptimizerOptions),
+                        image_optimizer_options);
+  }
+
   args.rval().setObject(*requestInstance);
   return true;
 }
@@ -2398,6 +2423,8 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance,
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::OverrideCacheKey),
                       JS::NullValue());
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::CacheOverride),
+                      JS::NullValue());
+  JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::ImageOptimizerOptions),
                       JS::NullValue());
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::IsDownstream),
                       JS::BooleanValue(is_downstream));
@@ -2568,6 +2595,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   JS::RootedValue cache_override(cx);
   JS::RootedValue cache_key(cx);
   JS::RootedValue fastly_val(cx);
+  JS::RootedValue image_optimizer_options(cx);
   bool hasManualFramingHeaders = false;
   bool setManualFramingHeaders = false;
   if (init_val.isObject()) {
@@ -2581,7 +2609,8 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
         !JS_GetProperty(cx, init, "cacheKey", &cache_key) ||
         !JS_GetProperty(cx, init, "fastly", &fastly_val) ||
         !JS_HasOwnProperty(cx, init, "manualFramingHeaders", &hasManualFramingHeaders) ||
-        !JS_GetProperty(cx, init, "manualFramingHeaders", &manualFramingHeaders)) {
+        !JS_GetProperty(cx, init, "manualFramingHeaders", &manualFramingHeaders) ||
+        !JS_GetProperty(cx, init, "imageOptimizerOptions", &image_optimizer_options)) {
       return nullptr;
     }
     setManualFramingHeaders = manualFramingHeaders.isBoolean() && manualFramingHeaders.toBoolean();
@@ -2871,6 +2900,13 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     }
   }
 
+  // Apply the Fastly Compute-proprietary `imageOptimizerOptions` property.
+  if (!image_optimizer_options.isUndefined()) {
+    if (!set_image_optimizer_options(cx, request, image_optimizer_options)) {
+      return nullptr;
+    }
+  }
+
   if (fastly_val.isObject()) {
     JS::RootedValue decompress_response_val(cx);
     JS::RootedObject fastly(cx, fastly_val.toObjectOrNull());
@@ -2962,9 +2998,11 @@ std::optional<host_api::HttpReq> Response::websocket_upgrade_request(JSObject *o
   MOZ_ASSERT(is_instance(obj));
   auto websocket_upgrade_request =
       JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::WebsocketUpgradeRequest));
+
   if (websocket_upgrade_request.isUndefined()) {
     return std::nullopt;
   }
+
   return host_api::HttpReq(websocket_upgrade_request.toInt32());
 }
 
@@ -3205,11 +3243,13 @@ bool Response::status_set(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // If it _is_ a CandidateResponse, then support the status set, with validation
   bool valid_status = true;
-  uint16_t status;
+  uint16_t status = 0;
   if (!args[0].isNumber() || !JS::ToUint16(cx, args[0], &status)) {
     valid_status = false;
   }
-  if (!valid_status || status < 200 || status > 599) {
+  // Allow 103: Early Hints
+  bool status_in_range = status == 103 || (status >= 200 && status < 600);
+  if (!valid_status || !status_in_range) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                               JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS, status);
     return false;
@@ -3523,7 +3563,7 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
 
-    if (status == 204 || status == 205 || status == 304) {
+    if (status == 103 || status == 204 || status == 205 || status == 304) {
       JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                                 JSMSG_RESPONSE_NULL_BODY_STATUS_WITH_BODY);
       return false;
@@ -4311,8 +4351,8 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   // 1.  If `init`["status"] is not in the range 200 to 599, inclusive, then
-  // `throw` a ``RangeError``.
-  if (status < 200 || status > 599) {
+  // `throw` a ``RangeError``. (We allow 103 Early Hints as an extension)
+  if (status != 103 && !(status >= 200 && status < 600)) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                               JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS, status);
     return false;
@@ -4416,7 +4456,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if ((!body_val.isNullOrUndefined())) {
     //     1.  If `init`["status"] is a `null body status`, then `throw` a
     //     ``TypeError``.
-    if (status == 204 || status == 205 || status == 304) {
+    if (status == 103 || status == 204 || status == 205 || status == 304) {
       JS_ReportErrorNumberLatin1(cx, FastlyGetErrorMessage, nullptr,
                                  JSMSG_RESPONSE_CONSTRUCTOR_BODY_WITH_NULL_BODY_STATUS);
       return false;
@@ -4595,7 +4635,7 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
     JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Status), JS::Int32Value(status));
     set_status_message_from_code(cx, response, status);
 
-    if (!(status == 204 || status == 205 || status == 304)) {
+    if (!(status == 103 || status == 204 || status == 205 || status == 304)) {
       JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::HasBody), JS::TrueValue());
     }
   }

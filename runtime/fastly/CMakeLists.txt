@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.27)
 
+#FIXME(1243)
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../rust-toolchain.toml" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/../StarlingMonkey")
+
 include("../StarlingMonkey/cmake/add_as_subproject.cmake")
 
 add_builtin(
@@ -28,6 +31,7 @@ add_builtin(fastly::dictionary SRC builtins/dictionary.cpp)
 add_builtin(fastly::edge_rate_limiter SRC builtins/edge-rate-limiter.cpp)
 add_builtin(fastly::config_store SRC builtins/config-store.cpp)
 add_builtin(fastly::secret_store SRC builtins/secret-store.cpp)
+add_builtin(fastly::image_optimizer SRC builtins/image-optimizer.cpp)
 
 add_builtin(fastly::fetch
   SRC

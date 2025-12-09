@@ -243,6 +243,11 @@ bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   auto grip_upgrade_request = &request_value.toObject();
 
+  RootedObject request(cx, grip_upgrade_request);
+  if (!RequestOrResponse::commit_headers(cx, request)) {
+    return false;
+  }
+
   auto response_handle = host_api::HttpResp::make();
   if (auto *err = response_handle.to_err()) {
     HANDLE_ERROR(cx, *err);
@@ -308,6 +313,11 @@ bool Fastly::createWebsocketHandoff(JSContext *cx, unsigned argc, JS::Value *vp)
     return false;
   }
   auto websocket_upgrade_request = &request_value.toObject();
+
+  RootedObject request(cx, websocket_upgrade_request);
+  if (!RequestOrResponse::commit_headers(cx, request)) {
+    return false;
+  }
 
   auto response_handle = host_api::HttpResp::make();
   if (auto *err = response_handle.to_err()) {
@@ -585,7 +595,8 @@ bool install(api::Engine *engine) {
 
   JS::SetOutOfMemoryCallback(engine->cx(), oom_callback, nullptr);
 
-  JS::RootedObject fastly(engine->cx(), JS_NewPlainObject(engine->cx()));
+  JS::RootedObject fastly(engine->cx());
+  get_fastly_object(engine, &fastly);
   if (!fastly) {
     return false;
   }
@@ -597,10 +608,6 @@ bool install(api::Engine *engine) {
 
   Fastly::baseURL.init(engine->cx());
   Fastly::defaultBackend.init(engine->cx());
-
-  if (!JS_DefineProperty(engine->cx(), engine->global(), "fastly", fastly, 0)) {
-    return false;
-  }
 
   JSFunctionSpec nowfn = JS_FN("now", Fastly::now, 0, JSPROP_ENUMERATE);
   JSFunctionSpec end = JS_FS_END;
