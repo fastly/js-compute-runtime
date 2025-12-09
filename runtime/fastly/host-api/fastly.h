@@ -532,6 +532,15 @@ int req_downstream_tls_raw_client_certificate(uint8_t *ret, size_t ret_len, size
 WASM_IMPORT("fastly_http_req", "downstream_tls_ja3_md5")
 int req_downstream_tls_ja3_md5(uint8_t *ret, size_t *nwritten);
 
+WASM_IMPORT("fastly_http_req", "downstream_tls_ja4")
+int req_downstream_tls_ja4(uint8_t *ret, size_t ret_len, size_t *nwritten);
+
+WASM_IMPORT("fastly_http_req", "downstream_client_h2_fingerprint")
+int req_downstream_client_h2_fingerprint(uint8_t *ret, size_t ret_len, size_t *nwritten);
+
+WASM_IMPORT("fastly_http_req", "downstream_client_oh_fingerprint")
+int req_downstream_client_oh_fingerprint(uint8_t *ret, size_t ret_len, size_t *nwritten);
+
 WASM_IMPORT("fastly_http_req", "new")
 int req_new(uint32_t *req_handle_out);
 

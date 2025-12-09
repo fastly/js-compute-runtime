@@ -449,6 +449,9 @@
   "GET /client/tlsClientCertificate": {},
   "GET /client/tlsCipherOpensslName": {},
   "GET /client/tlsProtocol": {},
+  "GET /client/tlsJA4": {},
+  "GET /client/h2Fingerprint": {},
+  "GET /client/ohFingerprint": {},
   "GET /config-store": {
     "flake": true
   },
