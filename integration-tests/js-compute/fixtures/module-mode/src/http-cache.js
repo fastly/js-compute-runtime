@@ -11,7 +11,7 @@ import { CacheOverride } from 'fastly:cache-override';
 
 // generate a unique URL everytime so that we never work on a populated cache
 const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
-  'https://httpbin.org/anything' + path;
+  'https://http-me.glitch.me/anything' + path;
 
 // afterSend error handling
 {

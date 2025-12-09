@@ -23,10 +23,6 @@ service_id = ""
       url = "https://compute-sdk-test-backend.edgecompute.app"
       override_host = "compute-sdk-test-backend.edgecompute.app"
 
-    [local_server.backends.httpbin]
-      url = "https://httpbin.org"
-      override_host = "httpbin.org"
-
     [local_server.backends.httpme]
       url = "https://http-me.glitch.me"
       override_host = "http-me.glitch.me"
@@ -118,11 +114,6 @@ service_id = ""
 
 [setup]
   [setup.backends]
-
-    [setup.backends.httpbin]
-      address = "httpbin.org"
-      port = 443
-
     [setup.backends.httpme]
       address = "http-me.glitch.me"
       port = 443
