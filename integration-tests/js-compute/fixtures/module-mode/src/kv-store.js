@@ -65,12 +65,7 @@ const debug = sdkVersion.endsWith('-debug');
       metadata: 'cbad',
     });
     const c5Entry = await store.get('c5');
-    if (isRunningLocally()) {
-      strictEqual(await c5Entry.text(), 'cbad');
-    } else {
-      // for some reason, compute doesn't support prepend?
-      strictEqual(await c5Entry.text(), 'd');
-    }
+    strictEqual(await c5Entry.text(), 'cbad');
     assertRejects(async () => await c5Entry.metadataText(), TypeError);
 
     // TTL only supported on compute not viceroy
