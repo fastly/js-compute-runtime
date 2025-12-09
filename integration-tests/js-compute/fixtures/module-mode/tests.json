@@ -196,7 +196,6 @@
         "date": true,
         "content-type": true,
         "fastly_service_version": true,
-        "server": true,
         "custom": "custom-header",
         "x-cache": true,
         "x-cache-hits": true,
