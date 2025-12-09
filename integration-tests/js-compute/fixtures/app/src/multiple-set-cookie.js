@@ -43,9 +43,9 @@ routes.set('/multiple-set-cookie/response-direct', async () => {
 });
 routes.set('/multiple-set-cookie/downstream', async () => {
   let response = await fetch(
-    'https://httpbin.org/cookies/set?1=1&2=2&3=3&4=4&5=5&6=6&7=7&8=8&9=9&10=10&11=11',
+    'https://http-me.glitch.me/append-header=Set-Cookie:test1=1/append-header=Set-Cookie:test2=2/append-header=Set-Cookie:test3=3/anything',
     {
-      backend: 'httpbin',
+      backend: 'httpme',
     },
   );
 
