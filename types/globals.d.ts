@@ -436,6 +436,9 @@ declare interface ClientInfo {
   readonly address: string;
   readonly geo: import('fastly:geolocation').Geolocation | null;
   readonly tlsJA3MD5: string | null;
+  readonly tlsJA4: string | null;
+  readonly h2Fingerprint: string | null;
+  readonly ohFingerprint: string | null;
   readonly tlsCipherOpensslName: string | null;
   readonly tlsProtocol: string | null;
   readonly tlsClientCertificate: ArrayBuffer | null;
@@ -1337,6 +1340,7 @@ declare interface RequestInit {
     decompressGzip?: boolean;
   };
   manualFramingHeaders?: boolean;
+  imageOptimizerOptions?: import('fastly:image-optimizer').ImageOptimizerOptions;
 }
 
 /**

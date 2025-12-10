@@ -515,6 +515,26 @@ enum class FramingHeadersMode : uint8_t {
   ManuallyFromHeaders,
 };
 
+class FastlyImageOptimizerError final {
+public:
+  enum detail { uninitialized, ok, error, warning };
+
+  FastlyImageOptimizerError(detail err, std::string msg)
+      : err(err), is_host_error(false), msg(std::move(msg)) {}
+  FastlyImageOptimizerError(APIError host_err) : host_err(host_err), is_host_error(true) {}
+
+  union {
+    APIError host_err;
+    detail err;
+  };
+  bool is_host_error;
+
+  const std::optional<std::string> message() const;
+
+private:
+  std::string msg;
+};
+
 class HttpReq final : public HttpBase {
 public:
   using Handle = uint32_t;
@@ -553,6 +573,12 @@ public:
 
   static Result<std::optional<HostBytes>> http_req_downstream_tls_ja3_md5();
 
+  static Result<std::optional<HostString>> http_req_downstream_tls_ja4();
+
+  static Result<std::optional<HostString>> http_req_downstream_client_h2_fingerprint();
+
+  static Result<std::optional<HostString>> http_req_downstream_client_oh_fingerprint();
+
   Result<Void> auto_decompress_gzip();
 
   /// Send this request synchronously, and wait for the response.
@@ -567,6 +593,10 @@ public:
   /// Send this request asynchronously without any caching.
   Result<HttpPendingReq> send_async_without_caching(HttpBody body, std::string_view backend,
                                                     bool streaming = false);
+
+  /// Send this request synchronously to the Image Optimizer and wait for the response.
+  api::FastlyResult<Response, FastlyImageOptimizerError>
+  send_image_optimizer(HttpBody body, std::string_view backend, std::string_view config_str);
 
   /// Get the http version used for this request.
 
@@ -1233,6 +1263,8 @@ public:
 void handle_api_error(JSContext *cx, uint8_t err, int line, const char *func);
 void handle_kv_error(JSContext *cx, host_api::FastlyKVError err, const unsigned int err_type,
                      int line, const char *func);
+void handle_image_optimizer_error(JSContext *cx, const host_api::FastlyImageOptimizerError &err,
+                                  int line, const char *func);
 
 bool error_is_generic(APIError e);
 bool error_is_invalid_argument(APIError e);

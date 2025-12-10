@@ -11,7 +11,7 @@ defaults:
     shell: bash
 env:
   # Note: when updated, also update version in ensure-cargo-installs
-  viceroy_version: 0.12.2
+  viceroy_version: 0.15.0
   # Note: when updated, also update version in ensure-cargo-installs ! AND ! release-please.yml
   wasm-tools_version: 1.216.0
   fastly-cli_version: 10.19.0
@@ -46,7 +46,7 @@ jobs:
       matrix:
         include:
           - crate: viceroy
-            version: 0.12.2 # Note: workflow-level env vars can't be used in matrix definitions
+            version: 0.15.0 # Note: workflow-level env vars can't be used in matrix definitions
             options: ""
           - crate: wasm-tools
             version: 1.216.0 # Note: workflow-level env vars can't be used in matrix definitions
@@ -164,10 +164,10 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    - name: Install Rust 1.77.1
+    - name: Install Rust 1.81.0
       run: |
-        rustup toolchain install 1.77.1
-        rustup target add wasm32-wasi --toolchain 1.77.1
+        rustup toolchain install 1.81.0
+        rustup target add wasm32-wasip1 --toolchain 1.81.0
     - name: Restore wasm-tools from cache
       uses: actions/cache@v3
       id: wasm-tools
@@ -193,10 +193,10 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    - name: Install Rust 1.77.1
+    - name: Install Rust 1.81.0
       run: |
-        rustup toolchain install 1.77.1
-        rustup target add wasm32-wasi --toolchain 1.77.1
+        rustup toolchain install 1.81.0
+        rustup target add wasm32-wasip1 --toolchain 1.81.0
     - name: Restore wasm-tools from cache
       uses: actions/cache@v3
       id: wasm-tools

@@ -46,6 +46,16 @@ void handle_kv_error(JSContext *cx, FastlyKVError err, const unsigned int err_ty
   JS_ReportErrorNumberASCII(cx, fastly::FastlyGetErrorMessage, nullptr, err_type, message.c_str());
 }
 
+void handle_image_optimizer_error(JSContext *cx, const FastlyImageOptimizerError &err, int line,
+                                  const char *func) {
+  if (err.is_host_error) {
+    return handle_api_error(cx, err.host_err, line, func);
+  }
+
+  std::string message = err.message().value();
+  JS_ReportErrorUTF8(cx, "[Image Optimizer] %s", message.c_str());
+}
+
 /* Returns false if an exception is set on `cx` and the caller should
    immediately return to propagate the exception. */
 void handle_api_error(JSContext *cx, APIError err, int line, const char *func) {
