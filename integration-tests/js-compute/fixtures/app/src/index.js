@@ -47,6 +47,7 @@ import './response-redirect.js';
 import './response.js';
 import './secret-store.js';
 import './server.js';
+import './shielding.js';
 import './tee.js';
 import './timers.js';
 import './urlsearchparams.js';
