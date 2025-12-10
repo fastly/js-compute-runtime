@@ -3136,5 +3136,8 @@
         ["link", "</style2.css>; rel=preload; as=style"]
       ]
     }
+  },
+  "GET /shielding/invalid-shield": {
+    "environments": ["compute"]
   }
 }
