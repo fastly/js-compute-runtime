@@ -400,6 +400,9 @@ jobs:
     - name: Npm install
       run: npm install && cd ./integration-tests/js-compute && npm install
 
+    - name: Build CLI
+      run: npm run build:cli
+
     - name: Run Tests
       run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js --ci --skip-teardown${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.profile == 'weval' && ' --aot' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
       env:
@@ -466,6 +469,9 @@ jobs:
 
     - name: Npm install
       run: npm install && cd ./integration-tests/js-compute && npm install
+
+    - name: Build CLI
+      run: npm run build:cli
 
     - name: Run Tests
       run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --ci --skip-teardown --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
