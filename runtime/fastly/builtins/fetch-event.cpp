@@ -48,6 +48,18 @@ JSString *ja3(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::JA3));
   return val.isString() ? val.toString() : nullptr;
 }
+JSString *ja4(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::JA4));
+  return val.isString() ? val.toString() : nullptr;
+}
+JSString *h2Fingerprint(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::H2Fingerprint));
+  return val.isString() ? val.toString() : nullptr;
+}
+JSString *ohFingerprint(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::OHFingerprint));
+  return val.isString() ? val.toString() : nullptr;
+}
 JSObject *clientHello(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::ClientHello));
   return val.isObject() ? val.toObjectOrNull() : nullptr;
@@ -208,6 +220,81 @@ bool ClientInfo::tls_ja3_md5_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool ClientInfo::tls_ja4_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  JS::RootedString result(cx, ja4(self));
+  if (!result) {
+    auto res = host_api::HttpReq::http_req_downstream_tls_ja4();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+
+    if (!res.unwrap().has_value()) {
+      args.rval().setNull();
+      return true;
+    }
+
+    auto ja4_str = std::move(res.unwrap().value());
+    result.set(JS_NewStringCopyN(cx, ja4_str.ptr.get(), ja4_str.len));
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::JA4),
+                        JS::StringValue(result));
+  }
+  args.rval().setString(result);
+  return true;
+}
+
+bool ClientInfo::h2_fingerprint_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  JS::RootedString result(cx, h2Fingerprint(self));
+  if (!result) {
+    auto res = host_api::HttpReq::http_req_downstream_client_h2_fingerprint();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+
+    if (!res.unwrap().has_value()) {
+      args.rval().setNull();
+      return true;
+    }
+
+    auto h2fp_str = std::move(res.unwrap().value());
+    result.set(JS_NewStringCopyN(cx, h2fp_str.ptr.get(), h2fp_str.len));
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::H2Fingerprint),
+                        JS::StringValue(result));
+  }
+  args.rval().setString(result);
+  return true;
+}
+
+bool ClientInfo::oh_fingerprint_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  JS::RootedString result(cx, ohFingerprint(self));
+  if (!result) {
+    auto res = host_api::HttpReq::http_req_downstream_client_oh_fingerprint();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+
+    if (!res.unwrap().has_value()) {
+      args.rval().setNull();
+      return true;
+    }
+
+    auto ohfp_str = std::move(res.unwrap().value());
+    result.set(JS_NewStringCopyN(cx, ohfp_str.ptr.get(), ohfp_str.len));
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::OHFingerprint),
+                        JS::StringValue(result));
+  }
+  args.rval().setString(result);
+  return true;
+}
+
 bool ClientInfo::tls_client_hello_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
@@ -323,6 +410,9 @@ const JSPropertySpec ClientInfo::properties[] = {
     JS_PSG("tlsCipherOpensslName", tls_cipher_openssl_name_get, JSPROP_ENUMERATE),
     JS_PSG("tlsProtocol", tls_protocol_get, JSPROP_ENUMERATE),
     JS_PSG("tlsJA3MD5", tls_ja3_md5_get, JSPROP_ENUMERATE),
+    JS_PSG("tlsJA4", tls_ja4_get, JSPROP_ENUMERATE),
+    JS_PSG("h2Fingerprint", h2_fingerprint_get, JSPROP_ENUMERATE),
+    JS_PSG("ohFingerprint", oh_fingerprint_get, JSPROP_ENUMERATE),
     JS_PSG("tlsClientCertificate", tls_client_certificate_get, JSPROP_ENUMERATE),
     JS_PSG("tlsClientHello", tls_client_hello_get, JSPROP_ENUMERATE),
     JS_PS_END,
