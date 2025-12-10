@@ -1807,6 +1807,90 @@ Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_ja3_md5() {
   return res;
 }
 
+// http-req-downstream-tls-ja4: func() -> result<option<string>, error>
+Result<std::optional<HostString>> HttpReq::http_req_downstream_tls_ja4() {
+  TRACE_CALL()
+  Result<std::optional<HostString>> res;
+
+  fastly::fastly_host_error err;
+  fastly::fastly_world_string ret;
+  auto default_size = 128;
+  ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
+  auto status = fastly::req_downstream_tls_ja4(ret.ptr, default_size, &ret.len);
+  if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
+    status = fastly::req_downstream_tls_ja4(ret.ptr, ret.len, &ret.len);
+  }
+  if (!convert_result(status, &err)) {
+    cabi_free(ret.ptr);
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(make_host_string(ret));
+  }
+
+  return res;
+}
+
+// http-req-downstream-client-h2-fingerprint: func() -> result<option<string>, error>
+Result<std::optional<HostString>> HttpReq::http_req_downstream_client_h2_fingerprint() {
+  TRACE_CALL()
+  Result<std::optional<HostString>> res;
+
+  fastly::fastly_host_error err;
+  fastly::fastly_world_string ret;
+  auto default_size = 128;
+  ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
+  auto status = fastly::req_downstream_client_h2_fingerprint(ret.ptr, default_size, &ret.len);
+  if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
+    status = fastly::req_downstream_client_h2_fingerprint(ret.ptr, ret.len, &ret.len);
+  }
+  if (!convert_result(status, &err)) {
+    cabi_free(ret.ptr);
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(make_host_string(ret));
+  }
+
+  return res;
+}
+
+// http-req-downstream-client-oh-fingerprint: func() -> result<option<string>, error>
+Result<std::optional<HostString>> HttpReq::http_req_downstream_client_oh_fingerprint() {
+  TRACE_CALL()
+  Result<std::optional<HostString>> res;
+
+  fastly::fastly_host_error err;
+  fastly::fastly_world_string ret;
+  auto default_size = 128;
+  ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
+  auto status = fastly::req_downstream_client_oh_fingerprint(ret.ptr, default_size, &ret.len);
+  if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
+    status = fastly::req_downstream_client_oh_fingerprint(ret.ptr, ret.len, &ret.len);
+  }
+  if (!convert_result(status, &err)) {
+    cabi_free(ret.ptr);
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(make_host_string(ret));
+  }
+
+  return res;
+}
+
 bool HttpReq::is_valid() const { return this->handle != HttpReq::invalid; }
 
 Result<HttpVersion> HttpReq::get_version() const {

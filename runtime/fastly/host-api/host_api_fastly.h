@@ -573,6 +573,12 @@ public:
 
   static Result<std::optional<HostBytes>> http_req_downstream_tls_ja3_md5();
 
+  static Result<std::optional<HostString>> http_req_downstream_tls_ja4();
+
+  static Result<std::optional<HostString>> http_req_downstream_client_h2_fingerprint();
+
+  static Result<std::optional<HostString>> http_req_downstream_client_oh_fingerprint();
+
   Result<Void> auto_decompress_gzip();
 
   /// Send this request synchronously, and wait for the response.
