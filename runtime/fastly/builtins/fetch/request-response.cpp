@@ -1,7 +1,13 @@
 #include "request-response.h"
 #include "../../../StarlingMonkey/builtins/web/base64.h"
 #include "../../../StarlingMonkey/builtins/web/blob.h"
+#include "../../../StarlingMonkey/builtins/web/form-data/form-data-encoder.h"
+#include "../../../StarlingMonkey/builtins/web/form-data/form-data-parser.h"
+#include "../../../StarlingMonkey/builtins/web/form-data/form-data.h"
+
 #include "../../../StarlingMonkey/builtins/web/dom-exception.h"
+#include "../../../StarlingMonkey/builtins/web/fetch/fetch-errors.h"
+#include "../../../StarlingMonkey/builtins/web/fetch/fetch-utils.h"
 #include "../../../StarlingMonkey/builtins/web/streams/native-stream-source.h"
 #include "../../../StarlingMonkey/builtins/web/streams/transform-stream.h"
 #include "../../../StarlingMonkey/builtins/web/url.h"
@@ -15,9 +21,11 @@
 #include "../cache-simple.h"
 #include "../fastly.h"
 #include "../fetch-event.h"
+#include "../image-optimizer.h"
 #include "../kv-store.h"
 #include "extension-api.h"
 #include "fetch.h"
+#include "mozilla/ResultVariant.h"
 
 #include "js/Array.h"
 #include "js/ArrayBuffer.h"
@@ -34,9 +42,17 @@
 #include <allocator.h>
 #pragma clang diagnostic pop
 
-using builtins::web::base64::valueToJSByteString;
 using builtins::web::blob::Blob;
+using builtins::web::form_data::FormData;
+using builtins::web::form_data::MultipartFormData;
+
+using namespace std::literals;
+
+using builtins::web::base64::valueToJSByteString;
 using builtins::web::dom_exception::DOMException;
+using builtins::web::form_data::FormData;
+using builtins::web::form_data::FormDataParser;
+using builtins::web::form_data::MultipartFormData;
 
 // We use the StarlingMonkey Headers implementation, despite it supporting features that we do
 // not - specifically the ability to construct headers unassociated with requests and responses.
@@ -808,6 +824,32 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
       MOZ_ASSERT(host_type_str);
       content_type = host_type_str.begin();
     }
+  } else if (FormData::is_instance(body_obj)) {
+    RootedObject encoder(cx, MultipartFormData::create(cx, body_obj));
+    if (!encoder) {
+      return false;
+    }
+
+    RootedObject stream(cx, MultipartFormData::encode_stream(cx, encoder));
+    if (!stream) {
+      return false;
+    }
+
+    auto boundary = MultipartFormData::boundary(encoder);
+    std::string content_type_str = "multipart/form-data; boundary=" + boundary;
+    host_type_str = host_api::HostString(content_type_str.c_str());
+
+    auto length = MultipartFormData::query_length(cx, encoder);
+    if (length.isErr()) {
+      return false;
+    }
+
+    // content_length = mozilla::Some(length.unwrap());
+    content_type = host_type_str.begin();
+
+    RootedValue stream_val(cx, JS::ObjectValue(*stream));
+    JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyStream),
+                       stream_val);
   } else if (body_obj && JS::IsReadableStream(body_obj)) {
     if (RequestOrResponse::body_unusable(cx, body_obj)) {
       JS_ReportErrorNumberLatin1(cx, FastlyGetErrorMessage, nullptr,
@@ -1053,12 +1095,47 @@ bool RequestOrResponse::parse_body(JSContext *cx, JS::HandleObject self, JS::Uni
   } else if constexpr (result_type == RequestOrResponse::BodyReadResult::Blob) {
     JS::RootedString contentType(cx, JS_GetEmptyString(cx));
     JS::RootedObject blob(cx, Blob::create(cx, std::move(buf), len, contentType));
-
     if (!blob) {
       return RejectPromiseWithPendingError(cx, result_promise);
     }
 
     result.setObject(*blob);
+  } else if constexpr (result_type == RequestOrResponse::BodyReadResult::FormData) {
+    auto throw_invalid_header = [&]() {
+      api::throw_error(cx, FetchErrors::InvalidFormDataHeader);
+      return RejectPromiseWithPendingError(cx, result_promise);
+    };
+
+    RootedObject headers(cx, RequestOrResponse::maybe_headers(self));
+    if (!headers) {
+      return throw_invalid_header();
+    }
+
+    auto content_type_str = host_api::HostString("Content-Type");
+    auto idx = Headers::lookup(cx, headers, content_type_str);
+    if (!idx) {
+      return throw_invalid_header();
+    }
+
+    auto values = Headers::get_index(cx, headers, idx.value());
+    auto maybe_mime = builtins::web::fetch::extract_mime_type(std::get<1>(*values));
+    if (maybe_mime.isErr()) {
+      return throw_invalid_header();
+    }
+
+    auto parser = FormDataParser::create(maybe_mime.unwrap().to_string());
+    if (!parser) {
+      return throw_invalid_header();
+    }
+
+    std::string_view body(buf.get(), len);
+    RootedObject form_data(cx, parser->parse(cx, body));
+    if (!form_data) {
+      api::throw_error(cx, FetchErrors::InvalidFormData);
+      return RejectPromiseWithPendingError(cx, result_promise);
+    }
+
+    result.setObject(*form_data);
   } else {
     JS::RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf.get(), len)));
     if (!text) {
@@ -1570,7 +1647,7 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
     return false;
 
   if (done_val.toBoolean()) {
-    // The only response we ever send is the one passed to
+    // The only response with a body we ever send is the one passed to
     // `FetchEvent#respondWith` to send to the client. As such, we can be
     // certain that if we have a response here, we can advance the FetchState to
     // `responseDone`.
@@ -1658,7 +1735,7 @@ bool RequestOrResponse::body_reader_catch_handler(JSContext *cx, JS::HandleObjec
   fprintf(stderr, "Warning: body ReadableStream closed during body streaming. Exception: ");
   ENGINE->dump_value(args.get(0), stderr);
 
-  // The only response we ever send is the one passed to
+  // The only response with a body we ever send is the one passed to
   // `FetchEvent#respondWith` to send to the client. As such, we can be certain
   // that if we have a response here, we can advance the FetchState to
   // `responseDone`. (Note that even though we encountered an error,
@@ -1910,6 +1987,19 @@ bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValu
     return false;
   }
 
+  return true;
+}
+
+bool Request::set_image_optimizer_options(JSContext *cx, JS::HandleObject self,
+                                          JS::HandleValue opts_val) {
+  MOZ_ASSERT(is_instance(self));
+
+  auto opts = image_optimizer::ImageOptimizerOptions::create(cx, opts_val);
+  if (!opts) {
+    return false;
+  }
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Request::Slots::ImageOptimizerOptions),
+                      JS::PrivateValue(opts.release()));
   return true;
 }
 
@@ -2255,6 +2345,17 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
                         cache_override);
   }
 
+  JS::RootedValue image_optimizer_options(
+      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ImageOptimizerOptions)));
+  if (!image_optimizer_options.isNullOrUndefined()) {
+    if (!set_image_optimizer_options(cx, requestInstance, image_optimizer_options)) {
+      return false;
+    }
+  } else {
+    JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::ImageOptimizerOptions),
+                        image_optimizer_options);
+  }
+
   args.rval().setObject(*requestInstance);
   return true;
 }
@@ -2271,6 +2372,8 @@ const JSFunctionSpec Request::methods[] = {
     JS_FN("arrayBuffer", Request::bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
           JSPROP_ENUMERATE),
     JS_FN("blob", Request::bodyAll<RequestOrResponse::BodyReadResult::Blob>, 0, JSPROP_ENUMERATE),
+    JS_FN("formData", Request::bodyAll<RequestOrResponse::BodyReadResult::FormData>, 0,
+          JSPROP_ENUMERATE),
     JS_FN("json", Request::bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", Request::bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setCacheOverride", Request::setCacheOverride, 3, JSPROP_ENUMERATE),
@@ -2320,6 +2423,8 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance,
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::OverrideCacheKey),
                       JS::NullValue());
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::CacheOverride),
+                      JS::NullValue());
+  JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::ImageOptimizerOptions),
                       JS::NullValue());
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::IsDownstream),
                       JS::BooleanValue(is_downstream));
@@ -2490,6 +2595,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   JS::RootedValue cache_override(cx);
   JS::RootedValue cache_key(cx);
   JS::RootedValue fastly_val(cx);
+  JS::RootedValue image_optimizer_options(cx);
   bool hasManualFramingHeaders = false;
   bool setManualFramingHeaders = false;
   if (init_val.isObject()) {
@@ -2503,7 +2609,8 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
         !JS_GetProperty(cx, init, "cacheKey", &cache_key) ||
         !JS_GetProperty(cx, init, "fastly", &fastly_val) ||
         !JS_HasOwnProperty(cx, init, "manualFramingHeaders", &hasManualFramingHeaders) ||
-        !JS_GetProperty(cx, init, "manualFramingHeaders", &manualFramingHeaders)) {
+        !JS_GetProperty(cx, init, "manualFramingHeaders", &manualFramingHeaders) ||
+        !JS_GetProperty(cx, init, "imageOptimizerOptions", &image_optimizer_options)) {
       return nullptr;
     }
     setManualFramingHeaders = manualFramingHeaders.isBoolean() && manualFramingHeaders.toBoolean();
@@ -2682,7 +2789,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   // non-null, and `request`’s method is ``GET`` or ``HEAD``, then throw a
   // TypeError.
   if ((input_has_body || !body_val.isNullOrUndefined()) && is_get_or_head) {
-    JS_ReportErrorLatin1(cx, "Request constructor: HEAD or GET Request cannot have a body.");
+    api::throw_error(cx, FetchErrors::InvalidInitArg, "Request constructor");
     return nullptr;
   }
 
@@ -2793,6 +2900,13 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     }
   }
 
+  // Apply the Fastly Compute-proprietary `imageOptimizerOptions` property.
+  if (!image_optimizer_options.isUndefined()) {
+    if (!set_image_optimizer_options(cx, request, image_optimizer_options)) {
+      return nullptr;
+    }
+  }
+
   if (fastly_val.isObject()) {
     JS::RootedValue decompress_response_val(cx);
     JS::RootedObject fastly(cx, fastly_val.toObjectOrNull());
@@ -2878,6 +2992,18 @@ std::optional<host_api::HttpReq> Response::grip_upgrade_request(JSObject *obj) {
     return std::nullopt;
   }
   return host_api::HttpReq(grip_upgrade_request.toInt32());
+}
+
+std::optional<host_api::HttpReq> Response::websocket_upgrade_request(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+  auto websocket_upgrade_request =
+      JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::WebsocketUpgradeRequest));
+
+  if (websocket_upgrade_request.isUndefined()) {
+    return std::nullopt;
+  }
+
+  return host_api::HttpReq(websocket_upgrade_request.toInt32());
 }
 
 host_api::HostString Response::backend_str(JSContext *cx, JSObject *obj) {
@@ -3117,11 +3243,13 @@ bool Response::status_set(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // If it _is_ a CandidateResponse, then support the status set, with validation
   bool valid_status = true;
-  uint16_t status;
+  uint16_t status = 0;
   if (!args[0].isNumber() || !JS::ToUint16(cx, args[0], &status)) {
     valid_status = false;
   }
-  if (!valid_status || status < 200 || status > 599) {
+  // Allow 103: Early Hints
+  bool status_in_range = status == 103 || (status >= 200 && status < 600);
+  if (!valid_status || !status_in_range) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                               JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS, status);
     return false;
@@ -3340,7 +3468,7 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   JS::RootedObject response(
-      cx, create(cx, response_instance, response_handle, body, false, nullptr, nullptr));
+      cx, create(cx, response_instance, response_handle, body, false, nullptr, nullptr, nullptr));
   if (!response) {
     return false;
   }
@@ -3435,7 +3563,7 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
 
-    if (status == 204 || status == 205 || status == 304) {
+    if (status == 103 || status == 204 || status == 205 || status == 304) {
       JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                                 JSMSG_RESPONSE_NULL_BODY_STATUS_WITH_BODY);
       return false;
@@ -3484,7 +3612,7 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   JS::RootedObject response(
-      cx, create(cx, response_instance, response_handle, body, false, nullptr, nullptr));
+      cx, create(cx, response_instance, response_handle, body, false, nullptr, nullptr, nullptr));
   if (!response) {
     return false;
   }
@@ -3566,6 +3694,7 @@ const JSFunctionSpec Response::methods[] = {
     JS_FN("arrayBuffer", bodyAll<RequestOrResponse::BodyReadResult::ArrayBuffer>, 0,
           JSPROP_ENUMERATE),
     JS_FN("blob", bodyAll<RequestOrResponse::BodyReadResult::Blob>, 0, JSPROP_ENUMERATE),
+    JS_FN("formData", bodyAll<RequestOrResponse::BodyReadResult::FormData>, 0, JSPROP_ENUMERATE),
     JS_FN("json", bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setManualFramingHeaders", Response::setManualFramingHeaders, 1, JSPROP_ENUMERATE),
@@ -4222,8 +4351,8 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   // 1.  If `init`["status"] is not in the range 200 to 599, inclusive, then
-  // `throw` a ``RangeError``.
-  if (status < 200 || status > 599) {
+  // `throw` a ``RangeError``. (We allow 103 Early Hints as an extension)
+  if (status != 103 && !(status >= 200 && status < 600)) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                               JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS, status);
     return false;
@@ -4259,7 +4388,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto body = make_res.unwrap();
   JS::RootedObject responseInstance(cx, JS_NewObjectForConstructor(cx, &class_, args));
   JS::RootedObject response(
-      cx, create(cx, responseInstance, response_handle, body, false, nullptr, nullptr));
+      cx, create(cx, responseInstance, response_handle, body, false, nullptr, nullptr, nullptr));
   if (!response) {
     return false;
   }
@@ -4327,7 +4456,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if ((!body_val.isNullOrUndefined())) {
     //     1.  If `init`["status"] is a `null body status`, then `throw` a
     //     ``TypeError``.
-    if (status == 204 || status == 205 || status == 304) {
+    if (status == 103 || status == 204 || status == 205 || status == 304) {
       JS_ReportErrorNumberLatin1(cx, FastlyGetErrorMessage, nullptr,
                                  JSMSG_RESPONSE_CONSTRUCTOR_BODY_WITH_NULL_BODY_STATUS);
       return false;
@@ -4432,7 +4561,7 @@ JSObject *Response::create(JSContext *cx, HandleObject request, host_api::Respon
   bool is_upstream = true;
   RootedString backend(cx, RequestOrResponse::backend(request));
   JS::RootedObject response(cx, Response::create(cx, response_instance, response_handle, body,
-                                                 is_upstream, nullptr, backend));
+                                                 is_upstream, nullptr, nullptr, backend));
   if (!response) {
     return nullptr;
   }
@@ -4461,7 +4590,7 @@ void Response::finalize(JS::GCContext *gcx, JSObject *self) {
 JSObject *Response::create(JSContext *cx, JS::HandleObject response,
                            host_api::HttpResp response_handle, host_api::HttpBody body_handle,
                            bool is_upstream, JSObject *grip_upgrade_request,
-                           JS::HandleString backend) {
+                           JSObject *websocket_upgrade_request, JS::HandleString backend) {
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Response),
                       JS::Int32Value(response_handle.handle));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Headers), JS::NullValue());
@@ -4476,6 +4605,10 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
   if (grip_upgrade_request) {
     JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::GripUpgradeRequest),
                         JS::Int32Value(Request::request_handle(grip_upgrade_request).handle));
+  }
+  if (websocket_upgrade_request) {
+    JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::WebsocketUpgradeRequest),
+                        JS::Int32Value(Request::request_handle(websocket_upgrade_request).handle));
   }
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::StorageAction), JS::UndefinedValue());
   JS::SetReservedSlot(response, static_cast<uint32_t>(RequestOrResponse::Slots::CacheEntry),
@@ -4502,7 +4635,7 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
     JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Status), JS::Int32Value(status));
     set_status_message_from_code(cx, response, status);
 
-    if (!(status == 204 || status == 205 || status == 304)) {
+    if (!(status == 103 || status == 204 || status == 205 || status == 304)) {
       JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::HasBody), JS::TrueValue());
     }
   }

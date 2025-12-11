@@ -20,11 +20,14 @@ const subsystems = [
   'env',
   'experimental',
   'fanout',
+  'websocket',
   'geolocation',
   'kv-store',
   'logger',
   'object-store',
-  'secret-store'
+  'secret-store',
+  'html-rewriter',
+  'image-optimizer'
 ];
 
 const files = readdirSync('docs');

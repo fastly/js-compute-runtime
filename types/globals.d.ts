@@ -328,6 +328,13 @@ declare interface FetchEvent {
   respondWith(response: Response | PromiseLike<Response>): void;
 
   /**
+   * Send a 103 Early Hints response back to the client.
+   *
+   * @param headers - Headers to send back down to the client
+   */
+  sendEarlyHints(headers: HeadersInit): void;
+
+  /**
    * Extend the service's lifetime to ensure asynchronous operations succeed.
    *
    * By default, a service will shut down as soon as the response passed to
@@ -429,6 +436,9 @@ declare interface ClientInfo {
   readonly address: string;
   readonly geo: import('fastly:geolocation').Geolocation | null;
   readonly tlsJA3MD5: string | null;
+  readonly tlsJA4: string | null;
+  readonly h2Fingerprint: string | null;
+  readonly ohFingerprint: string | null;
   readonly tlsCipherOpensslName: string | null;
   readonly tlsProtocol: string | null;
   readonly tlsClientCertificate: ArrayBuffer | null;
@@ -843,7 +853,7 @@ declare class TextEncoder {
    * UTF-8 encodes the `input` string and returns a `Uint8Array` containing the encoded bytes.
    * @param [input='an empty string'] The text to encode.
    */
-  encode(input?: string): Uint8Array;
+  encode(input?: string): Uint8Array<ArrayBuffer>;
   // /**
   //  * UTF-8 encodes the `src` string to the `dest` Uint8Array and returns an object
   //  * containing the read Unicode code units and written UTF-8 bytes.
@@ -998,7 +1008,7 @@ declare interface Fastly {
    * @hidden
    * @experimental
    */
-  includeBytes(path: string): Uint8Array;
+  includeBytes(path: string): Uint8Array<ArrayBuffer>;
 }
 
 /**
@@ -1055,7 +1065,7 @@ declare class CompressionStream {
    * console.log(stream.readable instanceof ReadableStream); // true
    * ```
    */
-  readonly readable: ReadableStream<Uint8Array>;
+  readonly readable: ReadableStream<Uint8Array<ArrayBuffer>>;
   /**
    * @example
    * ```js
@@ -1063,7 +1073,7 @@ declare class CompressionStream {
    * console.log(stream.writable instanceof WritableStream); // true
    * ```
    */
-  readonly writable: WritableStream<Uint8Array>;
+  readonly writable: WritableStream<Uint8Array<ArrayBuffer>>;
 }
 
 /**
@@ -1110,7 +1120,7 @@ declare class DecompressionStream {
    * console.log(stream.readable instanceof ReadableStream); // true
    * ```
    */
-  readonly readable: ReadableStream<Uint8Array>;
+  readonly readable: ReadableStream<Uint8Array<ArrayBuffer>>;
   /**
    * @example
    * ```js
@@ -1118,7 +1128,7 @@ declare class DecompressionStream {
    * console.log(stream.writable instanceof WritableStream); // true
    * ```
    */
-  readonly writable: WritableStream<Uint8Array>;
+  readonly writable: WritableStream<Uint8Array<ArrayBuffer>>;
 }
 
 // Note: the contents below here are, partially modified, copies of content from TypeScript's
@@ -1147,6 +1157,102 @@ and limitations under the License.
  * Copyright (c) Fastly Corporation, under the same license as the rest of the file.
  */
 
+type BlobPart = BufferSource | Blob | string;
+type EndingType = 'native' | 'transparent';
+type FormDataEntryValue = File | string;
+
+interface BlobPropertyBag {
+  endings?: EndingType;
+  type?: string;
+}
+
+interface FilePropertyBag extends BlobPropertyBag {
+  lastModified?: number;
+}
+
+/**
+ * A file-like object of immutable, raw data. Blobs represent data that isn't necessarily in a JavaScript-native format. The File interface is based on Blob, inheriting blob functionality and expanding it to support files on the user's system.
+ *
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob)
+ */
+interface Blob {
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/size) */
+  readonly size: number;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/type) */
+  readonly type: string;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/arrayBuffer) */
+  arrayBuffer(): Promise<ArrayBuffer>;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/slice) */
+  slice(start?: number, end?: number, contentType?: string): Blob;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/stream) */
+  stream(): ReadableStream<Uint8Array<ArrayBuffer>>;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Blob/text) */
+  text(): Promise<string>;
+}
+
+declare var Blob: {
+  prototype: Blob;
+  new (blobParts?: BlobPart[], options?: BlobPropertyBag): Blob;
+};
+
+/**
+ * Provides information about files and allows JavaScript in a web page to access their content.
+ *
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/File)
+ */
+interface File extends Blob {
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/File/lastModified) */
+  readonly lastModified: number;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/File/name) */
+  readonly name: string;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/File/webkitRelativePath) */
+  readonly webkitRelativePath: string;
+}
+
+declare var File: {
+  prototype: File;
+  new (fileBits: BlobPart[], fileName: string, options?: FilePropertyBag): File;
+};
+
+/**
+ * Provides a way to easily construct a set of key/value pairs representing form fields and their values, which can then be easily sent using the XMLHttpRequest.send() method. It uses the same format a form would use if the encoding type were set to "multipart/form-data".
+ *
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/FormData)
+ */
+interface FormData {
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/FormData/append) */
+  append(name: string, value: string | Blob): void;
+  append(name: string, value: string): void;
+  append(name: string, blobValue: Blob, filename?: string): void;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/FormData/delete) */
+  delete(name: string): void;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/FormData/get) */
+  get(name: string): FormDataEntryValue | null;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/FormData/getAll) */
+  getAll(name: string): FormDataEntryValue[];
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/FormData/has) */
+  has(name: string): boolean;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/FormData/set) */
+  set(name: string, value: string | Blob): void;
+  set(name: string, value: string): void;
+  set(name: string, blobValue: Blob, filename?: string): void;
+  forEach(
+    callbackfn: (
+      value: FormDataEntryValue,
+      key: string,
+      parent: FormData,
+    ) => void,
+    thisArg?: any,
+  ): void;
+}
+
+declare var FormData: {
+  prototype: FormData;
+  new (
+    form?: any /*form?: HTMLFormElement, submitter?: HTMLElement | null*/,
+  ): FormData;
+};
+
 /**
  * Used within the
  * [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request/Request) and
@@ -1154,10 +1260,11 @@ and limitations under the License.
  * ({@linkcode Request}, and {@linkcode Response})
  * @group Fetch API
  */
-declare type BodyInit =
-  | ReadableStream
-  | ArrayBufferView
-  | ArrayBuffer
+declare type BodyInit = ReadableStream | XMLHttpRequestBodyInit;
+declare type XMLHttpRequestBodyInit =
+  | Blob
+  | BufferSource
+  | FormData
   | URLSearchParams
   | string;
 
@@ -1168,11 +1275,11 @@ declare type BodyInit =
  * @group Fetch API
  */
 declare interface Body {
-  readonly body: ReadableStream<Uint8Array> | null;
+  readonly body: ReadableStream<Uint8Array<ArrayBuffer>> | null;
   readonly bodyUsed: boolean;
   arrayBuffer(): Promise<ArrayBuffer>;
-  // blob(): Promise<Blob>;
-  // formData(): Promise<FormData>;
+  blob(): Promise<Blob>;
+  formData(): Promise<FormData>;
   json(): Promise<any>;
   text(): Promise<string>;
 }
@@ -1233,6 +1340,7 @@ declare interface RequestInit {
     decompressGzip?: boolean;
   };
   manualFramingHeaders?: boolean;
+  imageOptimizerOptions?: import('fastly:image-optimizer').ImageOptimizerOptions;
 }
 
 /**
@@ -1836,6 +1944,7 @@ interface Headers {
   append(name: string, value: string): void;
   delete(name: string): void;
   get(name: string): string | null;
+  getSetCookie(): string[];
   has(name: string): boolean;
   set(name: string, value: string): void;
   forEach(
@@ -2185,6 +2294,158 @@ type KeyUsage =
   | 'verify'
   | 'wrapKey';
 
+interface EventInit {
+  bubbles?: boolean;
+  cancelable?: boolean;
+  composed?: boolean;
+}
+
+interface EventListenerOptions {
+  capture?: boolean;
+}
+
+interface AddEventListenerOptions extends EventListenerOptions {
+  once?: boolean;
+  passive?: boolean;
+  // signal?: AbortSignal;
+}
+/**
+ * An event which takes place in the DOM.
+ *
+ * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event)
+ */
+interface Event {
+  /**
+   * Returns true or false depending on how event was initialized. True if event goes through its target's ancestors in reverse tree order, and false otherwise.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/bubbles)
+   */
+  readonly bubbles: boolean;
+  /**
+   * @deprecated
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/cancelBubble)
+   */
+  cancelBubble: boolean;
+  /**
+   * Returns true or false depending on how event was initialized. Its return value does not always carry meaning, but true can indicate that part of the operation during which event was dispatched, can be canceled by invoking the preventDefault() method.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/cancelable)
+   */
+  readonly cancelable: boolean;
+  /**
+   * Returns true or false depending on how event was initialized. True if event invokes listeners past a ShadowRoot node that is the root of its target, and false otherwise.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/composed)
+   */
+  readonly composed: boolean;
+  /**
+   * Returns the object whose event listener's callback is currently being invoked.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/currentTarget)
+   */
+  readonly currentTarget: EventTarget | null;
+  /**
+   * Returns true if preventDefault() was invoked successfully to indicate cancelation, and false otherwise.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/defaultPrevented)
+   */
+  readonly defaultPrevented: boolean;
+  /**
+   * Returns the event's phase, which is one of NONE, CAPTURING_PHASE, AT_TARGET, and BUBBLING_PHASE.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/eventPhase)
+   */
+  readonly eventPhase: number;
+  /**
+   * Returns true if event was dispatched by the user agent, and false otherwise.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/isTrusted)
+   */
+  readonly isTrusted: boolean;
+  /**
+   * @deprecated
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/returnValue)
+   */
+  returnValue: boolean;
+  /**
+   * @deprecated
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/srcElement)
+   */
+  readonly srcElement: EventTarget | null;
+  /**
+   * Returns the object to which event is dispatched (its target).
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/target)
+   */
+  readonly target: EventTarget | null;
+  /**
+   * Returns the event's timestamp as the number of milliseconds measured relative to the time origin.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/timeStamp)
+   */
+  readonly timeStamp: DOMHighResTimeStamp;
+  /**
+   * Returns the type of event, e.g. "click", "hashchange", or "submit".
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/type)
+   */
+  readonly type: string;
+  /**
+   * Returns the invocation target objects of event's path (objects on which listeners will be invoked), except for any nodes in shadow trees of which the shadow root's mode is "closed" that are not reachable from event's currentTarget.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/composedPath)
+   */
+  composedPath(): EventTarget[];
+  /**
+   * @deprecated
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/initEvent)
+   */
+  initEvent(type: string, bubbles?: boolean, cancelable?: boolean): void;
+  /**
+   * If invoked when the cancelable attribute value is true, and while executing a listener for the event with passive set to false, signals to the operation that caused event to be dispatched that it needs to be canceled.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/preventDefault)
+   */
+  preventDefault(): void;
+  /**
+   * Invoking this method prevents event from reaching any registered event listeners after the current one finishes running and, when dispatched in a tree, also prevents event from reaching any other objects.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/stopImmediatePropagation)
+   */
+  stopImmediatePropagation(): void;
+  /**
+   * When dispatched in a tree, invoking this method prevents event from reaching any objects other than the current object.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Event/stopPropagation)
+   */
+  stopPropagation(): void;
+  readonly NONE: 0;
+  readonly CAPTURING_PHASE: 1;
+  readonly AT_TARGET: 2;
+  readonly BUBBLING_PHASE: 3;
+}
+
+declare var Event: {
+  prototype: Event;
+  new (type: string, eventInitDict?: EventInit): Event;
+  readonly NONE: 0;
+  readonly CAPTURING_PHASE: 1;
+  readonly AT_TARGET: 2;
+  readonly BUBBLING_PHASE: 3;
+};
+
+interface EventListener {
+  (evt: Event): void;
+}
+interface EventListenerObject {
+  handleEvent(object: Event): void;
+}
+type EventListenerOrEventListenerObject = EventListener | EventListenerObject;
+
 /**
  * EventTarget is a DOM interface implemented by objects that can receive events and may have listeners for them.
  *
@@ -2192,10 +2453,50 @@ type KeyUsage =
  * @group DOM Events
  */
 interface EventTarget {
-  //addEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: AddEventListenerOptions | boolean): void;
-  //dispatchEvent(event: Event): boolean;
-  //removeEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: EventListenerOptions | boolean): void;
+  /**
+   * Appends an event listener for events whose type attribute value is type. The callback argument sets the callback that will be invoked when the event is dispatched.
+   *
+   * The options argument sets listener-specific options. For compatibility this can be a boolean, in which case the method behaves exactly as if the value was specified as options's capture.
+   *
+   * When set to true, options's capture prevents callback from being invoked when the event's eventPhase attribute value is BUBBLING_PHASE. When false (or not present), callback will not be invoked when event's eventPhase attribute value is CAPTURING_PHASE. Either way, callback will be invoked if event's eventPhase attribute value is AT_TARGET.
+   *
+   * When set to true, options's passive indicates that the callback will not cancel the event by invoking preventDefault(). This is used to enable performance optimizations described in § 2.8 Observing event listeners.
+   *
+   * When set to true, options's once indicates that the callback will only be invoked once after which the event listener will be removed.
+   *
+   * If an AbortSignal is passed for options's signal, then the event listener will be removed when signal is aborted.
+   *
+   * The event listener is appended to target's event listener list and is not appended if it has the same type, callback, and capture.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener)
+   */
+  addEventListener(
+    type: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: AddEventListenerOptions | boolean,
+  ): void;
+  /**
+   * Dispatches a synthetic event event to target and returns true if either event's cancelable attribute value is false or its preventDefault() method was not invoked, and false otherwise.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/EventTarget/dispatchEvent)
+   */
+  dispatchEvent(event: Event): boolean;
+  /**
+   * Removes the event listener in target's event listener list with the same type, callback, and options.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/EventTarget/removeEventListener)
+   */
+  removeEventListener(
+    type: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: EventListenerOptions | boolean,
+  ): void;
 }
+
+declare var EventTarget: {
+  prototype: EventTarget;
+  new (): EventTarget;
+};
 
 /**
  * Provides access to performance-related information for the current page. It's part of the High Resolution Time API, but is enhanced by the Performance Timeline API, the Navigation Timing API, the User Timing API, and the Resource Timing API.

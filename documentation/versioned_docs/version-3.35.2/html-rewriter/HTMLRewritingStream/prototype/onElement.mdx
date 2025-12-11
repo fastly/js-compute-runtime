@@ -1,0 +1,90 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# onElement
+
+▸ **onElement**`(selector: string, handler: (element: Element) => void): this`
+
+Registers an element handler with the [`HTMLRewritingStream`] that will be called for each [`Element`] that matches the [CSS selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_selectors) `selector`.
+
+Elements added by handlers will not be processed by other handlers.
+
+## Syntax
+
+```js
+.onElement(selector, handler)
+```
+
+### Parameters
+
+- `selector` _: string_
+  - A CSS selector that determines the elements for which `handler` will be called
+  - The following types of CSS selector are supported:
+
+Currently the rewriter supports the following CSS selectors:
+
+| Pattern              | Description                                                                |
+|----------------------|----------------------------------------------------------------------------|
+| `*`                  | Any element                                                                |
+| `E`                  | All elements of type `E`                                                   |
+| `E F`                | `F` elements inside `E` elements                                           |
+| `E > F`              | `F` elements directly inside `E` elements                                  |
+| `E:nth-child(n)`     | The n-th child of type `E`                                                 |
+| `E:first-child`      | First child of type `E`                                                    |
+| `E:nth-of-type(n)`   | The n-th sibling of type `E`                                               |
+| `E:first-of-type`    | First sibling of type `E`                                                  |
+| `E:not(s)`           | Type `E` elements not matching selector `s`                                |
+| `E.myclass`          | Type `E` elements with class `"myclass"`                                   |
+| `E#myid`             | Type `E` elements with ID `"myid"`                                         |
+| `E[attr]`            | Type `E` elements with attribute `attr`                                    |
+| `E[attr="val"]`      | Type `E` elements where `attr` is `"val"`                                  |
+| `E[attr="val" i]`    | Type `E` elements where `attr` is `"val"`, case-insensitive                |
+| `E[attr="val" s]`    | Type `E` elements where `attr` is `"val"`, case-sensitive                  |
+| `E[attr~="val"]`     | Type `E` elements where `attr` contains `"val"` in a space-separated list  |
+| `E[attr`&#124`;="val"]`| Type `E` elements where `attr` is hyphen-separated and starts with `"val"` |
+| `E[attr^="val"]`     | Type `E` elements where `attr` starts with `"val"`                         |
+| `E[attr$="val"]`     | Type `E` elements where `attr` ends with `"val"`                           |
+| `E[attr*="val"]`     | Type `E` elements where `attr` contains `"val"`                            |
+
+- `handler` _: (element: Element) => void_
+  - A callback function that will be called once for each element that matches `selector`
+
+### Return value
+
+The `HTMLRewritingStream`, so multiple calls to `onElement` can be chained.
+
+### Exceptions
+
+- `Error`
+  - If the provided `selector` is not a valid CSS selector.
+  - If the provided `handler` is not a function.
+
+## Examples
+
+
+In this example, we fetch an HTML page and use the HTML rewriter to add an attribute to all `div` tags and prepend the text `Header:` to all `h1` tags:
+
+```js
+/// <reference types="@fastly/js-compute" />
+
+import { HTMLRewritingStream } from 'fastly:html-rewriter';
+
+async function handleRequest(event) {
+  let transformer = new HTMLRewritingStream()
+    .onElement("h1", e => e.prepend("Header: "))
+    .onElement("div", e => e.setAttribute("special-attribute", "top-secret"));
+  let body = (await fetch("https://example.com/")).body.pipeThrough(transformer);
+
+  return new Response(body, {
+    status: 200,
+    headers: new Headers({
+      "content-type": "text/html"
+    })
+  })
+}
+
+addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
+```

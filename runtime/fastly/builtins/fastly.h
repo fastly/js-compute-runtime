@@ -45,6 +45,7 @@ public:
   static const JSPropertySpec properties[];
 
   static bool createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool createWebsocketHandoff(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool now(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool dump(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool enableDebugLogging(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -63,6 +64,26 @@ public:
 
 JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
                                                                 JS::HandleValue bodyInit);
+
+inline bool get_fastly_object(api::Engine *engine, JS::MutableHandleObject out) {
+  JS::RootedValue fastly_val(engine->cx());
+  if (!JS_GetProperty(engine->cx(), engine->global(), "fastly", &fastly_val)) {
+    return false;
+  }
+  if (fastly_val.isObject()) {
+    out.set(&fastly_val.toObject());
+    return true;
+  }
+  JS::RootedObject fastly_obj(engine->cx(), JS_NewPlainObject(engine->cx()));
+  if (!fastly_obj) {
+    return false;
+  }
+  if (!JS_DefineProperty(engine->cx(), engine->global(), "fastly", fastly_obj, 0)) {
+    return false;
+  }
+  out.set(fastly_obj);
+  return true;
+}
 
 /**
  * Debug only logging system, adding messages to `fastly.debugMessages`

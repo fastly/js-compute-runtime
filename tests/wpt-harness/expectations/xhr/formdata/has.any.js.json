@@ -1,11 +1,11 @@
 {
   "testFormDataHas": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "testFormDataHasEmpty1": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "testFormDataHasEmpty2": {
-    "status": "FAIL"
+    "status": "PASS"
   }
 }

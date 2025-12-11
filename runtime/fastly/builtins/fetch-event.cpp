@@ -48,6 +48,18 @@ JSString *ja3(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::JA3));
   return val.isString() ? val.toString() : nullptr;
 }
+JSString *ja4(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::JA4));
+  return val.isString() ? val.toString() : nullptr;
+}
+JSString *h2Fingerprint(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::H2Fingerprint));
+  return val.isString() ? val.toString() : nullptr;
+}
+JSString *ohFingerprint(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::OHFingerprint));
+  return val.isString() ? val.toString() : nullptr;
+}
 JSObject *clientHello(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::ClientHello));
   return val.isObject() ? val.toObjectOrNull() : nullptr;
@@ -208,6 +220,81 @@ bool ClientInfo::tls_ja3_md5_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool ClientInfo::tls_ja4_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  JS::RootedString result(cx, ja4(self));
+  if (!result) {
+    auto res = host_api::HttpReq::http_req_downstream_tls_ja4();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+
+    if (!res.unwrap().has_value()) {
+      args.rval().setNull();
+      return true;
+    }
+
+    auto ja4_str = std::move(res.unwrap().value());
+    result.set(JS_NewStringCopyN(cx, ja4_str.ptr.get(), ja4_str.len));
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::JA4),
+                        JS::StringValue(result));
+  }
+  args.rval().setString(result);
+  return true;
+}
+
+bool ClientInfo::h2_fingerprint_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  JS::RootedString result(cx, h2Fingerprint(self));
+  if (!result) {
+    auto res = host_api::HttpReq::http_req_downstream_client_h2_fingerprint();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+
+    if (!res.unwrap().has_value()) {
+      args.rval().setNull();
+      return true;
+    }
+
+    auto h2fp_str = std::move(res.unwrap().value());
+    result.set(JS_NewStringCopyN(cx, h2fp_str.ptr.get(), h2fp_str.len));
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::H2Fingerprint),
+                        JS::StringValue(result));
+  }
+  args.rval().setString(result);
+  return true;
+}
+
+bool ClientInfo::oh_fingerprint_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  JS::RootedString result(cx, ohFingerprint(self));
+  if (!result) {
+    auto res = host_api::HttpReq::http_req_downstream_client_oh_fingerprint();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+
+    if (!res.unwrap().has_value()) {
+      args.rval().setNull();
+      return true;
+    }
+
+    auto ohfp_str = std::move(res.unwrap().value());
+    result.set(JS_NewStringCopyN(cx, ohfp_str.ptr.get(), ohfp_str.len));
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::OHFingerprint),
+                        JS::StringValue(result));
+  }
+  args.rval().setString(result);
+  return true;
+}
+
 bool ClientInfo::tls_client_hello_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
@@ -323,6 +410,9 @@ const JSPropertySpec ClientInfo::properties[] = {
     JS_PSG("tlsCipherOpensslName", tls_cipher_openssl_name_get, JSPROP_ENUMERATE),
     JS_PSG("tlsProtocol", tls_protocol_get, JSPROP_ENUMERATE),
     JS_PSG("tlsJA3MD5", tls_ja3_md5_get, JSPROP_ENUMERATE),
+    JS_PSG("tlsJA4", tls_ja4_get, JSPROP_ENUMERATE),
+    JS_PSG("h2Fingerprint", h2_fingerprint_get, JSPROP_ENUMERATE),
+    JS_PSG("ohFingerprint", oh_fingerprint_get, JSPROP_ENUMERATE),
     JS_PSG("tlsClientCertificate", tls_client_certificate_get, JSPROP_ENUMERATE),
     JS_PSG("tlsClientHello", tls_client_hello_get, JSPROP_ENUMERATE),
     JS_PS_END,
@@ -679,6 +769,17 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
     return true;
   }
 
+  if (auto websocket_upgrade_request = Response::websocket_upgrade_request(response_obj)) {
+    auto backend = Response::backend_str(cx, response_obj);
+
+    auto res = websocket_upgrade_request->redirect_to_websocket_proxy(backend);
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+    return true;
+  }
+
   bool streaming = false;
   if (!RequestOrResponse::maybe_stream_body(cx, response_obj, &streaming)) {
     return false;
@@ -687,8 +788,7 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
   if (streaming) {
     ENGINE->incr_event_loop_interest();
   }
-  FetchEvent::set_state(event, streaming ? FetchEvent::State::responseStreaming
-                                         : FetchEvent::State::responseDone);
+  FetchEvent::mark_done(event, streaming, Response::status(response_obj));
   return start_response(cx, response_obj, streaming);
 }
 
@@ -726,7 +826,7 @@ bool FetchEvent::respondWith(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   // Step 3
-  if (state(self) != State::unhandled) {
+  if (state(self) != State::unhandled && state(self) != State::waitToRespond) {
     JS_ReportErrorUTF8(cx, "FetchEvent#respondWith can't be called twice on the same event");
     return false;
   }
@@ -755,6 +855,63 @@ bool FetchEvent::respondWith(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   args.rval().setUndefined();
   return true;
+}
+
+bool FetchEvent::sendEarlyHints(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(1)
+  MOZ_RELEASE_ASSERT(state(self) == State::unhandled || state(self) == State::waitToRespond);
+
+  if (!is_dispatching(self)) {
+    JS_ReportErrorUTF8(cx, "FetchEvent#sendEarlyHints must be called synchronously from "
+                           "within a FetchEvent handler");
+    return false;
+  }
+  if (state(self) != State::unhandled && state(self) != State::waitToRespond) {
+    JS_ReportErrorUTF8(
+        cx, "FetchEvent#sendEarlyHints can't be called after the main response has been sent");
+    return false;
+  }
+
+  JS::RootedObject headers(cx, Headers::create(cx, args.get(0), Headers::HeadersGuard::None));
+  // Calling get_list() transitions to Mode::ContentOnly or Mode::CachedInContent.
+  if (!Headers::get_list(cx, headers)) {
+    return false;
+  }
+
+  auto response_handle = host_api::HttpResp::make();
+  if (auto *err = response_handle.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  // 103: Early Hint
+  auto set_res = response_handle.unwrap().set_status(103);
+  if (auto *err = set_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  auto body_handle = host_api::HttpBody::make();
+  if (auto *err = body_handle.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  JS::RootedObject response_instance(
+      cx, JS_NewObjectWithGivenProto(cx, &Response::class_, Response::proto_obj));
+  if (!response_instance) {
+    return false;
+  }
+  RootedObject response_obj(cx, Response::create(cx, response_instance, response_handle.unwrap(),
+                                                 body_handle.unwrap(), false, nullptr, nullptr,
+                                                 nullptr));
+  RootedValue headers_val(cx, JS::ObjectValue(*headers));
+  JS::SetReservedSlot(response_obj, static_cast<uint32_t>(Response::Slots::Headers), headers_val);
+  JS::SetReservedSlot(response_obj, static_cast<uint32_t>(Response::Slots::Status),
+                      JS::Int32Value(103));
+  RequestOrResponse::set_url(response_obj, JS_GetEmptyStringValue(cx));
+
+  args.rval().setUndefined();
+  return start_response(cx, response_obj, false);
 }
 
 bool FetchEvent::respondWithError(JSContext *cx, JS::HandleObject self) {
@@ -838,6 +995,7 @@ const JSPropertySpec FetchEvent::static_properties[] = {
 const JSFunctionSpec FetchEvent::methods[] = {
     JS_FN("respondWith", respondWith, 1, JSPROP_ENUMERATE),
     JS_FN("waitUntil", waitUntil, 1, JSPROP_ENUMERATE),
+    JS_FN("sendEarlyHints", sendEarlyHints, 1, JSPROP_ENUMERATE),
     JS_FS_END,
 };
 
@@ -912,9 +1070,24 @@ FetchEvent::State FetchEvent::state(JSObject *self) {
       JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::State)).toInt32());
 }
 
+void FetchEvent::mark_done(JSObject *self, bool streaming, uint16_t status_code) {
+  MOZ_ASSERT(is_instance(self));
+  auto new_state = [&] {
+    // 103: Early Hint
+    if (status_code == 103) {
+      return State::unhandled;
+    }
+    if (streaming) {
+      return State::responseStreaming;
+    }
+    return State::responseDone;
+  }();
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::State),
+                      JS::Int32Value(static_cast<int32_t>(new_state)));
+}
+
 void FetchEvent::set_state(JSObject *self, State new_state) {
   MOZ_ASSERT(is_instance(self));
-  MOZ_ASSERT((uint8_t)new_state > (uint8_t)state(self));
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::State),
                       JS::Int32Value(static_cast<int32_t>(new_state)));
 }

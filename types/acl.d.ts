@@ -5,7 +5,7 @@ declare module 'fastly:acl' {
     /**
      * Opens the given ACL store by name
      */
-    static open(aclName: string);
+    static open(aclName: string): Acl;
 
     /**
      * Lookup a given IP address in the ACL list.

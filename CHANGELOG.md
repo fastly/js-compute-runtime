@@ -1,5 +1,94 @@
 # Changelog
 
+## 3.37.0 (2025-12-11)
+
+### Added
+
+* Add client fingerprint properties (tlsJA4, h2Fingerprint, ohFingerprint) ([#1248](https://github.com/fastly/js-compute-runtime/issues/1248)) ([9390e8c](https://github.com/fastly/js-compute-runtime/commit/9390e8cdf37206a570512cf8d36335c70bc5ccde))
+* Shielding support ([#1241](https://github.com/fastly/js-compute-runtime/issues/1241)) ([985c55e](https://github.com/fastly/js-compute-runtime/commit/985c55e634227b8dac66aea9b7ba4ca982b41b9c))
+
+## 3.36.0 (2025-11-18)
+
+### Added
+
+* Image Optimizer support ([#1224](https://github.com/fastly/js-compute-runtime/issues/1224)) ([c3dd3de](https://github.com/fastly/js-compute-runtime/commit/c3dd3de7436f999055eb0b3d83a1f59c1c26b5d1))
+* Implement 103 Early Hints ([#1217](https://github.com/fastly/js-compute-runtime/issues/1217)) ([fda6ad3](https://github.com/fastly/js-compute-runtime/commit/fda6ad31d6f8ceee16cd950217be770a4f794bb3))
+
+### Fixed
+
+* **fanout:** commit request headers before fanout handoff ([#1222](https://github.com/fastly/js-compute-runtime/issues/1222)) ([8dfefad](https://github.com/fastly/js-compute-runtime/commit/8dfefadec46a2714be010c4a8c7e59cd43537fec))
+* Fix broken KVStore test ([#1223](https://github.com/fastly/js-compute-runtime/issues/1223)) ([6055d88](https://github.com/fastly/js-compute-runtime/commit/6055d884f617336d8d6326bf26dcfb49265f5ae2))
+
+## 3.35.2 (2025-11-07)
+
+### Fixed
+
+* **compute-file-server:** bump MSRV to fix ICU build issues ([#1221](https://github.com/fastly/js-compute-runtime/issues/1221)) ([379e511](https://github.com/fastly/js-compute-runtime/commit/379e51153e07962972b8a69e645e0f55912122d0))
+* surrogateKeys not being added when using CoreCache ([#1219](https://github.com/fastly/js-compute-runtime/issues/1219)) ([b0efe20](https://github.com/fastly/js-compute-runtime/commit/b0efe20c2f6f96755bb450d139e002797b376802))
+* **ws:** commit ws request headers before upgrading ([#1216](https://github.com/fastly/js-compute-runtime/issues/1216)) ([a15fa61](https://github.com/fastly/js-compute-runtime/commit/a15fa6148427801bbaf4d862b9a21884f21758f9))
+
+## 3.35.1 (2025-09-29)
+
+### Fixed
+
+* Root HTML rewriter variables to ensure no GC ([#1202](https://github.com/fastly/js-compute-runtime/issues/1202)) ([6aaf9f3](https://github.com/fastly/js-compute-runtime/commit/6aaf9f391acccfb68c5a012d92bf324df04d4230))
+
+## 3.35.0 (2025-09-26)
+
+### Added
+
+* HTML Rewriter ([0015ff1](https://github.com/fastly/js-compute-runtime/commit/0015ff155b9f57995ccf63671aee8c112b664678))
+
+### Fixed
+
+* Remove broken CI tests ([5b645f7](https://github.com/fastly/js-compute-runtime/commit/5b645f726f7a4f6eb741db3addda4b45be1dd63c))
+* Update rust toolchain for compute-file-server-cli ([09d5a6d](https://github.com/fastly/js-compute-runtime/commit/09d5a6dc66b0f1befff7268915f13dc4d7ac0854))
+
+## 3.34.0 (2025-04-11)
+
+### Added
+
+* add support for Websocket passthrough ([#1172](https://github.com/fastly/js-compute-runtime/issues/1172)) ([fcf2a54](https://github.com/fastly/js-compute-runtime/commit/fcf2a54e2935061b4d67ccb430d485d79ee0bd04))
+
+## 3.33.4 (2025-04-04)
+
+### Fixed
+
+* publish workflow ([#1166](https://github.com/fastly/js-compute-runtime/issues/1166)) ([3db857c](https://github.com/fastly/js-compute-runtime/commit/3db857c095aabbb15060694c3c84ae985cee13a1))
+
+## 3.33.3 (2025-04-04)
+
+### Fixed
+
+* config store documentation fix ([#1160](https://github.com/fastly/js-compute-runtime/issues/1160)) ([4047c7b](https://github.com/fastly/js-compute-runtime/commit/4047c7b0862bbaa799053cc341674725425f933a))
+* TypeScript declaration for Headers ([#1155](https://github.com/fastly/js-compute-runtime/issues/1155)) ([a6664b9](https://github.com/fastly/js-compute-runtime/commit/a6664b908db4f2f784ddedc53798f7c31474530e))
+
+## 3.33.2 (2025-03-17)
+
+### Fixed
+
+* TypeScript declaration return type of Acl.open() ([#1149](https://github.com/fastly/js-compute-runtime/issues/1149)) ([b9765f6](https://github.com/fastly/js-compute-runtime/commit/b9765f68823529327a8ec75268f4833d308ad6bd))
+* TypeScript type definitions for Blob, File, FormData ([#1150](https://github.com/fastly/js-compute-runtime/issues/1150)) ([4c93d79](https://github.com/fastly/js-compute-runtime/commit/4c93d794390e3f2cb98e8e806744620e2cde3b3b))
+* TypeScript type definitions for Event and EventTarget ([#1151](https://github.com/fastly/js-compute-runtime/issues/1151)) ([eb1ab0d](https://github.com/fastly/js-compute-runtime/commit/eb1ab0d2f693c199947e8b6ffc4a7c1d758024ad))
+
+## 3.33.1 (2025-03-12)
+
+### Fixed
+
+* documentation fix ([#1147](https://github.com/fastly/js-compute-runtime/issues/1147)) ([15b9ea5](https://github.com/fastly/js-compute-runtime/commit/15b9ea5b3121e779f0873a1562cc51ed710135c7))
+
+## 3.33.0 (2025-03-12)
+
+### Added
+
+* add support for EventTarget ([#1145](https://github.com/fastly/js-compute-runtime/issues/1145)) ([a735993](https://github.com/fastly/js-compute-runtime/commit/a735993e609b5e2405a5223e7bc02ef655a47d68))
+* FormData support and Request.formData and Response.formData ([#1144](https://github.com/fastly/js-compute-runtime/issues/1144)) ([0214ae7](https://github.com/fastly/js-compute-runtime/commit/0214ae70b8d5afd1bc66231d779af5b606e89efb))
+
+### Fixed
+
+* Backend.prototype.health method definition ([#1143](https://github.com/fastly/js-compute-runtime/issues/1143)) ([42d429b](https://github.com/fastly/js-compute-runtime/commit/42d429bafdd7ec02854217675bdb58eba1e533a4))
+* Weval stack overflow bug ([#1135](https://github.com/fastly/js-compute-runtime/issues/1135)) ([f6947d9](https://github.com/fastly/js-compute-runtime/commit/f6947d9eb9fcd10f91c8c439a8a5cd6db8169d9e))
+
 ## 3.32.2 (2025-02-26)
 
 ### Fixed

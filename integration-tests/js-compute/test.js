@@ -10,7 +10,7 @@ import { existsSync } from 'node:fs';
 import { copyFile, readFile, writeFile } from 'node:fs/promises';
 import core from '@actions/core';
 import TOML from '@iarna/toml';
-import { getEnv } from './env.js';
+import { getEnv, GLOBAL_PREFIX } from './env.js';
 
 // test environment variable handling
 process.env.LOCAL_TEST = 'local val';
@@ -81,7 +81,7 @@ const branchName = (await zx`git branch --show-current`).stdout
 const fixture = !moduleMode ? 'app' : 'module-mode';
 
 // Service names are carefully unique to support parallel runs
-const serviceName = `app-${branchName}${aot ? '--aot' : ''}${httpCache ? '--http' : ''}${process.env.SUFFIX_STRING ? '--' + process.env.SUFFIX_STRING : ''}`;
+const serviceName = `${GLOBAL_PREFIX}app-${branchName}${aot ? '--aot' : ''}${httpCache ? '--http' : ''}${process.env.SUFFIX_STRING ? '--' + process.env.SUFFIX_STRING : ''}`;
 let domain, serviceId;
 const fixturePath = join(__dirname, 'fixtures', fixture);
 let localServer;
@@ -151,7 +151,7 @@ if (!local) {
   serviceId = domainListing.ServiceID;
   core.notice(`Service is running on ${domain}`);
 } else {
-  localServer = zx`fastly compute serve --verbose --viceroy-args="${verbose ? '-vv' : ''}"`;
+  localServer = zx`fastly compute serve --verbose --viceroy-args=${verbose ? '-vv' : ''}`;
   domain = 'http://127.0.0.1:7676';
 }
 
@@ -192,7 +192,7 @@ await Promise.all([
   // and we don't currently have a reliable way to poll on that
   // (perhaps we could poll on the highest version as seen from setup.js resource-link return output
   // being fully activated?)
-  new Promise((resolve) => setTimeout(resolve, 60_000)),
+  local ? null : new Promise((resolve) => setTimeout(resolve, 60_000)),
 ]);
 
 core.endGroup();
@@ -300,6 +300,26 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
           clearTimeout(downstreamTimeout);
           return bodyChunks;
         }
+        let onInfoHandler = test.downstream_info
+          ? async (status, headers) => {
+              if (
+                test.downstream_info.status !== undefined &&
+                test.downstream_info.status != status
+              ) {
+                throw new Error(
+                  `[DownstreamInfo: Status mismatch] Expected: ${configResponse.status} - Got: ${status}}`,
+                );
+              }
+              if (headers) {
+                compareHeaders(
+                  configResponse.headers,
+                  headers,
+                  configResponse.headersExhaustive,
+                );
+              }
+            }
+          : undefined;
+
         if (local) {
           if (test.environments.includes('viceroy')) {
             return (bail || !test.flake ? (_, __, fn) => fn() : retry)(
@@ -354,6 +374,7 @@ for (const chunk of chunks(Object.entries(tests), 100)) {
                     method: test.downstream_request.method || 'GET',
                     headers: test.downstream_request.headers || undefined,
                     body: test.downstream_request.body || undefined,
+                    onInfo: onInfoHandler,
                   });
                   const bodyChunks = await getBodyChunks(response);
                   await compareDownstreamResponse(
@@ -435,7 +456,7 @@ if (!local && failed.length) {
   core.notice(`Tests failed.`);
 }
 
-if (!local && !skipTeardown && failed.length === 0) {
+if (!local && !skipTeardown) {
   const teardownPath = join(__dirname, 'teardown.js');
   if (existsSync(teardownPath)) {
     core.startGroup('Tear down the extra set-up for the service');

@@ -3,7 +3,7 @@
     "status": "FAIL"
   },
   "URLSearchParams is cloned": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "TypedArray is cloned": {
     "status": "PASS"

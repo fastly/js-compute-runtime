@@ -67,6 +67,7 @@ public:
   enum class BodyReadResult {
     ArrayBuffer,
     Blob,
+    FormData,
     JSON,
     Text,
   };
@@ -178,6 +179,7 @@ public:
     ResponsePromise,
     IsDownstream,
     AutoDecompressGzip,
+    ImageOptimizerOptions,
     Count,
   };
 
@@ -194,6 +196,8 @@ public:
                                  JS::HandleValue cache_override_val);
   static bool apply_cache_override(JSContext *cx, JS::HandleObject self);
   static bool apply_auto_decompress_gzip(JSContext *cx, JS::HandleObject self);
+  static bool set_image_optimizer_options(JSContext *cx, JS::HandleObject self,
+                                          JS::HandleValue image_optimizer_options);
 
   static bool isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static host_api::HttpReq request_handle(JSObject *obj);
@@ -263,6 +267,7 @@ public:
     StatusMessage,
     Redirected,
     GripUpgradeRequest,
+    WebsocketUpgradeRequest,
     StorageAction,
     SuggestedCacheWriteOptions,
     OverrideCacheWriteOptions,
@@ -290,7 +295,7 @@ public:
   static JSObject *create(JSContext *cx, JS::HandleObject response,
                           host_api::HttpResp response_handle, host_api::HttpBody body_handle,
                           bool is_upstream, JSObject *grip_upgrade_request,
-                          JS::HandleString backend);
+                          JSObject *websocket_upgrade_request, JS::HandleString backend);
 
   static host_api::HttpResp response_handle(JSObject *obj);
 
@@ -306,6 +311,7 @@ public:
 
   static bool is_upstream(JSObject *obj);
   static std::optional<host_api::HttpReq> grip_upgrade_request(JSObject *obj);
+  static std::optional<host_api::HttpReq> websocket_upgrade_request(JSObject *obj);
   static host_api::HostString backend_str(JSContext *cx, JSObject *obj);
   static uint16_t status(JSObject *obj);
   static JSString *status_message(JSObject *obj);
