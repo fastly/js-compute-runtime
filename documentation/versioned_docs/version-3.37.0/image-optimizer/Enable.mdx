@@ -1,0 +1,33 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# `Enable`
+
+Enumerator options for [`imageOptimizerOptions.enable`](./imageOptimizerOptions.mdx).
+
+## Constants
+
+- `Upscale` (`"upscale"`) Allow images to be resized such that the output image's dimensions are larger than the source image.
+
+## Examples
+
+```js
+import { Enable, Region } from 'fastly:image-optimizer';
+
+addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
+
+async function handleRequest(event) {
+  return await fetch('https://www.w3.org/Graphics/PNG/text2.png', {
+    imageOptimizerOptions: {
+      region: Region.UsEast,
+      width: 2560,
+      enable: Enable.Upscale
+    },
+    backend: 'w3'
+  });
+}
+```

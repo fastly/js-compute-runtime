@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.37.0 (2025-12-11)
+
+### Added
+
+* Add client fingerprint properties (tlsJA4, h2Fingerprint, ohFingerprint) ([#1248](https://github.com/fastly/js-compute-runtime/issues/1248)) ([9390e8c](https://github.com/fastly/js-compute-runtime/commit/9390e8cdf37206a570512cf8d36335c70bc5ccde))
+* Shielding support ([#1241](https://github.com/fastly/js-compute-runtime/issues/1241)) ([985c55e](https://github.com/fastly/js-compute-runtime/commit/985c55e634227b8dac66aea9b7ba4ca982b41b9c))
+
 ## 3.36.0 (2025-11-18)
 
 ### Added
