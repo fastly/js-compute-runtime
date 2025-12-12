@@ -13,7 +13,7 @@ declare module 'fastly:logger' {
    *   "type": "javascript",
    *   "title": "Logger Example",
    *   "origins": [
-   *     "https://http-me.glitch.me"
+   *     "https://http-me.fastly.dev"
    *   ],
    *   "src": {
    *     "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",

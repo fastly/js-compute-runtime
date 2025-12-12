@@ -238,7 +238,7 @@ declare module 'fastly:backend' {
    *   "type": "javascript",
    *   "title": "Explicit Dynamic Backend Example",
    *   "origins": [
-   *     "https://http-me.glitch.me"
+   *     "https://http-me.fastly.dev"
    *   ],
    *   "src": {
    *     "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",

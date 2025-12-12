@@ -25,25 +25,25 @@ routes.set('/backend/timeout', async () => {
   allowDynamicBackends(true);
   let backend = new Backend({
     name: 'httpme1',
-    target: 'http-me.glitch.me',
-    hostOverride: 'http-me.glitch.me',
+    target: 'http-me.fastly.dev',
+    hostOverride: 'http-me.fastly.dev',
     useSSL: true,
     dontPool: true,
     betweenBytesTimeout: 1_000,
     connectTimeout: 1_000,
     firstByteTimeout: 1_000,
   });
-  console.time(`fetch('https://http-me.glitch.me/test?wait=5000'`);
+  console.time(`fetch('https://http-me.fastly.dev/test?wait=5000'`);
   await assertRejects(
     () =>
-      fetch('https://http-me.glitch.me/test?wait=5000', {
+      fetch('https://http-me.fastly.dev/test?wait=5000', {
         backend,
         cacheOverride: new CacheOverride('pass'),
       }),
     DOMException,
     'HTTP response timeout',
   );
-  console.timeEnd(`fetch('https://http-me.glitch.me/test?wait=5000'`);
+  console.timeEnd(`fetch('https://http-me.fastly.dev/test?wait=5000'`);
 });
 
 // implicit dynamic backend
@@ -53,7 +53,7 @@ routes.set('/backend/timeout', async () => {
     async () => {
       allowDynamicBackends(false);
       await assertRejects(() =>
-        fetch('https://http-me.glitch.me/headers', {
+        fetch('https://http-me.fastly.dev/headers', {
           cacheOverride: 'pass',
         }),
       );
@@ -66,10 +66,10 @@ routes.set('/backend/timeout', async () => {
       strictEqual(evt.request.backend, undefined);
       strictEqual(new Response('test').backend, undefined);
       await assertResolves(async () => {
-        const res = await fetch('https://http-me.glitch.me/headers', {
+        const res = await fetch('https://http-me.fastly.dev/headers', {
           cacheOverride: 'pass',
         });
-        strictEqual(res.backend.name, 'http-me.glitch.me');
+        strictEqual(res.backend.name, 'http-me.fastly.dev');
         strictEqual(res.backend.isSSL, true);
       });
       await assertResolves(() => fetch('https://www.fastly.com'));
@@ -83,8 +83,8 @@ routes.set('/backend/timeout', async () => {
     '/implicit-dynamic-backend/dynamic-backends-enabled-called-twice',
     async () => {
       allowDynamicBackends(true);
-      await assertResolves(() => fetch('https://http-me.glitch.me/headers'));
-      await assertResolves(() => fetch('https://http-me.glitch.me/headers'));
+      await assertResolves(() => fetch('https://http-me.fastly.dev/headers'));
+      await assertResolves(() => fetch('https://http-me.fastly.dev/headers'));
     },
   );
   routes.set('/implicit-dynamic-backend/default-timeouts', async () => {
@@ -98,10 +98,10 @@ routes.set('/backend/timeout', async () => {
       firstByteTimeout: 3_000,
     });
     await assertResolves(() =>
-      fetch('https://http-me.glitch.me/test?wait=2000'),
+      fetch('https://http-me.fastly.dev/test?wait=2000'),
     );
     await assertRejects(
-      () => fetch('https://http-me.glitch.me/test?wait=5000'),
+      () => fetch('https://http-me.fastly.dev/test?wait=5000'),
       DOMException,
       'HTTP response timeout',
     );
@@ -116,7 +116,7 @@ routes.set('/backend/timeout', async () => {
       allowDynamicBackends(true);
       let backend = createValidHttpMeBackend();
       await assertResolves(() =>
-        fetch('https://http-me.glitch.me/headers', {
+        fetch('https://http-me.fastly.dev/headers', {
           backend,
           cacheOverride: new CacheOverride('pass'),
         }),
@@ -2077,13 +2077,13 @@ routes.set('/backend/timeout', async () => {
           }
           let backend = new Backend({
             name: 'clientCertificate-clientCertificate-valid',
-            target: 'http-me.glitch.me',
+            target: 'http-me.fastly.dev',
             clientCertificate: {
               certificate: 'a',
               key: SecretStore.fromBytes(new Uint8Array([1, 2, 3])),
             },
           });
-          await fetch('https://http-me.glitch.me/headers', {
+          await fetch('https://http-me.fastly.dev/headers', {
             backend,
             cacheOverride: new CacheOverride('pass'),
           });
@@ -2101,10 +2101,10 @@ routes.set('/backend/timeout', async () => {
           }
           let backend = new Backend({
             name: 'grpc-grpc-invalid',
-            target: 'http-me.glitch.me',
+            target: 'http-me.fastly.dev',
             grpc: 0,
           });
-          await fetch('https://http-me.glitch.me/anything', {
+          await fetch('https://http-me.fastly.dev/anything', {
             backend,
             cacheOverride: new CacheOverride('pass'),
           });
@@ -2116,12 +2116,12 @@ routes.set('/backend/timeout', async () => {
         }
         let backend = new Backend({
           name: 'grpc-grpc-valid',
-          target: 'http-me.glitch.me',
+          target: 'http-me.fastly.dev',
           grpc: true,
         });
         await assertRejects(
           () =>
-            fetch('https://http-me.glitch.me/anything', {
+            fetch('https://http-me.fastly.dev/anything', {
               backend,
               cacheOverride: new CacheOverride('pass'),
             }),
@@ -2134,10 +2134,10 @@ routes.set('/backend/timeout', async () => {
     {
       routes.set('/backend/constructor/http-keepalive-invalid', async () => {
         await assertRejects(async () => {
-          await fetch('https://http-me.glitch.me/anything', {
+          await fetch('https://http-me.fastly.dev/anything', {
             backend: new Backend({
               name: 'grpc-grpc-invalid',
-              target: 'http-me.glitch.me',
+              target: 'http-me.fastly.dev',
               httpKeepalive: NaN,
             }),
             cacheOverride: new CacheOverride('pass'),
@@ -2145,10 +2145,10 @@ routes.set('/backend/timeout', async () => {
         }, RangeError);
       });
       routes.set('/backend/constructor/http-keepalive', async () => {
-        await fetch('https://http-me.glitch.me/anything', {
+        await fetch('https://http-me.fastly.dev/anything', {
           backend: new Backend({
             name: 'grpc-grpc-invalid',
-            target: 'http-me.glitch.me',
+            target: 'http-me.fastly.dev',
             httpKeepalive: 500,
           }),
           cacheOverride: new CacheOverride('pass'),
@@ -2160,20 +2160,20 @@ routes.set('/backend/timeout', async () => {
     {
       routes.set('/backend/constructor/tcp-keepalive-invalid', async () => {
         await assertRejects(async () => {
-          await fetch('https://http-me.glitch.me/anything', {
+          await fetch('https://http-me.fastly.dev/anything', {
             backend: new Backend({
               name: 'grpc-grpc-invalid',
-              target: 'http-me.glitch.me',
+              target: 'http-me.fastly.dev',
               tcpKeepalive: 'blah',
             }),
             cacheOverride: new CacheOverride('pass'),
           });
         }, TypeError);
         await assertRejects(async () => {
-          await fetch('https://http-me.glitch.me/anything', {
+          await fetch('https://http-me.fastly.dev/anything', {
             backend: new Backend({
               name: 'grpc-grpc-invalid',
-              target: 'http-me.glitch.me',
+              target: 'http-me.fastly.dev',
               tcpKeepalive: {
                 intervalSecs: 'boo',
               },
@@ -2183,10 +2183,10 @@ routes.set('/backend/timeout', async () => {
         }, RangeError);
       });
       routes.set('/backend/constructor/tcp-keepalive', async () => {
-        await fetch('https://http-me.glitch.me/anything', {
+        await fetch('https://http-me.fastly.dev/anything', {
           backend: new Backend({
             name: 'grpc-grpc-invalid',
-            target: 'http-me.glitch.me',
+            target: 'http-me.fastly.dev',
             tcpKeepalive: {
               intervalSecs: 1000,
               probes: 4,
@@ -2210,19 +2210,19 @@ routes.set('/backend/timeout', async () => {
       });
       const backend = new Backend({
         name: 'new-default',
-        target: 'http-me.glitch.me',
+        target: 'http-me.fastly.dev',
       });
-      console.time(`fetch('https://http-me.glitch.me/test?wait=2000'`);
+      console.time(`fetch('https://http-me.fastly.dev/test?wait=2000'`);
       await assertRejects(
         () =>
-          fetch('https://http-me.glitch.me/test?wait=2000', {
+          fetch('https://http-me.fastly.dev/test?wait=2000', {
             backend,
             cacheOverride: new CacheOverride('pass'),
           }),
         DOMException,
         'HTTP response timeout',
       );
-      console.timeEnd(`fetch('https://http-me.glitch.me/test?wait=2000'`);
+      console.timeEnd(`fetch('https://http-me.fastly.dev/test?wait=2000'`);
     });
   }
 
@@ -2359,7 +2359,7 @@ routes.set('/backend/timeout', async () => {
       );
 
       await assertResolves(() =>
-        fetch('https://http-me.glitch.me/headers', {
+        fetch('https://http-me.fastly.dev/headers', {
           backend: Backend.fromName('TheOrigin'),
         }),
       );
@@ -2499,8 +2499,8 @@ routes.set('/backend/timeout', async () => {
       strictEqual(backend.toString(), 'http-me');
       strictEqual(backend.toName(), 'http-me');
       strictEqual(backend.health(), 'unknown');
-      strictEqual(backend.target, 'http-me.glitch.me', 'target');
-      strictEqual(backend.hostOverride, 'http-me.glitch.me', 'hostOverride');
+      strictEqual(backend.target, 'http-me.fastly.dev', 'target');
+      strictEqual(backend.hostOverride, 'http-me.fastly.dev', 'hostOverride');
       strictEqual(backend.port, 443, 'port');
       if (isRunningLocally()) {
         strictEqual(backend.connectTimeout, null, 'connectTimeout');
@@ -2535,7 +2535,7 @@ routes.set('/backend/timeout', async () => {
   // ip & port
   routes.set('/backend/port-ip-defined', async () => {
     allowDynamicBackends(true);
-    const res = await fetch('https://http-me.glitch.me/headers', {
+    const res = await fetch('https://http-me.fastly.dev/headers', {
       cacheOverride: new CacheOverride('pass'),
     });
     ok(res.port > 0);
@@ -2543,7 +2543,7 @@ routes.set('/backend/timeout', async () => {
   });
   routes.set('/backend/port-ip-cached', async () => {
     allowDynamicBackends(true);
-    const res = await fetch('https://http-me.glitch.me/headers');
+    const res = await fetch('https://http-me.fastly.dev/headers');
     strictEqual(res.port, undefined);
     strictEqual(res.ip, undefined);
   });
@@ -2555,8 +2555,8 @@ function createValidHttpMeBackend() {
   // We are defining all the possible fields here but any number of fields can be defined - the ones which are not defined will use their default value instead.
   return (validHttpMeBackend = new Backend({
     name: 'http-me',
-    target: 'http-me.glitch.me',
-    hostOverride: 'http-me.glitch.me',
+    target: 'http-me.fastly.dev',
+    hostOverride: 'http-me.fastly.dev',
     connectTimeout: 1000,
     firstByteTimeout: 180000,
     betweenBytesTimeout: 9000,
@@ -2564,10 +2564,10 @@ function createValidHttpMeBackend() {
     dontPool: false,
     tlsMinVersion: 1.2,
     tlsMaxVersion: 1.2,
-    certificateHostname: 'http-me.glitch.me',
+    certificateHostname: 'http-me.fastly.dev',
     // Colon-delimited list of permitted SSL Ciphers
     ciphers: 'ECDHE-RSA-AES128-GCM-SHA256:!RC4',
-    sniHostname: 'http-me.glitch.me',
+    sniHostname: 'http-me.fastly.dev',
   }));
 }
 
