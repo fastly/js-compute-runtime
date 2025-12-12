@@ -58,9 +58,9 @@ routes.set('/response/ip-port-undefined', async () => {
 
 routes.set('/response/request-body-init', async () => {
   allowDynamicBackends(true);
-  const downloadResp = await fetch('https://http-me.glitch.me/json');
+  const downloadResp = await fetch('https://http-me.fastly.dev/json');
   const postResp = await fetch(
-    new Request('https://http-me.glitch.me/anything', {
+    new Request('https://http-me.fastly.dev/anything', {
       method: 'POST',
       body: downloadResp.body,
     }),
