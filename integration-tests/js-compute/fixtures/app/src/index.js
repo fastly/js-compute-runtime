@@ -46,6 +46,7 @@ import './response-json.js';
 import './response-redirect.js';
 import './response.js';
 import './secret-store.js';
+import './security.js';
 import './server.js';
 import './shielding.js';
 import './tee.js';

@@ -142,8 +142,8 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
         }
         case 'image-optimizer': {
           return {
-            contents: `export const { 
-              Region, Auto, Format, BWAlgorithm, Disable, Enable, Fit, Metadata, 
+            contents: `export const {
+              Region, Auto, Format, BWAlgorithm, Disable, Enable, Fit, Metadata,
               Optimize, Orient, Profile, ResizeFilter, CropMode, optionsToQueryString
             } = globalThis.fastly.imageOptimizer;`,
           };
@@ -153,6 +153,11 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
             contents: `export const {
               Shield
             } = globalThis.fastly.shielding;`,
+          };
+        }
+        case 'security': {
+          return {
+            contents: `export const inspect = globalThis.fastly.inspect;`,
           };
         }
       }

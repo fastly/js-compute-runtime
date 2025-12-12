@@ -535,6 +535,21 @@ private:
   std::string msg;
 };
 
+class InspectOptions final {
+public:
+  const char *corp = nullptr;
+  uint32_t corp_len = 0;
+  const char *workspace = nullptr;
+  uint32_t workspace_len = 0;
+  const char *override_client_ip_ptr = nullptr;
+  uint32_t override_client_ip_len = 0;
+  uint32_t req_handle;
+  uint32_t body_handle;
+
+  InspectOptions() = default;
+  explicit InspectOptions(uint32_t req, uint32_t body) : req_handle{req}, body_handle{body} {}
+};
+
 class HttpReq final : public HttpBase {
 public:
   using Handle = uint32_t;
@@ -688,6 +703,8 @@ struct Request {
 
   Request() = default;
   Request(HttpReq req, HttpBody body) : req{req}, body{body} {}
+
+  Result<HostString> inspect(const InspectOptions *config);
 };
 
 class GeoIp final {
