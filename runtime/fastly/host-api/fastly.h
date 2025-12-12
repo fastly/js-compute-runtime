@@ -47,8 +47,8 @@ typedef fastly_host_http_response fastly_world_tuple2_handle_handle;
 #define HEADER_MAX_LEN 69000
 #define METHOD_MAX_LEN 1024
 #define URI_MAX_LEN 8192
-#define CONFIG_STORE_ENTRY_MAX_LEN 8000
-#define DICTIONARY_ENTRY_MAX_LEN CONFIG_STORE_ENTRY_MAX_LEN
+#define CONFIG_STORE_INITIAL_BUF_LEN 512
+#define DICTIONARY_ENTRY_MAX_LEN 8000
 
 // Ensure that all the things we want to use the hostcall buffer for actually
 // fit into the buffer.
