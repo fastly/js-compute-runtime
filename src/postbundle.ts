@@ -6,8 +6,8 @@ import MagicString from 'magic-string';
 import { simple as simpleWalk } from 'acorn-walk';
 
 export async function postbundle(
-  input,
-  outfile,
+  input: string,
+  outfile: string,
   { moduleMode = false, enableStackTraces = false },
 ) {
   const source = await readFile(input, { encoding: 'utf8' });
@@ -28,7 +28,7 @@ export async function postbundle(
     sourceType: moduleMode ? 'module' : 'script',
   });
 
-  const precompileCalls = [];
+  const precompileCalls: string[] = [];
   simpleWalk(ast, {
     Literal(node) {
       if (!node.regex) return;

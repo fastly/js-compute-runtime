@@ -1,10 +1,28 @@
 import { fileURLToPath } from 'node:url';
 import { dirname, join, isAbsolute } from 'node:path';
-import { unknownArgument } from './unknownArgument.js';
-import { tooManyEngines } from './tooManyEngines.js';
+import { tooManyEngines, unknownArgument } from './printHelp.js';
 import { EnvParser } from './env.js';
 
-export async function parseInputs(cliInputs) {
+export type ParsedInputs =
+  | 'help'
+  | 'version'
+  | {
+      enableAOT: boolean;
+      aotCache: string;
+      enableHttpCache: boolean;
+      enableExperimentalHighResolutionTimeMethods: boolean;
+      moduleMode: boolean;
+      bundle: boolean;
+      enableStackTraces: boolean;
+      excludeSources: boolean;
+      debugIntermediateFilesDir: string | undefined;
+      wasmEngine: string;
+      input: string;
+      output: string;
+      env: Record<string, string>;
+    };
+
+export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
   const __dirname = dirname(fileURLToPath(import.meta.url));
 
   let enableHttpCache = false;
@@ -26,14 +44,13 @@ export async function parseInputs(cliInputs) {
 
   const envParser = new EnvParser();
 
-  // eslint-disable-next-line no-cond-assign
   loop: while ((cliInput = cliInputs.shift())) {
     switch (cliInput) {
       case '--': {
         break loop;
       }
       case '--env': {
-        const value = cliInputs.shift();
+        let value = cliInputs.shift();
         if (!value) {
           console.error('Error: --env requires a KEY=VALUE pair');
           process.exit(1);
@@ -81,11 +98,11 @@ export async function parseInputs(cliInputs) {
       }
       case '-V':
       case '--version': {
-        return { version: true };
+        return 'version';
       }
       case '-h':
       case '--help': {
-        return { help: true };
+        return 'help';
       }
       case '--starlingmonkey': {
         break;
@@ -106,6 +123,10 @@ export async function parseInputs(cliInputs) {
           tooManyEngines();
         }
         const value = cliInputs.shift();
+        if (value == null) {
+          console.error('Error: --engine-wasm requires a value');
+          process.exit(1);
+        }
         customEngineSet = true;
         if (isAbsolute(value)) {
           wasmEngine = value;
@@ -116,6 +137,10 @@ export async function parseInputs(cliInputs) {
       }
       case '--aot-cache': {
         const value = cliInputs.shift();
+        if (value == null) {
+          console.error('Error: --aot-cache requires a value');
+          process.exit(1);
+        }
         if (isAbsolute(value)) {
           aotCache = value;
         } else {
@@ -133,6 +158,10 @@ export async function parseInputs(cliInputs) {
       }
       case '--debug-intermediate-files': {
         const value = cliInputs.shift();
+        if (value == null) {
+          console.error('Error: --aot-cache requires a value');
+          process.exit(1);
+        }
         if (isAbsolute(value)) {
           debugIntermediateFilesDir = value;
         } else {
