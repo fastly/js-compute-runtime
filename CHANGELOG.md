@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.38.0 (2025-12-12)
+
+### Added
+
+* **config:** add support for config store buffers longer than 8k ([#1181](https://github.com/fastly/js-compute-runtime/issues/1181)) ([da4c169](https://github.com/fastly/js-compute-runtime/commit/da4c169f7a302c2e6c2a1796c791b9463c4dc2a8))
+
 ## 3.37.0 (2025-12-11)
 
 ### Added
