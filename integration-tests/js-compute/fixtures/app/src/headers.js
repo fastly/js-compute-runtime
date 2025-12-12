@@ -25,8 +25,8 @@ routes.set('/headers/getsetcookie', async () => {
 });
 
 routes.set('/headers/from-response/set', async () => {
-  const response = await fetch('https://httpbin.org/stream-bytes/11', {
-    backend: 'httpbin',
+  const response = await fetch('https://http-me.glitch.me/anything', {
+    backend: 'httpme',
     cacheOverride: new CacheOverride('pass'),
   });
   response.headers.set('cuStom', 'test');
@@ -34,8 +34,8 @@ routes.set('/headers/from-response/set', async () => {
 });
 
 routes.set('/headers/from-response/delete-invalid', async () => {
-  const response = await fetch('https://httpbin.org/stream-bytes/11', {
-    backend: 'httpbin',
+  const response = await fetch('https://http-me.glitch.me/anything', {
+    backend: 'httpme',
     cacheOverride: new CacheOverride('pass'),
   });
   response.headers.delete('none');
@@ -43,8 +43,8 @@ routes.set('/headers/from-response/delete-invalid', async () => {
 });
 
 routes.set('/headers/from-response/set-delete', async () => {
-  const response = await fetch('https://httpbin.org/stream-bytes/11', {
-    backend: 'httpbin',
+  const response = await fetch('https://http-me.glitch.me/anything', {
+    backend: 'httpme',
     cacheOverride: new CacheOverride('pass'),
   });
   response.headers.set('custom', 'test');

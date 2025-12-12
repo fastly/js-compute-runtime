@@ -179,6 +179,7 @@ public:
     ResponsePromise,
     IsDownstream,
     AutoDecompressGzip,
+    ImageOptimizerOptions,
     Count,
   };
 
@@ -195,6 +196,8 @@ public:
                                  JS::HandleValue cache_override_val);
   static bool apply_cache_override(JSContext *cx, JS::HandleObject self);
   static bool apply_auto_decompress_gzip(JSContext *cx, JS::HandleObject self);
+  static bool set_image_optimizer_options(JSContext *cx, JS::HandleObject self,
+                                          JS::HandleValue image_optimizer_options);
 
   static bool isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static host_api::HttpReq request_handle(JSObject *obj);

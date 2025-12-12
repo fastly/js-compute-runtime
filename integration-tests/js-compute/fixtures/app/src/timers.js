@@ -340,13 +340,13 @@ import { CacheOverride } from 'fastly:cache-override';
   });
   routes.set('/setTimeout/fetch-timeout', async () => {
     let timedOut = false;
-    const first = fetch('https://httpbin.org/delay/2', {
-      backend: 'httpbin',
+    const first = fetch('https://http-me.glitch.me/wait=200', {
+      backend: 'httpme',
       cacheOverride: new CacheOverride('pass'),
     });
     const second = Promise.race([
-      fetch('https://httpbin.org/delay/2', {
-        backend: 'httpbin',
+      fetch('https://http-me.glitch.me/wait=200', {
+        backend: 'httpme',
         cacheOverride: new CacheOverride('pass'),
       }),
       new Promise((resolve) => setTimeout(resolve, 5)).then(() => {

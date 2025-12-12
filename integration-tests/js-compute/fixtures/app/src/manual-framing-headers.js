@@ -220,8 +220,8 @@ routes.set(
 );
 
 async function responseMethod(setManualFramingHeaders) {
-  const response = await fetch('https://httpbin.org/stream-bytes/11', {
-    backend: 'httpbin',
+  const response = await fetch('https://http-me.glitch.me/drip=11', {
+    backend: 'httpme',
     cacheOverride: new CacheOverride('pass'),
   });
   response.setManualFramingHeaders(setManualFramingHeaders);

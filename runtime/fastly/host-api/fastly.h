@@ -532,6 +532,15 @@ int req_downstream_tls_raw_client_certificate(uint8_t *ret, size_t ret_len, size
 WASM_IMPORT("fastly_http_req", "downstream_tls_ja3_md5")
 int req_downstream_tls_ja3_md5(uint8_t *ret, size_t *nwritten);
 
+WASM_IMPORT("fastly_http_req", "downstream_tls_ja4")
+int req_downstream_tls_ja4(uint8_t *ret, size_t ret_len, size_t *nwritten);
+
+WASM_IMPORT("fastly_http_req", "downstream_client_h2_fingerprint")
+int req_downstream_client_h2_fingerprint(uint8_t *ret, size_t ret_len, size_t *nwritten);
+
+WASM_IMPORT("fastly_http_req", "downstream_client_oh_fingerprint")
+int req_downstream_client_oh_fingerprint(uint8_t *ret, size_t ret_len, size_t *nwritten);
+
 WASM_IMPORT("fastly_http_req", "new")
 int req_new(uint32_t *req_handle_out);
 
@@ -1102,6 +1111,52 @@ int acl_open(const char *name, size_t name_len, uint32_t *acl_handle_out);
 WASM_IMPORT("fastly_acl", "lookup")
 int acl_lookup(uint32_t acl_handle, const uint8_t *ip_octets, size_t ip_len,
                uint32_t *body_handle_out, fastly_acl_error *acl_error_out);
+
+typedef struct __attribute__((aligned(8))) fastly_image_optimizer_transform_config {
+  const char *sdk_claims_opts;
+  size_t sdk_claims_opts_len;
+} fastly_image_optimizer_transform_config;
+
+#define FASTLY_IMAGE_OPTIMIZER_RESERVED (1u << 0)
+#define FASTLY_IMAGE_OPTIMIZER_SDK_CLAIMS_OPTS (1u << 1)
+
+#define FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_UNINITIALIZED 0
+#define FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_OK 1
+#define FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_ERROR 2
+#define FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_WARNING 3
+
+typedef struct __attribute__((aligned(8))) fastly_image_optimizer_error_detail {
+  uint32_t tag;
+  const char *message;
+  size_t message_len;
+} fastly_image_optimizer_error_detail;
+
+WASM_IMPORT("fastly_image_optimizer", "transform_image_optimizer_request")
+int image_optimizer_transform_image_optimizer_request(
+    uint32_t req_handle, uint32_t body_handle, const char *backend, size_t backend_len,
+    int io_transform_config_mask, fastly_image_optimizer_transform_config *io_transform_config,
+    fastly_image_optimizer_error_detail *io_error_detail, uint32_t *resp_handle_out,
+    uint32_t *resp_body_handle_out);
+
+#define FASTLY_SHIELDING_SHIELD_BACKEND_OPTIONS_RESERVED (1 << 0)
+#define FASTLY_SHIELDING_SHIELD_BACKEND_OPTIONS_CACHE_KEY (1 << 1)
+#define FASTLY_SHIELDING_SHIELD_BACKEND_OPTIONS_FIRST_BYTE_TIMEOUT (1 << 2)
+
+struct fastly_shielding_shield_backend_config {
+  const char *cache_key;
+  uint32_t cache_key_len;
+  uint32_t first_byte_timeout_ms;
+};
+
+WASM_IMPORT("fastly_shielding", "shield_info")
+int fastly_shielding_shield_info(const char *name, size_t name_len, char *info_block,
+                                 size_t info_block_len, uint32_t *nwritten_out);
+
+WASM_IMPORT("fastly_shielding", "backend_for_shield")
+int fastly_shielding_backend_for_shield(
+    const char *name, size_t name_len, uint32_t options_mask,
+    const fastly_shielding_shield_backend_config *backend_config, char *backend_name,
+    size_t backend_name_len, uint32_t *nwritten_out);
 
 #ifdef __cplusplus
 } // namespace fastly
