@@ -11,7 +11,7 @@ import { CacheOverride } from 'fastly:cache-override';
 
 // generate a unique URL everytime so that we never work on a populated cache
 const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
-  'https://http-me.glitch.me/anything' + path;
+  'https://http-me.fastly.dev/anything' + path;
 
 // afterSend error handling
 {
@@ -466,7 +466,7 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
     });
     strictEqual(calledAfterSend, true);
     // verify we get a proper response (url included in response)
-    strictEqual('https://http-me.glitch.me' + (await res.json()).url, url);
+    strictEqual('https://http-me.fastly.dev' + (await res.json()).url, url);
   });
 
   // Test response property mutations

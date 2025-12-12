@@ -102,7 +102,7 @@ import { CacheOverride } from 'fastly:cache-override';
   });
   routes.set('/setInterval/timeout-parameter-not-supplied', async () => {
     assertDoesNotThrow(() => {
-      setInterval(function () {});
+      setInterval(function () { });
     });
   });
   // https://tc39.es/ecma262/#sec-tonumber
@@ -119,7 +119,7 @@ import { CacheOverride } from 'fastly:cache-override';
             throw sentinel;
           },
         };
-        setInterval(function () {}, timeout);
+        setInterval(function () { }, timeout);
       };
       assertThrows(test);
       try {
@@ -129,7 +129,7 @@ import { CacheOverride } from 'fastly:cache-override';
         assert(requestedType, 'number', 'requestedType === "number"');
       }
       assertThrows(
-        () => setInterval(function () {}, Symbol()),
+        () => setInterval(function () { }, Symbol()),
         TypeError,
         `can't convert symbol to number`,
       );
@@ -137,26 +137,26 @@ import { CacheOverride } from 'fastly:cache-override';
   );
 
   routes.set('/setInterval/timeout-parameter-negative', async () => {
-    assertDoesNotThrow(() => setInterval(() => {}, -1));
-    assertDoesNotThrow(() => setInterval(() => {}, -1.1));
-    assertDoesNotThrow(() => setInterval(() => {}, Number.MIN_SAFE_INTEGER));
-    assertDoesNotThrow(() => setInterval(() => {}, Number.MIN_VALUE));
-    assertDoesNotThrow(() => setInterval(() => {}, -Infinity));
+    assertDoesNotThrow(() => setInterval(() => { }, -1));
+    assertDoesNotThrow(() => setInterval(() => { }, -1.1));
+    assertDoesNotThrow(() => setInterval(() => { }, Number.MIN_SAFE_INTEGER));
+    assertDoesNotThrow(() => setInterval(() => { }, Number.MIN_VALUE));
+    assertDoesNotThrow(() => setInterval(() => { }, -Infinity));
   });
   routes.set('/setInterval/timeout-parameter-positive', async () => {
-    assertDoesNotThrow(() => setInterval(() => {}, 1));
-    assertDoesNotThrow(() => setInterval(() => {}, 1.1));
-    assertDoesNotThrow(() => setInterval(() => {}, Number.MAX_SAFE_INTEGER));
-    assertDoesNotThrow(() => setInterval(() => {}, Number.MAX_VALUE));
-    assertDoesNotThrow(() => setInterval(() => {}, Infinity));
+    assertDoesNotThrow(() => setInterval(() => { }, 1));
+    assertDoesNotThrow(() => setInterval(() => { }, 1.1));
+    assertDoesNotThrow(() => setInterval(() => { }, Number.MAX_SAFE_INTEGER));
+    assertDoesNotThrow(() => setInterval(() => { }, Number.MAX_VALUE));
+    assertDoesNotThrow(() => setInterval(() => { }, Infinity));
   });
   routes.set('/setInterval/returns-integer', async () => {
-    let id = setInterval(() => {}, 1);
+    let id = setInterval(() => { }, 1);
     assert(typeof id, 'number', `typeof id === "number"`);
   });
   routes.set('/setInterval/called-unbound', async () => {
     assertDoesNotThrow(() => {
-      setInterval.call(undefined, () => {}, 1);
+      setInterval.call(undefined, () => { }, 1);
     });
   });
 }
@@ -260,7 +260,7 @@ import { CacheOverride } from 'fastly:cache-override';
   });
   routes.set('/setTimeout/timeout-parameter-not-supplied', async () => {
     assertDoesNotThrow(() => {
-      setTimeout(function () {});
+      setTimeout(function () { });
     });
   });
   // https://tc39.es/ecma262/#sec-tonumber
@@ -275,7 +275,7 @@ import { CacheOverride } from 'fastly:cache-override';
           throw sentinel;
         },
       };
-      setTimeout(function () {}, timeout);
+      setTimeout(function () { }, timeout);
     };
     assertThrows(test);
     try {
@@ -285,33 +285,33 @@ import { CacheOverride } from 'fastly:cache-override';
       assert(requestedType, 'number', 'requestedType === "number"');
     }
     assertThrows(
-      () => setTimeout(function () {}, Symbol()),
+      () => setTimeout(function () { }, Symbol()),
       TypeError,
       `can't convert symbol to number`,
     );
   });
 
   routes.set('/setTimeout/timeout-parameter-negative', async () => {
-    assertDoesNotThrow(() => setTimeout(() => {}, -1));
-    assertDoesNotThrow(() => setTimeout(() => {}, -1.1));
-    assertDoesNotThrow(() => setTimeout(() => {}, Number.MIN_SAFE_INTEGER));
-    assertDoesNotThrow(() => setTimeout(() => {}, Number.MIN_VALUE));
-    assertDoesNotThrow(() => setTimeout(() => {}, -Infinity));
+    assertDoesNotThrow(() => setTimeout(() => { }, -1));
+    assertDoesNotThrow(() => setTimeout(() => { }, -1.1));
+    assertDoesNotThrow(() => setTimeout(() => { }, Number.MIN_SAFE_INTEGER));
+    assertDoesNotThrow(() => setTimeout(() => { }, Number.MIN_VALUE));
+    assertDoesNotThrow(() => setTimeout(() => { }, -Infinity));
   });
   routes.set('/setTimeout/timeout-parameter-positive', async () => {
-    assertDoesNotThrow(() => setTimeout(() => {}, 1));
-    assertDoesNotThrow(() => setTimeout(() => {}, 1.1));
-    assertDoesNotThrow(() => setTimeout(() => {}, Number.MAX_SAFE_INTEGER));
-    assertDoesNotThrow(() => setTimeout(() => {}, Number.MAX_VALUE));
-    assertDoesNotThrow(() => setTimeout(() => {}, Infinity));
+    assertDoesNotThrow(() => setTimeout(() => { }, 1));
+    assertDoesNotThrow(() => setTimeout(() => { }, 1.1));
+    assertDoesNotThrow(() => setTimeout(() => { }, Number.MAX_SAFE_INTEGER));
+    assertDoesNotThrow(() => setTimeout(() => { }, Number.MAX_VALUE));
+    assertDoesNotThrow(() => setTimeout(() => { }, Infinity));
   });
   routes.set('/setTimeout/returns-integer', async () => {
-    let id = setTimeout(() => {}, 1);
+    let id = setTimeout(() => { }, 1);
     assert(typeof id, 'number', `typeof id === "number"`);
   });
   routes.set('/setTimeout/called-unbound', async () => {
     assertDoesNotThrow(() => {
-      setTimeout.call(undefined, () => {}, 1);
+      setTimeout.call(undefined, () => { }, 1);
     });
   });
   routes.set('/setTimeout/200-ms', async () => {
@@ -340,12 +340,12 @@ import { CacheOverride } from 'fastly:cache-override';
   });
   routes.set('/setTimeout/fetch-timeout', async () => {
     let timedOut = false;
-    const first = fetch('https://http-me.glitch.me/wait=200', {
+    const first = fetch('https://http-me.fastly.dev/wait=200', {
       backend: 'httpme',
       cacheOverride: new CacheOverride('pass'),
     });
     const second = Promise.race([
-      fetch('https://http-me.glitch.me/wait=200', {
+      fetch('https://http-me.fastly.dev/wait=200', {
         backend: 'httpme',
         cacheOverride: new CacheOverride('pass'),
       }),
