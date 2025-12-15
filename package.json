@@ -2,7 +2,7 @@
   "name": "@fastly/js-compute",
   "version": "3.37.0",
   "license": "Apache-2.0",
-  "main": "js-compute-runtime-cli.js",
+  "main": "dist/cli/js-compute-runtime-cli.js",
   "types": "types/index.d.ts",
   "type": "module",
   "repository": {
@@ -10,18 +10,17 @@
     "url": "https://github.com/fastly/js-compute-runtime"
   },
   "bin": {
-    "js-compute": "js-compute-runtime-cli.js",
-    "js-compute-runtime": "js-compute-runtime-cli.js"
+    "js-compute": "dist/cli/js-compute-runtime-cli.js",
+    "js-compute-runtime": "dist/cli/js-compute-runtime-cli.js"
   },
   "files": [
     "types",
-    "js-compute-runtime-cli.js",
     "fastly.wasm",
     "fastly.debug.wasm",
     "fastly-weval.wasm",
     "fastly-ics.wevalcache",
-    "src",
-    "index.d.ts",
+    "dist",
+    "rsrc",
     "package.json",
     "README.md",
     "CHANGELOG.md"
@@ -34,26 +33,15 @@
     "test:wpt:debug": "tests/wpt-harness/build-wpt-runtime.sh --debug-build && node ./tests/wpt-harness/run-wpt.mjs -vv",
     "test:types": "tsd",
     "clean": "rm -f starling.wasm fastly.wasm fastly.debug.wasm fastly-weval.wasm fastly-ics.wevalcache fastly-js-compute-*.tgz",
-    "build": "npm run clean && npm run build:debug && npm run build:release && npm run build:weval",
+    "build": "npm run clean && npm run build:cli && npm run build:debug && npm run build:release && npm run build:weval",
+    "build:cli": "tsc",
     "build:release": "./runtime/fastly/build-release.sh",
     "build:debug": "./runtime/fastly/build-debug.sh",
     "build:weval": "./runtime/fastly/build-release-weval.sh",
     "build:debug:info": "./runtime/fastly/build-debug.sh --keep-debug-info",
     "format-changelog": "node ci/format-changelog.js CHANGELOG.md",
-    "format": "prettier --write *.js src/*.js integration-tests types test-d",
-    "format:check": "prettier --check *.js src/*.js integration-tests"
-  },
-  "devDependencies": {
-    "@jakechampion/cli-testing-library": "^1.0.0",
-    "brittle": "^3.5.2",
-    "eslint": "^9.6.0",
-    "get-bin-path": "^11.0.0",
-    "prettier": "^3.3.3",
-    "remark-parse": "^11.0.0",
-    "remark-stringify": "^11.0.0",
-    "tsd": "^0.33.0",
-    "typescript": "^5.9.0",
-    "unified": "^11.0.5"
+    "format": "prettier --write 'src/**/*.ts' integration-tests types test-d",
+    "format:check": "prettier --check 'src/**/*.ts' integration-tests"
   },
   "dependencies": {
     "@bytecodealliance/jco": "^1.7.0",
@@ -66,7 +54,23 @@
     "esbuild": "^0.25.0",
     "magic-string": "^0.30.12",
     "picomatch": "^4.0.3",
-    "regexpu-core": "^6.1.1"
+    "regexpu-core": "^6.4.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@jakechampion/cli-testing-library": "^1.0.0",
+    "@types/node": "^24.10.1",
+    "@types/picomatch": "^4.0.2",
+    "brittle": "^3.5.2",
+    "eslint": "^9.39.1",
+    "get-bin-path": "^11.0.0",
+    "prettier": "^3.3.3",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "tsd": "^0.33.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.48.1",
+    "unified": "^11.0.5"
   },
   "peerDependencies": {
     "typescript": "^5.9.0"
@@ -74,6 +78,11 @@
   "peerDependenciesMeta": {
     "typescript": {
       "optional": true
+    }
+  },
+  "tsd": {
+    "compilerOptions": {
+      "types": []
     }
   }
 }

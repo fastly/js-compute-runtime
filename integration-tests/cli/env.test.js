@@ -1,5 +1,5 @@
 import test from 'brittle';
-import { EnvParser } from '../../src/env.js';
+import { EnvParser } from '../../dist/env.js';
 
 test('EnvParser should parse single key-value pair', function (t) {
   const parser = new EnvParser();

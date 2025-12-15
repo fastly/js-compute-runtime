@@ -1,14 +1,14 @@
 import { rename } from 'node:fs/promises';
 import { dirname, basename, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { build } from 'esbuild';
+import { build, type Plugin } from 'esbuild';
 
 import { swallowTopLevelExportsPlugin } from './swallowTopLevelExportsPlugin.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const fastlyPlugin = {
+const fastlyPlugin: Plugin = {
   name: 'fastly',
   setup(build) {
     build.onResolve({ filter: /^fastly:.*/ }, (args) => {
@@ -161,8 +161,8 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
 };
 
 export async function bundle(
-  input,
-  outfile,
+  input: string,
+  outfile: string,
   { moduleMode = false, enableStackTraces = false },
 ) {
   // Build output file in cwd first to build sourcemap with correct paths
@@ -175,7 +175,7 @@ export async function bundle(
 
   const inject = [];
   if (enableStackTraces) {
-    inject.push(resolve(__dirname, './rsrc/trace-mapping.inject.js'));
+    inject.push(resolve(__dirname, '../rsrc/trace-mapping.inject.js'));
   }
 
   await build({

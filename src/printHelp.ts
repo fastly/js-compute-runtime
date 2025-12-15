@@ -1,6 +1,8 @@
-import { basename } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { basename, dirname, join } from 'node:path';
 import { argv } from 'node:process';
-import { printVersion } from './printVersion.js';
+import { fileURLToPath } from 'node:url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export async function printHelp() {
   await printVersion();
@@ -33,4 +35,32 @@ ARGS:
     <input>     The input JS script's file path [default: bin/index.js]
     <output>    The file path to write the output Wasm module to [default: bin/main.wasm]
 `);
+}
+
+export async function printVersion() {
+  const packageJson = await readFile(join(__dirname, '../package.json'), {
+    encoding: 'utf-8',
+  });
+  const version = (JSON.parse(packageJson) as { version: string }).version;
+  console.log(`${basename(argv[1])} ${version}`);
+}
+
+export function tooManyEngines() {
+  console.error(`error: The argument '--engine-wasm <engine-wasm>' was provided more than once, but cannot be used multiple times
+  
+USAGE:
+    js-compute-runtime --engine-wasm <engine-wasm>
+      
+For more information try --help`);
+  process.exit(1);
+}
+
+export function unknownArgument(cliInput: string) {
+  console.error(`error: Found argument '${cliInput}' which wasn't expected, or isn't valid in this context
+
+USAGE:
+    js-compute-runtime [FLAGS] [OPTIONS] [ARGS]
+
+For more information try --help`);
+  process.exit(1);
 }

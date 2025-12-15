@@ -72,7 +72,7 @@ function mapStack(raw) {
   const lines = String(raw).split(/\r?\n/);
 
   for (const line of lines) {
-    if (line.startsWith('node_modules/@fastly/js-compute/src/rsrc/trace-mapping.inject.js')) {
+    if (line.startsWith('node_modules/@fastly/js-compute/rsrc/trace-mapping.inject.js')) {
       // If the line comes from this file, skip it
       continue;
     }
