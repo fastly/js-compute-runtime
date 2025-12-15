@@ -169,6 +169,115 @@ bool Fastly::getGeolocationForIpAddress(JSContext *cx, unsigned argc, JS::Value 
   return JS_ParseJSON(cx, geo_info_str, args.rval());
 }
 
+bool Fastly::inspect(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  REQUEST_HANDLER_ONLY("fastly.inspect");
+  if (!args.requireAtLeast(cx, "fastly.inspect", 1)) {
+    return false;
+  }
+
+  auto request_value = args.get(0);
+  if (!Request::is_instance(request_value)) {
+    JS_ReportErrorUTF8(cx, "inspect: request parameter must be an instance of Request");
+    return false;
+  }
+  JS::RootedObject request(cx, &request_value.toObject());
+  auto req{Request::request_handle(request)};
+  auto bod{RequestOrResponse::body_handle(request)};
+
+  auto options_value = args.get(1);
+  JS::RootedObject options_obj(cx, options_value.isObject() ? &options_value.toObject() : nullptr);
+
+  host_api::InspectOptions inspect_options(req.handle, bod.handle);
+
+  host_api::HostString corp_str;
+  JS::RootedValue corp_val(cx);
+
+  host_api::HostString workspace_str;
+  JS::RootedValue workspace_val(cx);
+
+  host_api::HostString override_client_ip_str;
+  JS::RootedValue override_client_ip_val(cx);
+  alignas(struct in6_addr) uint8_t octets[sizeof(struct in6_addr)];
+
+  if (options_obj != nullptr) {
+    if (JS_GetProperty(cx, options_obj, "corp", &corp_val)) {
+      if (!corp_val.isNullOrUndefined()) {
+        if (!corp_val.isString()) {
+          api::throw_error(cx, api::Errors::TypeError, "fastly.inspect", "corp", "be a string");
+          return false;
+        }
+        corp_str = core::encode(cx, corp_val);
+        if (!corp_str) {
+          return false;
+        }
+        inspect_options.corp_len = corp_str.size();
+        inspect_options.corp = std::move(corp_str.begin());
+      }
+    }
+
+    if (JS_GetProperty(cx, options_obj, "workspace", &workspace_val)) {
+      if (!workspace_val.isNullOrUndefined()) {
+        if (!workspace_val.isString()) {
+          api::throw_error(cx, api::Errors::TypeError, "fastly.inspect", "workspace",
+                           "be a string");
+          return false;
+        }
+        workspace_str = core::encode(cx, workspace_val);
+        if (!workspace_str) {
+          return false;
+        }
+        inspect_options.workspace_len = workspace_str.size();
+        inspect_options.workspace = std::move(workspace_str.begin());
+      }
+    }
+
+    if (JS_GetProperty(cx, options_obj, "overrideClientIp", &override_client_ip_val)) {
+      if (!override_client_ip_val.isNullOrUndefined()) {
+        if (!override_client_ip_val.isString()) {
+          api::throw_error(cx, api::Errors::TypeError, "fastly.inspect", "overrideClientIp",
+                           "be a string");
+          return false;
+        }
+        override_client_ip_str = core::encode(cx, override_client_ip_val);
+        if (!override_client_ip_str) {
+          return false;
+        }
+
+        // TODO: Remove all of this and rely on the host for validation as the hostcall only takes
+        // one user-supplied parameter
+        int format = AF_INET;
+        size_t octets_len = 4;
+        if (std::find(override_client_ip_str.begin(), override_client_ip_str.end(), ':') !=
+            override_client_ip_str.end()) {
+          format = AF_INET6;
+          octets_len = 16;
+        }
+
+        if (inet_pton(format, override_client_ip_str.begin(), &octets) != 1) {
+          api::throw_error(cx, api::Errors::TypeError, "fastly.inspect", "overrideClientIp",
+                           "be a valid IP address");
+          return false;
+        }
+        inspect_options.override_client_ip_len = octets_len;
+        inspect_options.override_client_ip_ptr = reinterpret_cast<const char *>(&octets);
+      }
+    }
+  }
+
+  host_api::Request host_request{req, bod};
+  auto res = host_request.inspect(&inspect_options);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  auto ret{std::move(res.unwrap())};
+
+  JS::RootedString js_str(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(ret.ptr.release(), ret.len)));
+  return JS_ParseJSON(cx, js_str, args.rval());
+}
+
 // TODO(performance): consider allowing logger creation during initialization, but then throw
 // when trying to log.
 // https://github.com/fastly/js-compute-runtime/issues/225
@@ -617,6 +726,7 @@ bool install(api::Engine *engine) {
       JS_FN("enableDebugLogging", Fastly::enableDebugLogging, 1, JSPROP_ENUMERATE),
       JS_FN("debugLog", debugLog, 1, JSPROP_ENUMERATE),
       JS_FN("getGeolocationForIpAddress", Fastly::getGeolocationForIpAddress, 1, JSPROP_ENUMERATE),
+      JS_FN("inspect", Fastly::inspect, 1, JSPROP_ENUMERATE),
       JS_FN("getLogger", Fastly::getLogger, 1, JSPROP_ENUMERATE),
       JS_FN("includeBytes", Fastly::includeBytes, 1, JSPROP_ENUMERATE),
       JS_FN("createFanoutHandoff", Fastly::createFanoutHandoff, 2, JSPROP_ENUMERATE),
@@ -758,6 +868,21 @@ bool install(api::Engine *engine) {
   if (!engine->define_builtin_module("fastly:fanout", fanout_val)) {
     return false;
   }
+
+  // fastly:security
+  RootedValue inspect_val(engine->cx());
+  if (!JS_GetProperty(engine->cx(), fastly, "inspect", &inspect_val)) {
+    return false;
+  }
+  RootedObject security_builtin(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  RootedValue security_builtin_val(engine->cx(), JS::ObjectValue(*security_builtin));
+  if (!JS_SetProperty(engine->cx(), security_builtin, "inspect", inspect_val)) {
+    return false;
+  }
+  if (!engine->define_builtin_module("fastly:security", security_builtin_val)) {
+    return false;
+  }
+
   // fastly:websocket
   RootedObject websocket(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   RootedValue websocket_val(engine->cx(), JS::ObjectValue(*websocket));

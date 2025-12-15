@@ -5,6 +5,7 @@ dist/
 /integration-tests/**/fixtures/**/*.tar.gz
 /integration-tests/**/fixtures/**/fastly.toml
 /integration-tests/**/fixtures/**/*.wasm
+/integration-tests/**/fixtures/**/*.js.map
 
 /runtime/fastly/build-*/
 

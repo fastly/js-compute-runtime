@@ -155,6 +155,11 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
             } = globalThis.fastly.shielding;`,
           };
         }
+        case 'security': {
+          return {
+            contents: `export const inspect = globalThis.fastly.inspect;`,
+          };
+        }
       }
     });
   },
