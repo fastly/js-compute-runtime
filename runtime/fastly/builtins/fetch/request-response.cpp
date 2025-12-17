@@ -1573,7 +1573,35 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
     auto handle = std::to_string(RequestOrResponse::body_handle(source).handle);
   }
 
-  // FIXME(#1257): optimize for proxy streams
+  // If the stream has been piped to a TransformStream whose readable end was
+  // then passed to a Request or Response as the body, we can just append the
+  // entire source body to the destination using a single native hostcall, and
+  // then close the source stream, instead of reading and writing it in
+  // individual chunks. Note that even in situations where multiple streams are
+  // piped to the same destination this is guaranteed to happen in the right
+  // order: ReadableStream#pipeTo locks the destination WritableStream until the
+  // source ReadableStream is closed/canceled, so only one stream can ever be
+  // piped in at the same time.
+  JS::RootedObject pipe_dest(cx, NativeStreamSource::piped_to_transform_stream(source));
+  if (pipe_dest) {
+    if (TransformStream::readable_used_as_body(pipe_dest)) {
+      JS::RootedObject dest_owner(cx, TransformStream::owner(pipe_dest));
+      // FIXME(#1257): This shouldn't be disabled for two Requests, but there's
+      // some bug that stops it from working properly.
+      if (!(Request::is_instance(dest_owner) && Request::is_instance(body_owner))) {
+        if (!RequestOrResponse::append_body(cx, dest_owner, body_owner)) {
+          return false;
+        }
+
+        JS::RootedObject stream(cx, NativeStreamSource::stream(source));
+        bool success = JS::ReadableStreamClose(cx, stream);
+        MOZ_RELEASE_ASSERT(success);
+
+        args.rval().setUndefined();
+        return true;
+      }
+    }
+  }
 
   // The actual read from the body needs to be delayed, because it'd otherwise
   // be a blocking operation in case the backend didn't yet send any data.
@@ -2230,10 +2258,10 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
 
-    // Here we get the current requests body stream and call ReadableStream.prototype.tee to return
-    // two versions of the stream. Once we get the two streams, we create a new request handle and
-    // attach one of the streams to the new handle and the other stream is attached to the request
-    // handle that `clone()` was called upon.
+    // Here we get the current requests body stream and call ReadableStream.prototype.tee to
+    // return two versions of the stream. Once we get the two streams, we create a new request
+    // handle and attach one of the streams to the new handle and the other stream is attached to
+    // the request handle that `clone()` was called upon.
     JS::RootedObject body_stream(cx, RequestOrResponse::body_stream(self));
     if (!body_stream) {
       body_stream = RequestOrResponse::create_body_stream(cx, self);
@@ -3022,7 +3050,8 @@ void Response::set_status_message_from_code(JSContext *cx, JSObject *obj, uint16
   case 202: // 202 Accepted - https://tools.ietf.org/html/rfc7231#section-6.3.3
     phrase = "Accepted";
     break;
-  case 203: // 203 Non-Authoritative Information - https://tools.ietf.org/html/rfc7231#section-6.3.4
+  case 203: // 203 Non-Authoritative Information -
+            // https://tools.ietf.org/html/rfc7231#section-6.3.4
     phrase = "Non Authoritative Information";
     break;
   case 204: // 204 No Content - https://tools.ietf.org/html/rfc7231#section-6.3.5
@@ -3769,7 +3798,8 @@ bool Response::ttl_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto entry = RequestOrResponse::cache_entry(self);
 
   // all caching paths should set the override options as the final options
-  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall support
+  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall
+  // support
   auto override_opts = override_cache_options(self);
   if (!override_opts) {
     args.rval().setUndefined();
@@ -3807,7 +3837,8 @@ bool Response::age_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto entry = RequestOrResponse::cache_entry(self);
 
   // all caching paths should set the override options as the final options
-  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall support
+  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall
+  // support
   auto override_opts = override_cache_options(self);
   if (!override_opts) {
     args.rval().setUndefined();
@@ -3839,7 +3870,8 @@ bool Response::swr_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto entry = RequestOrResponse::cache_entry(self);
 
   // all caching paths should set the override options as the final options
-  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall support
+  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall
+  // support
   auto override_opts = override_cache_options(self);
   if (!override_opts) {
     args.rval().setUndefined();
@@ -3868,7 +3900,8 @@ bool Response::vary_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto entry = RequestOrResponse::cache_entry(self);
 
   // all caching paths should set the override options as the final options
-  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall support
+  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall
+  // support
   auto override_opts = override_cache_options(self);
   if (!override_opts) {
     args.rval().setUndefined();
@@ -3954,7 +3987,8 @@ bool Response::surrogateKeys_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto entry = RequestOrResponse::cache_entry(self);
 
   // all caching paths should set the override options as the final options
-  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall support
+  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall
+  // support
   auto override_opts = override_cache_options(self);
   if (!override_opts) {
     args.rval().setUndefined();
@@ -4002,7 +4036,8 @@ bool Response::pci_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto entry = RequestOrResponse::cache_entry(self);
 
   // all caching paths should set the override options as the final options
-  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall support
+  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall
+  // support
   auto override_opts = override_cache_options(self);
   if (!override_opts) {
     args.rval().setUndefined();
@@ -4488,8 +4523,8 @@ host_api::HttpCacheWriteOptions *Response::take_override_cache_options(JSObject 
 }
 
 /**
- * Get suggested HTTP cache write options for this CandidateResponse, lazily computed and cached on
- * Slots::SuggestedCacheWriteOptions.
+ * Get suggested HTTP cache write options for this CandidateResponse, lazily computed and cached
+ * on Slots::SuggestedCacheWriteOptions.
  *
  * Suggested cache options will have ALL values set for HttpCacheWriteOptions (no optionals).
  *
