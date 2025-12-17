@@ -1572,33 +1572,8 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
   if (JS::GetReservedSlot(source, static_cast<uint32_t>(Slots::Body)).isInt32()) {
     auto handle = std::to_string(RequestOrResponse::body_handle(source).handle);
   }
-  // If the stream has been piped to a TransformStream whose readable end was
-  // then passed to a Request or Response as the body, we can just append the
-  // entire source body to the destination using a single native hostcall, and
-  // then close the source stream, instead of reading and writing it in
-  // individual chunks. Note that even in situations where multiple streams are
-  // piped to the same destination this is guaranteed to happen in the right
-  // order: ReadableStream#pipeTo locks the destination WritableStream until the
-  // source ReadableStream is closed/canceled, so only one stream can ever be
-  // piped in at the same time.
-  JS::RootedObject pipe_dest(cx, NativeStreamSource::piped_to_transform_stream(source));
-  if (pipe_dest) {
 
-    if (TransformStream::readable_used_as_body(pipe_dest)) {
-
-      JS::RootedObject dest_owner(cx, TransformStream::owner(pipe_dest));
-      if (!RequestOrResponse::append_body(cx, dest_owner, body_owner)) {
-        return false;
-      }
-
-      JS::RootedObject stream(cx, NativeStreamSource::stream(source));
-      bool success = JS::ReadableStreamClose(cx, stream);
-      MOZ_RELEASE_ASSERT(success);
-
-      args.rval().setUndefined();
-      return true;
-    }
-  }
+  // FIXME(#1257): optimize for proxy streams
 
   // The actual read from the body needs to be delayed, because it'd otherwise
   // be a blocking operation in case the backend didn't yet send any data.
