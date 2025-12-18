@@ -1,9 +1,8 @@
 # Changelog
 
-## [3.38.1](https://github.com/fastly/js-compute-runtime/compare/v3.38.0...v3.38.1) (2025-12-18)
+## 3.38.1 (2025-12-18)
 
-
-### Bug Fixes
+### Fixed
 
 * Build CLI in npm publish ([#1262](https://github.com/fastly/js-compute-runtime/issues/1262)) ([2fe6e2d](https://github.com/fastly/js-compute-runtime/commit/2fe6e2d5b38c74c4a3f7c4a4941d116ec75b1d88))
 
