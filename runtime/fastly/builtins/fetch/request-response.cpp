@@ -1580,23 +1580,47 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
   // piped to the same destination this is guaranteed to happen in the right
   // order: ReadableStream#pipeTo locks the destination WritableStream until the
   // source ReadableStream is closed/canceled, so only one stream can ever be
-  // piped in at the same time.
+  // piped in at the same time. There may be a chain of TransformStreams in
+  // between the source and destination, so we walk the piping chain to find the
+  // final destination.
   JS::RootedObject pipe_dest(cx, NativeStreamSource::piped_to_transform_stream(source));
   if (pipe_dest) {
+    // Walk the chain of TransformStreams to find the final destination
+    JS::RootedObject current_dest(cx, pipe_dest);
+    JS::RootedObject next_dest(cx);
 
-    if (TransformStream::readable_used_as_body(pipe_dest)) {
-
-      JS::RootedObject dest_owner(cx, TransformStream::owner(pipe_dest));
-      if (!RequestOrResponse::append_body(cx, dest_owner, body_owner)) {
-        return false;
+    while (current_dest) {
+      // Try to find the next TransformStream in the chain
+      JS::RootedObject readable(cx, TransformStream::readable(current_dest));
+      JS::RootedObject next_source(cx, NativeStreamSource::get_stream_source(cx, readable));
+      if (next_source) {
+        next_dest.set(NativeStreamSource::piped_to_transform_stream(next_source));
+      } else {
+        next_dest.set(nullptr);
       }
 
-      JS::RootedObject stream(cx, NativeStreamSource::stream(source));
-      bool success = JS::ReadableStreamClose(cx, stream);
-      MOZ_RELEASE_ASSERT(success);
+      // If there's no next destination, we've found the last one in the chain
+      if (!next_dest) {
+        // If this is used as a body, we can append directly and close
+        if (TransformStream::readable_used_as_body(current_dest)) {
+          JS::RootedObject dest_owner(cx, TransformStream::owner(current_dest));
+          if (!RequestOrResponse::append_body(cx, dest_owner, body_owner)) {
+            return false;
+          }
 
-      args.rval().setUndefined();
-      return true;
+          JS::RootedObject stream(cx, NativeStreamSource::stream(source));
+          bool success = JS::ReadableStreamClose(cx, stream);
+          MOZ_RELEASE_ASSERT(success);
+
+          args.rval().setUndefined();
+          return true;
+        }
+        // If the last one isn't used as a body it must be doing something else with
+        // the data, so we fall back to reading and writing chunks as normal
+        break;
+      }
+
+      current_dest.set(next_dest);
     }
   }
 
