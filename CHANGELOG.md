@@ -1,15 +1,13 @@
 # Changelog
 
-## [3.38.0](https://github.com/fastly/js-compute-runtime/compare/v3.37.0...v3.38.0) (2025-12-18)
+## 3.38.0 (2025-12-18)
 
-
-### Features
+### Added
 
 * **config:** add support for config store buffers longer than 8k ([#1181](https://github.com/fastly/js-compute-runtime/issues/1181)) ([da4c169](https://github.com/fastly/js-compute-runtime/commit/da4c169f7a302c2e6c2a1796c791b9463c4dc2a8))
 * **inspect:** add support for NGWAF inspect api ([#1212](https://github.com/fastly/js-compute-runtime/issues/1212)) ([98f45e4](https://github.com/fastly/js-compute-runtime/commit/98f45e4d678e294301c21be2ddf16c4482683ef7))
 
-
-### Bug Fixes
+### Fixed
 
 * Correct behaviour of chained body proxy streams in some circumstances ([#1259](https://github.com/fastly/js-compute-runtime/issues/1259)) ([11f9a4b](https://github.com/fastly/js-compute-runtime/commit/11f9a4b5b5fc90f9f2eb9f6a6958e971fbd52e19))
 * make shielding.d.ts ambient ([#1256](https://github.com/fastly/js-compute-runtime/issues/1256)) ([7a0e987](https://github.com/fastly/js-compute-runtime/commit/7a0e9876d0e001ad6c1b87b3701ecfffddc7b5ad))
