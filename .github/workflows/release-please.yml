@@ -180,6 +180,9 @@ jobs:
         with:
           name: fastly-weval-ic-cache
 
+      - name: Build CLI
+        run: npm run build:cli
+
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
