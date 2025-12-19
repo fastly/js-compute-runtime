@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.38.2 (2025-12-19)
+
+### Fixed
+
+* Handle cross-volume renames of intermediate files ([#1264](https://github.com/fastly/js-compute-runtime/issues/1264)) ([94e5671](https://github.com/fastly/js-compute-runtime/commit/94e5671090cbde1c3159032c90aa3f3ad2fdc88a))
+
 ## 3.38.1 (2025-12-18)
 
 ### Fixed
