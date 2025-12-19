@@ -15,7 +15,7 @@ import { rmSync } from 'node:fs';
 import weval from '@bytecodealliance/weval';
 import wizer from '@bytecodealliance/wizer';
 
-import { isDirectory, isFile } from './isFile.js';
+import { isDirectory, isFile } from './files.js';
 import { postbundle } from './postbundle.js';
 import { bundle } from './bundle.js';
 import { composeSourcemaps, ExcludePattern } from './composeSourcemaps.js';

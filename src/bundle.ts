@@ -1,8 +1,8 @@
-import { rename } from 'node:fs/promises';
 import { dirname, basename, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build, type Plugin } from 'esbuild';
 
+import { moveFile } from './files.js';
 import { swallowTopLevelExportsPlugin } from './swallowTopLevelExportsPlugin.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -197,8 +197,8 @@ export async function bundle(
     inject,
   });
 
-  await rename(bundle, outfile);
+  await moveFile(bundle, outfile);
   if (enableStackTraces) {
-    await rename(bundle + '.map', outfile + '.map');
+    await moveFile(bundle + '.map', outfile + '.map');
   }
 }
