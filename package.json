@@ -7,8 +7,18 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./types/index.d.ts",
-      "default": "./types/index.js"
+      "fastly": {
+        "types": "./types/index.d.ts",
+        "default": "./types/index.js"
+      },
+      "default": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./fastly-esbuild-plugin": {
+      "types": "./dist/esbuild-plugins/fastlyPlugin.d.ts",
+      "default": "./dist/esbuild-plugins/fastlyPlugin.js"
     }
   },
   "repository": {
