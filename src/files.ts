@@ -1,4 +1,5 @@
 import { stat, rename, copyFile, unlink } from 'node:fs/promises';
+import { resolve } from 'node:path';
 
 export async function isFile(path: string) {
   const stats = await stat(path);
