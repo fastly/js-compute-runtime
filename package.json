@@ -2,9 +2,25 @@
   "name": "@fastly/js-compute",
   "version": "3.38.2",
   "license": "Apache-2.0",
-  "main": "dist/cli/js-compute-runtime-cli.js",
+  "main": "types/index.js",
   "types": "types/index.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "fastly": {
+        "types": "./types/index.d.ts",
+        "default": "./types/index.js"
+      },
+      "default": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./fastly-esbuild-plugin": {
+      "types": "./dist/esbuild-plugins/fastlyPlugin.d.ts",
+      "default": "./dist/esbuild-plugins/fastlyPlugin.js"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/fastly/js-compute-runtime"
@@ -32,7 +48,7 @@
     "test:wpt": "tests/wpt-harness/build-wpt-runtime.sh && node ./tests/wpt-harness/run-wpt.mjs -vv",
     "test:wpt:debug": "tests/wpt-harness/build-wpt-runtime.sh --debug-build && node ./tests/wpt-harness/run-wpt.mjs -vv",
     "test:types": "tsd",
-    "clean": "rm -f starling.wasm fastly.wasm fastly.debug.wasm fastly-weval.wasm fastly-ics.wevalcache fastly-js-compute-*.tgz",
+    "clean": "rm -rf dist/ starling.wasm fastly.wasm fastly.debug.wasm fastly-weval.wasm fastly-ics.wevalcache fastly-js-compute-*.tgz",
     "build": "npm run clean && npm run build:cli && npm run build:debug && npm run build:release && npm run build:weval",
     "build:cli": "tsc",
     "build:release": "./runtime/fastly/build-release.sh",

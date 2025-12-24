@@ -1,4 +1,5 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import remapping, {
   SourceMap,
   type SourceMapInput,
@@ -7,11 +8,49 @@ import remapping, {
 import { TraceMap } from '@jridgewell/trace-mapping';
 import picomatch from 'picomatch';
 
+import { CompilerPipelineStep, SourceMapInfo } from '../compilerPipeline.js';
+
 export type ExcludePattern = string | ((file: string) => boolean);
 
-export type SourceMapInfo = {
-  f: string; // Filename
-  s: string; // Sourcemap filename
+// Compiler Step - Compose Sourcemaps
+// This step usually runs at the end.
+
+// This step composes all the source maps up to this point into a single
+// source map, and injects it into the bundle.
+
+// Be careful: Do not run any steps after this step. Such steps will not be
+// reflected in downstream source maps.
+
+export const composeSourcemapsStep: CompilerPipelineStep = {
+  outFilename: '__fastly_bundle_with_sourcemaps.js',
+  async fn(ctx) {
+    // Compose source maps
+    const replaceSourceMapToken = '__FINAL_SOURCE_MAP__';
+    let excludePatterns: ExcludePattern[] = [
+      'forbid-entry:/**',
+      'node_modules/**',
+    ];
+    if (ctx.excludeSources) {
+      excludePatterns = [() => true];
+    }
+    const composed = await composeSourcemaps(ctx.sourceMaps, excludePatterns);
+
+    const postBundleContent = await readFile(ctx.inFilepath, {
+      encoding: 'utf-8',
+    });
+    const outputWithSourcemapsContent = postBundleContent.replace(
+      replaceSourceMapToken,
+      () => JSON.stringify(composed),
+    );
+    await writeFile(ctx.outFilepath, outputWithSourcemapsContent);
+
+    if (ctx.debugIntermediateFilesDir != null) {
+      await writeFile(
+        resolve(ctx.debugIntermediateFilesDir, 'fastly_sourcemaps.json'),
+        composed,
+      );
+    }
+  },
 };
 
 async function readSourcemap(e: SourceMapInfo) {
