@@ -27,7 +27,8 @@ const subsystems = [
   'object-store',
   'secret-store',
   'html-rewriter',
-  'image-optimizer'
+  'image-optimizer',
+  'shielding'
 ];
 
 const files = readdirSync('docs');
