@@ -19,7 +19,8 @@ public:
   //
   // If `Mode` is `Override`, the values are interpreted in the following way:
   //
-  // If `TTL`, `SWR`, or `SurrogateKey` are `undefined`, they're ignored.
+  // If `TTL`, `StaleWhileRevalidate`, `StaleIfError`, or `SurrogateKey` are 
+  // `undefined`, they're ignored.
   // For each of them, if the value isn't `undefined`, a flag gets set in the
   // hostcall's `tag` parameter, and the value itself is encoded as a uint32
   // parameter.
@@ -29,7 +30,7 @@ public:
   //
   // `BeforeSend` and `AfterSend` are function callbacks that can be set
   // to execute before and after sending the request.
-  enum Slots { Mode, TTL, SWR, SurrogateKey, PCI, BeforeSend, AfterSend, Count };
+  enum Slots { Mode, TTL, StaleWhileRevalidate, SurrogateKey, PCI, BeforeSend, AfterSend, StaleIfError, Count };
 
   enum class CacheOverrideMode { None, Pass, Override };
 
@@ -40,8 +41,10 @@ public:
   static host_api::CacheOverrideTag abi_tag(JSObject *self);
   static JS::Value ttl(JSObject *self);
   static void set_ttl(JSObject *self, uint32_t ttl);
-  static JS::Value swr(JSObject *self);
-  static void set_swr(JSObject *self, uint32_t swr);
+  static JS::Value staleWhileRevalidate(JSObject *self);
+  static void set_staleWhileRevalidate(JSObject *self, uint32_t swr);
+  static JS::Value staleIfError(JSObject *self);
+  static void set_staleIfError(JSObject *self, uint32_t sie);
   static JS::Value surrogate_key(JSObject *self);
   static void set_surrogate_key(JSObject *self, JSString *key);
   static JSObject *clone(JSContext *cx, JS::HandleObject self);
@@ -59,8 +62,11 @@ public:
   static bool ttl_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
   static bool ttl_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
                       JS::MutableHandleValue rval);
-  static bool swr_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
-  static bool swr_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
+  static bool staleWhileRevalidate_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
+  static bool staleWhileRevalidate_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
+                      JS::MutableHandleValue rval);
+  static bool staleIfError_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
+  static bool staleIfError_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
                       JS::MutableHandleValue rval);
   static bool surrogate_key_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
   static bool surrogate_key_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,

@@ -348,6 +348,8 @@ typedef struct __attribute__((aligned(4))) fastly_http_cache_lookup_options {
 // HTTP Cache lookup options mask
 #define FASTLY_HTTP_CACHE_LOOKUP_OPTIONS_MASK_RESERVED (1 << 0)
 #define FASTLY_HTTP_CACHE_LOOKUP_OPTIONS_MASK_OVERRIDE_KEY (1 << 1)
+#define FASTLY_HTTP_CACHE_LOOKUP_OPTIONS_MASK_BACKEND_NAME (1 << 2)
+#define FASTLY_HTTP_CACHE_LOOKUP_OPTIONS_MASK_ACCEPT_STALE_IF_ERROR (1 << 3)
 
 // HTTP Cache write options
 typedef struct __attribute__((aligned(8))) fastly_http_cache_write_options {
@@ -359,6 +361,7 @@ typedef struct __attribute__((aligned(8))) fastly_http_cache_write_options {
   const char *surrogate_keys;
   size_t surrogate_keys_len;
   uint64_t length;
+  uint64_t stale_if_error_ns;
 } fastly_http_cache_write_options;
 
 // HTTP Cache write options mask
@@ -415,6 +418,9 @@ int http_cache_transaction_record_not_cacheable(uint32_t handle, uint32_t option
 WASM_IMPORT("fastly_http_cache", "transaction_abandon")
 int http_cache_transaction_abandon(uint32_t handle);
 
+WASM_IMPORT("fastly_http_cache", "transaction_broadcast_cancel")
+int http_cache_transaction_broadcast_cancel(uint32_t handle);
+
 WASM_IMPORT("fastly_http_cache", "close")
 int http_cache_close(uint32_t handle);
 
@@ -437,6 +443,10 @@ WASM_IMPORT("fastly_http_cache", "get_found_response")
 int http_cache_get_found_response(uint32_t handle, uint32_t transform_for_client,
                                   uint32_t *resp_handle_out, uint32_t *body_handle_out);
 
+WASM_IMPORT("fastly_http_cache", "get_any_response")
+int http_cache_get_any_response(uint32_t handle, uint32_t transform_for_client,
+                               uint32_t *resp_handle_out, uint32_t *body_handle_out);
+
 WASM_IMPORT("fastly_http_cache", "get_state")
 int http_cache_get_state(uint32_t handle, uint8_t *state_out);
 
@@ -448,6 +458,9 @@ int http_cache_get_max_age_ns(uint32_t handle, uint64_t *max_age_ns_out);
 
 WASM_IMPORT("fastly_http_cache", "get_stale_while_revalidate_ns")
 int http_cache_get_stale_while_revalidate_ns(uint32_t handle, uint64_t *swr_ns_out);
+
+WASM_IMPORT("fastly_http_cache", "get_stale_if_error_ns")
+int http_cache_get_stale_if_error_ns(uint32_t handle, uint64_t *sie_ns_out);
 
 WASM_IMPORT("fastly_http_cache", "get_age_ns")
 int http_cache_get_age_ns(uint32_t handle, uint64_t *age_ns_out);
@@ -945,6 +958,10 @@ typedef struct fastly_host_cache_write_options {
 #define FASTLY_HOST_CACHE_LOOKUP_STATE_STALE (1 << 2)
 // this client is requested to insert or revalidate an object
 #define FASTLY_HOST_CACHE_LOOKUP_STATE_MUST_INSERT_OR_UPDATE (1 << 3)
+// a cached object was found and it is only usable if synchronous revalidation fails
+#define FASTLY_HOST_CACHE_LOOKUP_STATE_USABLE_IF_ERROR (1 << 4)
+// in another client, a synchronous revalidation has failed for this object
+#define FASTLY_HOST_CACHE_LOOKUP_STATE_COLLAPSE_ERROR (1 << 5)
 
 WASM_IMPORT("fastly_cache", "lookup")
 int cache_lookup(char *cache_key, size_t cache_key_len, uint32_t options_mask,
