@@ -863,7 +863,25 @@ make_fastly_send_error(fastly::fastly_host_http_send_error_detail &send_error_de
 
 FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error,
                                    fastly::fastly_host_error host_err) {
+
   FastlyKVError err;
+  // first-priority host_err mapping
+  switch host_err {
+  case FASTLY_HOST_ERROR_BAD_HANDLE: {
+	// in the rust sdk, this is KVStoreError::InvalidStoreHandle
+    err.detail = FastlyKVError::detail::internal_error;
+    return err;
+  }
+  case FASTLY_HOST_ERROR_INVALID_ARGUMENT: {
+    err.detail = FastlyKVError::detail::bad_request;
+    return err;
+  }
+  case FASTLY_HOST_ERROR_LIMIT_EXCEEDED: {
+    err.detail = FastlyKVError::detail::too_many_requests;
+    return err;
+  }
+  }
+
   switch (kv_error) {
   case KV_ERROR_BAD_REQUEST: {
     err.detail = FastlyKVError::detail::bad_request;
@@ -891,6 +909,7 @@ FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error,
     return err;
   }
   }
+  // fall back to host_err mapping
   err.detail = FastlyKVError::detail::host_error;
   err.host_err = host_err;
   return err;
