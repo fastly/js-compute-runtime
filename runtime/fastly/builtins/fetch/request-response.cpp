@@ -108,7 +108,8 @@ bool error_stream_controller_with_pending_exception(JSContext *cx, JS::HandleObj
 
 constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
 
-bool maybe_shortcut_transform_stream_read(JSContext *cx, JS::HandleObject streamSource, JS::HandleObject body_owner, bool* shortcutted) {
+bool maybe_shortcut_transform_stream_read(JSContext *cx, JS::HandleObject streamSource,
+                                          JS::HandleObject body_owner, bool *shortcutted) {
   // If the stream has been piped to a TransformStream whose readable end was
   // then passed to a Request or Response as the body, we can just append the
   // entire source body to the destination using a single native hostcall, and
@@ -1660,8 +1661,7 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
 
   JS::RootedValue body_owner_value(cx, JS::ObjectValue(*body_owner));
   ENGINE->queue_async_task(new FastlyAsyncTask(RequestOrResponse::body_handle(owner).async_handle(),
-                                               source, body_owner_value,
-                                               process_body_read));
+                                               source, body_owner_value, process_body_read));
 
   args.rval().setUndefined();
   return true;
