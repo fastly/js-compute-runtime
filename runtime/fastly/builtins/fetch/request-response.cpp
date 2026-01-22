@@ -160,6 +160,7 @@ bool maybe_shortcut_transform_stream_read(JSContext *cx, JS::HandleObject stream
       current_dest.set(next_dest);
     }
   }
+  return true;
 }
 
 bool process_body_read(JSContext *cx, host_api::HttpBody::Handle handle, JS::HandleObject context,
