@@ -154,6 +154,7 @@ bool maybe_shortcut_transform_stream_read(JSContext *cx, JS::HandleObject stream
         }
         // If the last one isn't used as a body it must be doing something else with
         // the data, so we fall back to reading and writing chunks as normal
+        *shortcutted = false;
         break;
       }
 
@@ -1635,14 +1636,6 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
                                                    JS::HandleObject controller) {
   if (JS::GetReservedSlot(source, static_cast<uint32_t>(Slots::Body)).isInt32()) {
     auto handle = std::to_string(RequestOrResponse::body_handle(source).handle);
-  }
-
-  bool shortcutted = false;
-  if (!maybe_shortcut_transform_stream_read(cx, source, body_owner, &shortcutted)) {
-    return false;
-  }
-  if (shortcutted) {
-    return true;
   }
 
   // The actual read from the body needs to be delayed, because it'd otherwise
