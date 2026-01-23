@@ -108,8 +108,7 @@ bool error_stream_controller_with_pending_exception(JSContext *cx, JS::HandleObj
 
 constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
 
-bool maybe_shortcut_transform_stream_read(JSContext *cx, JS::HandleObject streamSource,
-                                          JS::HandleObject body_owner, bool *shortcutted) {
+bool maybe_shortcut_transform_stream_read(JSContext *cx, JS::HandleObject streamSource, JS::HandleObject body_owner, bool* shortcutted) {
   // If the stream has been piped to a TransformStream whose readable end was
   // then passed to a Request or Response as the body, we can just append the
   // entire source body to the destination using a single native hostcall, and
@@ -155,6 +154,7 @@ bool maybe_shortcut_transform_stream_read(JSContext *cx, JS::HandleObject stream
         }
         // If the last one isn't used as a body it must be doing something else with
         // the data, so we fall back to reading and writing chunks as normal
+        *shortcutted = false;
         break;
       }
 
@@ -172,6 +172,15 @@ bool process_body_read(JSContext *cx, host_api::HttpBody::Handle handle, JS::Han
   host_api::HttpBody body(handle);
   JS::RootedObject owner(cx, NativeStreamSource::owner(streamSource));
   JS::RootedObject stream(cx, NativeStreamSource::stream(streamSource));
+
+  bool shortcutted = false;
+  JS::RootedObject body_owner_obj(cx, &body_owner.toObject());
+  if (!maybe_shortcut_transform_stream_read(cx, streamSource, body_owner_obj, &shortcutted)) {
+    return false;
+  }
+  if (shortcutted) {
+    return true;
+  }
 
   bool shortcutted = false;
   JS::RootedObject body_owner_obj(cx, &body_owner.toObject());
@@ -1638,14 +1647,6 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
     auto handle = std::to_string(RequestOrResponse::body_handle(source).handle);
   }
 
-  bool shortcutted = false;
-  if (!maybe_shortcut_transform_stream_read(cx, source, body_owner, &shortcutted)) {
-    return false;
-  }
-  if (shortcutted) {
-    return true;
-  }
-
   // The actual read from the body needs to be delayed, because it'd otherwise
   // be a blocking operation in case the backend didn't yet send any data.
   // That would lead to situations where we block on I/O before processing
@@ -1661,7 +1662,8 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
 
   JS::RootedValue body_owner_value(cx, JS::ObjectValue(*body_owner));
   ENGINE->queue_async_task(new FastlyAsyncTask(RequestOrResponse::body_handle(owner).async_handle(),
-                                               source, body_owner_value, process_body_read));
+                                               source, body_owner_value,
+                                               process_body_read));
 
   args.rval().setUndefined();
   return true;
