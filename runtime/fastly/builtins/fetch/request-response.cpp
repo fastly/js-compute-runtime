@@ -182,15 +182,6 @@ bool process_body_read(JSContext *cx, host_api::HttpBody::Handle handle, JS::Han
     return true;
   }
 
-  bool shortcutted = false;
-  JS::RootedObject body_owner_obj(cx, &body_owner.toObject());
-  if (!maybe_shortcut_transform_stream_read(cx, streamSource, body_owner_obj, &shortcutted)) {
-    return false;
-  }
-  if (shortcutted) {
-    return true;
-  }
-
   auto read_res = body.read(HANDLE_READ_CHUNK_SIZE);
   if (auto *err = read_res.to_err()) {
     HANDLE_ERROR(cx, *err);
