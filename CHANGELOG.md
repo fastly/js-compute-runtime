@@ -1,9 +1,8 @@
 # Changelog
 
-## [3.38.4](https://github.com/fastly/js-compute-runtime/compare/v3.38.3...v3.38.4) (2026-01-23)
+## 3.38.4 (2026-01-23)
 
-
-### Bug Fixes
+### Fixed
 
 * Don't shortcut transform too early ([#1281](https://github.com/fastly/js-compute-runtime/issues/1281)) ([291814e](https://github.com/fastly/js-compute-runtime/commit/291814e330ae5e1e894f0a57db0dedc8b27fd9bd))
 
