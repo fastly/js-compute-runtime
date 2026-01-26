@@ -3145,5 +3145,16 @@
   },
   "GET /fastly/security/inspect/basic": {
     "environments": ["viceroy"]
+  },
+  "POST /proxy-transform-stream/content-length": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    },
+    "downstream_request": {
+      "method": "POST",
+      "pathname": "/proxy-transform-stream/content-length",
+      "body": "hello world"
+    }
   }
 }

@@ -1011,7 +1011,7 @@ Result<HostBytes> HttpBody::read_all() const {
 }
 
 Result<uint32_t> HttpBody::write_front(const uint8_t *ptr, size_t len) const {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(handle)))
   Result<uint32_t> res;
 
   // The write call doesn't mutate the buffer; the cast is just for the generated fastly api.
@@ -1033,7 +1033,7 @@ Result<uint32_t> HttpBody::write_front(const uint8_t *ptr, size_t len) const {
 }
 
 Result<uint32_t> HttpBody::write_back(const uint8_t *ptr, size_t len) const {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(handle)))
   Result<uint32_t> res;
 
   // The write call doesn't mutate the buffer; the cast is just for the generated fastly api.
@@ -1054,7 +1054,7 @@ Result<uint32_t> HttpBody::write_back(const uint8_t *ptr, size_t len) const {
 }
 
 Result<Void> HttpBody::write_all_front(const uint8_t *ptr, size_t len) const {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(handle)))
   while (len > 0) {
     auto write_res = this->write_front(ptr, len);
     if (auto *err = write_res.to_err()) {
@@ -1071,7 +1071,7 @@ Result<Void> HttpBody::write_all_front(const uint8_t *ptr, size_t len) const {
 }
 
 Result<Void> HttpBody::write_all_back(const uint8_t *ptr, size_t len) const {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(handle)))
   while (len > 0) {
     auto write_res = this->write_back(ptr, len);
     if (auto *err = write_res.to_err()) {
@@ -1087,7 +1087,7 @@ Result<Void> HttpBody::write_all_back(const uint8_t *ptr, size_t len) const {
 }
 
 Result<Void> HttpBody::append(HttpBody other) const {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(handle)), TSV(std::to_string(other.handle)))
   Result<Void> res;
 
   fastly::fastly_host_error err;
@@ -1101,7 +1101,7 @@ Result<Void> HttpBody::append(HttpBody other) const {
 }
 
 Result<Void> HttpBody::close() {
-  TRACE_CALL()
+  TRACE_CALL_ARGS(TSV(std::to_string(handle)))
   Result<Void> res;
 
   fastly::fastly_host_error err;

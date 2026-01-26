@@ -35,6 +35,7 @@ import './manual-framing-headers.js';
 import './missing-backend.js';
 import './multiple-set-cookie.js';
 import './performance.js';
+import './proxy-transform-stream.js';
 import './random.js';
 import './react-byob.js';
 import './request-auto-decompress.js';

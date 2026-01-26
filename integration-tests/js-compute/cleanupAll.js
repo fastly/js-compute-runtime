@@ -156,12 +156,11 @@ async function removeLinks(services) {
 }
 
 const services = await getServices();
-await removeLinks(services);
+await removeServices(services);
 await removeConfigStores(services);
 await removeKVStores();
 await removeSecretStores(services);
 await removeAcls(services);
-await removeServices(services);
 
 console.log(
   `Cleanup has finished! Took ${(Date.now() - startTime) / 1000} seconds to complete`,

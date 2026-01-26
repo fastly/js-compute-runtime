@@ -35,6 +35,7 @@
 #include "picosha2.h"
 #include <algorithm>
 #include <vector>
+#include <iostream>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winvalid-offsetof"
@@ -1814,6 +1815,22 @@ bool RequestOrResponse::maybe_stream_body(JSContext *cx, JS::HandleObject body_o
     // won't append to this body handle, because we don't expose any means to do
     // so, so it's ok for it to be closed immediately.
     return true;
+  }
+
+  // Check if this is a TransformStream that can be shortcutted by directly
+  // piping the underlying body handle instead of reading through JavaScript.
+  bool shortcutted = false;
+  JS::RootedObject stream_source(cx, NativeStreamSource::get_stream_source(cx, stream));
+  if (stream_source) {
+    if (!maybe_shortcut_transform_stream_read(cx, stream_source, body_owner, &shortcutted)) {
+      return false;
+    }
+    std::cerr << "Should shortcut? " << shortcutted << std::endl;
+    if (shortcutted) {
+      // Successfully transferred the underlying body handle directly.
+      // No streaming needed.
+      return true;
+    }
   }
 
   JS::RootedObject reader(
