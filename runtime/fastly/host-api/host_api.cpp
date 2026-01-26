@@ -902,16 +902,21 @@ FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error,
     err.detail = FastlyKVError::detail::too_many_requests;
     return err;
   }
-  case KV_ERROR_INTERNAL_ERROR:
-  default: {
+  case KV_ERROR_INTERNAL_ERROR: {
     err.detail = FastlyKVError::detail::internal_error;
     return err;
   }
+  case KV_ERROR_OK:
+  case KV_ERROR_UNINITIALIZED:
+  default: {
+    // If the hostcall never initialized `kv_error`, or if it claimed
+    // that it was `OK` but we still failed, then make a host error
+    // based on the `host_err` value.
+    err.detail = FastlyKVError::detail::host_error;
+    err.host_err = host_err;
+    return err;
   }
-  // fall back to host_err mapping
-  err.detail = FastlyKVError::detail::host_error;
-  err.host_err = host_err;
-  return err;
+  }
 }
 
 FastlyImageOptimizerError

@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.38.4 (2026-01-23)
+
+### Fixed
+
+* Don't shortcut transform too early ([#1281](https://github.com/fastly/js-compute-runtime/issues/1281)) ([291814e](https://github.com/fastly/js-compute-runtime/commit/291814e330ae5e1e894f0a57db0dedc8b27fd9bd))
+
+## 3.38.3 (2026-01-22)
+
+### Fixed
+
+* clean script to include TypeScript output directory ([#1270](https://github.com/fastly/js-compute-runtime/issues/1270)) ([015e40c](https://github.com/fastly/js-compute-runtime/commit/015e40c7f6cf6bf95f5a2ff7c52f4225948146a1))
+* pin lol\_html to 2.7.0 ([#1276](https://github.com/fastly/js-compute-runtime/issues/1276)) ([363550a](https://github.com/fastly/js-compute-runtime/commit/363550ae80056fb0e6fda2c7b67ddf4859d67fa8))
+* Rename shielding docs ([#1272](https://github.com/fastly/js-compute-runtime/issues/1272)) ([e12ab47](https://github.com/fastly/js-compute-runtime/commit/e12ab476821e9656dcdb5025e6ed54f40daf8da5))
+* Try and shortcut transform stream reading before doing a regular read ([#1279](https://github.com/fastly/js-compute-runtime/issues/1279)) ([6b9b939](https://github.com/fastly/js-compute-runtime/commit/6b9b939471e1589091f6cfa2f7864a528df35b1c))
+
 ## 3.38.2 (2025-12-19)
 
 ### Fixed
