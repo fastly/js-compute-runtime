@@ -868,8 +868,7 @@ FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error,
   // first-priority host_err mapping
   switch host_err {
   case FASTLY_HOST_ERROR_BAD_HANDLE: {
-	// in the rust sdk, this is KVStoreError::InvalidStoreHandle
-    err.detail = FastlyKVError::detail::internal_error;
+    err.detail = FastlyKVError::detail::invalid_store_handle;
     return err;
   }
   case FASTLY_HOST_ERROR_INVALID_ARGUMENT: {

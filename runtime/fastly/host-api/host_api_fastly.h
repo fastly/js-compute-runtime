@@ -256,6 +256,8 @@ public:
     internal_error,
     /// Rate limiting
     too_many_requests,
+    /// Store handle not recognized
+    invalid_store_handle,
     /// Host error
     host_error,
   };
