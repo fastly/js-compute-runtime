@@ -4,7 +4,6 @@
 #include "../host-api/host_api_fastly.h"
 #include "backend.h"
 #include "fastly.h"
-#include <iostream>
 
 namespace fastly::shielding {
 const uint64_t MAX_BACKEND_TIMEOUT = 0x100000000;
@@ -68,7 +67,6 @@ bool Shield::backend_for_shield(JSContext *cx, JS::HandleString target,
       host_config.first_byte_timeout_ms = parsed.value();
     }
   }
-  std::cout << "firstByteTimeout " << host_config.first_byte_timeout_ms << std::endl;
 
   auto options_mask = 0;
   std::uint32_t backend_name_size_out = 0;
