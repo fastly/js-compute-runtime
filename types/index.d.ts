@@ -20,3 +20,4 @@
 /// <reference path="html-rewriter.d.ts" />
 /// <reference path="image-optimizer.d.ts" />
 /// <reference path="shielding.d.ts" />
+/// <reference path="security.d.ts" />
