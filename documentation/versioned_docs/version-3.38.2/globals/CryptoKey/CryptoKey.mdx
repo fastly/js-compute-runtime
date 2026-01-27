@@ -1,0 +1,23 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# CryptoKey
+
+The **`CryptoKey`** interface represents a cryptographic key obtained from one of the [`SubtleCrypto`](../SubtleCrypto/SubtleCrypto.mdx) method [`importKey()`](../SubtleCrypto/prototype/importKey.mdx).
+
+## Instance properties
+
+- [`type`](./prototype/type.mdx) _**readonly**_
+  - : The type of key the object represents. It may take one of the following values: `"secret"`, `"private"` or `"public"`.
+
+- [`extractable`](./prototype/extractable.mdx) _**readonly**_
+  - : A boolean value indicating whether or not the key may be extracted.
+
+- [`algorithm`](./prototype/algorithm.mdx) _**readonly**_
+  - : An object describing the algorithm for which this key can be used and any associated extra parameters.
+
+- [`usages`](./prototype/usages.mdx) _**readonly**_
+  - : An `Array` of strings, indicating what can be done with the key. Possible values for array elements are `"encrypt"`, `"decrypt"`, `"sign"`, `"verify"`, `"deriveKey"`, `"deriveBits"`, `"wrapKey"`, and `"unwrapKey"`.

@@ -1,0 +1,104 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+import {Fiddle} from '@site/src/components/fiddle';
+
+# allowDynamicBackends
+
+The **`allowDynamicBackends()`** function is used to control whether or not Dynamic Backends should be allowed within this Fastly Compute Service.
+
+By default, Dynamic Backends are disabled within a JavaScript application as it can be a potential avenue for third-party JavaScript code to send requests, potentially including sensitive/secret data,  off to destinations that the JavaScript project was not intending, which could be a security issue.
+
+>**Note**: This feature is in disabled by default for Fastly Services. Please contact [Fastly Support](https://support.fastly.com/hc/requests/new?ticket_form_id=360000269711) to request the feature be enabled on the Fastly Services which require Dynamic Backends.
+
+## Syntax
+
+```js
+allowDynamicBackends(enabledOrConfig)
+```
+
+### Parameters
+
+- `enabledOrConfig` _: boolean_
+  - Whether or not to allow Dynamic Backends
+
+or
+
+- `enabledOrConfig` _: object_
+  - `connectTimeout` _: number_ _**optional**_
+    - Maximum duration in milliseconds to wait for a connection to this backend to be established.
+    - If exceeded, the connection is aborted and a 503 response will be presented instead.
+    - Throws a [`RangeError`](../globals/RangeError/RangeError.mdx) if the value is negative or greater than or equal to 2^32
+  - `firstByteTimeout` _: number_ _**optional**_
+    - Maximum duration in milliseconds to wait for the server response to begin after a TCP connection is established and the request has been sent.
+    - If exceeded, the connection is aborted and a 503 response will be presented instead.
+    - Throws a [`RangeError`](../globals/RangeError/RangeError.mdx) if the value is negative or greater than or equal to 2^32
+  - `betweenBytesTimeout` _: number_ _**optional**_
+    - Maximum duration in milliseconds that Fastly will wait while receiving no data on a download from a backend.
+    - If exceeded, the response received so far will be considered complete and the fetch will end.
+    - Throws a [`RangeError`](../globals/RangeError/RangeError.mdx) if the value is negative or greater than or equal to 2^32
+
+### Return value
+
+`undefined`.
+
+## Examples
+
+In this example an implicit Dynamic Backend is created when making the fetch request to [https://www.fastly.com/](https://www.fastly.com/) and the response is then returned to the client.
+
+<Fiddle config={{
+  "type": "javascript",
+  "title": "Dynamic Backends Example",
+  "origins": [
+    "https://http-me.fastly.dev"
+  ],
+  "src": {
+    "deps": "{\n  \"@fastly/js-compute\": \"^1.0.1\"\n}",
+    "main": `
+/// <reference types="@fastly/js-compute" />
+import { allowDynamicBackends } from "fastly:experimental";
+allowDynamicBackends(true);
+async function app() {
+  // For any request, return the fastly homepage -- without defining a backend!
+  return fetch('https://www.fastly.com/');
+}
+addEventListener("fetch", event => event.respondWith(app(event)));
+`
+  },
+  "requests": [
+    {
+      "enableCluster": true,
+      "enableShield": false,
+      "enableWAF": false,
+      "data": {
+         "dictionaries": {
+           "animals": {
+             "cat": "meow"
+           }
+         }
+       },
+      "method": "GET",
+      "path": "/status=200",
+      "useFreshCache": false,
+      "followRedirects": false,
+      "tests": "",
+      "delay": 0
+    }
+  ],
+  "srcVersion": 1
+}}>
+
+```js
+/// <reference types="@fastly/js-compute" />
+import { allowDynamicBackends } from "fastly:experimental";
+allowDynamicBackends(true);
+async function app() {
+  // For any request, return the fastly homepage -- without defining a backend!
+  return fetch('https://www.fastly.com/');
+}
+addEventListener("fetch", event => event.respondWith(app(event)));
+```
+</Fiddle>

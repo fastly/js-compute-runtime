@@ -6,7 +6,7 @@ import { assert, assertRejects } from './assertions.js';
 import { routes, isRunningLocally } from './routes.js';
 
 async function requestInitObjectLiteral(manualFramingHeaders) {
-  let request = new Request('https://http-me.glitch.me/anything', {
+  let request = new Request('https://http-me.fastly.dev/anything', {
     backend: 'httpme',
     method: 'POST',
     body: 'meow',
@@ -21,7 +21,7 @@ async function requestInitObjectLiteral(manualFramingHeaders) {
 }
 
 async function requestMethod(manualFramingHeaders) {
-  let request = new Request('https://http-me.glitch.me/anything', {
+  let request = new Request('https://http-me.fastly.dev/anything', {
     backend: 'httpme',
     method: 'POST',
     body: 'meow',
@@ -36,7 +36,7 @@ async function requestMethod(manualFramingHeaders) {
 }
 
 async function requestClone(manualFramingHeaders) {
-  let request = new Request('https://http-me.glitch.me/anything', {
+  let request = new Request('https://http-me.fastly.dev/anything', {
     backend: 'httpme',
     method: 'POST',
     body: 'meow',
@@ -51,7 +51,7 @@ async function requestClone(manualFramingHeaders) {
 }
 
 async function fetchInitObjectLiteral(manualFramingHeaders) {
-  let response = await fetch('https://http-me.glitch.me/anything', {
+  let response = await fetch('https://http-me.fastly.dev/anything', {
     backend: 'httpme',
     method: 'POST',
     body: 'meow',
@@ -220,8 +220,8 @@ routes.set(
 );
 
 async function responseMethod(setManualFramingHeaders) {
-  const response = await fetch('https://httpbin.org/stream-bytes/11', {
-    backend: 'httpbin',
+  const response = await fetch('https://http-me.fastly.dev/drip=11', {
+    backend: 'httpme',
     cacheOverride: new CacheOverride('pass'),
   });
   response.setManualFramingHeaders(setManualFramingHeaders);

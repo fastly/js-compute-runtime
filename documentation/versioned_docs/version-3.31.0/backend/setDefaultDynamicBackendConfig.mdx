@@ -4,6 +4,7 @@ hide_table_of_contents: false
 pagination_next: null
 pagination_prev: null
 ---
+import {Fiddle} from '@site/src/components/fiddle';
 
 # setDefaultDynamicBackendConfig()
 
@@ -89,7 +90,7 @@ In this example an explicit Dynamic Backend is created and supplied to the fetch
   "type": "javascript",
   "title": "Explicit Dynamic Backend Example",
   "origins": [
-    "https://http-me.glitch.me"
+    "https://http-me.fastly.dev"
   ],
   "src": {
     "deps": "{\n  \"@fastly/js-compute\": \"^1.0.1\"\n}",

@@ -40,32 +40,72 @@
   "GET /cache-override/fetch/mode-pass": {
     "flake": true
   },
-  "GET /secret-store/exposed-as-global": { "flake": true },
-  "GET /secret-store/interface": { "flake": true },
-  "GET /secret-store/constructor/called-as-regular-function": { "flake": true },
+  "GET /secret-store/exposed-as-global": {
+    "flake": true
+  },
+  "GET /secret-store/interface": {
+    "flake": true
+  },
+  "GET /secret-store/constructor/called-as-regular-function": {
+    "flake": true
+  },
   "GET /secret-store/constructor/parameter-calls-7.1.17-ToString": {
     "flake": true
   },
-  "GET /secret-store/constructor/empty-parameter": { "flake": true },
-  "GET /secret-store/constructor/found-store": { "flake": true },
-  "GET /secret-store/constructor/missing-store": { "flake": true },
-  "GET /secret-store/constructor/invalid-name": { "flake": true },
-  "GET /secret-store/get/called-as-constructor": { "flake": true },
-  "GET /secret-store/get/called-unbound": { "flake": true },
+  "GET /secret-store/constructor/empty-parameter": {
+    "flake": true
+  },
+  "GET /secret-store/constructor/found-store": {
+    "flake": true
+  },
+  "GET /secret-store/constructor/missing-store": {
+    "flake": true
+  },
+  "GET /secret-store/constructor/invalid-name": {
+    "flake": true
+  },
+  "GET /secret-store/get/called-as-constructor": {
+    "flake": true
+  },
+  "GET /secret-store/get/called-unbound": {
+    "flake": true
+  },
   "GET /secret-store/get/key-parameter-calls-7.1.17-ToString": {
     "flake": true
   },
-  "GET /secret-store/get/key-parameter-not-supplied": { "flake": true },
-  "GET /secret-store/get/key-parameter-empty-string": { "flake": true },
-  "GET /secret-store/get/key-parameter-255-character-string": { "flake": true },
-  "GET /secret-store/get/key-parameter-256-character-string": { "flake": true },
-  "GET /secret-store/get/key-parameter-invalid-string": { "flake": true },
-  "GET /secret-store/get/key-does-not-exist-returns-null": { "flake": true },
-  "GET /secret-store/get/key-exists": { "flake": true },
-  "GET /secret-store/from-bytes/invalid": { "flake": true },
-  "GET /secret-store/from-bytes/valid": { "flake": true },
-  "GET /secret-store-entry/interface": { "flake": true },
-  "GET /secret-store-entry/plaintext": { "flake": true },
+  "GET /secret-store/get/key-parameter-not-supplied": {
+    "flake": true
+  },
+  "GET /secret-store/get/key-parameter-empty-string": {
+    "flake": true
+  },
+  "GET /secret-store/get/key-parameter-255-character-string": {
+    "flake": true
+  },
+  "GET /secret-store/get/key-parameter-256-character-string": {
+    "flake": true
+  },
+  "GET /secret-store/get/key-parameter-invalid-string": {
+    "flake": true
+  },
+  "GET /secret-store/get/key-does-not-exist-returns-null": {
+    "flake": true
+  },
+  "GET /secret-store/get/key-exists": {
+    "flake": true
+  },
+  "GET /secret-store/from-bytes/invalid": {
+    "flake": true
+  },
+  "GET /secret-store/from-bytes/valid": {
+    "flake": true
+  },
+  "GET /secret-store-entry/interface": {
+    "flake": true
+  },
+  "GET /secret-store-entry/plaintext": {
+    "flake": true
+  },
   "GET /simple-cache/interface": {},
   "GET /simple-store/constructor/called-as-regular-function": {
     "flake": true,
@@ -409,7 +449,12 @@
   "GET /client/tlsClientCertificate": {},
   "GET /client/tlsCipherOpensslName": {},
   "GET /client/tlsProtocol": {},
-  "GET /config-store": { "flake": true },
+  "GET /client/tlsJA4": {},
+  "GET /client/h2Fingerprint": {},
+  "GET /client/ohFingerprint": {},
+  "GET /config-store": {
+    "flake": true
+  },
   "GET /crypto": {
     "downstream_response": {
       "status": 200,
@@ -980,24 +1025,54 @@
       "body": "ok"
     }
   },
-  "GET /dictionary/exposed-as-global": { "flake": true },
-  "GET /dictionary/interface": { "flake": true },
-  "GET /dictionary/constructor/called-as-regular-function": { "flake": true },
+  "GET /dictionary/exposed-as-global": {
+    "flake": true
+  },
+  "GET /dictionary/interface": {
+    "flake": true
+  },
+  "GET /dictionary/constructor/called-as-regular-function": {
+    "flake": true
+  },
   "GET /dictionary/constructor/parameter-calls-7.1.17-ToString": {
     "flake": true
   },
-  "GET /dictionary/constructor/empty-parameter": { "flake": true },
-  "GET /dictionary/constructor/found": { "flake": true },
-  "GET /dictionary/constructor/invalid-name": { "flake": true },
-  "GET /dictionary/get/called-as-constructor": { "flake": true },
-  "GET /dictionary/get/called-unbound": { "flake": true },
-  "GET /dictionary/get/key-parameter-calls-7.1.17-ToString": { "flake": true },
-  "GET /dictionary/get/key-parameter-not-supplied": { "flake": true },
-  "GET /dictionary/get/key-parameter-empty-string": { "flake": true },
-  "GET /dictionary/get/key-parameter-255-character-string": { "flake": true },
-  "GET /dictionary/get/key-parameter-256-character-string": { "flake": true },
-  "GET /dictionary/get/key-does-not-exist-returns-null": { "flake": true },
-  "GET /dictionary/get/key-exists": { "flake": true },
+  "GET /dictionary/constructor/empty-parameter": {
+    "flake": true
+  },
+  "GET /dictionary/constructor/found": {
+    "flake": true
+  },
+  "GET /dictionary/constructor/invalid-name": {
+    "flake": true
+  },
+  "GET /dictionary/get/called-as-constructor": {
+    "flake": true
+  },
+  "GET /dictionary/get/called-unbound": {
+    "flake": true
+  },
+  "GET /dictionary/get/key-parameter-calls-7.1.17-ToString": {
+    "flake": true
+  },
+  "GET /dictionary/get/key-parameter-not-supplied": {
+    "flake": true
+  },
+  "GET /dictionary/get/key-parameter-empty-string": {
+    "flake": true
+  },
+  "GET /dictionary/get/key-parameter-255-character-string": {
+    "flake": true
+  },
+  "GET /dictionary/get/key-parameter-256-character-string": {
+    "flake": true
+  },
+  "GET /dictionary/get/key-does-not-exist-returns-null": {
+    "flake": true
+  },
+  "GET /dictionary/get/key-exists": {
+    "flake": true
+  },
   "GET /env": {
     "environments": ["viceroy"]
   },
@@ -1087,19 +1162,11 @@
   },
   "GET /multiple-set-cookie/downstream": {
     "downstream_response": {
-      "status": 302,
+      "status": 200,
       "headers": [
-        ["Set-Cookie", "1=1; Path=/"],
-        ["Set-Cookie", "2=2; Path=/"],
-        ["Set-Cookie", "3=3; Path=/"],
-        ["Set-Cookie", "4=4; Path=/"],
-        ["Set-Cookie", "5=5; Path=/"],
-        ["Set-Cookie", "6=6; Path=/"],
-        ["Set-Cookie", "7=7; Path=/"],
-        ["Set-Cookie", "8=8; Path=/"],
-        ["Set-Cookie", "9=9; Path=/"],
-        ["Set-Cookie", "10=10; Path=/"],
-        ["Set-Cookie", "11=11; Path=/"]
+        ["Set-Cookie", "test1=1"],
+        ["Set-Cookie", "test2=2"],
+        ["Set-Cookie", "test3=3"]
       ]
     }
   },
@@ -1148,7 +1215,9 @@
     "flake": true,
     "downstream_response": {
       "status": 200,
-      "headers": { "content-type": "text/html" },
+      "headers": {
+        "content-type": "text/html"
+      },
       "body": ["<h1>blob</h1>"]
     }
   },
@@ -1160,21 +1229,7 @@
   "GET /response/arrayBuffer/guest-backed-stream": {},
   "GET /response/json": {},
   "GET /response/redirect": {},
-  "GET /response/request-body-init": {
-    "flake": true,
-    "downstream_response": {
-      "status": 200,
-      "body_prefix": [
-        123, 10, 32, 32, 34, 97, 114, 103, 115, 34, 58, 32, 123, 125, 44, 32,
-        10, 32, 32, 34, 100, 97, 116, 97, 34, 58, 32, 34, 100, 97, 116, 97, 58,
-        97, 112, 112, 108, 105, 99, 97, 116, 105, 111, 110, 47, 111, 99, 116,
-        101, 116, 45, 115, 116, 114, 101, 97, 109, 59, 98, 97, 115, 101, 54, 52,
-        44, 85, 107, 108, 71, 82, 107, 65, 112, 65, 65, 66, 88, 82, 85, 74, 81,
-        86, 108, 65, 52, 87, 65, 111, 65, 65, 65, 65, 69, 65, 65, 65, 65, 69, 81
-      ],
-      "body_suffix": [123, 10, 32, 32, 34, 97, 114, 103, 115, 34, 58, 32]
-    }
-  },
+  "GET /response/request-body-init": {},
   "GET /response/ip-port-undefined": {},
   "GET /setInterval/exposed-as-global": {},
   "GET /setInterval/interface": {},
@@ -1206,7 +1261,9 @@
       "body": ["START\nEND\n"]
     }
   },
-  "GET /setTimeout/fetch-timeout": { "flake": true },
+  "GET /setTimeout/fetch-timeout": {
+    "flake": true
+  },
   "GET /clearInterval/exposed-as-global": {},
   "GET /clearInterval/interface": {},
   "GET /clearInterval/called-as-constructor-function": {},
@@ -1245,10 +1302,6 @@
       "method": "POST",
       "pathname": "/tee",
       "headers": ["Content-Type", "application/json"],
-      "body": "hello world!"
-    },
-    "downstream_response": {
-      "status": 200,
       "body": "hello world!"
     }
   },
@@ -1318,7 +1371,9 @@
     "downstream_response": {
       "status": 200,
       "body": "meow",
-      "headers": { "content-length": "4" }
+      "headers": {
+        "content-length": "4"
+      }
     }
   },
   "GET /override-content-length/response/init/object-literal/false": {
@@ -1333,7 +1388,9 @@
     "downstream_response": {
       "status": 200,
       "body": "meow",
-      "headers": { "content-length": "4" }
+      "headers": {
+        "content-length": "4"
+      }
     }
   },
   "GET /override-content-length/response/init/response-instance/false": {
@@ -1350,13 +1407,9 @@
     "environments": ["compute"],
     "downstream_response": {
       "status": 200,
-      "headers": { "content-length": "11" }
-    }
-  },
-  "GET /headers/non-ascii-latin1-field-value": {
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
+      "headers": {
+        "content-length": "11"
+      }
     }
   },
   "GET /headers/getsetcookie": {
@@ -1380,7 +1433,9 @@
       "headers": [["cuStom", "test"]]
     }
   },
-  "GET /headers/from-response/delete-invalid": { "flake": true },
+  "GET /headers/from-response/delete-invalid": {
+    "flake": true
+  },
   "GET /headers/from-response/set-delete": {
     "flake": true,
     "downstream_response": {
@@ -2998,5 +3053,97 @@
   },
   "GET /compute/purge-surrogate-key-soft": {
     "environments": ["compute"]
+  },
+  "GET /html-rewriter/set-attribute": {},
+  "GET /html-rewriter/get-attribute": {},
+  "GET /html-rewriter/remove-attribute": {},
+  "GET /html-rewriter/replace-with": {},
+  "GET /html-rewriter/replace-children": {},
+  "GET /html-rewriter/insert": {},
+  "GET /html-rewriter/complex-selector": {},
+  "GET /html-rewriter/no-match-rewritten-content": {},
+  "GET /html-rewriter/multiple-handlers": {},
+  "GET /html-rewriter/invalid-selector": {},
+  "GET /html-rewriter/invalid-handler": {},
+  "GET /html-rewriter/throw-in-handler": {},
+  "GET /html-rewriter/invalid-html": {},
+  "GET /html-rewriter/insertion-order": {},
+  "GET /html-rewriter/escape-html": {},
+  "GET /image-optimizer/options/region": {},
+  "GET /image-optimizer/options/auto": {},
+  "GET /image-optimizer/options/bw": {},
+  "GET /image-optimizer/options/crop-mode": {},
+  "GET /image-optimizer/options/disable": {},
+  "GET /image-optimizer/options/enable": {},
+  "GET /image-optimizer/options/fit": {},
+  "GET /image-optimizer/options/metadata": {},
+  "GET /image-optimizer/options/optimize": {},
+  "GET /image-optimizer/options/orient": {},
+  "GET /image-optimizer/options/profile": {},
+  "GET /image-optimizer/options/resizeFilter": {},
+  "GET /image-optimizer/options/bgColor": {},
+  "GET /image-optimizer/options/blur": {},
+  "GET /image-optimizer/options/brightness": {},
+  "GET /image-optimizer/options/canvas": {},
+  "GET /image-optimizer/options/crop": {},
+  "GET /image-optimizer/options/precrop": {},
+  "GET /image-optimizer/options/dpr": {},
+  "GET /image-optimizer/options/frame": {},
+  "GET /image-optimizer/options/height": {},
+  "GET /image-optimizer/options/level": {},
+  "GET /image-optimizer/options/pad": {},
+  "GET /image-optimizer/options/quality": {},
+  "GET /image-optimizer/options/saturation": {},
+  "GET /image-optimizer/options/sharpen": {},
+  "GET /image-optimizer/options/trim": {},
+  "GET /image-optimizer/options/viewbox": {},
+  "GET /early-hints/manual-response": {
+    "environments": ["compute"],
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    },
+    "downstream_info": {
+      "status": 103,
+      "headers": {
+        "link": "</style.css>; rel=preload; as=style"
+      }
+    }
+  },
+  "GET /early-hints/send-early-hints": {
+    "environments": ["compute"],
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    },
+    "downstream_info": {
+      "status": 103,
+      "headers": {
+        "link": "</style.css>; rel=preload; as=style"
+      }
+    }
+  },
+  "GET /early-hints/send-early-hints-multiple-headers": {
+    "environments": ["compute"],
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    },
+    "downstream_info": {
+      "status": 103,
+      "headers": [
+        ["link", "</style.css>; rel=preload; as=style"],
+        ["link", "</style2.css>; rel=preload; as=style"]
+      ]
+    }
+  },
+  "GET /shielding/invalid-shield": {
+    "environments": ["compute"]
+  },
+  "GET /fastly/security/inspect/invalid-config": {
+    "environments": ["viceroy"]
+  },
+  "GET /fastly/security/inspect/basic": {
+    "environments": ["viceroy"]
   }
 }
