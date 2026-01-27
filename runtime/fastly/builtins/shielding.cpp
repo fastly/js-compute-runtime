@@ -4,8 +4,11 @@
 #include "../host-api/host_api_fastly.h"
 #include "backend.h"
 #include "fastly.h"
+#include <iostream>
 
 namespace fastly::shielding {
+const uint64_t MAX_BACKEND_TIMEOUT = 0x100000000;
+
 const JSFunctionSpec Shield::static_methods[] = {
     JS_FS_END,
 };
@@ -31,23 +34,47 @@ bool Shield::unencryptedBackend(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   JS::RootedString target(
       cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::PlainTarget)).toString());
-  return backend_for_shield(cx, target, args.rval());
+  return backend_for_shield(cx, target, args.rval(), args.get(0));
 }
 bool Shield::encryptedBackend(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
   JS::RootedString target(
       cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::SSLTarget)).toString());
-  return backend_for_shield(cx, target, args.rval());
+  return backend_for_shield(cx, target, args.rval(), args.get(0));
 }
 bool Shield::backend_for_shield(JSContext *cx, JS::HandleString target,
-                                JS::MutableHandleValue rval) {
+                                JS::MutableHandleValue rval, JS::HandleValue config) {
   auto name = core::encode(cx, target);
-  fastly_shielding_shield_backend_config config{nullptr, 0, 0};
+  fastly_shielding_shield_backend_config host_config{nullptr, 0, 0};
+
+  if (config.isObject()) {
+    JS::RootedObject configObj(cx, &config.toObject());
+    // Timeouts for backends must be less than 2^32 milliseconds, or
+    // about a month and a half.
+    JS::RootedValue first_byte_timeout_val(cx);
+    bool found;
+    if (!JS_HasProperty(cx, configObj, "firstByteTimeout", &found)) {
+      return false;
+    }
+    if (found) {
+      if (!JS_GetProperty(cx, configObj, "firstByteTimeout", &first_byte_timeout_val)) {
+        return false;
+      }
+      auto parsed = common::parse_and_validate_timeout(cx, first_byte_timeout_val, "Backend for shield",
+                                               "firstByteTimeout", MAX_BACKEND_TIMEOUT);
+      if (!parsed) {
+        return false;
+      }
+      host_config.first_byte_timeout_ms = parsed.value();
+    }
+  }
+  std::cout << "firstByteTimeout " << host_config.first_byte_timeout_ms << std::endl;
+
   auto options_mask = 0;
   std::uint32_t backend_name_size_out = 0;
   constexpr std::size_t max_backend_name_size = 1024;
   std::string backend_name_out(max_backend_name_size, 0);
-  auto status = fastly_shielding_backend_for_shield(name.ptr.get(), name.len, options_mask, &config,
+  auto status = fastly_shielding_backend_for_shield(name.ptr.get(), name.len, options_mask, &host_config,
                                                     backend_name_out.data(), max_backend_name_size,
                                                     &backend_name_size_out);
   if (status != 0) {

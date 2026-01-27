@@ -10,7 +10,7 @@ namespace fastly::shielding {
 class Shield : public builtins::BuiltinImpl<Shield> {
 private:
   static bool backend_for_shield(JSContext *cx, JS::HandleString target,
-                                 JS::MutableHandleValue rval);
+                                 JS::MutableHandleValue rval, JS::HandleValue config);
 
 public:
   static constexpr const char *class_name = "Shield";
