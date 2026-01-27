@@ -1,0 +1,29 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# WritableStream.abort()
+
+The **`abort()`** method of the `WritableStream` interface aborts the stream, signaling that the producer can no longer successfully write to the stream and it is to be immediately moved to an error state, with any queued writes discarded.
+
+## Syntax
+
+```js
+abort(reason)
+```
+
+### Parameters
+
+- `reason`
+  - : A string providing a human-readable reason for the abort.
+
+### Return value
+
+A `Promise`, which fulfills with the value given in the `reason` parameter.
+
+### Exceptions
+
+- `TypeError`
+  - : The stream you are trying to abort is not a `WritableStream`, or it is locked.

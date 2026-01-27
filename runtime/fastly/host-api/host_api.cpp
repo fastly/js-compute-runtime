@@ -885,15 +885,21 @@ FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error,
     err.detail = FastlyKVError::detail::too_many_requests;
     return err;
   }
-  case KV_ERROR_INTERNAL_ERROR:
-  default: {
+  case KV_ERROR_INTERNAL_ERROR: {
     err.detail = FastlyKVError::detail::internal_error;
     return err;
   }
+  case KV_ERROR_OK:
+  case KV_ERROR_UNINITIALIZED:
+  default: {
+    // If the hostcall never initialized `kv_error`, or if it claimed
+    // that it was `OK` but we still failed, then make a host error
+    // based on the `host_err` value.
+    err.detail = FastlyKVError::detail::host_error;
+    err.host_err = host_err;
+    return err;
   }
-  err.detail = FastlyKVError::detail::host_error;
-  err.host_err = host_err;
-  return err;
+  }
 }
 
 FastlyImageOptimizerError
@@ -1673,6 +1679,8 @@ Result<std::optional<HostString>> HttpReq::http_req_downstream_tls_cipher_openss
   auto status = fastly::req_downstream_tls_cipher_openssl_name(reinterpret_cast<char *>(ret.ptr),
                                                                default_size, &ret.len);
   if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    // NB(@zkat): ERROR_BUFFER_LEN sets the expected length of the buffer to
+    //            &ret.len, so we use that to inform our resize.
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
     status = fastly::req_downstream_tls_cipher_openssl_name(reinterpret_cast<char *>(ret.ptr),
                                                             ret.len, &ret.len);
@@ -1704,6 +1712,8 @@ Result<std::optional<HostString>> HttpReq::http_req_downstream_tls_protocol() {
   auto status = fastly::req_downstream_tls_protocol(reinterpret_cast<char *>(ret.ptr), default_size,
                                                     &ret.len);
   if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    // NB(@zkat): ERROR_BUFFER_LEN sets the expected length of the buffer to
+    //            &ret.len, so we use that to inform our resize.
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
     status =
         fastly::req_downstream_tls_protocol(reinterpret_cast<char *>(ret.ptr), ret.len, &ret.len);
@@ -1733,6 +1743,8 @@ Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_client_hello()
   ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
   auto status = fastly::req_downstream_tls_client_hello(ret.ptr, default_size, &ret.len);
   if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    // NB(@zkat): ERROR_BUFFER_LEN sets the expected length of the buffer to
+    //            &ret.len, so we use that to inform our resize.
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
     status = fastly::req_downstream_tls_client_hello(ret.ptr, ret.len, &ret.len);
   }
@@ -1762,6 +1774,8 @@ Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_raw_client_cer
   ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
   auto status = fastly::req_downstream_tls_raw_client_certificate(ret.ptr, default_size, &ret.len);
   if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    // NB(@zkat): ERROR_BUFFER_LEN sets the expected length of the buffer to
+    //            &ret.len, so we use that to inform our resize.
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
     status = fastly::req_downstream_tls_raw_client_certificate(ret.ptr, ret.len, &ret.len);
   }
@@ -1790,6 +1804,8 @@ Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_ja3_md5() {
   ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
   auto status = fastly::req_downstream_tls_ja3_md5(ret.ptr, &ret.len);
   if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    // NB(@zkat): ERROR_BUFFER_LEN sets the expected length of the buffer to
+    //            &ret.len, so we use that to inform our resize.
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
     status = fastly::req_downstream_tls_ja3_md5(ret.ptr, &ret.len);
   }
@@ -2253,6 +2269,43 @@ Result<HostString> HttpReq::get_suggested_cache_key() const {
 
   fastly::fastly_world_string str = {.ptr = buffer, .len = nwritten};
   return Result<HostString>::ok(make_host_string(str));
+}
+
+Result<HostString> Request::inspect(const InspectOptions *config) {
+  TRACE_CALL()
+  Result<HostString> res;
+  uint32_t inspect_opts_mask{0};
+  fastly::fastly_host_http_inspect_options opts;
+
+  if (config->corp != nullptr) {
+    inspect_opts_mask |= FASTLY_HOST_HTTP_REQ_INSPECT_CONFIG_OPTIONS_MASK_CORP;
+    opts.corp = config->corp;
+    opts.corp_len = config->corp_len;
+  }
+
+  if (config->workspace != nullptr) {
+    inspect_opts_mask |= FASTLY_HOST_HTTP_REQ_INSPECT_CONFIG_OPTIONS_MASK_WORKSPACE;
+    opts.workspace = config->workspace;
+    opts.workspace_len = config->workspace_len;
+  }
+
+  if (config->override_client_ip_ptr != nullptr) {
+    inspect_opts_mask |= FASTLY_HOST_HTTP_REQ_INSPECT_CONFIG_OPTIONS_MASK_OVERRIDE_CLIENT_IP;
+    opts.override_client_ip_ptr = config->override_client_ip_ptr;
+    opts.override_client_ip_len = config->override_client_ip_len;
+  }
+
+  fastly::fastly_host_error err;
+  fastly::fastly_world_string ret;
+  ret.ptr = static_cast<uint8_t *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 4));
+  if (!convert_result(fastly::req_inspect(this->req.handle, this->body.handle, inspect_opts_mask,
+                                          &opts, ret.ptr, HOSTCALL_BUFFER_LEN, &ret.len),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(make_host_string(ret));
+  }
+  return res;
 }
 
 // HttpCacheEntry method implementations
@@ -2824,17 +2877,39 @@ Result<ConfigStore> ConfigStore::open(std::string_view name) {
 }
 
 Result<std::optional<HostString>> ConfigStore::get(std::string_view name) {
+  return this->get(name, CONFIG_STORE_INITIAL_BUF_LEN);
+}
+
+Result<std::optional<HostString>> ConfigStore::get(std::string_view name,
+                                                   uint32_t initial_buf_len) {
   TRACE_CALL()
   Result<std::optional<HostString>> res;
 
+  uint32_t buf_len{initial_buf_len};
   auto name_str = string_view_to_world_string(name);
   fastly::fastly_world_string ret;
   fastly::fastly_host_error err;
-  ret.ptr = static_cast<uint8_t *>(cabi_malloc(CONFIG_STORE_ENTRY_MAX_LEN, 1));
-  if (!convert_result(fastly::config_store_get(this->handle, reinterpret_cast<char *>(name_str.ptr),
-                                               name_str.len, reinterpret_cast<char *>(ret.ptr),
-                                               CONFIG_STORE_ENTRY_MAX_LEN, &ret.len),
-                      &err)) {
+
+  ret.ptr = static_cast<uint8_t *>(cabi_malloc(buf_len, 1));
+
+  bool succeeded{convert_result(
+      fastly::config_store_get(this->handle, reinterpret_cast<char *>(name_str.ptr), name_str.len,
+                               reinterpret_cast<char *>(ret.ptr), buf_len, &ret.len),
+      &err)};
+
+  if (!succeeded && err == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    // NB(@zkat): ERROR_BUFFER_LEN sets the expected length of the buffer to
+    //            &ret.len, so we use that to inform our resize.
+    buf_len = ret.len;
+    ret.len = 0;
+    ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, initial_buf_len, 1, buf_len));
+    succeeded = convert_result(
+        fastly::config_store_get(this->handle, reinterpret_cast<char *>(name_str.ptr), name_str.len,
+                                 reinterpret_cast<char *>(ret.ptr), buf_len, &ret.len),
+        &err);
+  }
+
+  if (!succeeded) {
     cabi_free(ret.ptr);
     if (error_is_optional_none(err)) {
       res.emplace(std::nullopt);
@@ -2842,7 +2917,7 @@ Result<std::optional<HostString>> ConfigStore::get(std::string_view name) {
       res.emplace_err(err);
     }
   } else {
-    ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, CONFIG_STORE_ENTRY_MAX_LEN, 1, ret.len));
+    ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, buf_len, 1, ret.len));
     res.emplace(make_host_string(ret));
   }
 
@@ -2980,16 +3055,35 @@ FastlyAsyncTask::Handle ObjectStorePendingDelete::async_handle() const {
 }
 
 Result<std::optional<HostBytes>> Secret::plaintext() const {
+  return this->plaintext(CONFIG_STORE_INITIAL_BUF_LEN);
+}
+
+Result<std::optional<HostBytes>> Secret::plaintext(uint32_t initial_buf_len) const {
   TRACE_CALL()
   Result<std::optional<HostBytes>> res;
 
+  uint32_t buf_len{initial_buf_len};
   fastly::fastly_world_list_u8 ret;
   fastly::fastly_host_error err;
-  ret.ptr = static_cast<uint8_t *>(JS_malloc(CONTEXT, DICTIONARY_ENTRY_MAX_LEN));
-  if (!convert_result(fastly::secret_store_plaintext(this->handle,
-                                                     reinterpret_cast<char *>(ret.ptr),
-                                                     DICTIONARY_ENTRY_MAX_LEN, &ret.len),
-                      &err)) {
+  ret.ptr = static_cast<uint8_t *>(JS_malloc(CONTEXT, buf_len));
+  bool succeeded{
+      convert_result(fastly::secret_store_plaintext(this->handle, reinterpret_cast<char *>(ret.ptr),
+                                                    buf_len, &ret.len),
+                     &err)};
+
+  if (!succeeded && err == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    // NB(@zkat): ERROR_BUFFER_LEN sets the expected length of the buffer to
+    //            &ret.len, so we use that to inform our resize.
+    buf_len = ret.len;
+    ret.len = 0;
+    ret.ptr = static_cast<uint8_t *>(JS_realloc(CONTEXT, ret.ptr, initial_buf_len, buf_len));
+    succeeded =
+        convert_result(fastly::secret_store_plaintext(
+                           this->handle, reinterpret_cast<char *>(ret.ptr), buf_len, &ret.len),
+                       &err);
+  }
+
+  if (!succeeded) {
     if (error_is_optional_none(err)) {
       res.emplace(std::nullopt);
     } else {
@@ -2997,8 +3091,7 @@ Result<std::optional<HostBytes>> Secret::plaintext() const {
       res.emplace_err(err);
     }
   } else {
-    ret.ptr =
-        static_cast<uint8_t *>(JS_realloc(CONTEXT, ret.ptr, DICTIONARY_ENTRY_MAX_LEN, ret.len));
+    ret.ptr = static_cast<uint8_t *>(JS_realloc(CONTEXT, ret.ptr, buf_len, ret.len));
     res.emplace(make_host_bytes(ret.ptr, ret.len));
   }
 
@@ -3501,6 +3594,8 @@ Result<HostBytes> CacheHandle::get_user_metadata() {
   auto status = fastly::cache_get_user_metadata(handle, reinterpret_cast<char *>(ret.ptr),
                                                 default_size, &ret.len);
   if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    // NB(@zkat): ERROR_BUFFER_LEN sets the expected length of the buffer to
+    //            &ret.len, so we use that to inform our resize.
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
     status = fastly::cache_get_user_metadata(handle, reinterpret_cast<char *>(ret.ptr), ret.len,
                                              &ret.len);
@@ -4256,6 +4351,8 @@ Result<HostString> DeviceDetection::lookup(std::string_view user_agent) {
       reinterpret_cast<char *>(user_agent_str.ptr), user_agent_str.len,
       reinterpret_cast<char *>(ret.ptr), default_size, &ret.len);
   if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    // NB(@zkat): ERROR_BUFFER_LEN sets the expected length of the buffer to
+    //            &ret.len, so we use that to inform our resize.
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
     status = fastly::device_detection_lookup(reinterpret_cast<char *>(user_agent_str.ptr),
                                              user_agent_str.len, reinterpret_cast<char *>(ret.ptr),

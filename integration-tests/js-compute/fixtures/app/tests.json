@@ -3139,5 +3139,11 @@
   },
   "GET /shielding/invalid-shield": {
     "environments": ["compute"]
+  },
+  "GET /fastly/security/inspect/invalid-config": {
+    "environments": ["viceroy"]
+  },
+  "GET /fastly/security/inspect/basic": {
+    "environments": ["viceroy"]
   }
 }
