@@ -106,7 +106,7 @@ async function setupSecretStore() {
   const stores = JSON.parse(
     await zx`fastly secret-store list --quiet --json --token $FASTLY_API_TOKEN`,
   );
-  let STORE_ID = existingListId(stores, SECRET_STORE_NAME);
+  let STORE_ID = stores && existingListId(stores, SECRET_STORE_NAME);
   if (!STORE_ID) {
     console.log(`Creating new secret store ${SECRET_STORE_NAME}`);
     STORE_ID = JSON.parse(

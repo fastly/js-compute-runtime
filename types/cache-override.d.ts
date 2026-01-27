@@ -37,8 +37,8 @@ declare module 'fastly:cache-override' {
      * to return the new body.
      */
     bodyTransformFn?: (
-      body: Uint8Array,
-    ) => Uint8Array | PromiseLike<Uint8Array>;
+      body: Uint8Array<ArrayBuffer>,
+    ) => Uint8Array<ArrayBuffer> | PromiseLike<Uint8Array<ArrayBuffer>>;
   }
   /**
    * The cache override mode for a request
@@ -121,7 +121,7 @@ declare module 'fastly:cache-override' {
    *   "type": "javascript",
    *   "title": "CacheOverride Example",
    *   "origins": [
-   *     "https://http-me.glitch.me"
+   *     "https://http-me.fastly.dev"
    *   ],
    *   "src": {
    *     "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",

@@ -1,0 +1,36 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# DataView.prototype.getUint8()
+
+The **`getUint8()`** method gets an unsigned 8-bit integer
+(unsigned byte) at the specified byte offset from the start of the
+[`DataView`](../../../globals/DataView/DataView.mdx).
+
+## Syntax
+
+```js
+getUint8(byteOffset)
+```
+
+### Parameters
+
+- `byteOffset`
+  - : The offset, in byte, from the start of the view where to read the data.
+
+### Return value
+
+An unsigned 8-bit integer number.
+
+### Errors thrown
+
+- [`RangeError`](../../RangeError/RangeError.mdx)
+  - : Thrown if the `byteOffset` is set such as it would read beyond the end of
+    the view.
+
+## Description
+
+There is no alignment constraint; multi-byte values may be fetched from any offset.
