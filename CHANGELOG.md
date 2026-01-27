@@ -1,5 +1,44 @@
 # Changelog
 
+## 3.38.4 (2026-01-23)
+
+### Fixed
+
+* Don't shortcut transform too early ([#1281](https://github.com/fastly/js-compute-runtime/issues/1281)) ([291814e](https://github.com/fastly/js-compute-runtime/commit/291814e330ae5e1e894f0a57db0dedc8b27fd9bd))
+
+## 3.38.3 (2026-01-22)
+
+### Fixed
+
+* clean script to include TypeScript output directory ([#1270](https://github.com/fastly/js-compute-runtime/issues/1270)) ([015e40c](https://github.com/fastly/js-compute-runtime/commit/015e40c7f6cf6bf95f5a2ff7c52f4225948146a1))
+* pin lol\_html to 2.7.0 ([#1276](https://github.com/fastly/js-compute-runtime/issues/1276)) ([363550a](https://github.com/fastly/js-compute-runtime/commit/363550ae80056fb0e6fda2c7b67ddf4859d67fa8))
+* Rename shielding docs ([#1272](https://github.com/fastly/js-compute-runtime/issues/1272)) ([e12ab47](https://github.com/fastly/js-compute-runtime/commit/e12ab476821e9656dcdb5025e6ed54f40daf8da5))
+* Try and shortcut transform stream reading before doing a regular read ([#1279](https://github.com/fastly/js-compute-runtime/issues/1279)) ([6b9b939](https://github.com/fastly/js-compute-runtime/commit/6b9b939471e1589091f6cfa2f7864a528df35b1c))
+
+## 3.38.2 (2025-12-19)
+
+### Fixed
+
+* Handle cross-volume renames of intermediate files ([#1264](https://github.com/fastly/js-compute-runtime/issues/1264)) ([94e5671](https://github.com/fastly/js-compute-runtime/commit/94e5671090cbde1c3159032c90aa3f3ad2fdc88a))
+
+## 3.38.1 (2025-12-18)
+
+### Fixed
+
+* Build CLI in npm publish ([#1262](https://github.com/fastly/js-compute-runtime/issues/1262)) ([2fe6e2d](https://github.com/fastly/js-compute-runtime/commit/2fe6e2d5b38c74c4a3f7c4a4941d116ec75b1d88))
+
+## 3.38.0 (2025-12-18)
+
+### Added
+
+* **config:** add support for config store buffers longer than 8k ([#1181](https://github.com/fastly/js-compute-runtime/issues/1181)) ([da4c169](https://github.com/fastly/js-compute-runtime/commit/da4c169f7a302c2e6c2a1796c791b9463c4dc2a8))
+* **inspect:** add support for NGWAF inspect api ([#1212](https://github.com/fastly/js-compute-runtime/issues/1212)) ([98f45e4](https://github.com/fastly/js-compute-runtime/commit/98f45e4d678e294301c21be2ddf16c4482683ef7))
+
+### Fixed
+
+* Correct behaviour of chained body proxy streams in some circumstances ([#1259](https://github.com/fastly/js-compute-runtime/issues/1259)) ([11f9a4b](https://github.com/fastly/js-compute-runtime/commit/11f9a4b5b5fc90f9f2eb9f6a6958e971fbd52e19))
+* make shielding.d.ts ambient ([#1256](https://github.com/fastly/js-compute-runtime/issues/1256)) ([7a0e987](https://github.com/fastly/js-compute-runtime/commit/7a0e9876d0e001ad6c1b87b3701ecfffddc7b5ad))
+
 ## 3.37.0 (2025-12-11)
 
 ### Added

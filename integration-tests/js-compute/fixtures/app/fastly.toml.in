@@ -9,7 +9,7 @@ name = "js-test-app"
 service_id = ""
 
 [scripts]
-  build = "node ../../../../js-compute-runtime-cli.js --env FASTLY_DEBUG_LOGGING,ACL_NAME,CONFIG_STORE_NAME,DICTIONARY_NAME,KV_STORE_NAME,SECRET_STORE_NAME,LOCAL_TEST,TEST=\"foo\" --enable-experimental-high-resolution-time-methods src/index.js"
+  build = "node ../../../../dist/cli/js-compute-runtime-cli.js --env FASTLY_DEBUG_LOGGING,ACL_NAME,CONFIG_STORE_NAME,DICTIONARY_NAME,KV_STORE_NAME,SECRET_STORE_NAME,LOCAL_TEST,TEST=\"foo\" --enable-experimental-high-resolution-time-methods src/index.js"
 
 [local_server]
 
@@ -24,8 +24,8 @@ service_id = ""
       override_host = "compute-sdk-test-backend.edgecompute.app"
 
     [local_server.backends.httpme]
-      url = "https://http-me.glitch.me"
-      override_host = "http-me.glitch.me"
+      url = "https://http-me.fastly.dev"
+      override_host = "http-me.fastly.dev"
 
   [local_server.config_stores]
     [local_server.config_stores.CONFIG_STORE_NAME]
@@ -115,7 +115,7 @@ service_id = ""
 [setup]
   [setup.backends]
     [setup.backends.httpme]
-      address = "http-me.glitch.me"
+      address = "http-me.fastly.dev"
       port = 443
 
     [setup.backends.TheOrigin]
