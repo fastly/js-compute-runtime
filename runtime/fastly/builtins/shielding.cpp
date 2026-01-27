@@ -41,8 +41,8 @@ bool Shield::encryptedBackend(JSContext *cx, unsigned argc, JS::Value *vp) {
       cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::SSLTarget)).toString());
   return backend_for_shield(cx, target, args.rval(), args.get(0));
 }
-bool Shield::backend_for_shield(JSContext *cx, JS::HandleString target,
-                                JS::MutableHandleValue rval, JS::HandleValue config) {
+bool Shield::backend_for_shield(JSContext *cx, JS::HandleString target, JS::MutableHandleValue rval,
+                                JS::HandleValue config) {
   auto name = core::encode(cx, target);
   fastly_shielding_shield_backend_config host_config{nullptr, 0, 0};
 
@@ -59,8 +59,9 @@ bool Shield::backend_for_shield(JSContext *cx, JS::HandleString target,
       if (!JS_GetProperty(cx, configObj, "firstByteTimeout", &first_byte_timeout_val)) {
         return false;
       }
-      auto parsed = common::parse_and_validate_timeout(cx, first_byte_timeout_val, "Backend for shield",
-                                               "firstByteTimeout", MAX_BACKEND_TIMEOUT);
+      auto parsed =
+          common::parse_and_validate_timeout(cx, first_byte_timeout_val, "Backend for shield",
+                                             "firstByteTimeout", MAX_BACKEND_TIMEOUT);
       if (!parsed) {
         return false;
       }
@@ -72,9 +73,9 @@ bool Shield::backend_for_shield(JSContext *cx, JS::HandleString target,
   std::uint32_t backend_name_size_out = 0;
   constexpr std::size_t max_backend_name_size = 1024;
   std::string backend_name_out(max_backend_name_size, 0);
-  auto status = fastly_shielding_backend_for_shield(name.ptr.get(), name.len, options_mask, &host_config,
-                                                    backend_name_out.data(), max_backend_name_size,
-                                                    &backend_name_size_out);
+  auto status = fastly_shielding_backend_for_shield(name.ptr.get(), name.len, options_mask,
+                                                    &host_config, backend_name_out.data(),
+                                                    max_backend_name_size, &backend_name_size_out);
   if (status != 0) {
     HANDLE_ERROR(cx, status);
     return false;
