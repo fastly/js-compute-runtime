@@ -2,9 +2,25 @@
   "name": "@fastly/js-compute",
   "version": "3.38.4",
   "license": "Apache-2.0",
-  "main": "dist/cli/js-compute-runtime-cli.js",
+  "main": "types/index.js",
   "types": "types/index.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "fastly": {
+        "types": "./types/index.d.ts",
+        "default": "./types/index.js"
+      },
+      "default": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./fastly-esbuild-plugin": {
+      "types": "./dist/esbuild-plugins/fastlyPlugin.d.ts",
+      "default": "./dist/esbuild-plugins/fastlyPlugin.js"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/fastly/js-compute-runtime"
