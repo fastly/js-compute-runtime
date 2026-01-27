@@ -7,7 +7,7 @@ export type SwallowTopLevelExportsPluginParams = {
 
 export function swallowTopLevelExportsPlugin(
   opts?: SwallowTopLevelExportsPluginParams,
-) {
+): Plugin {
   const { entry } = opts ?? {};
 
   const name = 'swallow-top-level-exports';
@@ -40,5 +40,5 @@ export function swallowTopLevelExportsPlugin(
         };
       });
     },
-  } satisfies Plugin;
+  };
 }

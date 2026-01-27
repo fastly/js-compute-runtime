@@ -1,24 +1,21 @@
-import { dirname, resolve, sep, normalize } from 'node:path';
+import { dirname, sep, normalize } from 'node:path';
 import { tmpdir, freemem } from 'node:os';
 import {
   spawnSync,
   type SpawnSyncOptionsWithStringEncoding,
 } from 'node:child_process';
-import {
-  mkdir,
-  readFile,
-  mkdtemp,
-  writeFile,
-  copyFile,
-} from 'node:fs/promises';
+import { mkdir, readFile, mkdtemp } from 'node:fs/promises';
 import { rmSync } from 'node:fs';
 import weval from '@bytecodealliance/weval';
 import wizer from '@bytecodealliance/wizer';
 
 import { isDirectory, isFile } from './files.js';
-import { postbundle } from './postbundle.js';
-import { bundle } from './bundle.js';
-import { composeSourcemaps, ExcludePattern } from './composeSourcemaps.js';
+import { CompilerContext } from './compilerPipeline.js';
+import { bundleStep } from './compiler-steps/bundle.js';
+import { precompileRegexesStep } from './compiler-steps/precompileRegexes.js';
+import { addStackMappingHelpersStep } from './compiler-steps/addStackMappingHelpers.js';
+import { addFastlyHelpersStep } from './compiler-steps/addFastlyHelpers.js';
+import { composeSourcemapsStep } from './compiler-steps/composeSourcemaps.js';
 
 const maybeWindowsPath =
   process.platform === 'win32'
@@ -155,239 +152,156 @@ export async function compileApplicationToWasm(
     }
   }
 
-  let tmpDir;
-  if (doBundle) {
-    tmpDir = await getTmpDir();
+  const tmpDir = await getTmpDir();
 
-    const sourceMaps = [];
-
-    const bundleFilename = '__input_bundled.js';
-    const bundleOutputFilePath = resolve(tmpDir, bundleFilename);
-
-    // esbuild respects input source map, works if it's linked via sourceMappingURL
-    // either inline or as separate file
-    try {
-      await bundle(input, bundleOutputFilePath, {
+  try {
+    if (doBundle) {
+      const ctx = new CompilerContext(
+        input,
+        tmpDir,
+        debugIntermediateFilesDir,
         moduleMode,
         enableStackTraces,
-      });
+        excludeSources,
+      );
+
+      // bundle input -> apply esbuild (bundle package imports, apply Fastly Plugin)
+      ctx.addCompilerPipelineStep(bundleStep);
+
+      // precompile regexes
+      ctx.addCompilerPipelineStep(precompileRegexesStep);
+
+      // add stack mapping helpers
+      if (enableStackTraces) {
+        ctx.addCompilerPipelineStep(addStackMappingHelpersStep);
+      }
+
+      // add Fastly helpers
+      ctx.addCompilerPipelineStep(addFastlyHelpersStep);
+
+      // compile sourcemaps up to this point and inject into bundle
+      if (enableStackTraces) {
+        ctx.addCompilerPipelineStep(composeSourcemapsStep);
+      }
+
+      await ctx.applyCompilerPipeline();
+      await ctx.maybeWriteDebugIntermediateFile('fastly_bundle.js');
+
+      // the output of the pipeline is the Wizer/Weval input
+      input = ctx.outFilepath;
+    }
+
+    const spawnOpts = {
+      stdio: [null, process.stdout, process.stderr],
+      input: maybeWindowsPath(input),
+      shell: true,
+      encoding: 'utf-8',
+      env: {
+        ...env,
+        ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
+          enableExperimentalHighResolutionTimeMethods ? '1' : '0',
+        ENABLE_EXPERIMENTAL_HTTP_CACHE: enableHttpCache ? '1' : '0',
+        RUST_MIN_STACK: String(
+          Math.max(8 * 1024 * 1024, Math.floor(freemem() * 0.1)),
+        ),
+      },
+    } satisfies SpawnSyncOptionsWithStringEncoding;
+
+    try {
+      if (!doBundle) {
+        if (enableAOT) {
+          const wevalBin = await weval();
+
+          const wevalProcess = spawnSync(
+            `"${wevalBin}"`,
+            [
+              'weval',
+              '-v',
+              ...(aotCache ? [`--cache-ro ${aotCache}`] : []),
+              `--dir="${maybeWindowsPath(process.cwd())}"`,
+              '-w',
+              `-i "${wasmEngine}"`,
+              `-o "${output}"`,
+            ],
+            spawnOpts,
+          );
+          if (wevalProcess.status !== 0) {
+            throw new Error(`Weval initialization failure`);
+          }
+          process.exitCode = wevalProcess.status;
+        } else {
+          const wizerProcess = spawnSync(
+            `"${wizer}"`,
+            [
+              '--allow-wasi',
+              `--wasm-bulk-memory=true`,
+              `--dir="${maybeWindowsPath(process.cwd())}"`,
+              '--inherit-env=true',
+              '-r _start=wizer.resume',
+              `-o="${output}"`,
+              `"${wasmEngine}"`,
+            ],
+            spawnOpts,
+          );
+          if (wizerProcess.status !== 0) {
+            throw new Error(`Wizer initialization failure`);
+          }
+          process.exitCode = wizerProcess.status;
+        }
+      } else {
+        spawnOpts.input = `${maybeWindowsPath(input)}${moduleMode ? '' : ' --legacy-script'}`;
+        if (enableAOT) {
+          const wevalBin = await weval();
+
+          const wevalProcess = spawnSync(
+            `"${wevalBin}"`,
+            [
+              'weval',
+              '-v',
+              ...(aotCache ? [`--cache-ro ${aotCache}`] : []),
+              '--dir .',
+              `--dir ${maybeWindowsPath(dirname(input))}`,
+              '-w',
+              `-i "${wasmEngine}"`,
+              `-o "${output}"`,
+            ],
+            spawnOpts,
+          );
+          if (wevalProcess.status !== 0) {
+            throw new Error(`Weval initialization failure`);
+          }
+          process.exitCode = wevalProcess.status;
+        } else {
+          const wizerProcess = spawnSync(
+            `"${wizer}"`,
+            [
+              '--inherit-env=true',
+              '--allow-wasi',
+              '--dir=.',
+              `--dir=${maybeWindowsPath(dirname(input))}`,
+              '-r _start=wizer.resume',
+              `--wasm-bulk-memory=true`,
+              `-o="${output}"`,
+              `"${wasmEngine}"`,
+            ],
+            spawnOpts,
+          );
+          if (wizerProcess.status !== 0) {
+            throw new Error(`Wizer initialization failure`);
+          }
+          process.exitCode = wizerProcess.status;
+        }
+      }
     } catch (maybeError: unknown) {
       const error =
         maybeError instanceof Error
           ? maybeError
           : new Error(String(maybeError));
-      console.error(`Error:`, error.message);
-      process.exit(1);
-    }
-
-    if (debugIntermediateFilesDir != null) {
-      await copyFile(
-        bundleOutputFilePath,
-        resolve(debugIntermediateFilesDir, '__1_bundled.js'),
+      throw new Error(
+        `Error: Failed to compile JavaScript to Wasm:\n${error.message}`,
       );
-      if (enableStackTraces) {
-        await copyFile(
-          bundleOutputFilePath + '.map',
-          resolve(debugIntermediateFilesDir, '__1_bundled.js.map'),
-        );
-      }
     }
-    if (enableStackTraces) {
-      sourceMaps.push({ f: bundleFilename, s: bundleOutputFilePath + '.map' });
-    }
-
-    const postbundleFilename = '__fastly_post_bundle.js';
-    const postbundleOutputFilepath = resolve(tmpDir, postbundleFilename);
-
-    await postbundle(bundleOutputFilePath, postbundleOutputFilepath, {
-      moduleMode,
-      enableStackTraces,
-    });
-
-    if (debugIntermediateFilesDir != null) {
-      await copyFile(
-        postbundleOutputFilepath,
-        resolve(debugIntermediateFilesDir, '__2_postbundled.js'),
-      );
-      if (enableStackTraces) {
-        await copyFile(
-          postbundleOutputFilepath + '.map',
-          resolve(debugIntermediateFilesDir, '__2_postbundled.js.map'),
-        );
-      }
-    }
-    if (enableStackTraces) {
-      sourceMaps.push({
-        f: postbundleFilename,
-        s: postbundleOutputFilepath + '.map',
-      });
-    }
-
-    if (enableStackTraces) {
-      // Compose source maps
-      const replaceSourceMapToken = '__FINAL_SOURCE_MAP__';
-      let excludePatterns: ExcludePattern[] = [
-        'forbid-entry:/**',
-        'node_modules/**',
-      ];
-      if (excludeSources) {
-        excludePatterns = [() => true];
-      }
-      const composed = await composeSourcemaps(sourceMaps, excludePatterns);
-
-      const outputWithSourcemaps = '__fastly_bundle_with_sourcemaps.js';
-      const outputWithSourcemapsFilePath = resolve(
-        tmpDir,
-        outputWithSourcemaps,
-      );
-
-      const postBundleContent = await readFile(postbundleOutputFilepath, {
-        encoding: 'utf-8',
-      });
-      const outputWithSourcemapsContent = postBundleContent.replace(
-        replaceSourceMapToken,
-        () => JSON.stringify(composed),
-      );
-      await writeFile(
-        outputWithSourcemapsFilePath,
-        outputWithSourcemapsContent,
-      );
-
-      if (debugIntermediateFilesDir != null) {
-        await copyFile(
-          outputWithSourcemapsFilePath,
-          resolve(debugIntermediateFilesDir, 'fastly_bundle.js'),
-        );
-        await writeFile(
-          resolve(debugIntermediateFilesDir, 'fastly_sourcemaps.json'),
-          composed,
-        );
-      }
-
-      // the output with sourcemaps is now the Wizer input
-      input = outputWithSourcemapsFilePath;
-    } else {
-      // the bundled output is now the Wizer input
-      input = postbundleOutputFilepath;
-      if (debugIntermediateFilesDir != null) {
-        await copyFile(
-          postbundleOutputFilepath,
-          resolve(debugIntermediateFilesDir, 'fastly_bundle.js'),
-        );
-      }
-    }
-  }
-
-  const spawnOpts = {
-    stdio: [null, process.stdout, process.stderr],
-    input: maybeWindowsPath(input),
-    shell: true,
-    encoding: 'utf-8',
-    env: {
-      ...env,
-      ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS:
-        enableExperimentalHighResolutionTimeMethods ? '1' : '0',
-      ENABLE_EXPERIMENTAL_HTTP_CACHE: enableHttpCache ? '1' : '0',
-      RUST_MIN_STACK: String(
-        Math.max(8 * 1024 * 1024, Math.floor(freemem() * 0.1)),
-      ),
-    },
-  } satisfies SpawnSyncOptionsWithStringEncoding;
-
-  try {
-    if (!doBundle) {
-      if (enableAOT) {
-        const wevalBin = await weval();
-
-        const wevalProcess = spawnSync(
-          `"${wevalBin}"`,
-          [
-            'weval',
-            '-v',
-            ...(aotCache ? [`--cache-ro ${aotCache}`] : []),
-            `--dir="${maybeWindowsPath(process.cwd())}"`,
-            '-w',
-            `-i "${wasmEngine}"`,
-            `-o "${output}"`,
-          ],
-          spawnOpts,
-        );
-        if (wevalProcess.status !== 0) {
-          throw new Error(`Weval initialization failure`);
-        }
-        process.exitCode = wevalProcess.status;
-      } else {
-        const wizerProcess = spawnSync(
-          `"${wizer}"`,
-          [
-            '--allow-wasi',
-            `--wasm-bulk-memory=true`,
-            `--dir="${maybeWindowsPath(process.cwd())}"`,
-            '--inherit-env=true',
-            '-r _start=wizer.resume',
-            `-o="${output}"`,
-            `"${wasmEngine}"`,
-          ],
-          spawnOpts,
-        );
-        if (wizerProcess.status !== 0) {
-          throw new Error(`Wizer initialization failure`);
-        }
-        process.exitCode = wizerProcess.status;
-      }
-    } else {
-      spawnOpts.input = `${maybeWindowsPath(input)}${moduleMode ? '' : ' --legacy-script'}`;
-      if (enableAOT) {
-        const wevalBin = await weval();
-
-        const wevalProcess = spawnSync(
-          `"${wevalBin}"`,
-          [
-            'weval',
-            '-v',
-            ...(aotCache ? [`--cache-ro ${aotCache}`] : []),
-            '--dir .',
-            `--dir ${maybeWindowsPath(dirname(input))}`,
-            '-w',
-            `-i "${wasmEngine}"`,
-            `-o "${output}"`,
-          ],
-          spawnOpts,
-        );
-        if (wevalProcess.status !== 0) {
-          throw new Error(`Weval initialization failure`);
-        }
-        process.exitCode = wevalProcess.status;
-      } else {
-        const wizerProcess = spawnSync(
-          `"${wizer}"`,
-          [
-            '--inherit-env=true',
-            '--allow-wasi',
-            '--dir=.',
-            `--dir=${maybeWindowsPath(dirname(input))}`,
-            '-r _start=wizer.resume',
-            `--wasm-bulk-memory=true`,
-            `-o="${output}"`,
-            `"${wasmEngine}"`,
-          ],
-          spawnOpts,
-        );
-        if (wizerProcess.status !== 0) {
-          throw new Error(`Wizer initialization failure`);
-        }
-        process.exitCode = wizerProcess.status;
-      }
-    }
-  } catch (maybeError: unknown) {
-    const error =
-      maybeError instanceof Error ? maybeError : new Error(String(maybeError));
-    throw new Error(
-      `Error: Failed to compile JavaScript to Wasm:\n${error.message}`,
-    );
   } finally {
-    if (doBundle && tmpDir != null) {
-      rmSync(tmpDir, { recursive: true });
-    }
+    rmSync(tmpDir, { recursive: true });
   }
 }
