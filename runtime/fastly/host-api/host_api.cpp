@@ -866,20 +866,21 @@ FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error,
 
   FastlyKVError err;
   // first-priority host_err mapping
-  switch host_err {
-  case FASTLY_HOST_ERROR_BAD_HANDLE: {
-    err.detail = FastlyKVError::detail::invalid_store_handle;
-    return err;
-  }
-  case FASTLY_HOST_ERROR_INVALID_ARGUMENT: {
-    err.detail = FastlyKVError::detail::bad_request;
-    return err;
-  }
-  case FASTLY_HOST_ERROR_LIMIT_EXCEEDED: {
-    err.detail = FastlyKVError::detail::too_many_requests;
-    return err;
-  }
-  }
+  switch
+    host_err {
+    case FASTLY_HOST_ERROR_BAD_HANDLE: {
+      err.detail = FastlyKVError::detail::invalid_store_handle;
+      return err;
+    }
+    case FASTLY_HOST_ERROR_INVALID_ARGUMENT: {
+      err.detail = FastlyKVError::detail::bad_request;
+      return err;
+    }
+    case FASTLY_HOST_ERROR_LIMIT_EXCEEDED: {
+      err.detail = FastlyKVError::detail::too_many_requests;
+      return err;
+    }
+    }
 
   switch (kv_error) {
   case KV_ERROR_BAD_REQUEST: {
