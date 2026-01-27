@@ -1,0 +1,52 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# TransactionCacheEntry.insert
+
+Perform a transactional cache insertion, returning a `FastlyBody` instance for providing the cached object itself.
+
+This method should only be called when `TransactionCacheEntry.state().mustInsertOrUpdate()` is true; otherwise, an error will be thrown when attempting to perform the insertion.
+
+## Syntax
+
+```js
+insert(options)
+```
+
+### Parameters
+
+- `options` _: object_
+  - `maxAge` _: number_ __optional__
+    - Sets the “time to live” for the cache item in milliseconds: The time for which the item will be considered fresh.
+  - `vary` _: array_ __optional__
+    - Sets the list of headers that must match when looking up this cached item.
+  - `initialAge` _: number_ __optional__
+    - Sets the initial age of the cached item, in milliseconds, to be used in freshness calculations.
+    - The initial age is 0 by default.
+  - `staleWhileRevalidate` _: number_ __optional__
+    - Sets the stale-while-revalidate period, in milliseconds for the cached item, which is the time for which the item can be safely used despite being considered stale.
+    - Having a stale-while-revalidate period provides a signal that the cache should be updated (or its contents otherwise revalidated for freshness) asynchronously, while the stale cached item continues to be used, rather than blocking on updating the cached item.
+    - The methods `CacheState.protoype.usable` and `CacheState.protoype.stale` can be used to determine the current state of an item.
+    - The stale-while-revalidate period is 0 by default.
+  - `surrogateKeys` _: array_ __optional__
+    - Sets the surrogate keys that can be used for purging this cached item.
+    - Surrogate key purges are the only means to purge specific items from the cache. At least one surrogate key must be set in order to remove an item without performing a purge-all, waiting for the item’s TTL to elapse, or overwriting the item with insert().
+    - Surrogate keys must contain only printable ASCII characters (those between 0x21 and 0x7E, inclusive). Any invalid keys will be ignored.
+    - [See the Fastly surrogate keys guide for details.](https://docs.fastly.com/en/guides/working-with-surrogate-keys)
+  - `length` _: number_ __optional__
+    - Sets the size of the cached item, in bytes, when known prior to actually providing the bytes.
+    - It is preferable to provide a length, if possible.
+    - Clients that begin streaming the item's contents before it is completely provided will see the promised length which allows them to, for example, use content-length instead of transfer-encoding: chunked if the item is used as the body of a Request or Response.
+  - `userMetadata` _: ArrayBufferView | ArrayBuffer | URLSearchParams | string_ __optional__
+    - Sets the user-defined metadata to associate with the cached item.
+  - `sensitive` _: boolean_ __optional__
+    - Enable or disable PCI/HIPAA-compliant non-volatile caching.
+    - By default, this is false.
+    - [See the Fastly PCI-Compliant Caching and Delivery documentation for details.](https://docs.fastly.com/products/pci-compliant-caching-and-delivery)
+
+### Return value
+
+Returns a `FastlyBody`.

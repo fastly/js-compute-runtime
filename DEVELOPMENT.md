@@ -33,9 +33,9 @@ To build from source, you need to have the following tools installed to successf
   ```sh
   sudo apt install binaryen
   ```
-- rust target wasm32-wasi
+- rust target wasm32-wasip1
   ```sh
-  rustup target add wasm32-wasi
+  rustup target add wasm32-wasip1
   ```
 - [cbindgen](https://github.com/eqrion/cbindgen#quick-start)
   ```sh
@@ -87,14 +87,20 @@ npm run build
   # then, restart shell or run:
   source $HOME/.cargo/env
   ```
-- rust target wasm32-wasi
+- rust target wasm32-wasip1
   ```sh
-  rustup target add wasm32-wasi
+  rustup target add wasm32-wasip1
   ```
 - [cbindgen](https://github.com/eqrion/cbindgen#quick-start)
   ```sh
-  cargo install cbindgen
+  cargo install --locked cbindgen
   ```
+
+- [wasm-tools](https://github.com/bytecodealliance/wasm-tools)
+  ```sh
+  cargo install --locked wasm-tools
+  ```
+
 - [wasi-sdk, version 20](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-20),
   with alternate [install instructions](https://github.com/WebAssembly/wasi-sdk#install)
   ```sh
@@ -180,10 +186,10 @@ In addition the following flags can be added after the command (passed via `npm 
 A typical development test command is therefore something like:
 
 ```
-npm run build:debug && npm run test:integration -- --debug-build --debug-log --local --bail /crypto
+npm run build:cli && npm run build:debug && npm run test:integration -- --debug-build --debug-log --local --bail /crypto
 ```
 
-Which would run a debug build, enable debugging logging, and then that build against all the crypto tests locally on Viceroy, throwing an error as soon as one is found.
+Which would build the CLI TypeScript to JavaScript, run a debug build, enable debugging logging, and then that build against all the crypto tests locally on Viceroy, throwing an error as soon as one is found.
 
 Some tests can only be run on Compute and not Viceroy and will be automatically skipped. A green tick is always shown for a test that ran successfully - if it is missing that means it did not run.
 

@@ -257,7 +257,7 @@ JS::Result<host_api::CacheWriteOptions> parseTransactionUpdateOptions(JSContext 
   }
   if (!surrogateKeys_val.isUndefined()) {
     JS::ForOfIterator it(cx);
-    if (!it.init(vary_val)) {
+    if (!it.init(surrogateKeys_val)) {
       return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
 
@@ -626,6 +626,14 @@ bool CacheEntry::body(JSContext *cx, unsigned argc, JS::Value *vp) {
         return false;
       }
       options.end = JS::ToUint64(end);
+    }
+
+    // Reject cases where the start is greater than the end.
+    // Ideally this would be a host-side check... but we didn't do it there to begin with,
+    // so we couple it to an SDK/runtime upgrade.
+    if (!start_val.isUndefined() && !end_val.isUndefined() && options.end > options.start) {
+      JS_ReportErrorASCII(cx, "end field is before the start field");
+      return false;
     }
   }
 

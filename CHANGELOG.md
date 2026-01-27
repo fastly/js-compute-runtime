@@ -1,5 +1,88 @@
 # Changelog
 
+## 3.38.4 (2026-01-23)
+
+### Fixed
+
+* Don't shortcut transform too early ([#1281](https://github.com/fastly/js-compute-runtime/issues/1281)) ([291814e](https://github.com/fastly/js-compute-runtime/commit/291814e330ae5e1e894f0a57db0dedc8b27fd9bd))
+
+## 3.38.3 (2026-01-22)
+
+### Fixed
+
+* clean script to include TypeScript output directory ([#1270](https://github.com/fastly/js-compute-runtime/issues/1270)) ([015e40c](https://github.com/fastly/js-compute-runtime/commit/015e40c7f6cf6bf95f5a2ff7c52f4225948146a1))
+* pin lol\_html to 2.7.0 ([#1276](https://github.com/fastly/js-compute-runtime/issues/1276)) ([363550a](https://github.com/fastly/js-compute-runtime/commit/363550ae80056fb0e6fda2c7b67ddf4859d67fa8))
+* Rename shielding docs ([#1272](https://github.com/fastly/js-compute-runtime/issues/1272)) ([e12ab47](https://github.com/fastly/js-compute-runtime/commit/e12ab476821e9656dcdb5025e6ed54f40daf8da5))
+* Try and shortcut transform stream reading before doing a regular read ([#1279](https://github.com/fastly/js-compute-runtime/issues/1279)) ([6b9b939](https://github.com/fastly/js-compute-runtime/commit/6b9b939471e1589091f6cfa2f7864a528df35b1c))
+
+## 3.38.2 (2025-12-19)
+
+### Fixed
+
+* Handle cross-volume renames of intermediate files ([#1264](https://github.com/fastly/js-compute-runtime/issues/1264)) ([94e5671](https://github.com/fastly/js-compute-runtime/commit/94e5671090cbde1c3159032c90aa3f3ad2fdc88a))
+
+## 3.38.1 (2025-12-18)
+
+### Fixed
+
+* Build CLI in npm publish ([#1262](https://github.com/fastly/js-compute-runtime/issues/1262)) ([2fe6e2d](https://github.com/fastly/js-compute-runtime/commit/2fe6e2d5b38c74c4a3f7c4a4941d116ec75b1d88))
+
+## 3.38.0 (2025-12-18)
+
+### Added
+
+* **config:** add support for config store buffers longer than 8k ([#1181](https://github.com/fastly/js-compute-runtime/issues/1181)) ([da4c169](https://github.com/fastly/js-compute-runtime/commit/da4c169f7a302c2e6c2a1796c791b9463c4dc2a8))
+* **inspect:** add support for NGWAF inspect api ([#1212](https://github.com/fastly/js-compute-runtime/issues/1212)) ([98f45e4](https://github.com/fastly/js-compute-runtime/commit/98f45e4d678e294301c21be2ddf16c4482683ef7))
+
+### Fixed
+
+* Correct behaviour of chained body proxy streams in some circumstances ([#1259](https://github.com/fastly/js-compute-runtime/issues/1259)) ([11f9a4b](https://github.com/fastly/js-compute-runtime/commit/11f9a4b5b5fc90f9f2eb9f6a6958e971fbd52e19))
+* make shielding.d.ts ambient ([#1256](https://github.com/fastly/js-compute-runtime/issues/1256)) ([7a0e987](https://github.com/fastly/js-compute-runtime/commit/7a0e9876d0e001ad6c1b87b3701ecfffddc7b5ad))
+
+## 3.37.0 (2025-12-11)
+
+### Added
+
+* Add client fingerprint properties (tlsJA4, h2Fingerprint, ohFingerprint) ([#1248](https://github.com/fastly/js-compute-runtime/issues/1248)) ([9390e8c](https://github.com/fastly/js-compute-runtime/commit/9390e8cdf37206a570512cf8d36335c70bc5ccde))
+* Shielding support ([#1241](https://github.com/fastly/js-compute-runtime/issues/1241)) ([985c55e](https://github.com/fastly/js-compute-runtime/commit/985c55e634227b8dac66aea9b7ba4ca982b41b9c))
+
+## 3.36.0 (2025-11-18)
+
+### Added
+
+* Image Optimizer support ([#1224](https://github.com/fastly/js-compute-runtime/issues/1224)) ([c3dd3de](https://github.com/fastly/js-compute-runtime/commit/c3dd3de7436f999055eb0b3d83a1f59c1c26b5d1))
+* Implement 103 Early Hints ([#1217](https://github.com/fastly/js-compute-runtime/issues/1217)) ([fda6ad3](https://github.com/fastly/js-compute-runtime/commit/fda6ad31d6f8ceee16cd950217be770a4f794bb3))
+
+### Fixed
+
+* **fanout:** commit request headers before fanout handoff ([#1222](https://github.com/fastly/js-compute-runtime/issues/1222)) ([8dfefad](https://github.com/fastly/js-compute-runtime/commit/8dfefadec46a2714be010c4a8c7e59cd43537fec))
+* Fix broken KVStore test ([#1223](https://github.com/fastly/js-compute-runtime/issues/1223)) ([6055d88](https://github.com/fastly/js-compute-runtime/commit/6055d884f617336d8d6326bf26dcfb49265f5ae2))
+
+## 3.35.2 (2025-11-07)
+
+### Fixed
+
+* **compute-file-server:** bump MSRV to fix ICU build issues ([#1221](https://github.com/fastly/js-compute-runtime/issues/1221)) ([379e511](https://github.com/fastly/js-compute-runtime/commit/379e51153e07962972b8a69e645e0f55912122d0))
+* surrogateKeys not being added when using CoreCache ([#1219](https://github.com/fastly/js-compute-runtime/issues/1219)) ([b0efe20](https://github.com/fastly/js-compute-runtime/commit/b0efe20c2f6f96755bb450d139e002797b376802))
+* **ws:** commit ws request headers before upgrading ([#1216](https://github.com/fastly/js-compute-runtime/issues/1216)) ([a15fa61](https://github.com/fastly/js-compute-runtime/commit/a15fa6148427801bbaf4d862b9a21884f21758f9))
+
+## 3.35.1 (2025-09-29)
+
+### Fixed
+
+* Root HTML rewriter variables to ensure no GC ([#1202](https://github.com/fastly/js-compute-runtime/issues/1202)) ([6aaf9f3](https://github.com/fastly/js-compute-runtime/commit/6aaf9f391acccfb68c5a012d92bf324df04d4230))
+
+## 3.35.0 (2025-09-26)
+
+### Added
+
+* HTML Rewriter ([0015ff1](https://github.com/fastly/js-compute-runtime/commit/0015ff155b9f57995ccf63671aee8c112b664678))
+
+### Fixed
+
+* Remove broken CI tests ([5b645f7](https://github.com/fastly/js-compute-runtime/commit/5b645f726f7a4f6eb741db3addda4b45be1dd63c))
+* Update rust toolchain for compute-file-server-cli ([09d5a6d](https://github.com/fastly/js-compute-runtime/commit/09d5a6dc66b0f1befff7268915f13dc4d7ac0854))
+
 ## 3.34.0 (2025-04-11)
 
 ### Added

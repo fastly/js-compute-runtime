@@ -8,14 +8,6 @@ It is ideal for serving files built from a static site generator such as 11ty.
 
 ## Install
 
-### npm
-
-Install pre-compiled binaries via `npm`
-
-```sh
-npm install compute-file-server
-```
-
 ### Cargo
 
 Compile and install via `cargo`
