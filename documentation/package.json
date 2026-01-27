@@ -2,7 +2,7 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
-    "build": "node --max-old-space-size=8000 node_modules/.bin/docusaurus build",
+    "build": "node --max-old-space-size=8000 node_modules/.bin/docusaurus build && npm run generate-version-redirects",
     "swizzle": "docusaurus swizzle",
     "deploy": "npm run build && cd app && npm install && npm run deploy",
     "clear": "docusaurus clear",
@@ -10,7 +10,8 @@
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "remove-fastly-prefix": "node rename-docs.mjs remove-prefix",
-    "add-fastly-prefix": "node rename-docs.mjs add-prefix"
+    "add-fastly-prefix": "node rename-docs.mjs add-prefix",
+    "generate-version-redirects": "node generate-version-redirects.mjs"
   },
   "devDependencies": {
     "@cmfcmf/docusaurus-search-local": "^2.0.1",
