@@ -11,7 +11,7 @@ defaults:
     shell: bash
 env:
   # Note: when updated, also update version in ensure-cargo-installs
-  viceroy_version: 0.12.2
+  viceroy_version: 0.15.0
   # Note: when updated, also update version in ensure-cargo-installs ! AND ! release-please.yml
   wasm-tools_version: 1.216.0
   fastly-cli_version: 10.19.0
@@ -46,7 +46,7 @@ jobs:
       matrix:
         include:
           - crate: viceroy
-            version: 0.12.2 # Note: workflow-level env vars can't be used in matrix definitions
+            version: 0.15.0 # Note: workflow-level env vars can't be used in matrix definitions
             options: ""
           - crate: wasm-tools
             version: 1.216.0 # Note: workflow-level env vars can't be used in matrix definitions
@@ -154,6 +154,8 @@ jobs:
       with:
         name: fastly-weval-ic-cache
     - run: npm install
+    - name: Build CLI
+      run: npm run build:cli
     - run: npm test
 
   build-debug:
@@ -164,16 +166,23 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    - name: Install Rust 1.77.1
+    - name: Set up Node LTS
+      uses: actions/setup-node@v3
+      with:
+        node-version: 'lts/*'
+    - run: npm ci
+    - name: Install Rust 1.81.0
       run: |
-        rustup toolchain install 1.77.1
-        rustup target add wasm32-wasi --toolchain 1.77.1
+        rustup toolchain install 1.81.0
+        rustup target add wasm32-wasip1 --toolchain 1.81.0
     - name: Restore wasm-tools from cache
       uses: actions/cache@v3
       id: wasm-tools
       with:
         path: "/home/runner/.cargo/bin/wasm-tools"
         key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
+    - name: Build CLI
+      run: npm run build:cli
     - name: Build with full debug info
       run: npm run build:debug:info
     - uses: actions/upload-artifact@v4
@@ -193,16 +202,23 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    - name: Install Rust 1.77.1
+    - name: Set up Node LTS
+      uses: actions/setup-node@v3
+      with:
+        node-version: 'lts/*'
+    - run: npm ci
+    - name: Install Rust 1.81.0
       run: |
-        rustup toolchain install 1.77.1
-        rustup target add wasm32-wasi --toolchain 1.77.1
+        rustup toolchain install 1.81.0
+        rustup target add wasm32-wasip1 --toolchain 1.81.0
     - name: Restore wasm-tools from cache
       uses: actions/cache@v3
       id: wasm-tools
       with:
         path: "/home/runner/.cargo/bin/wasm-tools"
         key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
+    - name: Build CLI
+      run: npm run build:cli
     - name: Build
       if: matrix.profile == 'release'
       run: npm run build:release
@@ -229,9 +245,11 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    - uses: actions/setup-node@v3
+    - name: Set up Node LTS
+      uses: actions/setup-node@v3
       with:
         node-version: 'lts/*'
+    - run: npm ci
 
     - name: Download Engine
       uses: actions/download-artifact@v4
@@ -250,8 +268,9 @@ jobs:
       with:
         path: "/home/runner/.cargo/bin/wasm-tools"
         key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
-    
-    - run: npm install
+
+    - name: Build CLI
+      run: npm run build:cli
 
     - name: Build WPT runtime
       run: tests/wpt-harness/build-wpt-runtime.sh --debug-build
@@ -277,9 +296,11 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
-    - uses: actions/setup-node@v3
+    - name: Set up Node LTS
+      uses: actions/setup-node@v3
       with:
         node-version: 'lts/*'
+    - run: npm ci
 
     - name: Download Engine
       uses: actions/download-artifact@v4
@@ -305,7 +326,8 @@ jobs:
         path: "/home/runner/.cargo/bin/wasm-tools"
         key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
 
-    - run: npm install
+    - name: Build CLI
+      run: npm run build:cli
 
     - name: Build WPT runtime
       run: tests/wpt-harness/build-wpt-runtime.sh ${{matrix.profile == 'weval' && '--enable-experimental-aot' || matrix.profile == 'debug' && '--debug-build' || ''}}
@@ -378,6 +400,9 @@ jobs:
     - name: Npm install
       run: npm install && cd ./integration-tests/js-compute && npm install
 
+    - name: Build CLI
+      run: npm run build:cli
+
     - name: Run Tests
       run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js --ci --skip-teardown${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.profile == 'weval' && ' --aot' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
       env:
@@ -444,6 +469,9 @@ jobs:
 
     - name: Npm install
       run: npm install && cd ./integration-tests/js-compute && npm install
+
+    - name: Build CLI
+      run: npm run build:cli
 
     - name: Run Tests
       run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --ci --skip-teardown --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
