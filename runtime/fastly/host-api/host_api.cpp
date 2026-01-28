@@ -866,8 +866,7 @@ FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error,
 
   FastlyKVError err;
   // first-priority host_err mapping
-  switch
-    host_err {
+  switch (host_err) {
     case FASTLY_HOST_ERROR_BAD_HANDLE: {
       err.detail = FastlyKVError::detail::invalid_store_handle;
       return err;
@@ -3731,6 +3730,10 @@ const std::optional<std::string> FastlyKVError::message() const {
   /// Rate limiting
   case too_many_requests:
     return "Too many requests.";
+  };
+  /// Store handle not recognized
+  case invalid_store_handle:
+    return "Invalid Store handle.";
   };
 }
 
