@@ -110,7 +110,10 @@ service_id = ""
     user_agent = {}
     os = {}
     device = {name = "Asus TeK", brand = "Asus", model = "TeK", is_desktop = false }
-
+    [local_server.device_detection.user_agents."Googlebot/2.1 (+http://www.google.com/bot.html)"]
+    user_agent = {}
+    os = {}
+    device = {name = "Googlebot", brand = "Google", model = "bot", is_desktop = false, is_bot = true }
 
 [setup]
   [setup.backends]
