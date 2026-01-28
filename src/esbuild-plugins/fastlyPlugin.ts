@@ -1,14 +1,6 @@
-import { dirname, basename, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { build, type Plugin } from 'esbuild';
+import { type Plugin } from 'esbuild';
 
-import { moveFile } from './files.js';
-import { swallowTopLevelExportsPlugin } from './swallowTopLevelExportsPlugin.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const fastlyPlugin: Plugin = {
+export const fastlyPlugin: Plugin = {
   name: 'fastly',
   setup(build) {
     build.onResolve({ filter: /^fastly:.*/ }, (args) => {
@@ -164,41 +156,3 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
     });
   },
 };
-
-export async function bundle(
-  input: string,
-  outfile: string,
-  { moduleMode = false, enableStackTraces = false },
-) {
-  // Build output file in cwd first to build sourcemap with correct paths
-  const bundle = resolve(basename(outfile));
-
-  const plugins = [fastlyPlugin];
-  if (moduleMode) {
-    plugins.push(swallowTopLevelExportsPlugin({ entry: input }));
-  }
-
-  const inject = [];
-  if (enableStackTraces) {
-    inject.push(resolve(__dirname, '../rsrc/trace-mapping.inject.js'));
-  }
-
-  await build({
-    conditions: ['fastly'],
-    entryPoints: [input],
-    bundle: true,
-    write: true,
-    outfile: bundle,
-    sourcemap: enableStackTraces ? 'external' : undefined,
-    sourcesContent: enableStackTraces ? true : undefined,
-    format: moduleMode ? 'esm' : 'iife',
-    tsconfig: undefined,
-    plugins,
-    inject,
-  });
-
-  await moveFile(bundle, outfile);
-  if (enableStackTraces) {
-    await moveFile(bundle + '.map', outfile + '.map');
-  }
-}

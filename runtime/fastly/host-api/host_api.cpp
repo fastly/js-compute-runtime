@@ -2325,30 +2325,6 @@ Result<HostString> Request::inspect(const InspectOptions *config) {
   return res;
 }
 
-// HttpCacheEntry method implementations
-Result<HttpCacheEntry> HttpCacheEntry::lookup(const HttpReq &req, std::span<uint8_t> override_key) {
-  TRACE_CALL()
-  uint32_t handle_out;
-  fastly::fastly_http_cache_lookup_options opts{};
-  uint32_t opts_mask = 0;
-
-  if (!override_key.empty()) {
-    MOZ_ASSERT(override_key.size() == 32);
-    opts.override_key = reinterpret_cast<const char *>(override_key.data());
-    opts.override_key_len = override_key.size();
-    opts_mask |= FASTLY_HTTP_CACHE_LOOKUP_OPTIONS_MASK_OVERRIDE_KEY;
-  }
-
-  auto res = fastly::http_cache_lookup(req.handle, opts_mask,
-                                       override_key.empty() ? nullptr : &opts, &handle_out);
-
-  if (res != 0) {
-    return Result<HttpCacheEntry>::err(host_api::APIError(res));
-  }
-
-  return Result<HttpCacheEntry>::ok(HttpCacheEntry(handle_out));
-}
-
 Result<HttpCacheEntry> HttpCacheEntry::transaction_lookup(const HttpReq &req,
                                                           std::span<uint8_t> override_key) {
   TRACE_CALL_ARGS(TSV(std::to_string(req.handle)))

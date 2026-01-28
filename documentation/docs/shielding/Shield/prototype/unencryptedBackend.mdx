@@ -6,8 +6,14 @@ pagination_prev: null
 ---
 # Shield.prototype.unencryptedBackend
 
-▸ **unencryptedBackend**(): `Backend`
+▸ **unencryptedBackend**(configuration?): `Backend`
 
 Returns a `Backend` representing an unencrypted connection to the POP.
 
 Generally speaking, we encourage users to use [`Shield::encryptedBackend`](./encryptedBackend.mdx) instead of this function. Data sent over this backend – the unencrypted version – will be sent over the open internet, with no protections. In most cases, this is not what you want. However, in some cases – such as when you want to ship large data blobs that you know are already encrypted — using these backends can prevent a double-encryption performance penalty.
+
+## Parameters
+
+- `configuration` _: object_ _**optional**_
+  - `firstByteTimeout` _: number_ _**optional**_
+    - An optional first byte timeout (in milliseconds) to set on the returned backend.
