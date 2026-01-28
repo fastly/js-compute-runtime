@@ -93,8 +93,14 @@ npm run build
   ```
 - [cbindgen](https://github.com/eqrion/cbindgen#quick-start)
   ```sh
-  cargo install cbindgen
+  cargo install --locked cbindgen
   ```
+
+- [wasm-tools](https://github.com/bytecodealliance/wasm-tools)
+  ```sh
+  cargo install --locked wasm-tools
+  ```
+
 - [wasi-sdk, version 20](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-20),
   with alternate [install instructions](https://github.com/WebAssembly/wasi-sdk#install)
   ```sh
