@@ -60,6 +60,10 @@ declare module 'fastly:device' {
      * Either a boolean stating if the device's screen is touch sensitive, or `null` if the this is not known.
      */
     get isTouchscreen(): boolean | null;
+    /**
+     * Either a boolean stating if the device is a bot, or `null` if the this is not known.
+     */
+    get isBot(): boolean | null;
 
     /**
      * The `toJSON()` method of the Device interface is a serializer; it returns a JSON representation of the Device object.

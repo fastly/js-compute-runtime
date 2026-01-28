@@ -74,6 +74,7 @@ routes.set('/device/interface', () => {
       'isSmartTV',
       'isTablet',
       'isTouchscreen',
+      'isBot',
       'toJSON',
       Symbol.toStringTag,
     ];
@@ -215,6 +216,7 @@ routes.set('/device/interface', () => {
     'isSmartTV',
     'isTablet',
     'isTouchscreen',
+    'isBot',
   ]) {
     const descriptors = Reflect.getOwnPropertyDescriptor(
       Device.prototype,
@@ -339,6 +341,7 @@ routes.set('/device/interface', () => {
     assert(device.isSmartTV, false, `device.isSmartTV`);
     assert(device.isTablet, false, `device.isTablet`);
     assert(device.isTouchscreen, true, `device.isTouchscreen`);
+    assert(device.isBot, null, `device.isBot`);
   });
   routes.set(
     '/device/lookup/useragent-exists-all-fields-identified-tojson',
@@ -358,6 +361,7 @@ routes.set('/device/interface', () => {
       assert(device.isSmartTV, false, `device.isSmartTV`);
       assert(device.isTablet, false, `device.isTablet`);
       assert(device.isTouchscreen, true, `device.isTouchscreen`);
+      assert(device.isBot, null, `device.isBot`);
     },
   );
   routes.set('/device/lookup/useragent-exists-some-fields-identified', () => {
@@ -381,10 +385,25 @@ routes.set('/device/interface', () => {
     assert(device.isSmartTV, null, `device.isSmartTV`);
     assert(device.isTablet, null, `device.isTablet`);
     assert(device.isTouchscreen, null, `device.isTouchscreen`);
+    assert(device.isBot, null, `device.isBot`);
     assert(
       JSON.stringify(device),
-      '{"name":"Asus TeK","brand":"Asus","model":"TeK","hardwareType":null,"isDesktop":false,"isGameConsole":null,"isMediaPlayer":null,"isMobile":null,"isSmartTV":null,"isTablet":null,"isTouchscreen":null}',
+      '{"name":"Asus TeK","brand":"Asus","model":"TeK","hardwareType":null,"isDesktop":false,"isGameConsole":null,"isMediaPlayer":null,"isMobile":null,"isSmartTV":null,"isTablet":null,"isTouchscreen":null,"isBot":null}',
       `JSON.stringify(device)`,
     );
   });
 }
+routes.set('/device/lookup/bot-detection', () => {
+  let useragent = 'Googlebot/2.1 (+http://www.google.com/bot.html)';
+  let device = Device.lookup(useragent);
+
+  assert(
+    device instanceof Device,
+    true,
+    `Device.lookup(useragent) instanceof DeviceEntry`,
+  );
+
+  assert(device.name, 'Googlebot', `device.name`);
+  assert(device.brand, 'Google', `device.brand`);
+  assert(device.isBot, true, `device.isBot`);
+});
