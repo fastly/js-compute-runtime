@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.39.0 (2026-01-28)
+
+### Added
+
+* Add `isBot` support to device detection ([#1287](https://github.com/fastly/js-compute-runtime/issues/1287)) ([fe079b1](https://github.com/fastly/js-compute-runtime/commit/fe079b16858ff18da3fe9210da0f5cc3c6bee0b0))
+* Implement `firstByteTimeout` for shielding ([#1286](https://github.com/fastly/js-compute-runtime/issues/1286)) ([ad445b7](https://github.com/fastly/js-compute-runtime/commit/ad445b70ddd56bcd39d6201ad3f15e860cb85db4))
+* Map the FastlyStatus values into KVStoreError values the same way the Rust SDK does ([#1280](https://github.com/fastly/js-compute-runtime/issues/1280)) ([726f4e2](https://github.com/fastly/js-compute-runtime/commit/726f4e285805e91cfcc0c7fdd58f127e4d2e9094))
+
+### Fixed
+
+* Correct default export ([#1269](https://github.com/fastly/js-compute-runtime/issues/1269)) ([58d872e](https://github.com/fastly/js-compute-runtime/commit/58d872e2ff6b6351ac4018f590f3a27a1e015297))
+* suppress sourcemap for bundle() step when `--enable-stack-traces` is not set ([#1277](https://github.com/fastly/js-compute-runtime/issues/1277)) ([ab8c12e](https://github.com/fastly/js-compute-runtime/commit/ab8c12e6aaf22dcf52ca74834fb5712a7ed83b42))
+
 ## 3.38.4 (2026-01-23)
 
 ### Fixed
