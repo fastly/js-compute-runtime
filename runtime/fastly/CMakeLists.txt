@@ -40,9 +40,7 @@ add_builtin(fastly::fetch
     builtins/fetch/request-response.cpp
     builtins/fetch/request-response.cpp
     ../StarlingMonkey/builtins/web/fetch/headers.cpp
-    ../StarlingMonkey/builtins/web/fetch/fetch-utils.cpp
-  DEPENDENCIES
-    fmt)
+    ../StarlingMonkey/builtins/web/fetch/fetch-utils.cpp)
 
 add_builtin(fastly::cache_override SRC builtins/cache-override.cpp)
 

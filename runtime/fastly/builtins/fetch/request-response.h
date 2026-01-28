@@ -222,7 +222,7 @@ public:
   static JSObject *create_instance(JSContext *cx);
 };
 
-class Response final : public builtins::FinalizableBuiltinImpl<Response> {
+class Response final : public builtins::BuiltinImpl<Response, builtins::FinalizableClassPolicy> {
   static bool waitUntil(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool ok_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool status_get(JSContext *cx, unsigned argc, JS::Value *vp);

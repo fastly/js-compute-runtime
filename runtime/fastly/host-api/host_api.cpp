@@ -112,7 +112,7 @@ void sleep_until(uint64_t time_ns, uint64_t now) {
   }
 }
 
-size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
+size_t api::AsyncTask::select(std::vector<RefPtr<api::AsyncTask>> &tasks) {
   if (tasks.size() == 0) {
     TRACE_CALL()
   } else {
@@ -136,7 +136,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
   uint64_t soonest_deadline = 0;
   size_t soonest_deadline_idx = -1;
   for (size_t idx = 0; idx < tasks_len; ++idx) {
-    auto *task = tasks.at(idx);
+    auto task = tasks.at(idx);
     uint64_t deadline;
     if (task->id() == IMMEDIATE_TASK_HANDLE) {
       if (now == 0) {
