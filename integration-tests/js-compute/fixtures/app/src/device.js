@@ -396,7 +396,6 @@ routes.set('/device/interface', () => {
 routes.set('/device/lookup/bot-detection', () => {
   let useragent = 'Googlebot/2.1 (+http://www.google.com/bot.html)';
   let device = Device.lookup(useragent);
-  console.log('DEVICE LOOKUP ', device);
 
   assert(
     device instanceof Device,
