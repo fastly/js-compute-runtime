@@ -8,7 +8,7 @@ import { compareDownstreamResponse } from './compare-downstream-response.js';
 import { argv } from 'node:process';
 import { existsSync } from 'node:fs';
 import { copyFile, readFile, writeFile } from 'node:fs/promises';
-import core from '@actions/core';
+import * as core from '@actions/core';
 import TOML from '@iarna/toml';
 import { getEnv, GLOBAL_PREFIX } from './env.js';
 
