@@ -22,6 +22,7 @@ public:
     Backend,
     CacheEntry,
     Count,
+    ShortcuttedVia,
   };
 
   static bool is_instance(JSObject *obj);

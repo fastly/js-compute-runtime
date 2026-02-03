@@ -2,6 +2,7 @@
 #include "../../../StarlingMonkey/builtins/web/fetch/headers.h"
 #include "../../../StarlingMonkey/builtins/web/streams/native-stream-sink.h"
 #include "../../../StarlingMonkey/builtins/web/streams/native-stream-source.h"
+#include "../../../StarlingMonkey/builtins/web/streams/transform-stream.h"
 #include "../backend.h"
 #include "../body.h"
 #include "../cache-override.h"
@@ -12,9 +13,13 @@
 #include "builtin.h"
 #include "encode.h"
 #include "extension-api.h"
+#include "js/Stream.h"
+
+#include <iostream>
 
 using builtins::web::streams::NativeStreamSink;
 using builtins::web::streams::NativeStreamSource;
+using builtins::web::streams::TransformStream;
 using fastly::FastlyGetErrorMessage;
 using fastly::backend::Backend;
 using fastly::body::FastlyBody;
@@ -1296,6 +1301,87 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
 const JSFunctionSpec methods[] = {JS_FN("fetch", fetch, 2, JSPROP_ENUMERATE), JS_FS_END};
 
+namespace ReadableStream_fastly_adds {
+
+bool is_instance(JSObject *obj) { return JS::IsReadableStream(obj); }
+
+bool is_instance(JS::Value val) { return val.isObject() && is_instance(&val.toObject()); }
+
+bool check_receiver(JSContext *cx, JS::HandleValue receiver, const char *method_name) {
+  if (!is_instance(receiver)) {
+    return api::throw_error(cx, api::Errors::WrongReceiver, method_name, "ReadableStream");
+  }
+  return true;
+};
+
+static JS::PersistentRooted<JSObject *> rs_proto_obj;
+static JS::PersistentRooted<JS::Value> original_pipeTo;
+static JS::PersistentRooted<JS::Value> overridden_pipeTo;
+
+bool pipeTo_wrapper(JSContext *cx, unsigned argc, JS::Value *vp) {
+  __builtin_trap();
+  std::cerr << "wrapper getting called???" << std::endl;
+  METHOD_HEADER(1)
+
+  bool ret(JS::Call(cx, args.thisv(), original_pipeTo, JS::HandleValueArray(args), args.rval()));
+
+  JS::RootedObject target(cx, args[0].isObject() ? &args[0].toObject() : nullptr);
+  if (target) {
+    JS::RootedObject source(cx, NativeStreamSource::get_stream_source(cx, self));
+    if (NativeStreamSource::is_instance(source)) {
+      JS::RootedObject src_owner(cx, NativeStreamSource::owner(source));
+      JS::RootedObject proxy(
+          cx, JS::GetReservedSlot(source, NativeStreamSource::Slots::PipedToTransformStream)
+                  .toObjectOrNull());
+      if (proxy) {
+        JS::RootedObject proxy_owner(cx, TransformStream::owner(proxy));
+        if (RequestOrResponse::is_instance(proxy_owner)) {
+          std::cout << "wrapper getting called???" << std::endl;
+          JS::SetReservedSlot(proxy_owner,
+                              static_cast<uint32_t>(RequestOrResponse::Slots::ShortcuttedVia),
+                              ObjectValue(*src_owner));
+        }
+      }
+    }
+  }
+
+  return ret;
+}
+
+bool initialize_overridden_pipeTo(JSContext *cx, JS::HandleObject global) {
+  JS::RootedValue val(cx);
+  if (!JS_GetProperty(cx, global, "ReadableStream", &val)) {
+    return false;
+  }
+  JS::RootedObject readableStream_builtin(cx, &val.toObject());
+
+  if (!JS_GetProperty(cx, readableStream_builtin, "prototype", &val)) {
+    return false;
+  }
+  rs_proto_obj.init(cx, &val.toObject());
+  MOZ_ASSERT(rs_proto_obj);
+
+  original_pipeTo.init(cx);
+  overridden_pipeTo.init(cx);
+  if (!JS_GetProperty(cx, rs_proto_obj, "pipeTo", &original_pipeTo)) {
+    return false;
+  }
+  MOZ_ASSERT(JS::IsCallable(&original_pipeTo.toObject()));
+
+  std::cerr << "overriding pipeTo" << std::endl;
+  JSFunction *pipeTo_fun =
+      JS_DefineFunction(cx, rs_proto_obj, "pipeTo", pipeTo_wrapper, 1, JSPROP_ENUMERATE);
+  if (!pipeTo_fun) {
+    return false;
+  }
+
+  overridden_pipeTo.setObject(*JS_GetFunctionObject(pipeTo_fun));
+
+  return true;
+}
+
+} // namespace ReadableStream_fastly_adds
+
 bool install(api::Engine *engine) {
   ENGINE = engine;
   if (!JS_DefineFunctions(engine->cx(), engine->global(), methods)) {
@@ -1308,6 +1394,9 @@ bool install(api::Engine *engine) {
     return false;
   }
   if (!builtins::web::fetch::Headers::init_class(ENGINE->cx(), ENGINE->global())) {
+    return false;
+  }
+  if (!ReadableStream_fastly_adds::initialize_overridden_pipeTo(engine->cx(), engine->global())) {
     return false;
   }
   return true;
