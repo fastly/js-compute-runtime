@@ -256,6 +256,8 @@ public:
     internal_error,
     /// Rate limiting
     too_many_requests,
+    /// Store handle not recognized
+    invalid_store_handle,
     /// Host error
     host_error,
   };
@@ -774,9 +776,6 @@ public:
   explicit HttpCacheEntry(Handle handle) : handle{handle} {}
 
   bool is_valid() const { return handle != invalid; }
-
-  /// Lookup a cached object without participating in request collapsing
-  static Result<HttpCacheEntry> lookup(const HttpReq &req, std::span<uint8_t> override_key = {});
 
   /// Lookup a cached object, participating in request collapsing
   static Result<HttpCacheEntry> transaction_lookup(const HttpReq &req,
