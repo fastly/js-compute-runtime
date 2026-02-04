@@ -5,6 +5,8 @@ on:
 permissions:
   id-token: write
   contents: write
+  issues: write
+  pull-requests: write
 env:
   wasm-tools_version: 1.216.0
 name: release-please
