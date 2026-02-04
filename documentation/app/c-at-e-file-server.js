@@ -1,4 +1,44 @@
 import parseRange from 'range-parser'
+import versionRedirects from './version-redirects.json'
+
+/**
+ * Check if the request path is for an old minor version and should be redirected
+ * to the latest minor version within the same major version.
+ * @param {Request} request - The incoming request
+ * @returns {Response | null} - Returns a redirect Response if applicable, else null
+ */
+function redirectMinorVersions(request) {
+    const url = new URL(request.url);
+    const pathMatch = url.pathname.match(/^\/docs\/([^\/]+)(\/.*)?$/);
+    
+    if (!pathMatch) {
+        return null;
+    }
+    
+    const [, version, restOfPath = ''] = pathMatch;
+    
+    const majorVersion = version.split('.')[0];
+    const targetVersion = versionRedirects.latestByMajor[majorVersion];
+    
+    if (targetVersion === null || (targetVersion && targetVersion !== version)) {
+        // Construct the new URL with the latest version
+        const versionPrefix = targetVersion === null ? '' : `/${targetVersion}`;
+        const newPath = `/docs${versionPrefix}${restOfPath}`;
+        const newUrl = new URL(newPath, url.origin);
+        newUrl.search = url.search; // Preserve query parameters
+        
+        // Return a 301 permanent redirect
+        return new Response(null, {
+            status: 301,
+            headers: {
+                'Location': newUrl.toString(),
+                'Cache-Control': 'public, max-age=3600'
+            }
+        });
+    }
+    
+    return null;
+}
 
 /**
  * Attempt to locate the requested resource from a Fastly KV Store,
@@ -13,6 +53,12 @@ export async function get(store_name, request) {
     // static files should only respond on HEAD and GET requests
     if (!isHeadRequest && request.method !== 'GET') {
         return null
+    }
+
+    // Check if this request should be redirected to a newer minor version
+    const redirect = redirectMinorVersions(request);
+    if (redirect) {
+        return redirect;
     }
 
     // if path ends in / or does not have an extension
