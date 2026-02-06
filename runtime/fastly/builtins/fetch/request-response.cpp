@@ -165,11 +165,12 @@ bool maybe_shortcut_transform_stream_read(JSContext *cx, JS::HandleObject stream
 
   // Fallback: check stored source reference when pipe chain is broken by async operations
   if (!*shortcutted && RequestOrResponse::is_instance(body_owner)) {
-    JS::Value source_request_val = JS::GetReservedSlot(
-        body_owner, static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest));
+    JS::RootedObject source_request(
+        cx, JS::GetReservedSlot(body_owner,
+                                static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest))
+                .toObjectOrNull());
 
-    if (source_request_val.isObject()) {
-      JS::RootedObject source_request(cx, &source_request_val.toObject());
+    if (source_request) {
 
       while (source_request) {
         JS::RootedObject source_stream(cx, RequestOrResponse::body_stream(source_request));
@@ -187,11 +188,13 @@ bool maybe_shortcut_transform_stream_read(JSContext *cx, JS::HandleObject stream
         }
 
         // Follow chained Request sources
-        JS::Value next_source_val = JS::GetReservedSlot(
-            source_request, static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest));
+        JS::RootedObject next_source(
+            cx, JS::GetReservedSlot(source_request,
+                                    static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest))
+                    .toObjectOrNull());
 
-        if (next_source_val.isObject()) {
-          source_request = &next_source_val.toObject();
+        if (next_source) {
+          source_request.set(next_source);
         } else {
           break;
         }
@@ -970,11 +973,12 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
       }
 
       JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest),
-                        JS::ObjectValue(*source_owner));
+                         JS::ObjectValue(*source_owner));
 
       // Stream is now locked; new request creates its own from the handle
     } else {
-      JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyStream), body_val);
+      JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyStream),
+                         body_val);
     }
 
     // Ensure that we take the right steps for shortcutting operations on

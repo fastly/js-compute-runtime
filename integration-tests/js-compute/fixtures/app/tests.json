@@ -3233,5 +3233,49 @@
   },
   "GET /fastly/security/inspect/basic": {
     "environments": ["viceroy"]
+  },
+  "POST /proxy-transform-stream/content-length": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    },
+    "downstream_request": {
+      "method": "POST",
+      "pathname": "/proxy-transform-stream/content-length",
+      "body": "hello world"
+    }
+  },
+  "POST /proxy-transform-stream/simple-response-body-chain": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    },
+    "downstream_request": {
+      "method": "POST",
+      "pathname": "/proxy-transform-stream/simple-response-body-chain",
+      "body": "body"
+    }
+  },
+  "POST /proxy-transform-stream/multi-response-body-chain": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    },
+    "downstream_request": {
+      "method": "POST",
+      "pathname": "/proxy-transform-stream/multi-response-body-chain",
+      "body": "body"
+    }
+  },
+  "POST /proxy-transform-stream/response-body-into-js": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    },
+    "downstream_request": {
+      "method": "POST",
+      "pathname": "/proxy-transform-stream/response-body-into-js",
+      "body": "body"
+    }
   }
 }
