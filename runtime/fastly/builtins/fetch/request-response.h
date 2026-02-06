@@ -21,7 +21,7 @@ public:
     ManualFramingHeaders,
     Backend,
     CacheEntry,
-    SourceRequest,  // Tracks the original Request when body is proxied via TransformStream
+    SourceRequest, // Tracks the original Request when body is proxied via TransformStream
     Count,
   };
 
