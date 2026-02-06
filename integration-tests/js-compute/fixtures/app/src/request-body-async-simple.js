@@ -19,7 +19,7 @@ routes.set('/request/body-async-simple/no-workaround', async (event) => {
   const forwardRequest = new Request('http://example.com/dummy', {
     method: 'POST',
     headers: req.headers,
-    body: req.body,  // Pass the ReadableStream
+    body: req.body, // Pass the ReadableStream
   });
 
   // Async operations (this is where the bug happens)
@@ -30,19 +30,24 @@ routes.set('/request/body-async-simple/no-workaround', async (event) => {
   const bodyText = await forwardRequest.text();
   const receivedLength = bodyText.length;
 
-  console.log(`Body after async: ${receivedLength} bytes (expected ${originalLength})`);
+  console.log(
+    `Body after async: ${receivedLength} bytes (expected ${originalLength})`,
+  );
 
   if (receivedLength === 0 && originalLength > 0) {
     console.log(`Body was lost! Expected ${originalLength} bytes, got 0`);
-    return new Response(JSON.stringify({
-      bug: true,
-      expected: originalLength,
-      received: receivedLength,
-      message: 'Body lost across async boundary'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({
+        bug: true,
+        expected: originalLength,
+        received: receivedLength,
+        message: 'Body lost across async boundary',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
   }
 
   assert(receivedLength, originalLength, 'Body should not be lost');
@@ -79,13 +84,13 @@ routes.set('/request/body-async-simple/with-workaround', async (event) => {
 });
 
 routes.set('/response/body-shortcut/one-step', async () => {
-  const res = new Response("ORIGINAL_BODY_CONTENT");
+  const res = new Response('ORIGINAL_BODY_CONTENT');
 
   return new Response(res.body, res);
 });
 
 routes.set('/response/body-shortcut/two-step', async () => {
-  let res = new Response("ORIGINAL_BODY_CONTENT");
+  let res = new Response('ORIGINAL_BODY_CONTENT');
 
   res = new Response(res.body, res);
 
@@ -93,7 +98,7 @@ routes.set('/response/body-shortcut/two-step', async () => {
 });
 
 routes.set('/response/body-shortcut/two-step', async () => {
-  let res = new Response("ORIGINAL_BODY_CONTENT");
+  let res = new Response('ORIGINAL_BODY_CONTENT');
 
   res = new Response(res.body, res);
 
