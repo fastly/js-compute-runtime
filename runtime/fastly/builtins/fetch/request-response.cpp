@@ -1878,7 +1878,7 @@ bool RequestOrResponse::maybe_stream_body(JSContext *cx, JS::HandleObject body_o
   // Try shortcutting TransformStream by piping native body handle directly
   bool shortcutted = false;
   JS::RootedObject stream_source(cx, NativeStreamSource::get_stream_source(cx, stream));
-  if (stream_source) {
+  if (stream_source && NativeStreamSource::is_instance(stream_source)) {
     if (!maybe_shortcut_transform_stream_read(cx, stream_source, body_owner, &shortcutted)) {
       return false;
     }
