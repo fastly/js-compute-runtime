@@ -162,6 +162,43 @@ bool maybe_shortcut_transform_stream_read(JSContext *cx, JS::HandleObject stream
       current_dest.set(next_dest);
     }
   }
+
+  // Fallback: check stored source reference when pipe chain is broken by async operations
+  if (!*shortcutted && RequestOrResponse::is_instance(body_owner)) {
+    JS::Value source_request_val = JS::GetReservedSlot(
+        body_owner, static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest));
+
+    if (source_request_val.isObject()) {
+      JS::RootedObject source_request(cx, &source_request_val.toObject());
+
+      while (source_request) {
+        JS::RootedObject source_stream(cx, RequestOrResponse::body_stream(source_request));
+
+        if (source_stream && NativeStreamSource::stream_is_body(cx, source_stream)) {
+          if (!RequestOrResponse::append_body(cx, body_owner, source_request)) {
+            return false;
+          }
+
+          bool success = JS::ReadableStreamClose(cx, source_stream);
+          MOZ_RELEASE_ASSERT(success);
+
+          *shortcutted = true;
+          return true;
+        }
+
+        // Follow chained Request sources
+        JS::Value next_source_val = JS::GetReservedSlot(
+            source_request, static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest));
+
+        if (next_source_val.isObject()) {
+          source_request = &next_source_val.toObject();
+        } else {
+          break;
+        }
+      }
+    }
+  }
+
   return true;
 }
 
@@ -923,7 +960,22 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
       return false;
     }
 
-    JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyStream), body_val);
+    // Move native body handle to new Request and store source for async-safe shortcutting
+    if (NativeStreamSource::stream_is_body(cx, body_obj)) {
+      JS::RootedObject stream_source(cx, NativeStreamSource::get_stream_source(cx, body_obj));
+      JS::RootedObject source_owner(cx, NativeStreamSource::owner(stream_source));
+
+      if (!RequestOrResponse::move_body_handle(cx, source_owner, self)) {
+        return false;
+      }
+
+      JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest),
+                        JS::ObjectValue(*source_owner));
+
+      // Stream is now locked; new request creates its own from the handle
+    } else {
+      JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyStream), body_val);
+    }
 
     // Ensure that we take the right steps for shortcutting operations on
     // TransformStreams later on.
@@ -1608,6 +1660,9 @@ bool RequestOrResponse::bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObje
   // readables.
   // https://github.com/fastly/js-compute-runtime/issues/218
   JS::RootedObject stream(cx, body_stream(self));
+  // Note: Shortcutting is now handled by maybe_shortcut_transform_stream_read()
+  // which is called from body_source_pull_algorithm() when the stream is first read.
+
   if (stream && !NativeStreamSource::stream_is_body(cx, stream)) {
 
     if (!JS_SetElement(cx, stream, 1, body_parser)) {
@@ -1814,6 +1869,18 @@ bool RequestOrResponse::maybe_stream_body(JSContext *cx, JS::HandleObject body_o
     // won't append to this body handle, because we don't expose any means to do
     // so, so it's ok for it to be closed immediately.
     return true;
+  }
+
+  // Try shortcutting TransformStream by piping native body handle directly
+  bool shortcutted = false;
+  JS::RootedObject stream_source(cx, NativeStreamSource::get_stream_source(cx, stream));
+  if (stream_source) {
+    if (!maybe_shortcut_transform_stream_read(cx, stream_source, body_owner, &shortcutted)) {
+      return false;
+    }
+    if (shortcutted) {
+      return true;
+    }
   }
 
   JS::RootedObject reader(
@@ -2892,6 +2959,9 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
       RequestOrResponse::append_body(cx, request, input_request);
       RequestOrResponse::mark_body_used(cx, input_request);
     } else {
+      // Track source Request with native body before creating proxy
+      bool has_native_body = NativeStreamSource::stream_is_body(cx, inputBody);
+
       inputBody = TransformStream::create_rs_proxy(cx, inputBody);
       if (!inputBody) {
         return nullptr;
@@ -2900,6 +2970,11 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
       TransformStream::set_readable_used_as_body(cx, inputBody, request);
       JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::BodyStream),
                           JS::ObjectValue(*inputBody));
+
+      if (has_native_body) {
+        JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::SourceRequest),
+                            JS::ObjectValue(*input_request));
+      }
     }
 
     JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::HasBody), JS::BooleanValue(true));

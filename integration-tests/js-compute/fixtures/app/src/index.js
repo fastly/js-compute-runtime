@@ -38,6 +38,7 @@ import './performance.js';
 import './random.js';
 import './react-byob.js';
 import './request-auto-decompress.js';
+import './request-body-async-simple.js';
 import './request-cache-key.js';
 import './request-clone.js';
 import './request-headers.js';
