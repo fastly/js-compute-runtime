@@ -165,12 +165,11 @@ bool maybe_shortcut_transform_stream_read(JSContext *cx, JS::HandleObject stream
 
   // Fallback: check stored source reference when pipe chain is broken by async operations
   if (!*shortcutted && RequestOrResponse::is_instance(body_owner)) {
-    JS::RootedObject source_request(
-        cx, JS::GetReservedSlot(body_owner,
-                                static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest))
-                .toObjectOrNull());
+    JS::Value source_request_val = JS::GetReservedSlot(
+        body_owner, static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest));
 
-    if (source_request) {
+    if (source_request_val.isObject()) {
+      JS::RootedObject source_request(cx, &source_request_val.toObject());
 
       while (source_request) {
         JS::RootedObject source_stream(cx, RequestOrResponse::body_stream(source_request));
@@ -188,13 +187,11 @@ bool maybe_shortcut_transform_stream_read(JSContext *cx, JS::HandleObject stream
         }
 
         // Follow chained Request sources
-        JS::RootedObject next_source(
-            cx, JS::GetReservedSlot(source_request,
-                                    static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest))
-                    .toObjectOrNull());
+        JS::Value next_source_val = JS::GetReservedSlot(
+            source_request, static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest));
 
-        if (next_source) {
-          source_request.set(next_source);
+        if (next_source_val.isObject()) {
+          source_request = &next_source_val.toObject();
         } else {
           break;
         }

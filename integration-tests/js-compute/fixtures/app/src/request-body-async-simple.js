@@ -82,25 +82,3 @@ routes.set('/request/body-async-simple/with-workaround', async (event) => {
   assert(receivedLength, originalLength, 'Body preserved with workaround');
   return new Response('ok');
 });
-
-routes.set('/response/body-shortcut/one-step', async () => {
-  const res = new Response('ORIGINAL_BODY_CONTENT');
-
-  return new Response(res.body, res);
-});
-
-routes.set('/response/body-shortcut/two-step', async () => {
-  let res = new Response('ORIGINAL_BODY_CONTENT');
-
-  res = new Response(res.body, res);
-
-  return new Response(res.body, res);
-});
-
-routes.set('/response/body-shortcut/two-step', async () => {
-  let res = new Response('ORIGINAL_BODY_CONTENT');
-
-  res = new Response(res.body, res);
-
-  return new Response(res.body, res);
-});
