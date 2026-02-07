@@ -1235,63 +1235,6 @@
       "body": "ok"
     }
   },
-  "POST /request/body-async/forward-no-workaround": {
-    "environments": ["viceroy"],
-    "downstream_request": {
-      "method": "POST",
-      "pathname": "/request/body-async/forward-no-workaround",
-      "body": "test body content that should not be lost"
-    },
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "POST /request/body-async/forward-with-workaround": {
-    "environments": ["viceroy"],
-    "downstream_request": {
-      "method": "POST",
-      "pathname": "/request/body-async/forward-with-workaround",
-      "body": "test body with clone workaround"
-    },
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "POST /request/body-async/large-body": {
-    "environments": ["viceroy"],
-    "downstream_request": {
-      "method": "POST",
-      "pathname": "/request/body-async/large-body",
-      "body": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    },
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /request/body-chain/large-body": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /request/body-chain/exactly-8192": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /request/body-chain/just-over-8192": {
-    "environments": ["viceroy"],
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
   "GET /response/blob": {
     "flake": true,
     "downstream_response": {
