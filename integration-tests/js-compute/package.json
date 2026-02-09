@@ -4,7 +4,7 @@
     "lint": "npx prettier --write ./fixtures/**/*.js"
   },
   "devDependencies": {
-    "eslint": "^9",
+    "eslint": "^10",
     "prettier": "^3"
   },
   "dependencies": {
