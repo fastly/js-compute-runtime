@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.39.1](https://github.com/fastly/js-compute-runtime/compare/v3.39.0...v3.39.1) (2026-02-09)
+
+
+### Bug Fixes
+
+* For now, go back to old behavior for default exported types. ([#1298](https://github.com/fastly/js-compute-runtime/issues/1298)) ([e6d96d4](https://github.com/fastly/js-compute-runtime/commit/e6d96d47206821855d80d651bfa248a6d7da4453))
+* TransformStream shortcutting fixes ([#1301](https://github.com/fastly/js-compute-runtime/issues/1301)) ([51369ae](https://github.com/fastly/js-compute-runtime/commit/51369ae51d721199e0bbc6f6d168f4b8f7aee947))
+
 ## 3.39.0 (2026-01-28)
 
 ### Added
