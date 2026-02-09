@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.39.2](https://github.com/fastly/js-compute-runtime/compare/v3.39.1...v3.39.2) (2026-02-09)
+
+
+### Bug Fixes
+
+* NPM publication ([f80c089](https://github.com/fastly/js-compute-runtime/commit/f80c089fa9a50835955c0b1a1b42bc24b5eceb3d))
+
 ## 3.39.1 (2026-02-09)
 
 ### Fixed
