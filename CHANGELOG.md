@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.39.2 (2026-02-09)
+
+### Fixed
+
+* NPM publication ([f80c089](https://github.com/fastly/js-compute-runtime/commit/f80c089fa9a50835955c0b1a1b42bc24b5eceb3d))
+
+## 3.39.1 (2026-02-09)
+
+### Fixed
+
+* For now, go back to old behavior for default exported types. ([#1298](https://github.com/fastly/js-compute-runtime/issues/1298)) ([e6d96d4](https://github.com/fastly/js-compute-runtime/commit/e6d96d47206821855d80d651bfa248a6d7da4453))
+* TransformStream shortcutting fixes ([#1301](https://github.com/fastly/js-compute-runtime/issues/1301)) ([51369ae](https://github.com/fastly/js-compute-runtime/commit/51369ae51d721199e0bbc6f6d168f4b8f7aee947))
+
 ## 3.39.0 (2026-01-28)
 
 ### Added
