@@ -3178,6 +3178,7 @@
     "environments": ["viceroy"]
   },
   "POST /proxy-transform-stream/content-length": {
+    "environments": ["viceroy"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
@@ -3189,6 +3190,7 @@
     }
   },
   "POST /proxy-transform-stream/simple-response-body-chain": {
+    "environments": ["viceroy"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
@@ -3200,6 +3202,7 @@
     }
   },
   "POST /proxy-transform-stream/multi-response-body-chain": {
+    "environments": ["viceroy"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
@@ -3211,6 +3214,7 @@
     }
   },
   "POST /proxy-transform-stream/response-body-into-js": {
+    "environments": ["viceroy"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
