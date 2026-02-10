@@ -55,7 +55,8 @@ routes.set(
   async (event) => {
     let res = new Response('body');
     res = new Response(res.body, res);
-    return new Response(res.body, res);
+    res = new Response(res.body, res);
+    return res;
   },
 );
 
@@ -95,6 +96,38 @@ routes.set('/proxy-transform-stream/response-body-into-js', async (event) => {
     res.headers.get('content-length'),
     '4',
     'Should use Content-Length instead of Transfer-Encoding',
+  );
+  return new Response('ok');
+});
+
+routes.set('/proxy-transform-stream/framing', async (event) => {
+  const newUrl = new URL('https://http-me.fastly.dev/anything');
+  let req = new Request(newUrl, {
+    headers: event.request.headers,
+    body: event.request.body,
+    method: event.request.method,
+  });
+  req = new Request(req.url, {
+    headers: req.headers,
+    body: req.body,
+    method: req.method,
+  });
+  req = new Request(req.url, {
+    headers: req.headers,
+    body: req.body,
+    method: req.method,
+  });
+  const cacheOverride = new CacheOverride('pass');
+  const res = await fetch(req, {
+    backend: 'httpme',
+    cacheOverride,
+  });
+  let json = await res.json();
+  assert(res.status, 200, 'Status should be 200');
+  assert(
+    json['headers']['content-length'],
+    '11',
+    'Content-Length header should be 11',
   );
   return new Response('ok');
 });

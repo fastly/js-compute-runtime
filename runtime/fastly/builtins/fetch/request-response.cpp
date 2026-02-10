@@ -108,6 +108,33 @@ bool error_stream_controller_with_pending_exception(JSContext *cx, JS::HandleObj
 
 constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
 
+void set_up_shortcutting(JSContext *cx, JS::HandleObject stream, JS::HandleObject to) {
+  // This function is part of a web of code that allows requests and responses
+  // to "shortcut" pipelines down to simple host-side operations, without having
+  // to actually pipe data through to javascript. This covers one of the various
+  // scenarios. Another place to look is `maybe_shortcut_transform_stream_read`.
+  // Part of the reason for having this complexity on our end is so we don't
+  // have to patch StarlingMonkey to get all this working, since it's a Fastly
+  // optimization.
+  JS::RootedObject stream_source(cx, NativeStreamSource::get_stream_source(cx, stream));
+  JS::RootedObject source_owner(cx, NativeStreamSource::owner(stream_source));
+
+  auto body = RequestOrResponse::body_handle(source_owner);
+  JS::SetReservedSlot(to, static_cast<uint32_t>(RequestOrResponse::Slots::Body),
+                      JS::Int32Value(body.handle));
+  JS::SetReservedSlot(to, static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest),
+                      JS::ObjectValue(*source_owner));
+  // Ensure that we take the right steps for shortcutting operations on
+  // TransformStreams later on.
+  if (TransformStream::is_ts_readable(cx, stream)) {
+    // But only if the TransformStream isn't used as a mixin by other
+    // builtins.
+    if (!TransformStream::used_as_mixin(TransformStream::ts_from_readable(cx, stream))) {
+      TransformStream::set_readable_used_as_body(cx, stream, to);
+    }
+  }
+}
+
 bool maybe_shortcut_transform_stream_read(JSContext *cx, JS::HandleObject streamSource,
                                           JS::HandleObject body_owner, bool *shortcutted) {
   // If the stream has been piped to a TransformStream whose readable end was
@@ -962,31 +989,10 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
 
     // Move native body handle to new Request and store source for async-safe shortcutting
     if (NativeStreamSource::stream_is_body(cx, body_obj)) {
-      JS::RootedObject stream_source(cx, NativeStreamSource::get_stream_source(cx, body_obj));
-      JS::RootedObject source_owner(cx, NativeStreamSource::owner(stream_source));
-
-      if (!RequestOrResponse::move_body_handle(cx, source_owner, self)) {
-        return false;
-      }
-
-      JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest),
-                         JS::ObjectValue(*source_owner));
-
-      // Stream is now locked; new request creates its own from the handle
-    } else {
-      JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyStream),
-                         body_val);
+      set_up_shortcutting(cx, body_obj, self);
     }
 
-    // Ensure that we take the right steps for shortcutting operations on
-    // TransformStreams later on.
-    if (TransformStream::is_ts_readable(cx, body_obj)) {
-      // But only if the TransformStream isn't used as a mixin by other
-      // builtins.
-      if (!TransformStream::used_as_mixin(TransformStream::ts_from_readable(cx, body_obj))) {
-        TransformStream::set_readable_used_as_body(cx, body_obj, self);
-      }
-    }
+    JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyStream), body_val);
   } else {
     mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
     JS::UniqueChars text;
@@ -2963,19 +2969,18 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
       // Track source Request with native body before creating proxy
       bool has_native_body = NativeStreamSource::stream_is_body(cx, inputBody);
 
-      inputBody = TransformStream::create_rs_proxy(cx, inputBody);
-      if (!inputBody) {
-        return nullptr;
-      }
+      if (has_native_body) {
+        set_up_shortcutting(cx, inputBody, request);
+      } else {
+        inputBody = TransformStream::create_rs_proxy(cx, inputBody);
+        if (!inputBody) {
+          return nullptr;
+        }
 
-      TransformStream::set_readable_used_as_body(cx, inputBody, request);
+        TransformStream::set_readable_used_as_body(cx, inputBody, request);
+      }
       JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::BodyStream),
                           JS::ObjectValue(*inputBody));
-
-      if (has_native_body) {
-        JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::SourceRequest),
-                            JS::ObjectValue(*input_request));
-      }
     }
 
     JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::HasBody), JS::BooleanValue(true));

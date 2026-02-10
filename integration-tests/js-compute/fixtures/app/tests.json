@@ -3224,5 +3224,17 @@
       "pathname": "/proxy-transform-stream/response-body-into-js",
       "body": "body"
     }
+  },
+  "POST /proxy-transform-stream/framing": {
+    "environments": ["viceroy"],
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    },
+    "downstream_request": {
+      "method": "POST",
+      "pathname": "/proxy-transform-stream/framing",
+      "body": "hello world"
+    }
   }
 }
