@@ -144,12 +144,7 @@ bool ClientInfo::geo_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     auto res = host_api::GeoIp::lookup(std::span<uint8_t>{octets, octets_len});
-    if (auto *err = res.to_err()) {
-      HANDLE_ERROR(cx, *err);
-      return false;
-    }
-
-    if (!res.unwrap().has_value()) {
+    if (res.is_err() || !res.unwrap().has_value()) {
       args.rval().setNull();
       return true;
     }
