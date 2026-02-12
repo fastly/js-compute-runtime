@@ -348,8 +348,6 @@ typedef struct __attribute__((aligned(4))) fastly_http_cache_lookup_options {
 // HTTP Cache lookup options mask
 #define FASTLY_HTTP_CACHE_LOOKUP_OPTIONS_MASK_RESERVED (1 << 0)
 #define FASTLY_HTTP_CACHE_LOOKUP_OPTIONS_MASK_OVERRIDE_KEY (1 << 1)
-#define FASTLY_HTTP_CACHE_LOOKUP_OPTIONS_MASK_BACKEND_NAME (1 << 2)
-#define FASTLY_HTTP_CACHE_LOOKUP_OPTIONS_MASK_ACCEPT_STALE_IF_ERROR (1 << 3)
 
 // HTTP Cache write options
 typedef struct __attribute__((aligned(8))) fastly_http_cache_write_options {
@@ -423,9 +421,6 @@ int http_cache_transaction_record_not_cacheable(uint32_t handle, uint32_t option
 WASM_IMPORT("fastly_http_cache", "transaction_abandon")
 int http_cache_transaction_abandon(uint32_t handle);
 
-WASM_IMPORT("fastly_http_cache", "transaction_broadcast_cancel")
-int http_cache_transaction_broadcast_cancel(uint32_t handle);
-
 WASM_IMPORT("fastly_http_cache", "close")
 int http_cache_close(uint32_t handle);
 
@@ -447,10 +442,6 @@ int http_cache_prepare_response_for_storage(uint32_t handle, uint32_t response_h
 WASM_IMPORT("fastly_http_cache", "get_found_response")
 int http_cache_get_found_response(uint32_t handle, uint32_t transform_for_client,
                                   uint32_t *resp_handle_out, uint32_t *body_handle_out);
-
-WASM_IMPORT("fastly_http_cache", "get_any_response")
-int http_cache_get_any_response(uint32_t handle, uint32_t transform_for_client,
-                               uint32_t *resp_handle_out, uint32_t *body_handle_out);
 
 WASM_IMPORT("fastly_http_cache", "get_state")
 int http_cache_get_state(uint32_t handle, uint8_t *state_out);

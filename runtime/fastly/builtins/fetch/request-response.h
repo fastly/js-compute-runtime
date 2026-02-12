@@ -272,6 +272,7 @@ public:
     SuggestedCacheWriteOptions,
     OverrideCacheWriteOptions,
     CacheBodyTransform,
+    MaskedError, // An error that occured, but was masked by a cached stale-if-error response
     Count,
   };
   static const JSFunctionSpec static_methods[];
@@ -348,14 +349,17 @@ public:
   static bool ttl_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool ttl_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool age_get(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool swr_get(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool swr_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool staleWhileRevalidate_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool staleWhileRevalidate_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool staleIfError_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool staleIfError_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool vary_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool vary_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool surrogateKeys_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool pci_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool pci_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool staleIfErrorAvailable(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static void finalize(JS::GCContext *gcx, JSObject *self);
 };

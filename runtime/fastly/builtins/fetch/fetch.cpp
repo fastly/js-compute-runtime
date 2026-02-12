@@ -1247,6 +1247,18 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
         return false;
       }
     }
+    
+    if (cache_state.is_usable_if_error()) {
+      // The cached response is a usable stale-if-error response, which implies
+      // that the request collapse leader errored.
+      JS_ReportErrorASCII(cx, "error in request collapse leader");
+      JS::RootedValue exception(cx);
+      if (!JS_GetPendingException(cx, &exception)) {
+        return false;
+      }
+      JS_ClearPendingException(cx);
+      JS_SetReservedSlot(cached_response, static_cast<uint32_t>(Response::Slots::MaskedError), exception);
+    }
 
     // mark the response cache entry as cached for the cached getter
     RequestOrResponse::take_cache_entry(cached_response, true);
@@ -1264,19 +1276,45 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   }
 
   // No valid cached response, need to make backend request
-  if (!cache_state.must_insert_or_update()) {
-    // transaction entry is done
-    if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
-      return false;
-    }
-    // request collapsing has been disabled: pass the original request to the origin without
-    // updating the cache and without caching
-    return fetch_send_body<CachingMode::Guest>(cx, request, args.rval());
-  } else {
+  if (cache_state.must_insert_or_update()) {
+    // We are responsible for fetching/revalidating
     JS::RootedValue stream_back_promise(cx, JS::ObjectValue(*JS::NewPromiseObject(cx, nullptr)));
     if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry, &stream_back_promise)) {
-      RequestOrResponse::close_if_cache_entry(cx, request);
-      return false;
+      if (cache_state.is_usable_if_error()) {
+        // We've got a usable error substitute, so swap it out for the error and notify any 
+        // request collapse trailers.
+        auto chose_stale_res = cache_entry.transaction_record_choose_stale();
+        if (auto *err = chose_stale_res.to_err()) {
+          HANDLE_ERROR(cx, *err);
+          return false;
+        }
+        auto maybe_response = get_found_response(cx, cache_entry, request, no_candidate, false);
+        if (maybe_response.has_value() && !maybe_response.value()) {
+          return false;
+        }
+        JS::RootedValue exception(cx);
+        if (!JS_GetPendingException(cx, &exception)) {
+          return false;
+        }
+        JS_ClearPendingException(cx);
+        JS::RootedObject cached_response(cx, maybe_response.value());
+        JS_SetReservedSlot(cached_response, static_cast<uint32_t>(Response::Slots::MaskedError), exception);
+
+        RequestOrResponse::take_cache_entry(cached_response, true);
+        if (!Response::add_fastly_cache_headers(cx, cached_response, request, cache_entry,
+                                            "cached response")) {
+          return false;
+        }
+
+        RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
+        JS::RootedValue response_val(cx, JS::ObjectValue(*cached_response));
+        args.rval().setObject(*response_promise);
+        return JS::ResolvePromise(cx, response_promise, response_val);
+      }
+      else {
+        RequestOrResponse::close_if_cache_entry(cx, request);
+        return false;
+      }
     }
     JS::RootedObject stream_back_promise_obj(cx, &stream_back_promise.toObject());
     JS::RootedObject ret_promise(
@@ -1289,6 +1327,16 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ResponsePromise),
                         JS::ObjectValue(*ret_promise));
     args.rval().setObject(*ret_promise);
+  } else {
+    // Request collapsing has been disabled: pass the original request to the origin without
+    // updating the cache and without caching
+
+    // transaction entry is done
+    if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
+      return false;
+    }
+
+    return fetch_send_body<CachingMode::Guest>(cx, request, args.rval());
   }
 
   return true;
