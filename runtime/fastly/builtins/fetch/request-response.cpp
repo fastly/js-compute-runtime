@@ -108,14 +108,117 @@ bool error_stream_controller_with_pending_exception(JSContext *cx, JS::HandleObj
 
 constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
 
+bool maybe_shortcut_transform_stream_read(JSContext *cx, JS::HandleObject streamSource,
+                                          JS::HandleObject body_owner, bool *shortcutted) {
+  // If the stream has been piped to a TransformStream whose readable end was
+  // then passed to a Request or Response as the body, we can just append the
+  // entire source body to the destination using a single native hostcall, and
+  // then close the source stream, instead of reading and writing it in
+  // individual chunks. Note that even in situations where multiple streams are
+  // piped to the same destination this is guaranteed to happen in the right
+  // order: ReadableStream#pipeTo locks the destination WritableStream until the
+  // source ReadableStream is closed/canceled, so only one stream can ever be
+  // piped in at the same time. There may be a chain of TransformStreams in
+  // between the source and destination, so we walk the piping chain to find the
+  // final destination.
+  JS::RootedObject pipe_dest(cx, NativeStreamSource::piped_to_transform_stream(streamSource));
+  if (pipe_dest) {
+    *shortcutted = true;
+    // Walk the chain of TransformStreams to find the final destination
+    JS::RootedObject current_dest(cx, pipe_dest);
+    JS::RootedObject next_dest(cx);
+
+    while (current_dest) {
+      // Try to find the next TransformStream in the chain
+      JS::RootedObject readable(cx, TransformStream::readable(current_dest));
+      JS::RootedObject next_source(cx, NativeStreamSource::get_stream_source(cx, readable));
+      if (next_source) {
+        next_dest.set(NativeStreamSource::piped_to_transform_stream(next_source));
+      } else {
+        next_dest.set(nullptr);
+      }
+
+      // If there's no next destination, we've found the last one in the chain
+      if (!next_dest) {
+        // If this is used as a body, we can append directly and close
+        if (TransformStream::readable_used_as_body(current_dest)) {
+          JS::RootedObject dest_owner(cx, TransformStream::owner(current_dest));
+          if (!RequestOrResponse::append_body(cx, dest_owner, body_owner)) {
+            return false;
+          }
+
+          JS::RootedObject stream(cx, NativeStreamSource::stream(streamSource));
+          bool success = JS::ReadableStreamClose(cx, stream);
+          MOZ_RELEASE_ASSERT(success);
+
+          return true;
+        }
+        // If the last one isn't used as a body it must be doing something else with
+        // the data, so we fall back to reading and writing chunks as normal
+        *shortcutted = false;
+        break;
+      }
+
+      current_dest.set(next_dest);
+    }
+  }
+
+  // Fallback: check stored source reference when pipe chain is broken by async operations
+  if (!*shortcutted && RequestOrResponse::is_instance(body_owner)) {
+    JS::Value source_request_val = JS::GetReservedSlot(
+        body_owner, static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest));
+
+    if (source_request_val.isObject()) {
+      JS::RootedObject source_request(cx, &source_request_val.toObject());
+
+      while (source_request) {
+        JS::RootedObject source_stream(cx, RequestOrResponse::body_stream(source_request));
+
+        if (source_stream && NativeStreamSource::stream_is_body(cx, source_stream)) {
+          if (!RequestOrResponse::append_body(cx, body_owner, source_request)) {
+            return false;
+          }
+
+          bool success = JS::ReadableStreamClose(cx, source_stream);
+          MOZ_RELEASE_ASSERT(success);
+
+          *shortcutted = true;
+          return true;
+        }
+
+        // Follow chained Request sources
+        JS::Value next_source_val = JS::GetReservedSlot(
+            source_request, static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest));
+
+        if (next_source_val.isObject()) {
+          source_request = &next_source_val.toObject();
+        } else {
+          break;
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
 bool process_body_read(JSContext *cx, host_api::HttpBody::Handle handle, JS::HandleObject context,
-                       JS::HandleValue promise) {
+                       JS::HandleValue body_owner) {
   MOZ_ASSERT(context);
   JS::RootedObject streamSource(cx, context);
   MOZ_ASSERT(NativeStreamSource::is_instance(streamSource));
   host_api::HttpBody body(handle);
   JS::RootedObject owner(cx, NativeStreamSource::owner(streamSource));
   JS::RootedObject stream(cx, NativeStreamSource::stream(streamSource));
+
+  bool shortcutted = false;
+  JS::RootedObject body_owner_obj(cx, &body_owner.toObject());
+  if (!maybe_shortcut_transform_stream_read(cx, streamSource, body_owner_obj, &shortcutted)) {
+    return false;
+  }
+  if (shortcutted) {
+    return true;
+  }
 
   auto read_res = body.read(HANDLE_READ_CHUNK_SIZE);
   if (auto *err = read_res.to_err()) {
@@ -868,7 +971,23 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
       return false;
     }
 
-    JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyStream), body_val);
+    // Move native body handle to new Request and store source for async-safe shortcutting
+    if (NativeStreamSource::stream_is_body(cx, body_obj)) {
+      JS::RootedObject stream_source(cx, NativeStreamSource::get_stream_source(cx, body_obj));
+      JS::RootedObject source_owner(cx, NativeStreamSource::owner(stream_source));
+
+      if (!RequestOrResponse::move_body_handle(cx, source_owner, self)) {
+        return false;
+      }
+
+      JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest),
+                         JS::ObjectValue(*source_owner));
+
+      // Stream is now locked; new request creates its own from the handle
+    } else {
+      JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyStream),
+                         body_val);
+    }
 
     // Ensure that we take the right steps for shortcutting operations on
     // TransformStreams later on.
@@ -1553,6 +1672,9 @@ bool RequestOrResponse::bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObje
   // readables.
   // https://github.com/fastly/js-compute-runtime/issues/218
   JS::RootedObject stream(cx, body_stream(self));
+  // Note: Shortcutting is now handled by maybe_shortcut_transform_stream_read()
+  // which is called from body_source_pull_algorithm() when the stream is first read.
+
   if (stream && !NativeStreamSource::stream_is_body(cx, stream)) {
 
     if (!JS_SetElement(cx, stream, 1, body_parser)) {
@@ -1583,57 +1705,6 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
   if (JS::GetReservedSlot(source, static_cast<uint32_t>(Slots::Body)).isInt32()) {
     auto handle = std::to_string(RequestOrResponse::body_handle(source).handle);
   }
-  // If the stream has been piped to a TransformStream whose readable end was
-  // then passed to a Request or Response as the body, we can just append the
-  // entire source body to the destination using a single native hostcall, and
-  // then close the source stream, instead of reading and writing it in
-  // individual chunks. Note that even in situations where multiple streams are
-  // piped to the same destination this is guaranteed to happen in the right
-  // order: ReadableStream#pipeTo locks the destination WritableStream until the
-  // source ReadableStream is closed/canceled, so only one stream can ever be
-  // piped in at the same time. There may be a chain of TransformStreams in
-  // between the source and destination, so we walk the piping chain to find the
-  // final destination.
-  JS::RootedObject pipe_dest(cx, NativeStreamSource::piped_to_transform_stream(source));
-  if (pipe_dest) {
-    // Walk the chain of TransformStreams to find the final destination
-    JS::RootedObject current_dest(cx, pipe_dest);
-    JS::RootedObject next_dest(cx);
-
-    while (current_dest) {
-      // Try to find the next TransformStream in the chain
-      JS::RootedObject readable(cx, TransformStream::readable(current_dest));
-      JS::RootedObject next_source(cx, NativeStreamSource::get_stream_source(cx, readable));
-      if (next_source) {
-        next_dest.set(NativeStreamSource::piped_to_transform_stream(next_source));
-      } else {
-        next_dest.set(nullptr);
-      }
-
-      // If there's no next destination, we've found the last one in the chain
-      if (!next_dest) {
-        // If this is used as a body, we can append directly and close
-        if (TransformStream::readable_used_as_body(current_dest)) {
-          JS::RootedObject dest_owner(cx, TransformStream::owner(current_dest));
-          if (!RequestOrResponse::append_body(cx, dest_owner, body_owner)) {
-            return false;
-          }
-
-          JS::RootedObject stream(cx, NativeStreamSource::stream(source));
-          bool success = JS::ReadableStreamClose(cx, stream);
-          MOZ_RELEASE_ASSERT(success);
-
-          args.rval().setUndefined();
-          return true;
-        }
-        // If the last one isn't used as a body it must be doing something else with
-        // the data, so we fall back to reading and writing chunks as normal
-        break;
-      }
-
-      current_dest.set(next_dest);
-    }
-  }
 
   // The actual read from the body needs to be delayed, because it'd otherwise
   // be a blocking operation in case the backend didn't yet send any data.
@@ -1648,9 +1719,9 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
   JS::RootedObject self(cx, &args.thisv().toObject());
   JS::RootedObject owner(cx, NativeStreamSource::owner(self));
 
+  JS::RootedValue body_owner_value(cx, JS::ObjectValue(*body_owner));
   ENGINE->queue_async_task(new FastlyAsyncTask(RequestOrResponse::body_handle(owner).async_handle(),
-                                               source, JS::UndefinedHandleValue,
-                                               process_body_read));
+                                               source, body_owner_value, process_body_read));
 
   args.rval().setUndefined();
   return true;
@@ -1810,6 +1881,18 @@ bool RequestOrResponse::maybe_stream_body(JSContext *cx, JS::HandleObject body_o
     // won't append to this body handle, because we don't expose any means to do
     // so, so it's ok for it to be closed immediately.
     return true;
+  }
+
+  // Try shortcutting TransformStream by piping native body handle directly
+  bool shortcutted = false;
+  JS::RootedObject stream_source(cx, NativeStreamSource::get_stream_source(cx, stream));
+  if (stream_source && NativeStreamSource::is_instance(stream_source)) {
+    if (!maybe_shortcut_transform_stream_read(cx, stream_source, body_owner, &shortcutted)) {
+      return false;
+    }
+    if (shortcutted) {
+      return true;
+    }
   }
 
   JS::RootedObject reader(
@@ -2888,6 +2971,9 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
       RequestOrResponse::append_body(cx, request, input_request);
       RequestOrResponse::mark_body_used(cx, input_request);
     } else {
+      // Track source Request with native body before creating proxy
+      bool has_native_body = NativeStreamSource::stream_is_body(cx, inputBody);
+
       inputBody = TransformStream::create_rs_proxy(cx, inputBody);
       if (!inputBody) {
         return nullptr;
@@ -2896,6 +2982,11 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
       TransformStream::set_readable_used_as_body(cx, inputBody, request);
       JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::BodyStream),
                           JS::ObjectValue(*inputBody));
+
+      if (has_native_body) {
+        JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::SourceRequest),
+                            JS::ObjectValue(*input_request));
+      }
     }
 
     JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::HasBody), JS::BooleanValue(true));

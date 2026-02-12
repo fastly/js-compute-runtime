@@ -4,11 +4,11 @@
     "lint": "npx prettier --write ./fixtures/**/*.js"
   },
   "devDependencies": {
-    "eslint": "^9",
+    "eslint": "^10",
     "prettier": "^3"
   },
   "dependencies": {
-    "@actions/core": "^1",
+    "@actions/core": "^3",
     "@iarna/toml": "^2",
     "fast-check": "^4",
     "undici": "^7",

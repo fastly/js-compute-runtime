@@ -863,7 +863,24 @@ make_fastly_send_error(fastly::fastly_host_http_send_error_detail &send_error_de
 
 FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error,
                                    fastly::fastly_host_error host_err) {
+
   FastlyKVError err;
+  // first-priority host_err mapping
+  switch (host_err) {
+  case FASTLY_HOST_ERROR_BAD_HANDLE: {
+    err.detail = FastlyKVError::detail::invalid_store_handle;
+    return err;
+  }
+  case FASTLY_HOST_ERROR_INVALID_ARGUMENT: {
+    err.detail = FastlyKVError::detail::bad_request;
+    return err;
+  }
+  case FASTLY_HOST_ERROR_LIMIT_EXCEEDED: {
+    err.detail = FastlyKVError::detail::too_many_requests;
+    return err;
+  }
+  }
+
   switch (kv_error) {
   case KV_ERROR_BAD_REQUEST: {
     err.detail = FastlyKVError::detail::bad_request;
@@ -885,15 +902,21 @@ FastlyKVError make_fastly_kv_error(fastly::fastly_kv_error kv_error,
     err.detail = FastlyKVError::detail::too_many_requests;
     return err;
   }
-  case KV_ERROR_INTERNAL_ERROR:
-  default: {
+  case KV_ERROR_INTERNAL_ERROR: {
     err.detail = FastlyKVError::detail::internal_error;
     return err;
   }
+  case KV_ERROR_OK:
+  case KV_ERROR_UNINITIALIZED:
+  default: {
+    // If the hostcall never initialized `kv_error`, or if it claimed
+    // that it was `OK` but we still failed, then make a host error
+    // based on the `host_err` value.
+    err.detail = FastlyKVError::detail::host_error;
+    err.host_err = host_err;
+    return err;
   }
-  err.detail = FastlyKVError::detail::host_error;
-  err.host_err = host_err;
-  return err;
+  }
 }
 
 FastlyImageOptimizerError
@@ -2315,30 +2338,6 @@ Result<HostString> Request::inspect(const InspectOptions *config) {
   return res;
 }
 
-// HttpCacheEntry method implementations
-Result<HttpCacheEntry> HttpCacheEntry::lookup(const HttpReq &req, std::span<uint8_t> override_key) {
-  TRACE_CALL()
-  uint32_t handle_out;
-  fastly::fastly_http_cache_lookup_options opts{};
-  uint32_t opts_mask = 0;
-
-  if (!override_key.empty()) {
-    MOZ_ASSERT(override_key.size() == 32);
-    opts.override_key = reinterpret_cast<const char *>(override_key.data());
-    opts.override_key_len = override_key.size();
-    opts_mask |= FASTLY_HTTP_CACHE_LOOKUP_OPTIONS_MASK_OVERRIDE_KEY;
-  }
-
-  auto res = fastly::http_cache_lookup(req.handle, opts_mask,
-                                       override_key.empty() ? nullptr : &opts, &handle_out);
-
-  if (res != 0) {
-    return Result<HttpCacheEntry>::err(host_api::APIError(res));
-  }
-
-  return Result<HttpCacheEntry>::ok(HttpCacheEntry(handle_out));
-}
-
 Result<HttpCacheEntry> HttpCacheEntry::transaction_lookup(const HttpReq &req,
                                                           std::span<uint8_t> override_key) {
   TRACE_CALL_ARGS(TSV(std::to_string(req.handle)))
@@ -3748,6 +3747,9 @@ const std::optional<std::string> FastlyKVError::message() const {
   /// Rate limiting
   case too_many_requests:
     return "Too many requests.";
+  /// Store handle not recognized
+  case invalid_store_handle:
+    return "Invalid Store handle.";
   };
 }
 

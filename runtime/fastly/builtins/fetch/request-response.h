@@ -21,6 +21,7 @@ public:
     ManualFramingHeaders,
     Backend,
     CacheEntry,
+    SourceRequest, // Tracks the original Request when body is proxied via TransformStream
     Count,
   };
 
@@ -172,6 +173,7 @@ public:
     ManualFramingHeaders = static_cast<int>(RequestOrResponse::Slots::ManualFramingHeaders),
     Backend = static_cast<int>(RequestOrResponse::Slots::Backend),
     CacheEntry = static_cast<int>(RequestOrResponse::Slots::CacheEntry),
+    SourceRequest = static_cast<int>(RequestOrResponse::Slots::SourceRequest),
     Method = static_cast<int>(RequestOrResponse::Slots::Count),
     OverrideCacheKey,
     CacheOverride,
@@ -262,6 +264,7 @@ public:
     ManualFramingHeaders = static_cast<int>(RequestOrResponse::Slots::ManualFramingHeaders),
     Backend = static_cast<int>(RequestOrResponse::Slots::Backend),
     CacheEntry = static_cast<int>(RequestOrResponse::Slots::CacheEntry),
+    SourceRequest = static_cast<int>(RequestOrResponse::Slots::SourceRequest),
     IsUpstream = static_cast<int>(RequestOrResponse::Slots::Count),
     Status,
     StatusMessage,

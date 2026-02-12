@@ -2,6 +2,12 @@ on:
   push:
     branches:
       - main
+permissions:
+  id-token: write
+  contents: write
+  issues: write
+  pull-requests: write
+  packages: write
 env:
   wasm-tools_version: 1.216.0
 name: release-please
@@ -183,9 +189,8 @@ jobs:
       - name: Build CLI
         run: npm run build:cli
 
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+      - name: npmjs publish
+        run: npm publish
 
       - name: github package registry publish
         run: |

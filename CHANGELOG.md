@@ -1,5 +1,46 @@
 # Changelog
 
+## 3.39.2 (2026-02-09)
+
+### Fixed
+
+* NPM publication ([f80c089](https://github.com/fastly/js-compute-runtime/commit/f80c089fa9a50835955c0b1a1b42bc24b5eceb3d))
+
+## 3.39.1 (2026-02-09)
+
+### Fixed
+
+* For now, go back to old behavior for default exported types. ([#1298](https://github.com/fastly/js-compute-runtime/issues/1298)) ([e6d96d4](https://github.com/fastly/js-compute-runtime/commit/e6d96d47206821855d80d651bfa248a6d7da4453))
+* TransformStream shortcutting fixes ([#1301](https://github.com/fastly/js-compute-runtime/issues/1301)) ([51369ae](https://github.com/fastly/js-compute-runtime/commit/51369ae51d721199e0bbc6f6d168f4b8f7aee947))
+
+## 3.39.0 (2026-01-28)
+
+### Added
+
+* Add `isBot` support to device detection ([#1287](https://github.com/fastly/js-compute-runtime/issues/1287)) ([fe079b1](https://github.com/fastly/js-compute-runtime/commit/fe079b16858ff18da3fe9210da0f5cc3c6bee0b0))
+* Implement `firstByteTimeout` for shielding ([#1286](https://github.com/fastly/js-compute-runtime/issues/1286)) ([ad445b7](https://github.com/fastly/js-compute-runtime/commit/ad445b70ddd56bcd39d6201ad3f15e860cb85db4))
+* Map the FastlyStatus values into KVStoreError values the same way the Rust SDK does ([#1280](https://github.com/fastly/js-compute-runtime/issues/1280)) ([726f4e2](https://github.com/fastly/js-compute-runtime/commit/726f4e285805e91cfcc0c7fdd58f127e4d2e9094))
+
+### Fixed
+
+* Correct default export ([#1269](https://github.com/fastly/js-compute-runtime/issues/1269)) ([58d872e](https://github.com/fastly/js-compute-runtime/commit/58d872e2ff6b6351ac4018f590f3a27a1e015297))
+* suppress sourcemap for bundle() step when `--enable-stack-traces` is not set ([#1277](https://github.com/fastly/js-compute-runtime/issues/1277)) ([ab8c12e](https://github.com/fastly/js-compute-runtime/commit/ab8c12e6aaf22dcf52ca74834fb5712a7ed83b42))
+
+## 3.38.4 (2026-01-23)
+
+### Fixed
+
+* Don't shortcut transform too early ([#1281](https://github.com/fastly/js-compute-runtime/issues/1281)) ([291814e](https://github.com/fastly/js-compute-runtime/commit/291814e330ae5e1e894f0a57db0dedc8b27fd9bd))
+
+## 3.38.3 (2026-01-22)
+
+### Fixed
+
+* clean script to include TypeScript output directory ([#1270](https://github.com/fastly/js-compute-runtime/issues/1270)) ([015e40c](https://github.com/fastly/js-compute-runtime/commit/015e40c7f6cf6bf95f5a2ff7c52f4225948146a1))
+* pin lol\_html to 2.7.0 ([#1276](https://github.com/fastly/js-compute-runtime/issues/1276)) ([363550a](https://github.com/fastly/js-compute-runtime/commit/363550ae80056fb0e6fda2c7b67ddf4859d67fa8))
+* Rename shielding docs ([#1272](https://github.com/fastly/js-compute-runtime/issues/1272)) ([e12ab47](https://github.com/fastly/js-compute-runtime/commit/e12ab476821e9656dcdb5025e6ed54f40daf8da5))
+* Try and shortcut transform stream reading before doing a regular read ([#1279](https://github.com/fastly/js-compute-runtime/issues/1279)) ([6b9b939](https://github.com/fastly/js-compute-runtime/commit/6b9b939471e1589091f6cfa2f7864a528df35b1c))
+
 ## 3.38.2 (2025-12-19)
 
 ### Fixed
