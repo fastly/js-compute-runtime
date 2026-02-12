@@ -372,6 +372,7 @@ typedef struct __attribute__((aligned(8))) fastly_http_cache_write_options {
 #define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS (1 << 4)
 #define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_LENGTH (1 << 5)
 #define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA (1 << 6)
+#define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_IF_ERROR_NS (1 << 7)
 
 // HTTP Cache host calls
 WASM_IMPORT("fastly_http_cache", "is_request_cacheable")
@@ -410,6 +411,10 @@ int http_cache_transaction_update_and_return_fresh(uint32_t handle, uint32_t res
                                                    uint32_t options_mask,
                                                    fastly_http_cache_write_options *options,
                                                    uint32_t *fresh_handle_out);
+
+
+WASM_IMPORT("fastly_http_cache", "transaction_record_choose_stale")
+int http_cache_transaction_record_choose_stale(uint32_t handle);
 
 WASM_IMPORT("fastly_http_cache", "transaction_record_not_cacheable")
 int http_cache_transaction_record_not_cacheable(uint32_t handle, uint32_t options_mask,
@@ -948,6 +953,7 @@ typedef struct fastly_host_cache_write_options {
   uint64_t length;
   fastly_world_list_u8 user_metadata;
   bool sensitive_data;
+  uint64_t stale_if_error_ns;
 } fastly_host_cache_write_options;
 
 // a cached object was found
@@ -960,8 +966,6 @@ typedef struct fastly_host_cache_write_options {
 #define FASTLY_HOST_CACHE_LOOKUP_STATE_MUST_INSERT_OR_UPDATE (1 << 3)
 // a cached object was found and it is only usable if synchronous revalidation fails
 #define FASTLY_HOST_CACHE_LOOKUP_STATE_USABLE_IF_ERROR (1 << 4)
-// in another client, a synchronous revalidation has failed for this object
-#define FASTLY_HOST_CACHE_LOOKUP_STATE_COLLAPSE_ERROR (1 << 5)
 
 WASM_IMPORT("fastly_cache", "lookup")
 int cache_lookup(char *cache_key, size_t cache_key_len, uint32_t options_mask,

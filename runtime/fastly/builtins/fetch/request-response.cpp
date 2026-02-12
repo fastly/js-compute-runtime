@@ -575,11 +575,18 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
       override_cache_options->max_age_ns = ttl_ns + initial_age_ns;
     }
 
-    RootedValue override_swr(cx, CacheOverride::swr(cache_override));
+    RootedValue override_swr(cx, CacheOverride::staleWhileRevalidate(cache_override));
     if (!override_swr.isUndefined()) {
       override_cache_options->stale_while_revalidate_ns =
           static_cast<uint64_t>(override_swr.toInt32() * 1e9);
     }
+
+    RootedValue override_sie(cx, CacheOverride::staleIfError(cache_override));
+    if (!override_sie.isUndefined()) {
+      override_cache_options->stale_if_error_ns =
+          static_cast<uint64_t>(override_sie.toInt32() * 1e9);
+    }
+
 
     // overriding surrogate keys composes suggested surrogate keys with the original cache override
     // space-split keys, so again, use the suggested computation to do this.
