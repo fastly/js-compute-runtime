@@ -75,8 +75,7 @@ JSString *protocol(JSObject *obj) {
 
 static JSString *retrieve_client_address(JSContext *cx, JS::HandleObject self) {
   auto res = host_api::HttpReq::downstream_client_ip_addr();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
+  if (res.is_err()) {
     return nullptr;
   }
 
@@ -98,8 +97,10 @@ bool ClientInfo::address_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedString address_str(cx, client_address(self));
   if (!address_str) {
     address_str = retrieve_client_address(cx, self);
-    if (!address_str)
-      return false;
+    if (!address_str) {
+      args.rval().setNull();
+      return true;
+    }
   }
 
   args.rval().setString(address_str);
@@ -114,8 +115,10 @@ bool ClientInfo::geo_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     JS::RootedString address_str(cx, client_address(self));
     if (!address_str) {
       address_str = retrieve_client_address(cx, self);
-      if (!address_str)
-        return false;
+      if (!address_str) {
+        args.rval().setNull();
+        return true;
+      }
     }
 
     // TODO: skip intermediate encoding, and rely on the fact that we already had the bytes before
