@@ -1216,10 +1216,6 @@ void CacheOverrideTag::set_stale_while_revalidate() {
   this->value |= CACHE_OVERRIDE_STALE_WHILE_REVALIDATE;
 }
 
-void CacheOverrideTag::set_stale_if_error() {
-  this->value |= CACHE_OVERRIDE_STALE_IF_ERROR;
-}
-
 void CacheOverrideTag::set_pci() { this->value |= CACHE_OVERRIDE_PCI; }
 
 TlsVersion::TlsVersion(uint8_t raw) : value{raw} {
