@@ -1282,8 +1282,8 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     JS::RootedValue stream_back_promise(cx, JS::ObjectValue(*JS::NewPromiseObject(cx, nullptr)));
     if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry, &stream_back_promise)) {
       if (cache_state.is_usable_if_error()) {
-        // We've got a usable error substitute, so swap it out for the error and notify any
-        // request collapse trailers.
+        // We've got a stale-if-error response, so swap it out for the error and notify any
+        // request collapse followers.
         auto chose_stale_res = cache_entry.transaction_record_choose_stale();
         if (auto *err = chose_stale_res.to_err()) {
           HANDLE_ERROR(cx, *err);
