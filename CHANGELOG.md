@@ -1,9 +1,8 @@
 # Changelog
 
-## [3.39.3](https://github.com/fastly/js-compute-runtime/compare/v3.39.2...v3.39.3) (2026-02-12)
+## 3.39.3 (2026-02-12)
 
-
-### Bug Fixes
+### Fixed
 
 * Don't throw from `event.client.geo` or `event.client.address` on hostcall error ([#1306](https://github.com/fastly/js-compute-runtime/issues/1306)) ([471b112](https://github.com/fastly/js-compute-runtime/commit/471b1128a32b3a2233a95eb14e2887abbb6183c0))
 
