@@ -1247,7 +1247,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
         return false;
       }
     }
-    
+
     if (cache_state.is_usable_if_error()) {
       // The cached response is a usable stale-if-error response, which implies
       // that the request collapse leader errored.
@@ -1257,7 +1257,8 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
         return false;
       }
       JS_ClearPendingException(cx);
-      JS_SetReservedSlot(cached_response, static_cast<uint32_t>(Response::Slots::MaskedError), exception);
+      JS_SetReservedSlot(cached_response, static_cast<uint32_t>(Response::Slots::MaskedError),
+                         exception);
     }
 
     // mark the response cache entry as cached for the cached getter
@@ -1281,7 +1282,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     JS::RootedValue stream_back_promise(cx, JS::ObjectValue(*JS::NewPromiseObject(cx, nullptr)));
     if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry, &stream_back_promise)) {
       if (cache_state.is_usable_if_error()) {
-        // We've got a usable error substitute, so swap it out for the error and notify any 
+        // We've got a usable error substitute, so swap it out for the error and notify any
         // request collapse trailers.
         auto chose_stale_res = cache_entry.transaction_record_choose_stale();
         if (auto *err = chose_stale_res.to_err()) {
@@ -1298,11 +1299,12 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
         }
         JS_ClearPendingException(cx);
         JS::RootedObject cached_response(cx, maybe_response.value());
-        JS_SetReservedSlot(cached_response, static_cast<uint32_t>(Response::Slots::MaskedError), exception);
+        JS_SetReservedSlot(cached_response, static_cast<uint32_t>(Response::Slots::MaskedError),
+                           exception);
 
         RequestOrResponse::take_cache_entry(cached_response, true);
         if (!Response::add_fastly_cache_headers(cx, cached_response, request, cache_entry,
-                                            "cached response")) {
+                                                "cached response")) {
           return false;
         }
 
@@ -1310,8 +1312,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
         JS::RootedValue response_val(cx, JS::ObjectValue(*cached_response));
         args.rval().setObject(*response_promise);
         return JS::ResolvePromise(cx, response_promise, response_val);
-      }
-      else {
+      } else {
         RequestOrResponse::close_if_cache_entry(cx, request);
         return false;
       }

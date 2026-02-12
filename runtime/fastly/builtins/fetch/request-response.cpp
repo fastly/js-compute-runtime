@@ -539,8 +539,7 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue p
         suggested_cache_write_options->stale_while_revalidate_ns;
   }
   if (!cache_write_options->stale_if_error_ns.has_value()) {
-    cache_write_options->stale_if_error_ns = 
-        suggested_cache_write_options->stale_if_error_ns;
+    cache_write_options->stale_if_error_ns = suggested_cache_write_options->stale_if_error_ns;
   }
   if (!cache_write_options->surrogate_keys.has_value()) {
     cache_write_options->surrogate_keys = std::move(suggested_cache_write_options->surrogate_keys);
@@ -693,7 +692,6 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
       override_cache_options->stale_if_error_ns =
           static_cast<uint64_t>(override_sie.toInt32() * 1e9);
     }
-
 
     // overriding surrogate keys composes suggested surrogate keys with the original cache override
     // space-split keys, so again, use the suggested computation to do this.
@@ -3846,11 +3844,13 @@ const JSPropertySpec Response::properties[] = {
     JS_PSGS("ttl", ttl_get, ttl_set, JSPROP_ENUMERATE),
     JS_PSG("age", age_get, JSPROP_ENUMERATE),
     JS_PSGS("swr", staleWhileRevalidate_get, staleWhileRevalidate_set, JSPROP_ENUMERATE),
-    JS_PSGS("staleWhileRevalidate", staleWhileRevalidate_get, staleWhileRevalidate_set, JSPROP_ENUMERATE),
+    JS_PSGS("staleWhileRevalidate", staleWhileRevalidate_get, staleWhileRevalidate_set,
+            JSPROP_ENUMERATE),
     JS_PSGS("staleIfError", staleIfError_get, staleIfError_set, JSPROP_ENUMERATE),
     JS_PSGS("vary", vary_get, vary_set, JSPROP_ENUMERATE),
     JS_PSGS("surrogateKeys", surrogateKeys_get, surrogateKeys_set, JSPROP_ENUMERATE),
     JS_PSGS("pci", pci_get, pci_set, JSPROP_ENUMERATE),
+    JS_PSG("maskedError", maskedError_get, JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "Response", JSPROP_READONLY),
     JS_PS_END,
 };
@@ -4204,6 +4204,18 @@ bool Response::pci_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   args.rval().setBoolean(sensitive_data);
+  return true;
+}
+
+bool Response::maskedError_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  JS::RootedValue masked_error_val(cx);
+  if (!JS_GetReservedSlot(cx, self, static_cast<uint32_t>(Slots::MaskedError), &masked_error_val)) {
+    return false;
+  }
+
+  args.rval().set(masked_error_val);
   return true;
 }
 

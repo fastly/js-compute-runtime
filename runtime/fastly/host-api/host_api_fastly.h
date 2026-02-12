@@ -376,7 +376,7 @@ struct TlsVersion {
   uint8_t value = 0;
 
   explicit TlsVersion(uint8_t raw);
-  explicit TlsVersion(){};
+  explicit TlsVersion() {};
 
   uint8_t get_version() const;
   double get_version_number() const;
@@ -805,8 +805,7 @@ public:
                                    std::optional<std::string_view> vary_rule = std::nullopt);
 
   /// Substitute stale-if-error response
-  Result<Void>
-  transaction_record_choose_stale();
+  Result<Void> transaction_record_choose_stale();
 
   /// Abandon the transaction
   Result<Void> transaction_abandon();

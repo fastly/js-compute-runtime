@@ -406,7 +406,6 @@ int http_cache_transaction_update_and_return_fresh(uint32_t handle, uint32_t res
                                                    fastly_http_cache_write_options *options,
                                                    uint32_t *fresh_handle_out);
 
-
 WASM_IMPORT("fastly_http_cache", "transaction_record_choose_stale")
 int http_cache_transaction_record_choose_stale(uint32_t handle);
 

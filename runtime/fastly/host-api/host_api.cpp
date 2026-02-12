@@ -2226,7 +2226,7 @@ from_fastly_cache_write_options(const fastly::fastly_http_cache_write_options &f
     opts->stale_while_revalidate_ns = fastly_opts.stale_while_revalidate_ns;
   }
 
-    if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_IF_ERROR_NS) {
+  if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_IF_ERROR_NS) {
     opts->stale_if_error_ns = fastly_opts.stale_if_error_ns;
   }
 
@@ -2422,8 +2422,7 @@ HttpCacheEntry::transaction_update_and_return_fresh(const HttpResp &resp,
   return Result<HttpCacheEntry>::ok(HttpCacheEntry(fresh_handle_out));
 }
 
-Result<Void>
-HttpCacheEntry::transaction_record_choose_stale() {
+Result<Void> HttpCacheEntry::transaction_record_choose_stale() {
   TRACE_CALL()
   auto res = fastly::http_cache_transaction_record_choose_stale(this->handle);
   if (res != 0) {

@@ -363,6 +363,7 @@ public:
   static bool pci_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool pci_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool staleIfErrorAvailable(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool maskedError_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static void finalize(JS::GCContext *gcx, JSObject *self);
 };
