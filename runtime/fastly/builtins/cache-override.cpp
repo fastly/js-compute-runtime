@@ -495,8 +495,17 @@ JSObject *CacheOverride::create(JSContext *cx, JS::HandleValue override) {
     return nullptr;
   }
 
-  if (!JS_GetProperty(cx, override_obj, "swr", &val) || !JS_GetProperty(cx, override_obj, "staleWhileRevalidate", &val) || !staleWhileRevalidate_set(cx, self, val, &val)) {
+  if (!JS_GetProperty(cx, override_obj, "swr", &val) || !staleWhileRevalidate_set(cx, self, val, &val)) {
     return nullptr;
+  }
+
+  if (!JS_GetProperty(cx, override_obj, "staleWhileRevalidate", &val)) {
+    return nullptr;
+  }
+  if (!val.isNullOrUndefined()) {
+    if (!staleWhileRevalidate_set(cx, self, val, &val)) {
+      return nullptr;
+    }
   }
 
   if (!JS_GetProperty(cx, override_obj, "staleIfError", &val) || !staleIfError_set(cx, self, val, &val)) {
