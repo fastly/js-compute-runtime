@@ -4209,13 +4209,7 @@ bool Response::pci_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Response::maskedError_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
-
-  JS::RootedValue masked_error_val(cx);
-  if (!JS_GetReservedSlot(cx, self, static_cast<uint32_t>(Slots::MaskedError), &masked_error_val)) {
-    return false;
-  }
-
-  args.rval().set(masked_error_val);
+  args.rval().set(JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::MaskedError)));
   return true;
 }
 
