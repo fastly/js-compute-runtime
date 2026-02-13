@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.39.4](https://github.com/fastly/js-compute-runtime/compare/v3.39.3...v3.39.4) (2026-02-13)
+
+
+### Bug Fixes
+
+* Body truncation error in chained extract_body requests ([#1310](https://github.com/fastly/js-compute-runtime/issues/1310)) ([b929648](https://github.com/fastly/js-compute-runtime/commit/b929648bef34c0d41fe387fc755a2554372bb946))
+
 ## 3.39.3 (2026-02-12)
 
 ### Fixed
