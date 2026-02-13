@@ -2970,6 +2970,9 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
       bool has_native_body = NativeStreamSource::stream_is_body(cx, inputBody);
 
       if (has_native_body) {
+        // Technically speaking, the spec says we must create a proxy,
+        // but this has caused us so many problems that we're going to cheat and just
+        // re-use the existing stream.
         set_up_shortcutting(cx, inputBody, request);
       } else {
         inputBody = TransformStream::create_rs_proxy(cx, inputBody);
