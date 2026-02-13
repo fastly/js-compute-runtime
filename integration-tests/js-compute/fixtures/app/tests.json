@@ -3178,7 +3178,6 @@
     "environments": ["viceroy"]
   },
   "POST /proxy-transform-stream/content-length": {
-    "environments": ["viceroy"],
     "downstream_response": {
       "status": 200,
       "body": "ok"
@@ -3190,10 +3189,10 @@
     }
   },
   "POST /proxy-transform-stream/simple-response-body-chain": {
-    "environments": ["viceroy"],
     "downstream_response": {
       "status": 200,
-      "body": "ok"
+      "body": "body",
+      "headers": [["content-length", "4"]]
     },
     "downstream_request": {
       "method": "POST",
@@ -3202,10 +3201,10 @@
     }
   },
   "POST /proxy-transform-stream/multi-response-body-chain": {
-    "environments": ["viceroy"],
     "downstream_response": {
       "status": 200,
-      "body": "ok"
+      "body": "body",
+      "headers": [["content-length", "4"]]
     },
     "downstream_request": {
       "method": "POST",
@@ -3214,15 +3213,26 @@
     }
   },
   "POST /proxy-transform-stream/response-body-into-js": {
-    "environments": ["viceroy"],
+    "downstream_response": {
+      "status": 200,
+      "body": "body",
+      "headers": [["content-length", "4"]]
+    },
+    "downstream_request": {
+      "method": "POST",
+      "pathname": "/proxy-transform-stream/response-body-into-js",
+      "body": "body"
+    }
+  },
+  "POST /proxy-transform-stream/framing": {
     "downstream_response": {
       "status": 200,
       "body": "ok"
     },
     "downstream_request": {
       "method": "POST",
-      "pathname": "/proxy-transform-stream/response-body-into-js",
-      "body": "body"
+      "pathname": "/proxy-transform-stream/framing",
+      "body": "hello world"
     }
   }
 }
