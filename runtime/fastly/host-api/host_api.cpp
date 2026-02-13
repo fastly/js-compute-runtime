@@ -2422,9 +2422,9 @@ HttpCacheEntry::transaction_update_and_return_fresh(const HttpResp &resp,
   return Result<HttpCacheEntry>::ok(HttpCacheEntry(fresh_handle_out));
 }
 
-Result<Void> HttpCacheEntry::transaction_record_choose_stale() {
+Result<Void> HttpCacheEntry::transaction_choose_stale() {
   TRACE_CALL()
-  auto res = fastly::http_cache_transaction_record_choose_stale(this->handle);
+  auto res = fastly::http_cache_transaction_choose_stale(this->handle);
   if (res != 0) {
     return Result<Void>::err(host_api::APIError(res));
   }

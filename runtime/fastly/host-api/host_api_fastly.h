@@ -805,7 +805,7 @@ public:
                                    std::optional<std::string_view> vary_rule = std::nullopt);
 
   /// Substitute stale-if-error response
-  Result<Void> transaction_record_choose_stale();
+  Result<Void> transaction_choose_stale();
 
   /// Abandon the transaction
   Result<Void> transaction_abandon();
