@@ -13,7 +13,11 @@ routes.set('/proxy-transform-stream/content-length', async (event) => {
   let proxy = new Request(request);
   const response = await fetch(proxy);
   assert(response.status, 200, 'status == 200');
-  assert((await response.json()).headers['content-length'], '11', 'headers["content-length"] == 11');
+  assert(
+    (await response.json()).headers['content-length'],
+    '11',
+    'headers["content-length"] == 11',
+  );
   return new Response('ok');
 });
 
@@ -35,14 +39,11 @@ routes.set(
   },
 );
 
-routes.set(
-  '/proxy-transform-stream/response-body-into-js',
-  async (event) => {
-    let res = new Response('body');
-    const body = await res.text();
-    return new Response(body, res);
-  },
-);
+routes.set('/proxy-transform-stream/response-body-into-js', async (event) => {
+  let res = new Response('body');
+  const body = await res.text();
+  return new Response(body, res);
+});
 
 routes.set('/proxy-transform-stream/framing', async (event) => {
   const newUrl = new URL('https://http-me.fastly.dev/anything');
