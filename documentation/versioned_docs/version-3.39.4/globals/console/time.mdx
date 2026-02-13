@@ -1,0 +1,29 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# console.time()
+
+The **`console.time()`** method starts a timer you can use to track
+how long an operation takes. You give each timer a unique name. When you call `console.timeEnd()` with the same name, the
+browser will output the time, in milliseconds, that elapsed since the timer was started.
+
+## Syntax
+
+```js
+time(label)
+```
+
+### Parameters
+
+- `label`
+  - : A `string` representing the name to give the new timer. This will identify the timer; use the same name when
+    calling `console.timeEnd()` to stop the timer and get the time output to
+    the console.
+
+### Return value
+
+`undefined`.

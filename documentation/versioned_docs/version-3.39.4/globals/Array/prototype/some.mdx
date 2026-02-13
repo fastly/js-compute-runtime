@@ -1,0 +1,68 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Array.prototype.some()
+
+The **`some()`** method tests whether
+at least one element in the array passes the test implemented by the provided
+function. It returns true if, in the array, it finds an element for which the provided function returns true; otherwise it returns false. It doesn't modify the array.
+
+## Syntax
+
+```js
+// Arrow function
+some((element) => { /* … */ })
+some((element, index) => { /* … */ })
+some((element, index, array) => { /* … */ })
+
+// Callback function
+some(callbackFn)
+some(callbackFn, thisArg)
+
+// Inline callback function
+some(function (element) { /* … */ })
+some(function (element, index) { /* … */ })
+some(function (element, index, array) { /* … */ })
+some(function (element, index, array) { /* … */ }, thisArg)
+```
+
+### Parameters
+
+- `callbackFn`
+
+  - : A function to execute for each element in the array. It should return a [truthy](https://developer.mozilla.org/docs/Glossary/Truthy) to indicate the element passes the test, and a falsy value otherwise.
+
+    The function is called with the following arguments:
+
+    - `element`
+      - : The current element being processed in the array.
+    - `index`
+      - : The index of the current element being processed in the array.
+    - `array`
+      - : The array `some()` was called upon.
+
+- `thisArg` _**optional**_
+  - : A value to use as `this` when executing `callbackFn`. 
+
+### Return value
+
+`true` if the callback function returns a [truthy](https://developer.mozilla.org/docs/Glossary/Truthy) value for at least one element in the array. Otherwise, `false`.
+
+## Description
+
+The `some()` method is an iterative method. It calls a provided `callbackFn` function once for each element in an array, until the `callbackFn` returns a [truthy](https://developer.mozilla.org/docs/Glossary/Truthy) value. If such an element is found, `some()` immediately returns `true` and stops iterating through the array. Otherwise, if `callbackFn` returns a [falsy](https://developer.mozilla.org/docs/Glossary/Falsy) value for all elements, `some()` returns `false`.
+
+`some()` acts like the "there exists" quantifier in mathematics. In particular, for an empty array, it returns `false` for any condition.
+
+`callbackFn` is invoked only for array indexes which have assigned values. It is not invoked for empty slots in sparse arrays.
+
+`some()` does not mutate the array on which it is called, but the function provided as `callbackFn` can. Note, however, that the length of the array is saved _before_ the first invocation of `callbackFn`. Therefore:
+
+- `callbackFn` will not visit any elements added beyond the array's initial length when the call to `some()` began.
+- Changes to already-visited indexes do not cause `callbackFn` to be invoked on them again.
+- If an existing, yet-unvisited element of the array is changed by `callbackFn`, its value passed to the `callbackFn` will be the value at the time that element gets visited. [Deleted](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/delete) elements are not visited.
+
+The `some()` method is generic. It only expects the `this` value to have a `length` property and integer-keyed properties.

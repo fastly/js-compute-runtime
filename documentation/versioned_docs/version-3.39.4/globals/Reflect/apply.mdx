@@ -1,0 +1,48 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Reflect.apply()
+
+The static **`Reflect.apply()`** method calls a target function
+with arguments as specified.
+
+## Syntax
+
+```js
+Reflect.apply(target, thisArgument, argumentsList)
+```
+
+### Parameters
+
+- `target`
+  - : The target function to call.
+- `thisArgument`
+  - : The value of `this` provided for the call to
+    `target`.
+- `argumentsList`
+  - : An array-like object specifying the arguments with which
+    `target` should be called.
+
+### Return value
+
+The result of calling the given `target` function with the
+specified `this` value and arguments.
+
+### Exceptions
+
+A [`TypeError`](../../globals/TypeError/TypeError.mdx), if the `target` is not callable.
+
+## Description
+
+In ES5, you typically use the [`Function.prototype.apply()`](../../globals/Function/prototype/apply.mdx) method to call a
+function with a given `this` value and `arguments` provided as an array
+(or an [array-like object](https://developer.mozilla.org/docs/Web/JavaScript/Guide/Indexed_collections#working_with_array-like_objects)).
+
+```js
+Function.prototype.apply.call(Math.floor, undefined, [1.75]);
+```
+
+With `Reflect.apply()` this becomes less verbose and easier to understand.
