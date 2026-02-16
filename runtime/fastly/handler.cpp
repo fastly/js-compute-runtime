@@ -1,12 +1,12 @@
 #include "../StarlingMonkey/builtins/web/performance.h"
-#include "./builtins/fetch-event.h"
 #include "./builtins/fastly.h"
+#include "./builtins/fetch-event.h"
 #include "./host-api/fastly.h"
 #include "./host-api/host_api_fastly.h"
 #include "extension-api.h"
 #include "host_api.h"
-#include <wasi/libc-environ.h>
 #include <chrono>
+#include <wasi/libc-environ.h>
 
 using fastly::fetch_event::FetchEvent;
 using std::chrono::duration_cast;
@@ -104,13 +104,14 @@ int main(int argc, const char *argv[]) {
 
   host_api::HttpReqPromise::DownstreamNextOptions options;
   if (Fastly::reusableSandboxOptions.between_request_timeout()) {
-    options.timeout_ms = static_cast<uint32_t>(Fastly::reusableSandboxOptions.between_request_timeout().value().count());
+    options.timeout_ms = static_cast<uint32_t>(
+        Fastly::reusableSandboxOptions.between_request_timeout().value().count());
   }
 
   auto req = host_api::Request::downstream_get();
   if (req.is_err()) {
-      HANDLE_ERROR(ENGINE->cx(), *req.to_err());
-      return -1;
+    HANDLE_ERROR(ENGINE->cx(), *req.to_err());
+    return -1;
   }
 
   const auto max_requests = Fastly::reusableSandboxOptions.max_requests().value_or(1);
@@ -147,12 +148,12 @@ int main(int argc, const char *argv[]) {
     if (Fastly::reusableSandboxOptions.max_memory_mib()) {
       uint32_t heap_mib;
       if (fastly::compute_get_heap_mib(&heap_mib) != 0) {
-        // If we fail to get heap memory usage, log a warning but continue anyway since this isn't a critical failure.
+        // If we fail to get heap memory usage, log a warning but continue anyway since this isn't a
+        // critical failure.
         if (fastly::runtime::ENGINE->debug_logging_enabled()) {
           printf("Failed to get heap memory usage, continuing anyway.\n");
         }
-      }
-      else if (heap_mib >= Fastly::reusableSandboxOptions.max_memory_mib().value()) {
+      } else if (heap_mib >= Fastly::reusableSandboxOptions.max_memory_mib().value()) {
         if (fastly::runtime::ENGINE->debug_logging_enabled()) {
           printf("Max memory exceeded (heap usage: %u MiB, max: %u MiB), exiting process.\n",
                  heap_mib, Fastly::reusableSandboxOptions.max_memory_mib().value());
@@ -166,14 +167,15 @@ int main(int argc, const char *argv[]) {
       HANDLE_ERROR(ENGINE->cx(), *next.to_err());
       return -1;
     }
-    
+
     req = next.unwrap().wait();
     if (req.is_err()) {
       HANDLE_ERROR(ENGINE->cx(), *req.to_err());
       return -1;
     }
 
-    // The FetchEvent instance is a singleton that we re-initialize here. It's originally initialized during engine setup.
+    // The FetchEvent instance is a singleton that we re-initialize here. It's originally
+    // initialized during engine setup.
     if (!FetchEvent::reset(fastly::runtime::ENGINE->cx(), FetchEvent::instance())) {
       fprintf(stderr, "Failed to reset FetchEvent instance for new request, exiting process.\n");
       return -1;

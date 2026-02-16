@@ -43,7 +43,9 @@ public:
     max_requests_ = max_requests;
     return true;
   }
-  std::optional<std::chrono::milliseconds> between_request_timeout() const { return between_request_timeout_; }
+  std::optional<std::chrono::milliseconds> between_request_timeout() const {
+    return between_request_timeout_;
+  }
   bool set_between_request_timeout(std::chrono::milliseconds timeout) {
     if (frozen_) {
       return false;

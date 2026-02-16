@@ -698,8 +698,9 @@ bool Fastly::setReusableSandboxOptions(JSContext *cx, unsigned argc, JS::Value *
     return false;
   }
   RootedObject options_obj(cx, &options_value.toObject());
-  
-  auto get_non_negative_int = [cx, &options_obj](const char* prop_name, bool* defined, int32_t* out_value) -> bool {
+
+  auto get_non_negative_int = [cx, &options_obj](const char *prop_name, bool *defined,
+                                                 int32_t *out_value) -> bool {
     RootedValue val(cx);
     if (!JS_GetProperty(cx, options_obj, prop_name, &val)) {
       return false;
@@ -735,7 +736,8 @@ bool Fastly::setReusableSandboxOptions(JSContext *cx, unsigned argc, JS::Value *
   int32_t between_request_timeout_ms;
   if (get_non_negative_int("betweenRequestTimeoutMs", &defined, &between_request_timeout_ms)) {
     if (defined) {
-      Fastly::reusableSandboxOptions.set_between_request_timeout(std::chrono::milliseconds(between_request_timeout_ms));
+      Fastly::reusableSandboxOptions.set_between_request_timeout(
+          std::chrono::milliseconds(between_request_timeout_ms));
     }
   } else {
     return false;
@@ -753,7 +755,8 @@ bool Fastly::setReusableSandboxOptions(JSContext *cx, unsigned argc, JS::Value *
   int32_t sandbox_timeout_ms;
   if (get_non_negative_int("sandboxTimeoutMs", &defined, &sandbox_timeout_ms)) {
     if (defined) {
-      Fastly::reusableSandboxOptions.set_sandbox_timeout(std::chrono::milliseconds(sandbox_timeout_ms));
+      Fastly::reusableSandboxOptions.set_sandbox_timeout(
+          std::chrono::milliseconds(sandbox_timeout_ms));
     }
   } else {
     return false;
@@ -912,13 +915,12 @@ bool install(api::Engine *engine) {
                       allow_dynamic_backends_val)) {
     return false;
   }
-  auto set_reusable_sandbox_options =
-      JS_NewFunction(engine->cx(), &Fastly::setReusableSandboxOptions, 1, 0,
-                      "setReusableSandboxOptions");
+  auto set_reusable_sandbox_options = JS_NewFunction(
+      engine->cx(), &Fastly::setReusableSandboxOptions, 1, 0, "setReusableSandboxOptions");
   RootedObject set_reusable_sandbox_options_obj(engine->cx(),
                                                 JS_GetFunctionObject(set_reusable_sandbox_options));
-  RootedValue set_reusable_sandbox_options_val(
-      engine->cx(), ObjectValue(*set_reusable_sandbox_options_obj));
+  RootedValue set_reusable_sandbox_options_val(engine->cx(),
+                                               ObjectValue(*set_reusable_sandbox_options_obj));
   if (!JS_SetProperty(engine->cx(), experimental, "setReusableSandboxOptions",
                       set_reusable_sandbox_options_val)) {
     return false;
