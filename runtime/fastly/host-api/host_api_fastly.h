@@ -376,7 +376,7 @@ struct TlsVersion {
   uint8_t value = 0;
 
   explicit TlsVersion(uint8_t raw);
-  explicit TlsVersion() {};
+  explicit TlsVersion(){};
 
   uint8_t get_version() const;
   double get_version_number() const;
