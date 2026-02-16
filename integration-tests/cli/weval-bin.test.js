@@ -19,7 +19,7 @@ test('should use --weval-bin when set and AOT is enabled', async function (t) {
   const markerPath = `${path}/weval-bin-invoked`;
   const wrapperFileName = isWindows ? 'weval-wrapper.bat' : 'weval-wrapper.sh';
   const wrapperPath = `${path}/${wrapperFileName}`;
-  
+
   if (isWindows) {
     await writeFile(
       `./${wrapperFileName}`,
