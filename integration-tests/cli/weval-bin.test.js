@@ -4,6 +4,7 @@ import { prepareEnvironment } from '@jakechampion/cli-testing-library';
 import { chmodSync } from 'node:fs';
 
 const cli = await getBinPath({ name: 'js-compute' });
+const isWindows = process.platform === 'win32';
 
 test('should use --weval-bin when set and AOT is enabled', async function (t) {
   const { execute, cleanup, writeFile, exists, path } =
@@ -16,15 +17,27 @@ test('should use --weval-bin when set and AOT is enabled', async function (t) {
   await writeFile('./dummy.wasm', '');
 
   const markerPath = `${path}/weval-bin-invoked`;
-  const wrapperPath = `${path}/weval-wrapper.sh`;
-  await writeFile(
-    './weval-wrapper.sh',
-    `#!/bin/sh
+  const wrapperFileName = isWindows ? 'weval-wrapper.bat' : 'weval-wrapper.sh';
+  const wrapperPath = `${path}/${wrapperFileName}`;
+  
+  if (isWindows) {
+    await writeFile(
+      `./${wrapperFileName}`,
+      `@echo off
+echo invoked > "${markerPath}"
+exit /b 1
+`,
+    );
+  } else {
+    await writeFile(
+      `./${wrapperFileName}`,
+      `#!/bin/sh
 echo "invoked" > "${markerPath}"
 exit 1
 `,
-  );
-  chmodSync(wrapperPath, 0o755);
+    );
+    chmodSync(wrapperPath, 0o755);
+  }
 
   const { code } = await execute(
     process.execPath,
