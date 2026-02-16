@@ -4,6 +4,7 @@
 import { routes } from './routes.js';
 import { env } from 'fastly:env';
 import { enableDebugLogging } from 'fastly:experimental';
+import { setReusableSandboxOptions } from 'fastly:experimental';
 
 import './async-select.js';
 import './btoa.js';
@@ -51,9 +52,17 @@ import './secret-store.js';
 import './security.js';
 import './server.js';
 import './shielding.js';
+import './stale-if-error.js';
 import './tee.js';
 import './timers.js';
 import './urlsearchparams.js';
+
+setReusableSandboxOptions({
+        maxRequests: 10000, // Default is 1, 0 means unlimited
+        //betweenRequestTimeoutMs: 10000000, // 100ms, default is 0 (no timeout)
+        //maxMemoryMiB: 128, // 128MiB, default is 0 (no limit)
+        //sandboxTimeoutMs: 1, // 1000ms, default is 0 (no timeout) 
+});
 
 addEventListener('fetch', (event) => {
   event.respondWith(app(event));

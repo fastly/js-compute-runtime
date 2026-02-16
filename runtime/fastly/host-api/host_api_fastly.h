@@ -572,29 +572,26 @@ public:
   static Result<Void> register_dynamic_backend(std::string_view name, std::string_view target,
                                                const BackendConfig &config);
 
-  /// Fetch the downstream request/body pair
-  static Result<Request> downstream_get();
-
   /// Get the downstream ip address.
-  static Result<HostBytes> downstream_client_ip_addr();
+  Result<HostBytes> downstream_client_ip_addr();
 
-  static Result<HostBytes> downstream_server_ip_addr();
+  Result<HostBytes> downstream_server_ip_addr();
 
-  static Result<std::optional<HostString>> http_req_downstream_tls_cipher_openssl_name();
+  Result<std::optional<HostString>> http_req_downstream_tls_cipher_openssl_name();
 
-  static Result<std::optional<HostString>> http_req_downstream_tls_protocol();
+  Result<std::optional<HostString>> http_req_downstream_tls_protocol();
 
-  static Result<std::optional<HostBytes>> http_req_downstream_tls_client_hello();
+  Result<std::optional<HostBytes>> http_req_downstream_tls_client_hello();
 
-  static Result<std::optional<HostBytes>> http_req_downstream_tls_raw_client_certificate();
+  Result<std::optional<HostBytes>> http_req_downstream_tls_raw_client_certificate();
 
-  static Result<std::optional<HostBytes>> http_req_downstream_tls_ja3_md5();
+  Result<std::optional<HostBytes>> http_req_downstream_tls_ja3_md5();
 
-  static Result<std::optional<HostString>> http_req_downstream_tls_ja4();
+  Result<std::optional<HostString>> http_req_downstream_tls_ja4();
 
-  static Result<std::optional<HostString>> http_req_downstream_client_h2_fingerprint();
+  Result<std::optional<HostString>> http_req_downstream_client_h2_fingerprint();
 
-  static Result<std::optional<HostString>> http_req_downstream_client_oh_fingerprint();
+  Result<std::optional<HostString>> http_req_downstream_client_oh_fingerprint();
 
   Result<Void> auto_decompress_gzip();
 
@@ -706,7 +703,28 @@ struct Request {
   Request() = default;
   Request(HttpReq req, HttpBody body) : req{req}, body{body} {}
 
+  /// Fetch the downstream request/body pair
+  static Result<Request> downstream_get();
   Result<HostString> inspect(const InspectOptions *config);
+};
+
+class HttpReqPromise final {
+public:
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
+
+  HttpReqPromise() = default;
+  explicit HttpReqPromise(Handle handle) : handle{handle} {}
+
+  struct DownstreamNextOptions final {
+    std::optional<uint32_t> timeout_ms;
+  };
+  static Result<HttpReqPromise> downstream_next(DownstreamNextOptions options);
+  Result<Request> wait();
+  Result<Void> abandon();
 };
 
 class GeoIp final {

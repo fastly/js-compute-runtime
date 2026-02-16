@@ -1,10 +1,12 @@
 #include "../StarlingMonkey/builtins/web/performance.h"
 #include "./builtins/fetch-event.h"
+#include "./builtins/fastly.h"
 #include "./host-api/fastly.h"
 #include "./host-api/host_api_fastly.h"
 #include "extension-api.h"
 #include "host_api.h"
 #include <wasi/libc-environ.h>
+#include <chrono>
 
 using fastly::fetch_event::FetchEvent;
 using std::chrono::duration_cast;
@@ -95,16 +97,104 @@ void handle_incoming(host_api::Request req) {
 
 } // namespace fastly::runtime
 
-// Fastly uses main to then pull the backend request
 int main(int argc, const char *argv[]) {
-  host_api::Request req;
+  using fastly::fastly::Fastly;
+  using fastly::runtime::ENGINE;
+  Fastly::reusableSandboxOptions.freeze();
 
-  if (fastly::req_body_downstream_get(&req.req.handle, &req.body.handle) != 0) {
-    abort();
-    return 1;
+  host_api::HttpReqPromise::DownstreamNextOptions options;
+  if (Fastly::reusableSandboxOptions.between_request_timeout()) {
+    options.timeout_ms = static_cast<uint32_t>(Fastly::reusableSandboxOptions.between_request_timeout().value().count());
+  }
+  printf("Starting process with max_requests=%s, between_request_timeout=%s, max_memory_mib=%s, sandbox_timeout=%s\n",
+         Fastly::reusableSandboxOptions.max_requests() ? std::to_string(Fastly::reusableSandboxOptions.max_requests().value()).c_str() : "none",
+         Fastly::reusableSandboxOptions.between_request_timeout() ? std::to_string(Fastly::reusableSandboxOptions.between_request_timeout().value().count()).c_str() : "none",
+         Fastly::reusableSandboxOptions.max_memory_mib() ? std::to_string(Fastly::reusableSandboxOptions.max_memory_mib().value()).c_str() : "none",
+         Fastly::reusableSandboxOptions.sandbox_timeout() ? std::to_string(Fastly::reusableSandboxOptions.sandbox_timeout().value().count()).c_str() : "none");
+  fflush(stdout);
+
+  auto req = host_api::Request::downstream_get();
+  if (req.is_err()) {
+      HANDLE_ERROR(ENGINE->cx(), *req.to_err());
+      return -1;
   }
 
-  fastly::runtime::handle_incoming(req);
+  const auto max_requests = Fastly::reusableSandboxOptions.max_requests().value_or(1);
+  std::size_t requests_handled = 0;
+  const auto start_time = std::chrono::high_resolution_clock::now();
+  while (true) {
+    fastly::runtime::handle_incoming(req.unwrap());
+    requests_handled++;
+
+    printf("Finished handling request #%zu\n", requests_handled);
+    fflush(stdout);
+
+    // Check if we should exit based on configured max requests
+    // Note that a max request value of 0 means unlimited,
+    // so we only check the max requests condition if max_requests is greater than 0.
+    if (max_requests > 0 && requests_handled >= max_requests) {
+      if (fastly::runtime::ENGINE->debug_logging_enabled()) {
+        printf("Max requests handled (%zu), exiting process.\n", requests_handled);
+        fflush(stdout);
+      }
+      break;
+    }
+
+    // Check if we should exit based on configured sandbox timeout
+    if (Fastly::reusableSandboxOptions.sandbox_timeout()) {
+      auto now = std::chrono::high_resolution_clock::now();
+      auto elapsed = now - start_time;
+      if (elapsed >= Fastly::reusableSandboxOptions.sandbox_timeout().value()) {
+        if (fastly::runtime::ENGINE->debug_logging_enabled()) {
+          printf("Sandbox timeout reached (%llu ms), exiting process.\n",
+                 std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count());
+          fflush(stdout);
+        }
+        break;
+      }
+    }
+
+    // Check if we should exit based on configured max memory usage
+    if (Fastly::reusableSandboxOptions.max_memory_mib()) {
+      uint32_t heap_mib;
+      if (fastly::compute_get_heap_mib(&heap_mib) != 0) {
+        // If we fail to get heap memory usage, log a warning but continue anyway since this isn't a critical failure.
+        if (fastly::runtime::ENGINE->debug_logging_enabled()) {
+          printf("Failed to get heap memory usage, continuing anyway.\n");
+          fflush(stdout);
+        }
+      }
+      else if (heap_mib >= Fastly::reusableSandboxOptions.max_memory_mib().value()) {
+        if (fastly::runtime::ENGINE->debug_logging_enabled()) {
+          printf("Max memory exceeded (heap usage: %u MiB, max: %u MiB), exiting process.\n",
+                 heap_mib, Fastly::reusableSandboxOptions.max_memory_mib().value());
+          fflush(stdout);
+        }
+        break;
+      }
+    }
+
+    auto next = host_api::HttpReqPromise::downstream_next(options);
+    if (next.is_err()) {
+      HANDLE_ERROR(ENGINE->cx(), *next.to_err());
+      return -1;
+    }
+    
+    req = next.unwrap().wait();
+    if (req.is_err()) {
+      HANDLE_ERROR(ENGINE->cx(), *req.to_err());
+      return -1;
+    }
+
+    // The FetchEvent instance is a singleton that we re-initialize here. It's originally initialized during engine setup.
+    if (!FetchEvent::reset(fastly::runtime::ENGINE->cx(), FetchEvent::instance())) {
+      fprintf(stderr, "Failed to reset FetchEvent instance for new request, exiting process.\n");
+      return -1;
+    }
+  }
+
+  printf("Exiting process after handling %zu requests.\n", requests_handled);
+  fflush(stdout);
 
   return 0;
 }
