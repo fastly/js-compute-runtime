@@ -105,11 +105,13 @@ declare module 'fastly:experimental' {
     sandboxTimeoutMs?: number;
   }
   /**
-   * Configure reuse of the same underlying sandbox for multiple requests, 
-   * which can improve performance by avoiding the overhead of initializing a 
+   * Configure reuse of the same underlying sandbox for multiple requests,
+   * which can improve performance by avoiding the overhead of initializing a
    * new sandbox for each request.
    * @experimental
    * @param options - Configuration options for sandbox reuse
    */
-  export function setReusableSandboxOptions(options: ReusableSandboxOptions): void;
+  export function setReusableSandboxOptions(
+    options: ReusableSandboxOptions,
+  ): void;
 }
