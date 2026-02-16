@@ -137,6 +137,19 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
         }
         break;
       }
+      case '--weval-bin': {
+        const value = cliInputs.shift();
+        if (value == null) {
+          console.error('Error: --weval-bin requires a value');
+          process.exit(1);
+        }
+        if (isAbsolute(value)) {
+          wevalBin = value;
+        } else {
+          wevalBin = join(process.cwd(), value);
+        }
+        break;
+      }
       case '--aot-cache': {
         const value = cliInputs.shift();
         if (value == null) {
@@ -223,6 +236,12 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
 
   if (!customEngineSet && enableAOT) {
     wasmEngine = join(__dirname, '../fastly-weval.wasm');
+  }
+
+  if (wevalBin && !enableAOT) {
+    console.error(
+      'Warning: --weval-bin has no effect without --enable-aot, as weval is only used for AOT compilation',
+    );
   }
 
   return {
