@@ -20,12 +20,22 @@ import { composeSourcemapsStep } from './compiler-steps/composeSourcemaps.js';
 const maybeWindowsPath =
   process.platform === 'win32'
     ? (path: string) => {
-        return '//?/' + path.replace(/\\/g, '/');
-      }
+      return '//?/' + path.replace(/\\/g, '/');
+    }
     : (path: string) => path;
 
 async function getTmpDir() {
   return await mkdtemp(normalize(tmpdir() + sep));
+}
+
+async function getWevalBin() {
+  // Check env var for weval bin path
+  const wevalEnvBinPath = process.env.WEVAL_BIN;
+  if (wevalEnvBinPath) {
+    return wevalEnvBinPath;
+  }
+
+  return weval();
 }
 
 export type CompileApplicationToWasmParams = {
@@ -210,7 +220,7 @@ export async function compileApplicationToWasm(
     try {
       if (!doBundle) {
         if (enableAOT) {
-          const wevalBin = await weval();
+          const wevalBin = await getWevalBin();
 
           const wevalProcess = spawnSync(
             `"${wevalBin}"`,
@@ -251,7 +261,7 @@ export async function compileApplicationToWasm(
       } else {
         spawnOpts.input = `${maybeWindowsPath(input)}${moduleMode ? '' : ' --legacy-script'}`;
         if (enableAOT) {
-          const wevalBin = await weval();
+          const wevalBin = await getWevalBin();
 
           const wevalProcess = spawnSync(
             `"${wevalBin}"`,
