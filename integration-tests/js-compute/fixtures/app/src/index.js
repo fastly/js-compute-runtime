@@ -51,7 +51,6 @@ import './secret-store.js';
 import './security.js';
 import './server.js';
 import './shielding.js';
-import './stale-if-error.js';
 import './tee.js';
 import './timers.js';
 import './urlsearchparams.js';
