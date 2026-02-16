@@ -39,6 +39,7 @@ export type CompileApplicationToWasmParams = {
   enableStackTraces: boolean;
   excludeSources: boolean;
   debugIntermediateFilesDir: string | undefined;
+  wevalBin: string | undefined;
   moduleMode: boolean;
   doBundle: boolean;
   env: Record<string, string>;
@@ -57,6 +58,7 @@ export async function compileApplicationToWasm(
     enableStackTraces,
     excludeSources,
     debugIntermediateFilesDir,
+    wevalBin,
     moduleMode = false,
     doBundle = false,
     env,
@@ -210,10 +212,10 @@ export async function compileApplicationToWasm(
     try {
       if (!doBundle) {
         if (enableAOT) {
-          const wevalBin = await weval();
+          const wevalPath = wevalBin ?? (await weval());
 
           const wevalProcess = spawnSync(
-            `"${wevalBin}"`,
+            `"${wevalPath}"`,
             [
               'weval',
               '-v',
@@ -251,10 +253,10 @@ export async function compileApplicationToWasm(
       } else {
         spawnOpts.input = `${maybeWindowsPath(input)}${moduleMode ? '' : ' --legacy-script'}`;
         if (enableAOT) {
-          const wevalBin = await weval();
+          const wevalPath = wevalBin ?? (await weval());
 
           const wevalProcess = spawnSync(
-            `"${wevalBin}"`,
+            `"${wevalPath}"`,
             [
               'weval',
               '-v',

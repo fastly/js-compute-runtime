@@ -17,6 +17,7 @@ export type ParsedInputs =
       excludeSources: boolean;
       debugIntermediateFilesDir: string | undefined;
       wasmEngine: string;
+      wevalBin: string | undefined;
       input: string;
       output: string;
       env: Record<string, string>;
@@ -40,6 +41,7 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
   let enableStackTraces = false;
   let excludeSources = false;
   let debugIntermediateFilesDir = undefined;
+  let wevalBin = undefined;
   let cliInput;
 
   const envParser = new EnvParser();
@@ -186,6 +188,14 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
           const value = cliInput.replace(/--env=/, '');
           envParser.parse(value);
           break;
+        } else if (cliInput.startsWith('--weval-bin=')) {
+          const value = cliInput.replace(/--weval-bin=/, '');
+          if (isAbsolute(value)) {
+            wevalBin = value;
+          } else {
+            wevalBin = join(process.cwd(), value);
+          }
+          break;
         } else if (cliInput.startsWith('-')) {
           unknownArgument(cliInput);
         } else {
@@ -228,6 +238,7 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
     input,
     output,
     wasmEngine,
+    wevalBin,
     env: envParser.getEnv(),
   };
 }
