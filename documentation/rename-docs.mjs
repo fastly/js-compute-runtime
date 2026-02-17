@@ -28,6 +28,7 @@ const subsystems = [
   'secret-store',
   'html-rewriter',
   'image-optimizer',
+  'security',
   'shielding'
 ];
 
