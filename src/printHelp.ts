@@ -29,7 +29,8 @@ OPTIONS:
     --enable-experimental-top-level-await                   Enable experimental top level await
     --enable-stack-traces                                   Enable stack traces
     --exclude-sources                                       Don't include sources in stack traces                
-    --debug-intermediate-files <dir>                        Output intermediate files in directory                
+    --debug-intermediate-files <dir>                        Output intermediate files in directory   
+    --weval-bin <weval-bin>                                 Path to the weval binary to use for AOT compilation             
 
 ARGS:
     <input>     The input JS script's file path [default: bin/index.js]
