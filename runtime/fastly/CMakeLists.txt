@@ -61,6 +61,23 @@ add_builtin(fastly::html_rewriter
     ${CMAKE_CURRENT_SOURCE_DIR}/crates/rust-lol-html/include
 )
 
+add_builtin(
+    fastly::crypto
+    SRC
+        builtins/crypto/crypto.cpp
+        builtins/crypto/crypto-algorithm.cpp
+        builtins/crypto/crypto-key.cpp
+        builtins/crypto/crypto-key-ec-components.cpp
+        builtins/crypto/crypto-key-rsa-components.cpp
+        builtins/crypto/json-web-key.cpp
+        builtins/crypto/subtle-crypto.cpp
+        builtins/crypto/uuid.cpp
+    DEPENDENCIES
+        OpenSSL::Crypto
+        fmt
+    INCLUDE_DIRS
+        runtime)
+
 add_compile_definitions(PUBLIC RUNTIME_VERSION=${RUNTIME_VERSION})
 
 project(FastlyJS)
