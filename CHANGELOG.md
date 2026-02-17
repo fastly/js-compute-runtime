@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.40.0](https://github.com/fastly/js-compute-runtime/compare/v3.39.4...v3.40.0) (2026-02-17)
+
+
+### Features
+
+* Allow custom weval binary ([#1315](https://github.com/fastly/js-compute-runtime/issues/1315)) ([b143150](https://github.com/fastly/js-compute-runtime/commit/b143150df609f217e8160759c0cf1dae2f86afb7))
+* Reusable sandboxes ([#1314](https://github.com/fastly/js-compute-runtime/issues/1314)) ([70a9d28](https://github.com/fastly/js-compute-runtime/commit/70a9d282d276176777d3369e164d8f89d3e96209))
+
+
+### Bug Fixes
+
+* Add `security` to docs rename script ([#1316](https://github.com/fastly/js-compute-runtime/issues/1316)) ([7028c0b](https://github.com/fastly/js-compute-runtime/commit/7028c0bd819c44b870140d1536039f9aad6ddd4e))
+
 ## [3.39.4](https://github.com/fastly/js-compute-runtime/compare/v3.39.3...v3.39.4) (2026-02-13)
 
 
