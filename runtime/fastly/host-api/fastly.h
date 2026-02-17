@@ -469,6 +469,27 @@ int log_endpoint_get(const char *name, size_t name_len, uint32_t *endpoint_handl
 WASM_IMPORT("fastly_log", "write")
 int log_write(uint32_t endpoint_handle, const char *msg, size_t msg_len, size_t *nwritten);
 
+// Module fastly_http_downstream
+
+typedef struct fastly_http_downstream_next_request_options {
+  uint32_t timeout_ms;
+} fastly_http_downstream_next_request_options;
+
+#define FASTLY_HTTP_DOWNSTREAM_NEXT_REQUEST_OPTIONS_MASK_RESERVED (1 << 0)
+#define FASTLY_HTTP_DOWNSTREAM_NEXT_REQUEST_OPTIONS_MASK_TIMEOUT (1 << 1)
+
+WASM_IMPORT("fastly_http_downstream", "next_request")
+int downstream_next_request(uint32_t options_mask,
+                            fastly_http_downstream_next_request_options *options,
+                            uint32_t *req_promise_handle_out);
+
+WASM_IMPORT("fastly_http_downstream", "next_request_wait")
+int downstream_next_request_wait(uint32_t req_promise_handle, uint32_t *req_handle_out,
+                                 uint32_t *body_handle_out);
+
+WASM_IMPORT("fastly_http_downstream", "next_request_abandon")
+int downstream_next_request_abandon(uint32_t req_promise_handle);
+
 // Module fastly_http_req
 WASM_IMPORT("fastly_http_req", "register_dynamic_backend")
 int req_register_dynamic_backend(const char *name_prefix, size_t name_prefix_len,
@@ -523,35 +544,40 @@ int req_auto_decompress_response_set(uint32_t req_handle, int tag);
  * Otherwise, if `nwritten` will is `16`, the value in `octets` is an IPv6 address.
  * Otherwise, `nwritten` will be `0`, and no address is available.
  */
-WASM_IMPORT("fastly_http_req", "downstream_client_ip_addr")
-int req_downstream_client_ip_addr_get(uint8_t *octets, size_t *nwritten);
+WASM_IMPORT("fastly_http_downstream", "downstream_client_ip_addr")
+int http_downstream_client_ip_addr_get(uint32_t req_handle, uint8_t *octets, size_t *nwritten);
 
-WASM_IMPORT("fastly_http_req", "downstream_server_ip_addr")
-int req_downstream_server_ip_addr_get(uint8_t *octets, size_t *nwritten);
+WASM_IMPORT("fastly_http_downstream", "downstream_server_ip_addr")
+int http_downstream_server_ip_addr_get(uint32_t req_handle, uint8_t *octets, size_t *nwritten);
 
-WASM_IMPORT("fastly_http_req", "downstream_tls_cipher_openssl_name")
-int req_downstream_tls_cipher_openssl_name(char *ret, size_t ret_len, size_t *nwritten);
+WASM_IMPORT("fastly_http_downstream", "downstream_tls_cipher_openssl_name")
+int http_downstream_tls_cipher_openssl_name(uint32_t req_handle, char *ret, size_t ret_len,
+                                            size_t *nwritten);
 
-WASM_IMPORT("fastly_http_req", "downstream_tls_protocol")
-int req_downstream_tls_protocol(char *ret, size_t ret_len, size_t *nwritten);
+WASM_IMPORT("fastly_http_downstream", "downstream_tls_protocol")
+int http_downstream_tls_protocol(uint32_t req_handle, char *ret, size_t ret_len, size_t *nwritten);
 
-WASM_IMPORT("fastly_http_req", "downstream_tls_client_hello")
-int req_downstream_tls_client_hello(uint8_t *ret, size_t ret_len, size_t *nwritten);
+WASM_IMPORT("fastly_http_downstream", "downstream_tls_client_hello")
+int http_downstream_tls_client_hello(uint32_t req_handle, uint8_t *ret, size_t ret_len,
+                                     size_t *nwritten);
 
-WASM_IMPORT("fastly_http_req", "downstream_tls_raw_client_certificate")
-int req_downstream_tls_raw_client_certificate(uint8_t *ret, size_t ret_len, size_t *nwritten);
+WASM_IMPORT("fastly_http_downstream", "downstream_tls_raw_client_certificate")
+int http_downstream_tls_raw_client_certificate(uint32_t req_handle, uint8_t *ret, size_t ret_len,
+                                               size_t *nwritten);
 
-WASM_IMPORT("fastly_http_req", "downstream_tls_ja3_md5")
-int req_downstream_tls_ja3_md5(uint8_t *ret, size_t *nwritten);
+WASM_IMPORT("fastly_http_downstream", "downstream_tls_ja3_md5")
+int http_downstream_tls_ja3_md5(uint32_t req_handle, uint8_t *ret, size_t *nwritten);
 
-WASM_IMPORT("fastly_http_req", "downstream_tls_ja4")
-int req_downstream_tls_ja4(uint8_t *ret, size_t ret_len, size_t *nwritten);
+WASM_IMPORT("fastly_http_downstream", "downstream_tls_ja4")
+int http_downstream_tls_ja4(uint32_t req_handle, uint8_t *ret, size_t ret_len, size_t *nwritten);
 
-WASM_IMPORT("fastly_http_req", "downstream_client_h2_fingerprint")
-int req_downstream_client_h2_fingerprint(uint8_t *ret, size_t ret_len, size_t *nwritten);
+WASM_IMPORT("fastly_http_downstream", "downstream_client_h2_fingerprint")
+int http_downstream_client_h2_fingerprint(uint32_t req_handle, uint8_t *ret, size_t ret_len,
+                                          size_t *nwritten);
 
-WASM_IMPORT("fastly_http_req", "downstream_client_oh_fingerprint")
-int req_downstream_client_oh_fingerprint(uint8_t *ret, size_t ret_len, size_t *nwritten);
+WASM_IMPORT("fastly_http_downstream", "downstream_client_oh_fingerprint")
+int http_downstream_client_oh_fingerprint(uint32_t req_handle, uint8_t *ret, size_t ret_len,
+                                          size_t *nwritten);
 
 WASM_IMPORT("fastly_http_req", "new")
 int req_new(uint32_t *req_handle_out);
@@ -1110,6 +1136,9 @@ int device_detection_lookup(const char *user_agent, size_t user_agent_len, const
 
 WASM_IMPORT("fastly_compute_runtime", "get_vcpu_ms")
 int compute_get_vcpu_ms(uint64_t *vcpu_ms);
+
+WASM_IMPORT("fastly_compute_runtime", "get_heap_mib")
+int compute_get_heap_mib(uint32_t *heap_mib);
 
 // ACL handle type
 typedef uint32_t fastly_acl_handle;

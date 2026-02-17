@@ -84,4 +84,34 @@ declare module 'fastly:experimental' {
    * @param error
    */
   export function mapAndLogError(error: Error | string): void;
+
+  export interface ReusableSandboxOptions {
+    /**
+     * The maximum number of requests to handle with a single sandbox instance before it is recycled.
+     * Default is 1. A value of 0 means there is no maximum, and the sandbox may be reused indefinitely until it is recycled for another reason (e.g., timeout or memory limit).
+     */
+    maxRequests?: number;
+    /**
+     * The maximum amount of time in milliseconds to wait for the next request before recycling the sandbox. Default is up to the platform and not specified.
+     */
+    betweenRequestTimeoutMs?: number;
+    /**
+     * The maximum amount of memory in MiB that the sandbox is allowed to use. If the sandbox exceeds this limit, it will be recycled before handling the next request. Default is no limit.
+     */
+    maxMemoryMiB?: number;
+    /**
+     * The maximum amount of time in milliseconds that a sandbox is allowed to run before it is recycled after handling the current request. Default is no timeout.
+     */
+    sandboxTimeoutMs?: number;
+  }
+  /**
+   * Configure reuse of the same underlying sandbox for multiple requests,
+   * which can improve performance by avoiding the overhead of initializing a
+   * new sandbox for each request.
+   * @experimental
+   * @param options - Configuration options for sandbox reuse
+   */
+  export function setReusableSandboxOptions(
+    options: ReusableSandboxOptions,
+  ): void;
 }

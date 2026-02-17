@@ -5,6 +5,7 @@
 #include "builtin.h"
 #include "extension-api.h"
 #include "host_api.h"
+#include <chrono>
 
 namespace fastly::fetch_event {
 
@@ -19,11 +20,14 @@ class ClientInfo final : public builtins::BuiltinNoConstructor<ClientInfo> {
   static bool h2_fingerprint_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool oh_fingerprint_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool tls_client_certificate_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static host_api::HttpReq request_handle(JSContext *cx, JS::HandleObject self);
+  static JSString *retrieve_client_address(JSContext *cx, JS::HandleObject self);
 
 public:
   static constexpr const char *class_name = "ClientInfo";
 
   enum class Slots {
+    Request,
     Address,
     GeoInfo,
     Cipher,
@@ -41,16 +45,19 @@ public:
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 
-  static JSObject *create(JSContext *cx);
+  static JSObject *create(JSContext *cx, JS::HandleValue req);
 };
 
 class ServerInfo final : public builtins::BuiltinNoConstructor<ServerInfo> {
   static bool address_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static host_api::HttpReq request_handle(JSContext *cx, JS::HandleObject self);
+  static JSString *retrieve_server_address(JSContext *cx, JS::HandleObject self);
 
 public:
   static constexpr const char *class_name = "ServerInfo";
 
   enum class Slots {
+    Request,
     Address,
     Count,
   };
@@ -59,7 +66,7 @@ public:
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
 
-  static JSObject *create(JSContext *cx);
+  static JSObject *create(JSContext *cx, JS::HandleValue req);
 };
 
 void dispatch_fetch_event(HandleObject event);
@@ -101,6 +108,7 @@ public:
   static const JSPropertySpec properties[];
 
   static JSObject *create(JSContext *cx);
+  static bool reset(JSContext *cx, JS::HandleObject self);
 
   /**
    * Create a Request object for the incoming request.
