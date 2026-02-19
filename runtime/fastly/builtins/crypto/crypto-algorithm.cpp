@@ -1838,11 +1838,57 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext *cx, Cryp
     // 9. Return key.
     return CryptoKey::createRSA(cx, this, std::move(key), extractable, usages);
   }
+  // 2. If format is "spki":
   case CryptoKeyFormat::Spki:
+    // 2.1. If usages contains an entry which is not "verify", then throw a SyntaxError.
+    if (!usages.canOnlyVerify()) {
+      DOMException::raise(cx, "spki format usage can only be 'verify'", "SyntaxError");
+    }
+
+    std::vector<uint8_t> spki_data;
+    // Uh, this doesn't seem right.
+    auto _spki_data = std::get<std::span<uint8_t>>(keyData);
+    spki_data.assign(_spki_data.begin(), _spki_data.end());
+
+    fastly::sys::asn::SubjectPublicKeyInfo *spki_raw;
+    std::string spki_parse_err;
+    if (!fastly::sys::asn::decode_spki(spki_data, spki_raw, spki_parse_err)) {
+      DOMException::raise(cx, spki_parse_err, "DataError");
+    }
+
+    auto spki(::rust::Box::from_raw(spki_raw));
+
+    if (!spki->is_rsa()) {
+      DOMException::raise(cx, "algorithm not RSA", "DataError");
+    }
+
+    fastly::sys::asn::RSAPublicKey *public_key_raw;
+    std::string public_key_parse_err;
+    if (!spki->decode_public_key(public_key_raw, public_key_parse_err)) {
+      DOMException::raise(cx, public_key_parse_err, "DataError");
+    }
+
+    auto public_key(::rust::Box::from_raw(public_key_raw));
+
+    std::string modulus;
+    std::string exponent;
+    public_key->details(modulus, exponent);
+    auto publicKeyComponents = CryptoKeyRSAComponents::createPublic(modulus, exponent);
+    if (!publicKeyComponents) {
+      return nullptr;
+    }
+    return CryptoKey::createRSA(cx, this, std::move(publicKeyComponents), extractable, usages);
+
   case CryptoKeyFormat::Pkcs8: {
-    // TODO: Add implementations for these
-    std::cerr << "Falling through" << std::endl;
-    [[fallthrough]];
+    // 2.1. If usages contains an entry which is not "sign" then throw a SyntaxError.
+    if (!usages.canOnlySign()) {
+      DOMException::raise(cx, "pkcs8 format usage can only be 'sign'", "SyntaxError");
+    }
+    auto privateKeyComponents = CryptoKeyRSAComponents::createPrivate(modulus, exponent, privateExponent);
+    if (!privateKeyComponents) {
+      return nullptr;
+    }
+    return CryptoKey::createRSA(cx, this, std::move(privateKeyComponents), extractable, usages);
   }
   default: {
     DOMException::raise(cx, "Supplied format is not supported", "DataError");
