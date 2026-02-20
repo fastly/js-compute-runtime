@@ -1650,6 +1650,35 @@ Result<Void> HttpReq::set_framing_headers_mode(FramingHeadersMode mode) {
   return res;
 }
 
+// http-req-downstream-client-request-id: func() -> result<option<string>, error>
+Result<std::optional<HostString>> HttpReq::http_req_downstream_client_request_id() {
+  TRACE_CALL()
+  Result<std::optional<HostString>> res;
+
+  fastly::fastly_host_error err;
+  fastly::fastly_world_string ret;
+  auto default_size = 128;
+  ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
+  auto status =
+      fastly::http_downstream_client_request_id(this->handle, ret.ptr, default_size, &ret.len);
+  if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
+    status = fastly::http_downstream_client_request_id(this->handle, ret.ptr, ret.len, &ret.len);
+  }
+  if (!convert_result(status, &err)) {
+    cabi_free(ret.ptr);
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(make_host_string(ret));
+  }
+
+  return res;
+}
+
 Result<HostBytes> HttpReq::downstream_client_ip_addr() {
   TRACE_CALL()
   Result<HostBytes> res;
