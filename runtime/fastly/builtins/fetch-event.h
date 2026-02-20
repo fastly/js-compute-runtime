@@ -10,6 +10,7 @@
 namespace fastly::fetch_event {
 
 class ClientInfo final : public builtins::BuiltinNoConstructor<ClientInfo> {
+  static bool request_id_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool address_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool geo_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -38,6 +39,7 @@ public:
     H2Fingerprint,
     OHFingerprint,
     ClientCert,
+    ClientRequestId,
     Count,
   };
   static const JSFunctionSpec static_methods[];

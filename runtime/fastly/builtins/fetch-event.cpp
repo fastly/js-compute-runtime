@@ -30,6 +30,12 @@ namespace fastly::fetch_event {
 
 namespace {
 
+JSString *client_request_id(JSObject *obj) {
+  JS::Value val =
+      JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::ClientRequestId));
+  return val.isString() ? val.toString() : nullptr;
+}
+
 JSString *client_address(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::Address));
   return val.isString() ? val.toString() : nullptr;
@@ -94,6 +100,26 @@ JSString *ClientInfo::retrieve_client_address(JSContext *cx, JS::HandleObject se
 host_api::HttpReq ClientInfo::request_handle(JSContext *cx, JS::HandleObject self) {
   JS::RootedValue req(cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Request)));
   return Request::request_handle(&req.toObject());
+}
+
+bool ClientInfo::request_id_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  JS::RootedString result(cx, client_request_id(self));
+  if (!result) {
+    auto res = request_handle(cx, self).http_req_downstream_client_request_id();
+    if (res.to_err() || !res.unwrap().has_value()) {
+      args.rval().setNull();
+      return true;
+    }
+
+    auto h2fp_str = std::move(res.unwrap().value());
+    result.set(JS_NewStringCopyN(cx, h2fp_str.ptr.get(), h2fp_str.len));
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::ClientRequestId),
+                        JS::StringValue(result));
+  }
+  args.rval().setString(result);
+  return true;
 }
 
 bool ClientInfo::address_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -408,6 +434,7 @@ const JSFunctionSpec ClientInfo::methods[] = {
 };
 
 const JSPropertySpec ClientInfo::properties[] = {
+    JS_PSG("requestId", request_id_get, JSPROP_ENUMERATE),
     JS_PSG("address", address_get, JSPROP_ENUMERATE),
     JS_PSG("geo", geo_get, JSPROP_ENUMERATE),
     JS_PSG("tlsCipherOpensslName", tls_cipher_openssl_name_get, JSPROP_ENUMERATE),
