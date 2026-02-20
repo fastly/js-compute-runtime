@@ -108,8 +108,11 @@ declare module 'fastly:experimental' {
    * Configure reuse of the same underlying sandbox for multiple requests,
    * which can improve performance by avoiding the overhead of initializing a
    * new sandbox for each request.
-   * @experimental
+   *
    * @param options - Configuration options for sandbox reuse
+   *
+   * **Note**: Can only be used during build-time initialization, not when processing requests.
+   * @experimental
    */
   export function setReusableSandboxOptions(
     options: ReusableSandboxOptions,
