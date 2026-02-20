@@ -433,6 +433,7 @@ declare interface ClientInfo {
    * While always defined on Fastly compute, on environments where these fields are unavailable,
    * such as Viceroy, these fields may return *null*.
    */
+  readonly requestId: string;
   readonly address: string;
   readonly geo: import('fastly:geolocation').Geolocation | null;
   readonly tlsJA3MD5: string | null;

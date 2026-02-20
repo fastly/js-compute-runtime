@@ -1,6 +1,18 @@
 import { strictEqual } from './assertions.js';
 import { routes, isRunningLocally } from './routes.js';
 
+routes.set('/client/requestId', (event) => {
+  strictEqual(
+    typeof event.client.requestId,
+    'string',
+    'typeof event.client.requestId',
+  );
+  strictEqual(
+    event.client.requestId.length,
+    32,
+    'event.client.requestId.length',
+  );
+});
 routes.set('/client/tlsJA3MD5', (event) => {
   if (isRunningLocally()) {
     strictEqual(event.client.tlsJA3MD5, null);

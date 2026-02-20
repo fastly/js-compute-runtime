@@ -538,6 +538,10 @@ int req_cache_override_v2_set(uint32_t req_handle, int tag, uint32_t ttl,
 WASM_IMPORT("fastly_http_req", "auto_decompress_response_set")
 int req_auto_decompress_response_set(uint32_t req_handle, int tag);
 
+WASM_IMPORT("fastly_http_downstream", "downstream_client_request_id")
+int http_downstream_client_request_id(uint32_t req_handle, uint8_t *ret, size_t ret_len,
+                                      size_t *nwritten);
+
 /**
  * `octets` must be a 16-byte array.
  * If, after a successful call, `nwritten` == 4, the value in `octets` is an IPv4 address.

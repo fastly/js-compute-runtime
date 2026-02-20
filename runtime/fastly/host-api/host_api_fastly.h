@@ -572,6 +572,8 @@ public:
   static Result<Void> register_dynamic_backend(std::string_view name, std::string_view target,
                                                const BackendConfig &config);
 
+  Result<std::optional<HostString>> http_req_downstream_client_request_id();
+
   /// Get the downstream ip address.
   Result<HostBytes> downstream_client_ip_addr();
 
