@@ -3142,6 +3142,33 @@
       }
     }
   },
+  "GET /early-hints/manual-response-late": {
+    "environments": ["compute"],
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /early-hints/manual-response-async": {
+    "environments": ["compute"],
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    },
+    "downstream_info": {
+      "status": 103,
+      "headers": {
+        "link": "</style.css>; rel=preload; as=style"
+      }
+    }
+  },
+  "GET /early-hints/manual-response-late-async": {
+    "environments": ["compute"],
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
   "GET /early-hints/send-early-hints": {
     "environments": ["compute"],
     "downstream_response": {
@@ -3153,6 +3180,13 @@
       "headers": {
         "link": "</style.css>; rel=preload; as=style"
       }
+    }
+  },
+  "GET /early-hints/send-early-hints-late": {
+    "environments": ["compute"],
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
     }
   },
   "GET /early-hints/send-early-hints-multiple-headers": {
@@ -3167,6 +3201,26 @@
         ["link", "</style.css>; rel=preload; as=style"],
         ["link", "</style2.css>; rel=preload; as=style"]
       ]
+    }
+  },
+  "GET /early-hints/send-early-hints-async": {
+    "environments": ["compute"],
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    },
+    "downstream_info": {
+      "status": 103,
+      "headers": {
+        "link": "</style.css>; rel=preload; as=style"
+      }
+    }
+  },
+  "GET /early-hints/send-early-hints-late-async": {
+    "environments": ["compute"],
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
     }
   },
   "GET /shielding/invalid-shield": {
