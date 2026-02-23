@@ -1,4 +1,6 @@
-use rasn::uper::de::DecodeError;
+use std::pin::Pin;
+
+use cxx::{CxxString, CxxVector};
 
 mod generated;
 
@@ -6,7 +8,7 @@ use generated::x509::*;
 
 pub fn decode_spki(
     data: &CxxVector<u8>,
-    out: Pin<&mut *mut SubjectPublicKeyInfo>,
+    mut out: Pin<&mut *mut SubjectPublicKeyInfo>,
     err: Pin<&mut CxxString>,
 ) -> bool {
     match rasn::der::decode(data.as_slice()) {
@@ -14,8 +16,8 @@ pub fn decode_spki(
             out.set(Box::into_raw(Box::new(spki)));
             true
         }
-        Err(err) => {
-            err.push_bytes(format!("{err}").as_ref());
+        Err(e) => {
+            err.push_bytes(format!("{e}").as_ref());
             false
         }
     }
@@ -23,16 +25,16 @@ pub fn decode_spki(
 
 pub fn decode_pkcs8(
     data: &CxxVector<u8>,
-    out: Pin<&mut *mut PrivateKeyInfo>,
+    mut out: Pin<&mut *mut PrivateKeyInfo>,
     err: Pin<&mut CxxString>,
 ) -> bool {
     match rasn::der::decode(data.as_slice()) {
         Ok(pkcs8) => {
-            out.set(Box::into_raw(Box::new(spki)));
+            out.set(Box::into_raw(Box::new(pkcs8)));
             true
         }
-        Err(err) => {
-            err.push_bytes(format!("{err}").as_ref());
+        Err(e) => {
+            err.push_bytes(format!("{e}").as_ref());
             false
         }
     }
@@ -41,6 +43,23 @@ pub fn decode_pkcs8(
 impl SubjectPublicKeyInfo {
     pub fn is_rsa(&self) -> bool {
         self.algorithm.algorithm == *RSA_ENCRYPTION
+    }
+
+    pub fn decode_public_key(
+        &self,
+        mut out: Pin<&mut *mut RSAPublicKey>,
+        err: Pin<&mut CxxString>,
+    ) -> bool {
+        match rasn::der::decode(self.subject_public_key.as_raw_slice()) {
+            Ok(pubkey) => {
+                out.set(Box::into_raw(Box::new(pubkey)));
+                true
+            }
+            Err(e) => {
+                err.push_bytes(format!("{e}").as_ref());
+                false
+            }
+        }
     }
 }
 
@@ -63,6 +82,11 @@ mod ffi {
     extern "Rust" {
         type SubjectPublicKeyInfo;
         fn is_rsa(&self) -> bool;
+        fn decode_public_key(
+            &self,
+            mut out: Pin<&mut *mut RSAPublicKey>,
+            err: Pin<&mut CxxString>,
+        ) -> bool;
         fn decode_spki(
             data: &CxxVector<u8>,
             out: Pin<&mut *mut SubjectPublicKeyInfo>,

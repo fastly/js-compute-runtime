@@ -6,3 +6,6 @@ edition = "2024"
 [dependencies]
 cxx = "1.0"
 rasn = "=0.28.7"
+
+[build-dependencies]
+cxx-build = "1.0"

@@ -7,6 +7,9 @@
 #include <span>
 #include <vector>
 
+#include "cxx.h"
+#include "lib.rs.h"
+
 #include "../../../StarlingMonkey/builtins/web/base64.h"
 #include "../../../StarlingMonkey/builtins/web/dom-exception.h"
 #include "crypto-algorithm.h"
@@ -155,7 +158,8 @@ std::unique_ptr<CryptoKeyRSAComponents> createRSAPublicKeyFromJWK(JSContext *cx,
                         "DataError");
     return nullptr;
   }
-  auto modulusResult = builtins::web::base64::forgivingBase64Decode(jwk->n.value(), builtins::web::base64::base64URLDecodeTable);
+  auto modulusResult = builtins::web::base64::forgivingBase64Decode(
+      jwk->n.value(), builtins::web::base64::base64URLDecodeTable);
   if (modulusResult.isErr()) {
     DOMException::raise(
         cx, "The JWK member 'n' could not be base64url decoded or contained padding", "DataError");
@@ -174,7 +178,8 @@ std::unique_ptr<CryptoKeyRSAComponents> createRSAPublicKeyFromJWK(JSContext *cx,
     return nullptr;
   }
   auto data = dataResult.unwrap();
-  auto exponentResult = builtins::web::base64::forgivingBase64Decode(data, builtins::web::base64::base64URLDecodeTable);
+  auto exponentResult = builtins::web::base64::forgivingBase64Decode(
+      data, builtins::web::base64::base64URLDecodeTable);
   if (exponentResult.isErr()) {
     DOMException::raise(
         cx, "The JWK member 'e' could not be base64url decoded or contained padding", "DataError");
@@ -193,14 +198,16 @@ std::unique_ptr<CryptoKeyECComponents> createECPublicKeyFromJWK(JSContext *cx, J
                         "DataError");
     return nullptr;
   }
-  auto xResult = builtins::web::base64::forgivingBase64Decode(jwk->x.value(), builtins::web::base64::base64URLDecodeTable);
+  auto xResult = builtins::web::base64::forgivingBase64Decode(
+      jwk->x.value(), builtins::web::base64::base64URLDecodeTable);
   if (xResult.isErr()) {
     DOMException::raise(
         cx, "The JWK member 'x' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto x = xResult.unwrap();
-  auto yResult = builtins::web::base64::forgivingBase64Decode(jwk->y.value(), builtins::web::base64::base64URLDecodeTable);
+  auto yResult = builtins::web::base64::forgivingBase64Decode(
+      jwk->y.value(), builtins::web::base64::base64URLDecodeTable);
   if (yResult.isErr()) {
     DOMException::raise(
         cx, "The JWK member 'y' could not be base64url decoded or contained padding", "DataError");
@@ -217,21 +224,24 @@ std::unique_ptr<CryptoKeyECComponents> createECPrivateKeyFromJWK(JSContext *cx, 
                         "DataError");
     return nullptr;
   }
-  auto xResult = builtins::web::base64::forgivingBase64Decode(jwk->x.value(), builtins::web::base64::base64URLDecodeTable);
+  auto xResult = builtins::web::base64::forgivingBase64Decode(
+      jwk->x.value(), builtins::web::base64::base64URLDecodeTable);
   if (xResult.isErr()) {
     DOMException::raise(
         cx, "The JWK member 'x' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto x = xResult.unwrap();
-  auto yResult = builtins::web::base64::forgivingBase64Decode(jwk->y.value(), builtins::web::base64::base64URLDecodeTable);
+  auto yResult = builtins::web::base64::forgivingBase64Decode(
+      jwk->y.value(), builtins::web::base64::base64URLDecodeTable);
   if (yResult.isErr()) {
     DOMException::raise(
         cx, "The JWK member 'y' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto y = yResult.unwrap();
-  auto dResult = builtins::web::base64::forgivingBase64Decode(jwk->d.value(), builtins::web::base64::base64URLDecodeTable);
+  auto dResult = builtins::web::base64::forgivingBase64Decode(
+      jwk->d.value(), builtins::web::base64::base64URLDecodeTable);
   if (dResult.isErr()) {
     DOMException::raise(
         cx, "The JWK member 'd' could not be base64url decoded or contained padding", "DataError");
@@ -248,7 +258,8 @@ std::unique_ptr<CryptoKeyRSAComponents> createRSAPrivateKeyFromJWK(JSContext *cx
   // then throw a DataError. 2.10.2 Let privateKey represents the RSA private key identified by
   // interpreting jwk according to Section 6.3.2 of JSON Web Algorithms [JWA]. 2.10.3 If privateKey
   // is not a valid RSA private key according to [RFC3447], then throw a DataError.
-  auto modulusResult = builtins::web::base64::forgivingBase64Decode(jwk->n.value(), builtins::web::base64::base64URLDecodeTable);
+  auto modulusResult = builtins::web::base64::forgivingBase64Decode(
+      jwk->n.value(), builtins::web::base64::base64URLDecodeTable);
   if (modulusResult.isErr()) {
     DOMException::raise(
         cx, "The JWK member 'n' could not be base64url decoded or contained padding", "DataError");
@@ -265,15 +276,16 @@ std::unique_ptr<CryptoKeyRSAComponents> createRSAPrivateKeyFromJWK(JSContext *cx
                         "DataError");
   }
   auto data = dataResult.unwrap();
-  auto exponentResult = builtins::web::base64::forgivingBase64Decode(data, builtins::web::base64::base64URLDecodeTable);
+  auto exponentResult = builtins::web::base64::forgivingBase64Decode(
+      data, builtins::web::base64::base64URLDecodeTable);
   if (exponentResult.isErr()) {
     DOMException::raise(
         cx, "The JWK member 'e' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto exponent = exponentResult.unwrap();
-  auto privateExponentResult =
-      builtins::web::base64::forgivingBase64Decode(jwk->d.value(), builtins::web::base64::base64URLDecodeTable);
+  auto privateExponentResult = builtins::web::base64::forgivingBase64Decode(
+      jwk->d.value(), builtins::web::base64::base64URLDecodeTable);
   if (privateExponentResult.isErr()) {
     DOMException::raise(
         cx, "The JWK member 'd' could not be base64url decoded or contained padding", "DataError");
@@ -294,40 +306,40 @@ std::unique_ptr<CryptoKeyRSAComponents> createRSAPrivateKeyFromJWK(JSContext *cx
     return nullptr;
   }
 
-  auto firstPrimeFactorResult =
-      builtins::web::base64::forgivingBase64Decode(jwk->p.value(), builtins::web::base64::base64URLDecodeTable);
+  auto firstPrimeFactorResult = builtins::web::base64::forgivingBase64Decode(
+      jwk->p.value(), builtins::web::base64::base64URLDecodeTable);
   if (firstPrimeFactorResult.isErr()) {
     DOMException::raise(
         cx, "The JWK member 'p' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto firstPrimeFactor = firstPrimeFactorResult.unwrap();
-  auto firstFactorCRTExponentResult =
-      builtins::web::base64::forgivingBase64Decode(jwk->dp.value(), builtins::web::base64::base64URLDecodeTable);
+  auto firstFactorCRTExponentResult = builtins::web::base64::forgivingBase64Decode(
+      jwk->dp.value(), builtins::web::base64::base64URLDecodeTable);
   if (firstFactorCRTExponentResult.isErr()) {
     DOMException::raise(
         cx, "The JWK member 'dp' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto firstFactorCRTExponent = firstFactorCRTExponentResult.unwrap();
-  auto secondPrimeFactorResult =
-      builtins::web::base64::forgivingBase64Decode(jwk->q.value(), builtins::web::base64::base64URLDecodeTable);
+  auto secondPrimeFactorResult = builtins::web::base64::forgivingBase64Decode(
+      jwk->q.value(), builtins::web::base64::base64URLDecodeTable);
   if (secondPrimeFactorResult.isErr()) {
     DOMException::raise(
         cx, "The JWK member 'q' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto secondPrimeFactor = secondPrimeFactorResult.unwrap();
-  auto secondFactorCRTExponentResult =
-      builtins::web::base64::forgivingBase64Decode(jwk->dq.value(), builtins::web::base64::base64URLDecodeTable);
+  auto secondFactorCRTExponentResult = builtins::web::base64::forgivingBase64Decode(
+      jwk->dq.value(), builtins::web::base64::base64URLDecodeTable);
   if (secondFactorCRTExponentResult.isErr()) {
     DOMException::raise(
         cx, "The JWK member 'dq' could not be base64url decoded or contained padding", "DataError");
     return nullptr;
   }
   auto secondFactorCRTExponent = secondFactorCRTExponentResult.unwrap();
-  auto secondFactorCRTCoefficientResult =
-      builtins::web::base64::forgivingBase64Decode(jwk->qi.value(), builtins::web::base64::base64URLDecodeTable);
+  auto secondFactorCRTCoefficientResult = builtins::web::base64::forgivingBase64Decode(
+      jwk->qi.value(), builtins::web::base64::base64URLDecodeTable);
   if (secondFactorCRTCoefficientResult.isErr()) {
     DOMException::raise(
         cx, "The JWK member 'qi' could not be base64url decoded or contained padding", "DataError");
@@ -348,19 +360,20 @@ std::unique_ptr<CryptoKeyRSAComponents> createRSAPrivateKeyFromJWK(JSContext *cx
 
   std::vector<CryptoKeyRSAComponents::PrimeInfo> otherPrimeInfos;
   for (const auto &value : jwk->oth) {
-    auto primeFactorResult = builtins::web::base64::forgivingBase64Decode(value.r, builtins::web::base64::base64URLDecodeTable);
+    auto primeFactorResult = builtins::web::base64::forgivingBase64Decode(
+        value.r, builtins::web::base64::base64URLDecodeTable);
     if (primeFactorResult.isErr()) {
       return nullptr;
     }
     auto primeFactor = primeFactorResult.unwrap();
-    auto factorCRTExponentResult =
-        builtins::web::base64::forgivingBase64Decode(value.d, builtins::web::base64::base64URLDecodeTable);
+    auto factorCRTExponentResult = builtins::web::base64::forgivingBase64Decode(
+        value.d, builtins::web::base64::base64URLDecodeTable);
     if (factorCRTExponentResult.isErr()) {
       return nullptr;
     }
     auto factorCRTExponent = factorCRTExponentResult.unwrap();
-    auto factorCRTCoefficientResult =
-        builtins::web::base64::forgivingBase64Decode(value.t, builtins::web::base64::base64URLDecodeTable);
+    auto factorCRTCoefficientResult = builtins::web::base64::forgivingBase64Decode(
+        value.t, builtins::web::base64::base64URLDecodeTable);
     if (factorCRTCoefficientResult.isErr()) {
       return nullptr;
     }
@@ -1856,7 +1869,7 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext *cx, Cryp
       DOMException::raise(cx, spki_parse_err, "DataError");
     }
 
-    auto spki(::rust::Box::from_raw(spki_raw));
+    auto spki(::rust::Box<fastly::sys::asn::SubjectPublicKeyInfo>::from_raw(spki_raw));
 
     if (!spki->is_rsa()) {
       DOMException::raise(cx, "algorithm not RSA", "DataError");
@@ -1868,7 +1881,7 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext *cx, Cryp
       DOMException::raise(cx, public_key_parse_err, "DataError");
     }
 
-    auto public_key(::rust::Box::from_raw(public_key_raw));
+    auto public_key(::rust::Box<fastly::sys::asn::RSAPublicKey>::from_raw(public_key_raw));
 
     std::string modulus;
     std::string exponent;
@@ -1879,17 +1892,17 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext *cx, Cryp
     }
     return CryptoKey::createRSA(cx, this, std::move(publicKeyComponents), extractable, usages);
 
-  case CryptoKeyFormat::Pkcs8: {
+  case CryptoKeyFormat::Pkcs8:
     // 2.1. If usages contains an entry which is not "sign" then throw a SyntaxError.
-    if (!usages.canOnlySign()) {
-      DOMException::raise(cx, "pkcs8 format usage can only be 'sign'", "SyntaxError");
-    }
-    auto privateKeyComponents = CryptoKeyRSAComponents::createPrivate(modulus, exponent, privateExponent);
-    if (!privateKeyComponents) {
-      return nullptr;
-    }
-    return CryptoKey::createRSA(cx, this, std::move(privateKeyComponents), extractable, usages);
-  }
+    // if (!usages.canOnlySign()) {
+    //   DOMException::raise(cx, "pkcs8 format usage can only be 'sign'", "SyntaxError");
+    // }
+    // auto privateKeyComponents = CryptoKeyRSAComponents::createPrivate(modulus, exponent, privateExponent);
+    // if (!privateKeyComponents) {
+    //   return nullptr;
+    // }
+    // return CryptoKey::createRSA(cx, this, std::move(privateKeyComponents), extractable, usages);
+    [[fallthrough]];
   default: {
     DOMException::raise(cx, "Supplied format is not supported", "DataError");
     return nullptr;

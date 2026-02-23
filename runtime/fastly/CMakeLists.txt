@@ -61,6 +61,8 @@ add_builtin(fastly::html_rewriter
     ${CMAKE_CURRENT_SOURCE_DIR}/crates/rust-lol-html/include
 )
 
+add_rust_lib(crypto-rasn-wrapper "${CMAKE_CURRENT_SOURCE_DIR}/crates/crypto-rasn-wrapper")
+
 add_builtin(
     fastly::crypto
     SRC
@@ -74,9 +76,13 @@ add_builtin(
         builtins/crypto/uuid.cpp
     DEPENDENCIES
         OpenSSL::Crypto
+        crypto-rasn-wrapper
         fmt
     INCLUDE_DIRS
-        runtime)
+        runtime
+        ${CMAKE_CURRENT_SOURCE_DIR}/crates/crypto-rasn-wrapper/target/cxxbridge/crypto-rasn-wrapper/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/crates/crypto-rasn-wrapper/target/cxxbridge/rust
+    )
 
 add_compile_definitions(PUBLIC RUNTIME_VERSION=${RUNTIME_VERSION})
 
