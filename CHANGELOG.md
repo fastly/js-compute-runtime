@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.40.1 (2026-02-24)
+
+### Fixed
+
+* **early-hints:** early hints don't need to be sync inside a FetchEve… ([#1323](https://github.com/fastly/js-compute-runtime/issues/1323)) ([22ac0cc](https://github.com/fastly/js-compute-runtime/commit/22ac0ccd3205a0136e39621e2cfe93968a5be9f3))
+
 ## 3.40.0 (2026-02-17)
 
 ### Added
