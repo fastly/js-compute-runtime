@@ -908,11 +908,6 @@ bool FetchEvent::sendEarlyHints(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
   MOZ_RELEASE_ASSERT(state(self) == State::unhandled || state(self) == State::waitToRespond);
 
-  if (!is_dispatching(self)) {
-    JS_ReportErrorUTF8(cx, "FetchEvent#sendEarlyHints must be called synchronously from "
-                           "within a FetchEvent handler");
-    return false;
-  }
   if (state(self) != State::unhandled && state(self) != State::waitToRespond) {
     JS_ReportErrorUTF8(
         cx, "FetchEvent#sendEarlyHints can't be called after the main response has been sent");
