@@ -139,24 +139,24 @@ declare module 'fastly:backend' {
      * Setting to boolean true enables keepalive with the default options.
      */
     tcpKeepalive?:
-    | boolean
-    | {
-      /**
-       * Configure how long to wait after the last sent data over the TCP connection before
-       * starting to send TCP keepalive probes.
-       */
-      timeSecs?: number;
+      | boolean
+      | {
+          /**
+           * Configure how long to wait after the last sent data over the TCP connection before
+           * starting to send TCP keepalive probes.
+           */
+          timeSecs?: number;
 
-      /**
-       * Configure how long to wait between each TCP keepalive probe sent to the backend to determine if it is still active.
-       */
-      intervalSecs?: number;
+          /**
+           * Configure how long to wait between each TCP keepalive probe sent to the backend to determine if it is still active.
+           */
+          intervalSecs?: number;
 
-      /**
-       * Number of probes to send to the backend before it is considered dead.
-       */
-      probes?: number;
-    };
+          /**
+           * Number of probes to send to the backend before it is considered dead.
+           */
+          probes?: number;
+        };
   }
 
   interface BackendConfiguration extends DefaultBackendConfiguration {
