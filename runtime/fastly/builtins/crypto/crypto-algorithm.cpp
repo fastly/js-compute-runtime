@@ -7,8 +7,7 @@
 #include <span>
 #include <vector>
 
-#include "cxx.h"
-#include "lib.rs.h"
+#include "rust-rasn.h"
 
 #include "../../../StarlingMonkey/builtins/web/base64.h"
 #include "../../../StarlingMonkey/builtins/web/dom-exception.h"
@@ -1852,57 +1851,111 @@ JSObject *CryptoAlgorithmRSASSA_PKCS1_v1_5_Import::importKey(JSContext *cx, Cryp
     return CryptoKey::createRSA(cx, this, std::move(key), extractable, usages);
   }
   // 2. If format is "spki":
-  case CryptoKeyFormat::Spki:
+  case CryptoKeyFormat::Spki: {
     // 2.1. If usages contains an entry which is not "verify", then throw a SyntaxError.
     if (!usages.canOnlyVerify()) {
       DOMException::raise(cx, "spki format usage can only be 'verify'", "SyntaxError");
     }
 
-    std::vector<uint8_t> spki_data;
-    // Uh, this doesn't seem right.
+    // Uh, this doesn't seem right?
     auto _spki_data = std::get<std::span<uint8_t>>(keyData);
-    spki_data.assign(_spki_data.begin(), _spki_data.end());
-
-    fastly::sys::asn::SubjectPublicKeyInfo *spki_raw;
-    std::string spki_parse_err;
-    if (!fastly::sys::asn::decode_spki(spki_data, spki_raw, spki_parse_err)) {
+    std::vector<uint8_t> spki_data(_spki_data.begin(), _spki_data.end());
+    rasn::SubjectPublicKeyInfo *spki;
+    rasn::SpecString *spki_parse_err;
+    // 2.2.  Let spki be the result of running the parse a subjectPublicKeyInfo
+    // algorithm over keyData.
+    if (!rasn::decode_spki(spki_data, &spki, &spki_parse_err)) {
+      // 2.3. If an error occurred while parsing, then throw a DataError.
       DOMException::raise(cx, spki_parse_err, "DataError");
     }
 
-    auto spki(::rust::Box<fastly::sys::asn::SubjectPublicKeyInfo>::from_raw(spki_raw));
-
-    if (!spki->is_rsa()) {
+    // 2.4. If the algorithm object identifier field of the algorithm
+    // AlgorithmIdentifier field of spki is not equal to the rsaEncryption
+    // object identifier defined in [RFC3447], then throw a DataError.
+    if (!spki_is_rsa(spki)) {
       DOMException::raise(cx, "algorithm not RSA", "DataError");
     }
 
-    fastly::sys::asn::RSAPublicKey *public_key_raw;
+    fastly::sys::asn::RSAPublicKey *public_key;
     std::string public_key_parse_err;
-    if (!spki->decode_public_key(public_key_raw, public_key_parse_err)) {
+
+    // 2.5. Let publicKey be the result of performing the parse an ASN.1
+    // structure algorithm, with data as the subjectPublicKeyInfo field of spki,
+    // structure as the RSAPublicKey structure specified in Section A.1.1 of
+    // [RFC3447], and exactData set to true.
+    if (!decode_spki(spki, &public_key, &public_key_parse_err)) {
+      // 2.6. If an error occurred while parsing, or it can be determined that
+      // publicKey is not a valid public key according to [RFC3447], then throw
+      // a DataError.
       DOMException::raise(cx, public_key_parse_err, "DataError");
     }
 
-    auto public_key(::rust::Box<fastly::sys::asn::RSAPublicKey>::from_raw(public_key_raw));
-
-    std::string modulus;
-    std::string exponent;
-    public_key->details(modulus, exponent);
+    // 2.7. Let key be a new CryptoKey that represents the RSA public key identified by publicKey.
+    // 2.8. Set the [[type]] internal slot of key to "public"
+    auto modulus = rsa_pubkey_modulus(public_key);
+    auto exponent = rsa_pubkey_exponent(public_key);
     auto publicKeyComponents = CryptoKeyRSAComponents::createPublic(modulus, exponent);
     if (!publicKeyComponents) {
       return nullptr;
     }
     return CryptoKey::createRSA(cx, this, std::move(publicKeyComponents), extractable, usages);
-
-  case CryptoKeyFormat::Pkcs8:
+  }
+  case CryptoKeyFormat::Pkcs8: {
     // 2.1. If usages contains an entry which is not "sign" then throw a SyntaxError.
-    // if (!usages.canOnlySign()) {
-    //   DOMException::raise(cx, "pkcs8 format usage can only be 'sign'", "SyntaxError");
-    // }
-    // auto privateKeyComponents = CryptoKeyRSAComponents::createPrivate(modulus, exponent, privateExponent);
-    // if (!privateKeyComponents) {
-    //   return nullptr;
-    // }
-    // return CryptoKey::createRSA(cx, this, std::move(privateKeyComponents), extractable, usages);
-    [[fallthrough]];
+    if (!usages.canOnlySign()) {
+      DOMException::raise(cx, "pkcs8 format usage can only be 'sign'", "SyntaxError");
+    }
+
+    // 2.2. Let privateKeyInfo be the result of running the parse a
+    // privateKeyInfo algorithm over keyData.
+
+    // Uh, this doesn't seem right?
+    auto _pkcs8_data = std::get<std::span<uint8_t>>(keyData);
+    std::vector<uint8_t> pkcs8_data(_pkcs8_data.begin(), _pkcs8_data.end());
+    fastly::sys::asn::PrivateKeyInfo *pkcs8_raw;
+    std::string pkcs8_parse_err;
+    if (!fastly::sys::asn::decode_pkcs8(pkcs8_data, pkcs8_raw, pkcs8_parse_err)) {
+      // 2.3. If an error occurred while parsing, then throw a DataError.
+      DOMException::raise(cx, spki_parse_err, "DataError");
+    }
+
+    auto pkcs8(::rust::Box<fastly::sys::asn::PrivateKeyInfo>::from_raw(spki_raw));
+
+    // 2.4. If the algorithm object identifier field of the privateKeyAlgorithm
+    // PrivateKeyAlgorithm field of privateKeyInfo is not equal to the
+    // rsaEncryption object identifier defined in [RFC3447], then throw a
+    // DataError.
+    if (!pkcs8->is_rsa()) {
+      DOMException::raise(cx, "algorithm not RSA", "DataError");
+    }
+
+    fastly::sys::asn::RSAPrivateKey *private_key_raw;
+    std::string private_key_parse_err;
+
+    // 2.5. Let rsaPrivateKey be the result of performing the parse an ASN.1
+    // structure algorithm, with data as the privateKey field of privateKeyInfo,
+    // structure as the RSAPrivateKey structure specified in Section A.1.2 of
+    // [RFC3447], and exactData set to true.
+    if (!pkcs8->decode_private_key(private_key_raw, private_key_parse_err)) {
+      // 2.6. If an error occurred while parsing, or if rsaPrivateKey is not a
+      // valid RSA private key according to [RFC3447], then throw a DataError.
+      DOMException::raise(cx, private_key_parse_err, "DataError");
+    }
+
+    auto private_key(::rust::Box<fastly::sys::asn::RSAPrivateKey>::from_raw(private_key_raw));
+
+    // 2.7. Let key be a new CryptoKey that represents the RSA private key identified by rsaPrivateKey.
+    // 2.8. Set the [[type]] internal slot of key to "private"
+    std::string modulus;
+    std::string exponent;
+    std::string privateExponent;
+    private_key->details(modulus, exponent, privateExponent);
+    auto privateKeyComponents = CryptoKeyRSAComponents::createPrivate(modulus, exponent, privateExponent);
+    if (!privateKeyComponents) {
+      return nullptr;
+    }
+    return CryptoKey::createRSA(cx, this, std::move(privateKeyComponents), extractable, usages);
+  }
   default: {
     DOMException::raise(cx, "Supplied format is not supported", "DataError");
     return nullptr;
