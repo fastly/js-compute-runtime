@@ -9,6 +9,7 @@ declare module 'fastly:backend' {
    * implicitly created when using {@link fetch | fetch()}.
    *
    * @param defaultDynamicBackendConfiguration default backend configuration options
+   * @version 3.24.0 
    */
   export function setDefaultDynamicBackendConfig(
     defaultDynamicBackendConfiguration: DefaultBackendConfiguration,
@@ -33,6 +34,7 @@ declare module 'fastly:backend' {
    *
    * @param defaultBackend the name of the default backend to use, when using {@link fetch | fetch()}.
    *
+   * @version 3.24.0
    * @experimental
    */
   export function enforceExplicitBackends(defaultBackend?: string): void;
@@ -78,6 +80,7 @@ declare module 'fastly:backend' {
      * In those cases, when pooling is enabled, if Session 1 opens a connection to this backend it will be left open, and can be re-used by Session 2.
      * This can help improve backend latency, by removing the need for the initial network / TLS handshake(s).
      * By default, pooling is enabled for dynamic backends.
+     * @version 3.1.0
      */
     dontPool?: boolean;
     /**
@@ -123,6 +126,8 @@ declare module 'fastly:backend' {
      * Set the client certificate to be provided to the server during the initial TLS handshake.
      *
      * @throws {TypeError} Throws a TypeError if the value is not an object of the correct type.
+     *
+     * @version 3.15.0
      */
     clientCertificate?: {
       certificate: string;
@@ -131,12 +136,16 @@ declare module 'fastly:backend' {
 
     /**
      * Enables and sets the HTTP keepalive time in milliseconds for the backend.
+     *
+     * @version 3.24.0
      */
     httpKeepalive?: number;
 
     /**
      * Enables and sets the TCP keep alive options for the backend.
      * Setting to boolean true enables keepalive with the default options.
+     *
+     * @version 3.24.0
      */
     tcpKeepalive?:
       | boolean
@@ -211,6 +220,7 @@ declare module 'fastly:backend' {
      *
      * Warning: When using this experimental feature, no guarantees are provided for behaviours for
      * backends that do not provide gRPC traffic.
+     * @version 3.23.0
      */
     grpc?: boolean;
   }
@@ -264,45 +274,55 @@ declare module 'fastly:backend' {
 
     /**
      * The name of the backend
+     * @version 3.24.0
      */
     readonly name: string;
 
     /**
      * Whether this backend was dynamically created by the running service.
+     * @version 3.24.0 
      */
     readonly isDynamic: boolean;
     /**
      * The host target for the backend
+     * @version 3.24.0
      */
     readonly target: string;
     /**
      * The host header override defined for the backend.
      *
      * See https://docs.fastly.com/en/guides/specifying-an-override-host for more information.
+     * @version 3.24.0
      */
     readonly hostOverride: string;
     /**
      * The backend port
+     * @version 3.24.0
      */
     readonly port: number;
     /**
      * The connect timeout for the backend in milliseconds, if available.
+     * @version 3.24.0
      */
     readonly connectTimeout: number | null;
     /**
      * The first byte timeout for the backend in milliseconds, if available.
+     * @version 3.24.0
      */
     readonly firstByteTimeout: number | null;
     /**
      * The between bytes timeout for the backend in milliseconds, if available.
+     * @version 3.24.0
      */
     readonly betweenBytesTimeout: number | null;
     /**
      * The HTTP keepalive time for the backend in milliseconds.
+     * @version 3.24.0
      */
     readonly httpKeepaliveTime: number;
     /**
      * The TCP keepalive configuration, if TCP keepalive is enabled.
+     * @version 3.24.0
      */
     readonly tcpKeepalive: null | {
       /**
@@ -320,25 +340,30 @@ declare module 'fastly:backend' {
     };
     /**
      * Whether the backend is configured to use SSL.
+     * @version 3.24.0
      */
     readonly isSSL: boolean;
     /**
      * The minimum SSL version number this backend will use, if available.
+     * @version 3.24.0
      */
     readonly tlsMinVersion: 1 | 1.1 | 1.2 | 1.3 | null;
     /**
      * The maximum SSL version number this backend will use, if available.
+     * @version 3.24.0
      */
     readonly tlsMaxversion: 1 | 1.1 | 1.2 | 1.3 | null;
 
     /**
      * Get the health of this backend.
+     * @version 3.24.0
      */
     health(): 'healthy' | 'unhealthy' | 'unknown';
 
     /**
      * Returns the name associated with the Backend instance.
      * @deprecated Use `backend.name` instead.
+     * @version 3.7.0
      */
     toName(): string;
 
@@ -351,12 +376,14 @@ declare module 'fastly:backend' {
 
     /**
      * Returns a boolean indicating if a Backend with the given name exists or not.
+     * @version 3.7.0
      */
     static exists(name: string): boolean;
 
     /**
      * Returns the Backend instance with the given name, if one exists. If one does not exist, an error is thrown.
-     */
+     * @version 3.7.0
+     */ 
     static fromName(name: string): Backend;
 
     /**
@@ -368,6 +395,7 @@ declare module 'fastly:backend' {
      * "unknown" - The backend does not have a health check configured.
      *
      * @deprecated Use `backend.health()` ({@link Backend.prototype.health}) instead.
+     * @version 3.7.0 
      */
     static health(backend: Backend): 'healthy' | 'unhealthy' | 'unknown';
   }
