@@ -5,11 +5,11 @@ declare module 'fastly:image-optimizer' {
   type Color =
     | string
     | {
-        r: number;
-        g: number;
-        b: number;
-        a?: number;
-      };
+      r: number;
+      g: number;
+      b: number;
+      a?: number;
+    };
   /**
    * A percentage, expressed as a string such as '100%'
    */
@@ -111,17 +111,54 @@ declare module 'fastly:image-optimizer' {
     Lanczos: 'lanczos';
   };
 
+  /**
+   * @example
+   * ```js
+   * import { Format, Orient, CropMode, Region } from 'fastly:image-optimizer';
+   *
+   * addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
+   * 
+   * async function handleRequest(event) {
+   *   return await fetch('https://www.w3.org/Graphics/PNG/text2.png', {
+   *     imageOptimizerOptions: {
+   *       region: Region.UsEast,
+   *       format: Format.PNG,
+   *       bgColor: {
+   *         'r': 100,
+   *         'g': 255,
+   *         'b': 9,
+   *         'a': 0.5
+   *       },
+   *       blur: '1%',
+   *       brightness: -20,
+   *       contrast: -20,
+   *       height: 600,
+   *       level: '4.0',
+   *       orient: Orient.FlipVertical,
+   *       saturation: 80,
+   *       sharpen: { 'amount': 5, 'radius': 6, 'threshold': 44 },
+   *       canvas: { 'size': { 'absolute': { 'width': 400, 'height': 400 } } },
+   *       crop: { size: { absolute: { width: 200, height: 200 }, mode: CropMode.Safe } },
+   *       trim: { top: 10, left: 10, right: 10, bottom: 10 },
+   *       pad: { top: 30, left: 30, right: "1%", bottom: 30 }
+   *     },
+   *     backend: 'w3'
+   *   });
+   * }
+   * ```
+   * @version 3.36.0
+   */
   interface ImageOptimizerOptions {
     /**
      *
      */
     region:
-      | 'us_east'
-      | 'us_central'
-      | 'us_west'
-      | 'eu_central'
-      | 'asia'
-      | 'australia';
+    | 'us_east'
+    | 'us_central'
+    | 'us_west'
+    | 'eu_central'
+    | 'asia'
+    | 'australia';
     /**
      * Enable optimization features automatically.
      */
@@ -181,21 +218,21 @@ declare module 'fastly:image-optimizer' {
      * Specify the output format to convert the image to.
      */
     format?:
-      | 'auto'
-      | 'avif'
-      | 'bjpg'
-      | 'gif'
-      | 'jpg'
-      | 'jxl'
-      | 'mp4'
-      | 'pjpg'
-      | 'pjxl'
-      | 'png'
-      | 'png8'
-      | 'svg'
-      | 'webp'
-      | 'webpll'
-      | 'webply';
+    | 'auto'
+    | 'avif'
+    | 'bjpg'
+    | 'gif'
+    | 'jpg'
+    | 'jxl'
+    | 'mp4'
+    | 'pjpg'
+    | 'pjxl'
+    | 'png'
+    | 'png8'
+    | 'svg'
+    | 'webp'
+    | 'webpll'
+    | 'webply';
     /**
      * Extract the first frame from an animated image.
      */
@@ -244,14 +281,14 @@ declare module 'fastly:image-optimizer' {
      * Specify the resize filter used when resizing images.
      */
     resizeFilter?:
-      | 'nearest'
-      | 'bilinear'
-      | 'linear'
-      | 'bicubic'
-      | 'cubic'
-      | 'lanczos2'
-      | 'lanczos3'
-      | 'lanczos';
+    | 'nearest'
+    | 'bilinear'
+    | 'linear'
+    | 'bicubic'
+    | 'cubic'
+    | 'lanczos2'
+    | 'lanczos3'
+    | 'lanczos';
     /**
      * Set the saturation of the output image (-100-100).
      */
