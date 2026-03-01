@@ -928,6 +928,9 @@ int purge_surrogate_key(char *surrogate_key, size_t surrogate_key_len, uint32_t 
 
 #define FASTLY_CACHE_LOOKUP_OPTIONS_MASK_RESERVED (1 << 0)
 #define FASTLY_CACHE_LOOKUP_OPTIONS_MASK_REQUEST_HEADERS (1 << 1)
+// Note: SERVICE_ID for internal use only.
+#define FASTLY_CACHE_LOOKUP_OPTIONS_MASK_SERVICE_ID (1 << 2)
+#define FASTLY_CACHE_LOOKUP_OPTIONS_MASK_ALWAYS_USE_REQUESTED_RANGE (1 << 3)
 
 // Extensible options for cache lookup operations currently used for both `lookup` and
 // `transaction_lookup`.

@@ -42,6 +42,7 @@ JS::Result<host_api::CacheLookupOptions> parseLookupOptions(JSContext *cx,
       return JS::Result<host_api::CacheLookupOptions>(JS::Error());
     }
     JS::RootedObject options_obj(cx, &options_val.toObject());
+
     JS::RootedValue headers_val(cx);
     if (!JS_GetProperty(cx, options_obj, "headers", &headers_val)) {
       return JS::Result<host_api::CacheLookupOptions>(JS::Error());
@@ -78,6 +79,20 @@ JS::Result<host_api::CacheLookupOptions> parseLookupOptions(JSContext *cx,
         return JS::Result<host_api::CacheLookupOptions>(JS::Error());
       }
       options.request_headers = host_api::HttpReq(request_handle);
+    }
+
+    JS::RootedValue always_use_requested_range_val(cx);
+    if (!JS_GetProperty(cx, options_obj, "always_use_requested_range",
+                        &always_use_requested_range_val)) {
+      return JS::Result<host_api::CacheLookupOptions>(JS::Error());
+    }
+    // always_use_requested_range property is optional
+    if (!always_use_requested_range_val.isUndefined()) {
+      if (!always_use_requested_range_val.isBoolean()) {
+        JS_ReportErrorASCII(cx, "always_use_requested_range must be a boolean");
+        return JS::Result<host_api::CacheLookupOptions>(JS::Error());
+      }
+      options.always_use_requested_range = always_use_requested_range_val.toBoolean();
     }
   }
   return options;
