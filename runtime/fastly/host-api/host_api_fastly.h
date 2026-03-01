@@ -764,6 +764,9 @@ struct HttpCacheWriteOptions final {
 
   // Optional flag indicating if this contains sensitive data
   std::optional<bool> sensitive_data;
+
+  // Optional stale-if-error duration in nanoseconds
+  std::optional<uint64_t> stale_if_error_ns;
 };
 
 struct CacheState final {
@@ -776,6 +779,7 @@ struct CacheState final {
   bool is_usable() const;
   bool is_stale() const;
   bool must_insert_or_update() const;
+  bool is_usable_if_error() const;
 };
 
 enum class HttpStorageAction : uint8_t {
@@ -820,6 +824,9 @@ public:
   transaction_record_not_cacheable(uint64_t max_age_ns,
                                    std::optional<std::string_view> vary_rule = std::nullopt);
 
+  /// Substitute stale-if-error response
+  Result<Void> transaction_choose_stale();
+
   /// Abandon the transaction
   Result<Void> transaction_abandon();
 
@@ -849,6 +856,9 @@ public:
 
   /// Get stale while revalidate time in nanoseconds
   Result<uint64_t> get_stale_while_revalidate_ns() const;
+
+  /// Get stale if error time in nanoseconds
+  Result<uint64_t> get_stale_if_error_ns() const;
 
   /// Get age in nanoseconds
   Result<uint64_t> get_age_ns() const;

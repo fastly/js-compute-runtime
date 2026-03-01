@@ -65,17 +65,31 @@ void CacheOverride::set_ttl(JSObject *self, uint32_t ttl) {
   JS::SetReservedSlot(self, CacheOverride::Slots::TTL, JS::Int32Value((int32_t)ttl));
 }
 
-JS::Value CacheOverride::swr(JSObject *self) {
+JS::Value CacheOverride::staleWhileRevalidate(JSObject *self) {
   MOZ_ASSERT(is_instance(self));
   if (CacheOverride::mode(self) != CacheOverride::CacheOverrideMode::Override)
     return JS::UndefinedValue();
-  return JS::GetReservedSlot(self, Slots::SWR);
+  return JS::GetReservedSlot(self, Slots::StaleWhileRevalidate);
 }
 
-void CacheOverride::set_swr(JSObject *self, uint32_t swr) {
+void CacheOverride::set_staleWhileRevalidate(JSObject *self, uint32_t swr) {
   MOZ_ASSERT(is_instance(self));
   MOZ_ASSERT(CacheOverride::mode(self) == CacheOverride::CacheOverrideMode::Override);
-  JS::SetReservedSlot(self, CacheOverride::Slots::SWR, JS::Int32Value((int32_t)swr));
+  JS::SetReservedSlot(self, CacheOverride::Slots::StaleWhileRevalidate,
+                      JS::Int32Value((int32_t)swr));
+}
+
+JS::Value CacheOverride::staleIfError(JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
+  if (CacheOverride::mode(self) != CacheOverride::CacheOverrideMode::Override)
+    return JS::UndefinedValue();
+  return JS::GetReservedSlot(self, Slots::StaleIfError);
+}
+
+void CacheOverride::set_staleIfError(JSObject *self, uint32_t sie) {
+  MOZ_ASSERT(is_instance(self));
+  MOZ_ASSERT(CacheOverride::mode(self) == CacheOverride::CacheOverrideMode::Override);
+  JS::SetReservedSlot(self, CacheOverride::Slots::StaleIfError, JS::Int32Value((int32_t)sie));
 }
 
 JS::Value CacheOverride::surrogate_key(JSObject *self) {
@@ -149,7 +163,7 @@ host_api::CacheOverrideTag CacheOverride::abi_tag(JSObject *self) {
     tag.set_ttl();
   }
 
-  if (!swr(self).isUndefined()) {
+  if (!staleWhileRevalidate(self).isUndefined()) {
     tag.set_stale_while_revalidate();
   }
 
@@ -240,32 +254,65 @@ bool CacheOverride::ttl_set(JSContext *cx, JS::HandleObject self, JS::HandleValu
   return true;
 }
 
-bool CacheOverride::swr_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval) {
+bool CacheOverride::staleWhileRevalidate_get(JSContext *cx, JS::HandleObject self,
+                                             JS::MutableHandleValue rval) {
   if (self == proto_obj) {
-    return api::throw_error(cx, api::Errors::WrongReceiver, "swr get", "CacheOverride");
+    return api::throw_error(cx, api::Errors::WrongReceiver, "staleWhileRevalidate get",
+                            "CacheOverride");
   }
-  rval.set(swr(self));
+  rval.set(staleWhileRevalidate(self));
   return true;
 }
 
-bool CacheOverride::swr_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
-                            JS::MutableHandleValue rval) {
+bool CacheOverride::staleWhileRevalidate_set(JSContext *cx, JS::HandleObject self,
+                                             JS::HandleValue val, JS::MutableHandleValue rval) {
   if (self == proto_obj) {
-    return api::throw_error(cx, api::Errors::WrongReceiver, "swr set", "CacheOverride");
+    return api::throw_error(cx, api::Errors::WrongReceiver, "staleWhileRevalidate set",
+                            "CacheOverride");
   }
-  if (!ensure_override(cx, self, "SWR"))
+  if (!ensure_override(cx, self, "staleWhileRevalidate"))
     return false;
 
   if (val.isUndefined()) {
-    JS::SetReservedSlot(self, Slots::SWR, val);
+    JS::SetReservedSlot(self, Slots::StaleWhileRevalidate, val);
   } else {
     int32_t swr;
     if (!JS::ToInt32(cx, val, &swr))
       return false;
 
-    set_swr(self, swr);
+    set_staleWhileRevalidate(self, swr);
   }
-  rval.set(swr(self));
+  rval.set(staleWhileRevalidate(self));
+  return true;
+}
+
+bool CacheOverride::staleIfError_get(JSContext *cx, JS::HandleObject self,
+                                     JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    return api::throw_error(cx, api::Errors::WrongReceiver, "staleIfError get", "CacheOverride");
+  }
+  rval.set(staleIfError(self));
+  return true;
+}
+
+bool CacheOverride::staleIfError_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
+                                     JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    return api::throw_error(cx, api::Errors::WrongReceiver, "staleIfError set", "CacheOverride");
+  }
+  if (!ensure_override(cx, self, "staleIfError"))
+    return false;
+
+  if (val.isUndefined()) {
+    JS::SetReservedSlot(self, Slots::StaleIfError, val);
+  } else {
+    int32_t swr;
+    if (!JS::ToInt32(cx, val, &swr))
+      return false;
+
+    set_staleIfError(self, swr);
+  }
+  rval.set(staleIfError(self));
   return true;
 }
 
@@ -416,13 +463,18 @@ const JSFunctionSpec CacheOverride::methods[] = {JS_FS_END};
 const JSPropertySpec CacheOverride::properties[] = {
     JS_PSGS("mode", accessor_get<mode_get>, accessor_set<mode_set>, JSPROP_ENUMERATE),
     JS_PSGS("ttl", accessor_get<ttl_get>, accessor_set<ttl_set>, JSPROP_ENUMERATE),
-    JS_PSGS("swr", accessor_get<swr_get>, accessor_set<swr_set>, JSPROP_ENUMERATE),
+    JS_PSGS("swr", accessor_get<staleWhileRevalidate_get>, accessor_set<staleWhileRevalidate_set>,
+            JSPROP_ENUMERATE),
+    JS_PSGS("staleWhileRevalidate", accessor_get<staleWhileRevalidate_get>,
+            accessor_set<staleWhileRevalidate_set>, JSPROP_ENUMERATE),
     JS_PSGS("surrogateKey", accessor_get<surrogate_key_get>, accessor_set<surrogate_key_set>,
             JSPROP_ENUMERATE),
     JS_PSGS("pci", accessor_get<pci_get>, accessor_set<pci_set>, JSPROP_ENUMERATE),
     JS_PSGS("beforeSend", accessor_get<before_send_get>, accessor_set<before_send_set>,
             JSPROP_ENUMERATE),
     JS_PSGS("afterSend", accessor_get<after_send_get>, accessor_set<after_send_set>,
+            JSPROP_ENUMERATE),
+    JS_PSGS("staleIfError", accessor_get<staleIfError_get>, accessor_set<staleIfError_set>,
             JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "CacheOverride", JSPROP_READONLY),
     JS_PS_END};
@@ -451,7 +503,22 @@ JSObject *CacheOverride::create(JSContext *cx, JS::HandleValue override) {
     return nullptr;
   }
 
-  if (!JS_GetProperty(cx, override_obj, "swr", &val) || !swr_set(cx, self, val, &val)) {
+  if (!JS_GetProperty(cx, override_obj, "swr", &val) ||
+      !staleWhileRevalidate_set(cx, self, val, &val)) {
+    return nullptr;
+  }
+
+  if (!JS_GetProperty(cx, override_obj, "staleWhileRevalidate", &val)) {
+    return nullptr;
+  }
+  if (!val.isNullOrUndefined()) {
+    if (!staleWhileRevalidate_set(cx, self, val, &val)) {
+      return nullptr;
+    }
+  }
+
+  if (!JS_GetProperty(cx, override_obj, "staleIfError", &val) ||
+      !staleIfError_set(cx, self, val, &val)) {
     return nullptr;
   }
 
