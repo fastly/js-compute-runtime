@@ -403,7 +403,6 @@
   "GET /kv-store-entry/json/invalid": { "flake": true },
   "GET /kv-store-entry/arrayBuffer/valid": { "flake": true },
   "GET /kv-store-options/gen": {
-    "skip": true,
     "flake": true
   },
   "GET /kv-store-options/gen-invalid": { "flake": true },
