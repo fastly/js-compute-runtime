@@ -443,9 +443,6 @@ declare module 'fastly:backend' {
      * `Object.prototype.toString()`. For Backend values, the `toString` method returns the
      * name given to the Backend object during construction.
      *
-     * The `toString()` method requires its `this` value to be a Backend object. If the
-     * `this` value does not inherit from `Backend.prototype`, a TypeError is thrown.
-     *
      * @example
      * ```js
      * import { Backend } from "fastly:backend";
