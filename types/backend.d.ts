@@ -28,7 +28,7 @@ declare module 'fastly:backend' {
    *   hostOverride: "www.my-site.com",
    * });
    * ```
-   * @fiddle metadata
+   * @fiddle meta
    * {
    *   "title": "setDefaultDynamicBackendConfig Example",
    *   "request": "/status=200"
@@ -290,7 +290,7 @@ declare module 'fastly:backend' {
    * }
    * addEventListener("fetch", event => event.respondWith(app(event)));
    * ```
-   * @fiddle metadata
+   * @fiddle meta
    * {
    *   "title": "Explicit Dynamic Backend Example",
    *   "request": "/status=200"
@@ -327,7 +327,7 @@ declare module 'fastly:backend' {
      * });
      * console.log(backend.name); // "my-backend"
      * ```
-     * @fiddle metadata
+     * @fiddle meta
      * {
      *   "title": "Backend.prototype.name Example",
      *   "request": "/status=200"
@@ -455,7 +455,7 @@ declare module 'fastly:backend' {
      * });
      * console.log(backend.toString()); // "my-backend"
      * ```
-     * @fiddle metadata
+     * @fiddle meta
      * {
      *   "title": "Backend.prototype.toString Example",
      *   "request": "/status=200"
