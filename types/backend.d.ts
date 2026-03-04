@@ -9,7 +9,31 @@ declare module 'fastly:backend' {
    * implicitly created when using {@link fetch | fetch()}.
    *
    * @param defaultDynamicBackendConfiguration default backend configuration options
-   * @version 3.24.0 
+   *
+   * @example
+   * Setting default timeouts and TLS options for all newly created dynamic backends:
+   * ```js
+   * import { Backend, setDefaultDynamicBackendConfig } from "fastly:backend";
+   * setDefaultDynamicBackendConfig({
+   *   connectTimeout: 1000,          // milliseconds
+   *   firstByteTimeout: 15_000,      // milliseconds
+   *   betweenBytesTimeout: 10_000,   // milliseconds
+   *   useSSL: true,
+   *   tlsMinVersion: 1.3,
+   *   tlsMaxVersion: 1.3,
+   * });
+   * // Timeouts and TLS configuration are inherited from the defaults above.
+   * const backend = new Backend({
+   *   target: 'my-site.com',
+   *   hostOverride: "www.my-site.com",
+   * });
+   * ```
+   * @fiddle metadata
+   * {
+   *   "title": "setDefaultDynamicBackendConfig Example",
+   *   "request": "/status=200"
+   * }
+   * @version 3.24.0
    */
   export function setDefaultDynamicBackendConfig(
     defaultDynamicBackendConfiguration: DefaultBackendConfiguration,
@@ -39,6 +63,9 @@ declare module 'fastly:backend' {
    */
   export function enforceExplicitBackends(defaultBackend?: string): void;
 
+  /**
+   * @version 3.24.0
+   */
   interface DefaultBackendConfiguration {
     /**
      * Maximum duration in milliseconds to wait for a connection to this backend to be established.
@@ -130,7 +157,12 @@ declare module 'fastly:backend' {
      * @version 3.15.0
      */
     clientCertificate?: {
+      /** The PEM certificate string. */
       certificate: string;
+      /**
+       * The {@link import('fastly:secret-store').SecretStoreEntry} to use for the key,
+       * created via `SecretStore.prototype.get` or via `SecretStore.fromBytes`.
+       */
       key: import('fastly:secret-store').SecretStoreEntry;
     };
 
@@ -228,6 +260,10 @@ declare module 'fastly:backend' {
   /**
    * Class for dynamically creating new [Fastly Backends](https://developer.fastly.com/reference/api/services/backend/).
    *
+   * **Note**: Dynamic backends are by default disabled at the Fastly service level.
+   * Contact [Fastly Support](https://support.fastly.com/hc/en-us/requests/new?ticket_form_id=360000269711)
+   * to request dynamic backends on Fastly Services.
+   *
    * To disable the usage of dynamic backends, see {@link enforceExplicitBackends}.
    *
    * @example
@@ -254,7 +290,7 @@ declare module 'fastly:backend' {
    * }
    * addEventListener("fetch", event => event.respondWith(app(event)));
    * ```
-   * @fiddle meta
+   * @fiddle metadata
    * {
    *   "title": "Explicit Dynamic Backend Example",
    *   "request": "/status=200"
@@ -262,7 +298,14 @@ declare module 'fastly:backend' {
    */
   class Backend {
     /**
-     * Creates a new Backend instance
+     * Creates a new Backend instance.
+     *
+     * **Note:** `Backend()` can only be constructed with `new`. Attempting to call it
+     * without `new` throws a TypeError.
+     *
+     * All optional generic options can have their defaults set via
+     * {@link setDefaultDynamicBackendConfig}. This includes all configuration
+     * options except for `name`, `target`, `hostOverride`, `sniHostname` and `grpc`.
      *
      * @example
      * Construct a new backend with all properties set to their default values:
@@ -273,7 +316,22 @@ declare module 'fastly:backend' {
     constructor(configuration: BackendConfiguration);
 
     /**
-     * The name of the backend
+     * The name of the backend.
+     *
+     * @example
+     * ```js
+     * import { Backend } from "fastly:backend";
+     * const backend = new Backend({
+     *   name: "my-backend",
+     *   target: "my-site.com",
+     * });
+     * console.log(backend.name); // "my-backend"
+     * ```
+     * @fiddle metadata
+     * {
+     *   "title": "Backend.prototype.name Example",
+     *   "request": "/status=200"
+     * }
      * @version 3.24.0
      */
     readonly name: string;
@@ -302,21 +360,24 @@ declare module 'fastly:backend' {
     readonly port: number;
     /**
      * The connect timeout for the backend in milliseconds, if available.
+     * When not set or in environments that do not support this property (such as Viceroy), `null` may be returned.
      * @version 3.24.0
      */
     readonly connectTimeout: number | null;
     /**
      * The first byte timeout for the backend in milliseconds, if available.
+     * When not set or in environments that do not support this property (such as Viceroy), `null` may be returned.
      * @version 3.24.0
      */
     readonly firstByteTimeout: number | null;
     /**
      * The between bytes timeout for the backend in milliseconds, if available.
+     * When not set or in environments that do not support this property (such as Viceroy), `null` may be returned.
      * @version 3.24.0
      */
     readonly betweenBytesTimeout: number | null;
     /**
-     * The HTTP keepalive time for the backend in milliseconds.
+     * The HTTP keepalive time for the backend in milliseconds, or 0 if no keepalive is set.
      * @version 3.24.0
      */
     readonly httpKeepaliveTime: number;
@@ -328,15 +389,15 @@ declare module 'fastly:backend' {
       /**
        * The keepalive time in seconds.
        */
-      timeSecs: number;
+      timeSecs: number | null;
       /**
        * The interval in seconds between probes.
        */
-      intervalSecs: number;
+      intervalSecs: number | null;
       /**
        * The number of probes to send before terminating the keepalive.
        */
-      probes: number;
+      probes: number | null;
     };
     /**
      * Whether the backend is configured to use SSL.
@@ -344,18 +405,26 @@ declare module 'fastly:backend' {
      */
     readonly isSSL: boolean;
     /**
-     * The minimum SSL version number this backend will use, if available.
+     * The minimum TLS version number this backend will use.
+     * When not used, or for environments that do not support this feature (such as Viceroy), `null` may be returned.
      * @version 3.24.0
      */
     readonly tlsMinVersion: 1 | 1.1 | 1.2 | 1.3 | null;
     /**
-     * The maximum SSL version number this backend will use, if available.
+     * The maximum TLS version number this backend will use.
+     * When not used, or for environments that do not support this feature (such as Viceroy), `null` may be returned.
      * @version 3.24.0
      */
     readonly tlsMaxversion: 1 | 1.1 | 1.2 | 1.3 | null;
 
     /**
-     * Get the health of this backend.
+     * Returns a string representing the health of this backend.
+     * Possible values are:
+     *
+     * - "healthy" - The backend's health check has succeeded, indicating the backend is working as expected and should receive requests.
+     * - "unhealthy" - The backend's health check has failed, indicating the backend is not working as expected and should not receive requests.
+     * - "unknown" - The backend does not have a health check configured.
+     *
      * @version 3.24.0
      */
     health(): 'healthy' | 'unhealthy' | 'unknown';
@@ -370,6 +439,27 @@ declare module 'fastly:backend' {
     /**
      * Returns the name associated with the Backend instance.
      *
+     * The Backend object overrides the `toString()` method of Object; it does not inherit
+     * `Object.prototype.toString()`. For Backend values, the `toString` method returns the
+     * name given to the Backend object during construction.
+     *
+     * The `toString()` method requires its `this` value to be a Backend object. If the
+     * `this` value does not inherit from `Backend.prototype`, a TypeError is thrown.
+     *
+     * @example
+     * ```js
+     * import { Backend } from "fastly:backend";
+     * const backend = new Backend({
+     *   name: "my-backend",
+     *   target: "my-site.com",
+     * });
+     * console.log(backend.toString()); // "my-backend"
+     * ```
+     * @fiddle metadata
+     * {
+     *   "title": "Backend.prototype.toString Example",
+     *   "request": "/status=200"
+     * }
      * @deprecated Use `backend.name` instead.
      */
     toString(): string;
