@@ -1,0 +1,75 @@
+X509 DEFINITIONS ::=
+
+BEGIN
+
+Attribute               ::= SEQUENCE {
+      type             AttributeType,
+      values    SET OF AttributeValue }
+            -- at least one value is required
+AttributeType           ::= OBJECT IDENTIFIER
+
+AttributeValue          ::= ANY -- DEFINED BY AttributeType
+   SubjectPublicKeyInfo  ::=  SEQUENCE  {
+        algorithm            AlgorithmIdentifier,
+        subjectPublicKey     BIT STRING  }
+
+   Extensions  ::=  SEQUENCE SIZE (1..MAX) OF Extension
+
+   Extension  ::=  SEQUENCE  {
+        extnID      OBJECT IDENTIFIER,
+        critical    BOOLEAN DEFAULT FALSE,
+        extnValue   OCTET STRING
+                    -- contains the DER encoding of an ASN.1 value
+                    -- corresponding to the extension type identified
+                    -- by extnID
+        }
+
+   AlgorithmIdentifier  ::=  SEQUENCE  {
+        algorithm               OBJECT IDENTIFIER,
+        parameters              ANY DEFINED BY algorithm OPTIONAL  }
+
+      RSAPublicKey ::= SEQUENCE {
+          modulus           INTEGER,  -- n
+          publicExponent    INTEGER   -- e
+      }
+
+      RSAPrivateKey ::= SEQUENCE {
+          version           Version,
+          modulus           INTEGER,  -- n
+          publicExponent    INTEGER,  -- e
+          privateExponent   INTEGER,  -- d
+          prime1            INTEGER,  -- p
+          prime2            INTEGER,  -- q
+          exponent1         INTEGER,  -- d mod (p-1)
+          exponent2         INTEGER,  -- d mod (q-1)
+          coefficient       INTEGER,  -- (inverse of q) mod p
+          otherPrimeInfos   OtherPrimeInfos OPTIONAL
+      }
+        OtherPrimeInfos ::= SEQUENCE SIZE(1..MAX) OF OtherPrimeInfo
+
+         OtherPrimeInfo ::= SEQUENCE {
+             prime             INTEGER,  -- ri
+             exponent          INTEGER,  -- di
+             coefficient       INTEGER   -- ti
+         }
+
+      PrivateKeyInfo ::= SEQUENCE {
+        version                   Version,
+        privateKeyAlgorithm       PrivateKeyAlgorithmIdentifier,
+        privateKey                PrivateKey,
+        attributes           [0]  IMPLICIT Attributes OPTIONAL }
+
+      Version ::= INTEGER
+
+      PrivateKeyAlgorithmIdentifier ::= AlgorithmIdentifier
+
+      PrivateKey ::= OCTET STRING
+
+      Attributes ::= SET OF Attribute
+
+      pkcs-1    OBJECT IDENTIFIER ::= {
+        iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) 1
+}
+
+      rsaEncryption    OBJECT IDENTIFIER ::= { pkcs-1 1 }
+END
