@@ -59,6 +59,19 @@ const privateRsaJsonWebKeyData = {
   qi: 'GyM_p6JrXySiz1toFgKbWV-JdI3jQ4ypu9rbMWx3rQJBfmt0FoYzgUIZEVFEcOqwemRN81zoDAaa-Bk0KWNGDjJHZDdDmFhW3AN7lI-puxk_mHZGJ11rxyR8O55XLSe3SPmRfKwZI6yU24ZxvQKFYItdldUKGzO6Ia6zTKhAVRU',
 };
 
+const publicRsaSpkiData = "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEApE+Xj4CJYSgOUgwzPXbgBSDIFKURyCk1kK8vLOZUhceuzKnglhZX1IZTMBqPOAP2QCha8RP/e9qINP0RJMgBa1R81rOvsDk9xImMD/g7X7S9gkNjTuVADgIwKlUDAT8G4+qWBnoAIf4yNthDbQ0Oiobzil1CWjbiqdL7+qoocN1n07dp0VQAWTue8X+VIKM00QQT9yj9X+7d9W4BPYBpzsfbLJAJdkG0aVRwNAZLZhQg7dOAzxl7JNkMhf4QaQjAouPZ8Px4ulWddMBMobSZ6HYdENXPJZLv/I9iHC3jkFUdpfUael+95dxkiZii0v6nKFOtkipZc56sB0DtiWBnGaago1TldLTPJFjKExQYl0AXdLoxt+rKT0vvhH2DPyvvR6EcyBaJ8lCurnMLEMHIVmPCgpbL3t7O4EzZ3SdsT47fpjxPuEHdUleDCZKKrbkF9tzT06jB+X108hWAfKCAA4V+nQpfTN9PzS4zQFxVL0oNJ6C/Tfh8m84Ek8nM3fnUEBpot7xsZAMIDxrdiKZrwB03aWXUglxI+IjBJOdhdLKgsaedDGjYvIlkwLMGl4emCIskLw15tCKX3Sgc9UVTKxNxRJ28fU18VyPiN0RA4UcOxpT53Tu8bOWGYPZ5RYVkwN+aGcq/RKUAA77EbYdDF9pOUbzhY0aAUaOXvOYNYgsCAwEAAQ==";
+
+const privateRsaPkcs8Data = "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";
+
+function decodeBase64(b64) {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
 // Helper functions to create fresh copies of test data for tests that mutate them
 function freshPublicRsaKey() {
   return structuredClone(publicRsaJsonWebKeyData);
@@ -845,7 +858,41 @@ routes.set('/crypto.subtle', async () => {
     // pkcs8 Elliptic Curve private keys
     // TODO
     // pkcs8 RSA private keys
-    // raw AES
+    {
+      routes.set('/crypto.subtle.importKey/rsa1_5-spki-public', async () => {
+        const pubkey = await crypto.subtle.importKey("spki", decodeBase64(publicRsaSpkiData), {
+          name: "RSASSA-PKCS1-v1_5",
+          hash: "SHA-256"
+        },
+          false,
+          ["verify"]);
+        assert(pubkey.type, "public");
+        assert(pubkey.extractable, false);
+        assert(pubkey.algorithm.name, "RSASSA-PKCS1-v1_5");
+        assert(pubkey.algorithm.hash, { name: "SHA-256" });
+
+        const privkey = await crypto.subtle.importKey("pkcs8", decodeBase64(privateRsaPkcs8Data), {
+          name: "RSASSA-PKCS1-v1_5",
+          hash: "SHA-256"
+        },
+          false,
+          ["sign"]);
+
+        // const data = new TextEncoder().encode("hello world").buffer;
+        // const signed = await crypto.subtle.sign({ name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, privkey, data);
+        // assert(await crypto.subtle.verify({ name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, pubkey, signed, data), true);
+      });
+    }
+    {
+      routes.set('/crypto.subtle.importKey/rsa1_5-pkcs8-private', async () => {
+        await crypto.subtle.importKey("pkcs8", decodeBase64(privateRsaPkcs8Data), {
+          name: "RSASSA-PKCS1-v1_5",
+          hash: "SHA-256"
+        },
+          false,
+          ["sign"]);
+      });
+    }
   }
   // third-parameter
   {
