@@ -1,14 +1,21 @@
 {
     "$schema": "https://typedoc.org/schema.json",
-    "plugin": ["typedoc-plugin-versions", "typedoc-plugin-mdn-links"],
-    "theme": "default",
+    "plugin": [
+        "typedoc-plugin-fastly"
+    ],
+    "theme": "fastly",
     "tsconfig": "tsconfig.json",
-    "exclude": ["types/index.d.ts"],
+    "exclude": [
+        "types/index.d.ts"
+    ],
     "entryPointStrategy": "expand",
     "entryPoints": [
-        "types"
+        "types/*"
     ],
-    "excludeExternals":true,
+    "excludeExternals": true,
+    "externalPattern": [
+        "node_modules/**"
+    ],
     "excludeInternal": true,
     "excludePrivate": true,
     "categorizeByGroup": false,

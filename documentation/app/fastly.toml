@@ -1,17 +1,26 @@
 # This file describes a Fastly Compute package. To learn more visit:
-# https://developer.fastly.com/reference/fastly-toml/
+# https://www.fastly.com/documentation/reference/compute/fastly-toml
 
-authors = ["jchampion@fastly.com"]
-description = ""
+authors = ["you@example.com"]
+description = "Fastly Compute static site"
 language = "javascript"
-manifest_version = 2
-name = "js-compute-reference-docs"
-service_id = "1B3wrEgiLdTaCjsmK5Jq25"
-
-[scripts]
-  build = "yarn build"
+manifest_version = 3
+name = "compute-js-static-site"
+service_id = "w28lvGyqRRGQTcJK2rpOJL"
 
 [local_server]
 
-[local_server.object_store]
+  [local_server.kv_stores]
 
+    [local_server.kv_stores.js-docs-content]
+      file = "./static-publisher/kvstore.json"
+      format = "json"
+
+[scripts]
+  build = "npm run build"
+
+[setup]
+
+  [setup.kv_stores]
+
+    [setup.kv_stores.js-docs-content]

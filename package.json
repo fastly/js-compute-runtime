@@ -47,6 +47,7 @@
     "clean": "rm -rf dist/ starling.wasm fastly.wasm fastly.debug.wasm fastly-weval.wasm fastly-ics.wevalcache fastly-js-compute-*.tgz",
     "build": "npm run clean && npm run build:cli && npm run build:debug && npm run build:release && npm run build:weval",
     "build:cli": "tsc",
+    "build:docs": "cd documentation/typedoc && npm run build && cd ../.. && typedoc",
     "build:release": "./runtime/fastly/build-release.sh",
     "build:debug": "./runtime/fastly/build-debug.sh",
     "build:weval": "./runtime/fastly/build-release-weval.sh",
@@ -71,6 +72,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@jakechampion/cli-testing-library": "^1.0.0",
+    "@shipgirl/typedoc-plugin-versions": "^0.3.2",
     "@types/node": "^24.10.1",
     "@types/picomatch": "^4.0.2",
     "brittle": "^3.5.2",
@@ -80,6 +82,9 @@
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
     "tsd": "^0.33.0",
+    "typedoc": "^0.28.17",
+    "typedoc-plugin-fastly": "file:documentation/typedoc",
+    "typedoc-plugin-mdn-links": "^5.1.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.48.1",
     "unified": "^11.0.5"

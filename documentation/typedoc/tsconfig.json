@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "target": "es2022",
+        "module": "nodenext",
+        "lib": [
+            "es2022"
+        ],
+        "outDir": "./dist",
+        "rootDir": "./",
+        "strict": true,
+        "moduleResolution": "nodenext",
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "allowJs": true,
+        "declaration": true,
+        "jsx": "react",
+        "jsxFactory": "JSX.createElement",
+        "jsxFragmentFactory": "JSX.Fragment"
+    },
+    "include": [
+        "src/typedoc-plugin-fastly.tsx",
+        "src/utils.tsx"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

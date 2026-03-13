@@ -1,23 +1,24 @@
 /// <reference types="@fastly/js-compute" />
-/* eslint-env serviceworker */
+import { env } from 'fastly:env';
+import { PublisherServer } from '@fastly/compute-js-static-publish';
+import rc from '../static-publish.rc.js';
+const publisherServer = PublisherServer.fromStaticPublishRc(rc);
 
-import { get } from "../c-at-e-file-server.js";
-import { env } from "fastly:env";
+// eslint-disable-next-line no-restricted-globals
+addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
+async function handleRequest(event) {
 
-addEventListener("fetch", (event) => event.respondWith(app(event)));
+  console.log('FASTLY_SERVICE_VERSION', env('FASTLY_SERVICE_VERSION'));
 
-async function app(event) {
-    try {
-        console.log(`FASTLY_SERVICE_VERSION: ${env('FASTLY_SERVICE_VERSION')}`)
-        const response = await get('site', event.request)
-        if (response) {
-            response.headers.set("x-compress-hint", "on");
-            return response
-        } else {
-            return new Response("Not Found", { status: 404 });
-        }
-    } catch (error) {
-        console.error(error);
-        return new Response(error.message + '\n' + error.stack, { status: 500 })
-    }
+  const request = event.request;
+
+  const response = await publisherServer.serveRequest(request);
+  if (response != null) {
+    return response;
+  }
+
+  // Do custom things here!
+  // Handle API requests, serve non-static responses, etc.
+
+  return new Response('Not found', { status: 404 });
 }

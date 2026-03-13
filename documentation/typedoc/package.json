@@ -1,0 +1,17 @@
+{
+  "name": "typedoc-plugin-fastly",
+  "version": "0.1.0",
+  "description": "Fastly customizations for typedoc",
+  "license": "ISC",
+  "author": "sy.brand@fastly.com",
+  "type": "module",
+  "main": "dist/src/typedoc-plugin-fastly.js",
+  "dependencies": {
+    "typedoc": "^0.28.17",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc && cp src/custom.css dist/src/custom.css"
+  }
+}
