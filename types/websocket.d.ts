@@ -24,8 +24,7 @@ declare module 'fastly:websocket' {
    *
    * @param request The request to pass through as a WebSocket connection
    * @param backend The name of the backend to send the request to (1–254 characters)
-   * @throws {Error} Thrown if `request` is not a Request instance
-   * @throws {Error} Thrown if `backend` is empty or longer than 254 characters
+   * @throws Throws an `Error` if `request` is not a {@link Request} instance, or if `backend` is empty or longer than 254 characters
    * @version 3.34.0
    */
   function createWebsocketHandoff(request: Request, backend: string): Response;
