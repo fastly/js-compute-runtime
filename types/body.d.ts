@@ -32,7 +32,7 @@ declare module 'fastly:body' {
      * The `dest` body is consumed by this operation and should not be reused.
      *
      * @param dest The `FastlyBody` to append to this body.
-     * @throws {Error} If `dest` is not a `FastlyBody` instance.
+     * @throws `Error` if `dest` is not a `FastlyBody` instance.
      */
     concat(dest: FastlyBody): void;
 
@@ -41,7 +41,7 @@ declare module 'fastly:body' {
      * Returns an empty `ArrayBuffer` when no more data is available.
      *
      * @param chunkSize The maximum number of bytes to read. Must be a positive number.
-     * @throws {Error} If `chunkSize` is not a positive number, is `NaN`, or is `Infinity`.
+     * @throws `Error` if `chunkSize` is not a positive number, is `NaN`, or is `Infinity`.
      */
     read(chunkSize: number): ArrayBuffer;
 
@@ -49,7 +49,7 @@ declare module 'fastly:body' {
      * Appends data to the end of this body.
      *
      * @param data The data to append.
-     * @throws {TypeError} If `data` is a guest-backed `ReadableStream` (not yet supported),
+     * @throws `TypeError` if `data` is a guest-backed `ReadableStream` (not yet supported),
      *   or if the `ReadableStream` is unusable (locked or already read from).
      */
     append(data: BodyInit): void;
@@ -58,7 +58,7 @@ declare module 'fastly:body' {
      * Prepends data to the beginning of this body.
      *
      * @param data The data to prepend.
-     * @throws {TypeError} If `data` is a guest-backed `ReadableStream` (not yet supported),
+     * @throws `TypeError` if `data` is a guest-backed `ReadableStream` (not yet supported),
      *   or if the `ReadableStream` is unusable (locked or already read from).
      */
     prepend(data: BodyInit): void;
