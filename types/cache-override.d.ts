@@ -112,10 +112,10 @@ declare module 'fastly:cache-override' {
   }
 
   /**
-   * Configures the caching behavior of a {@linkcode "globals".Response}.
+   * Configures the caching behavior of a {@linkcode "globals".Response | Response}.
    *
-   * Normally, the HTTP Headers on a {@linkcode "globals".Response} would control how the {@linkcode "globals".Response} is cached,
-   * but `CacheOverride` can be set on a {@linkcode "globals".Request}, to define custom caching behavior.
+   * Normally, the HTTP Headers on a {@linkcode "globals".Response | Response} would control how the {@linkcode "globals".Response | Response} is cached,
+   * but `CacheOverride` can be set on a {@linkcode "globals".Request | Request}, to define custom caching behavior.
    *
    * @example
    * In this example we override the cache for all the requests prefixed /static/ to have a long TTL (Time To Live),
