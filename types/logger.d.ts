@@ -1,53 +1,18 @@
 declare module 'fastly:logger' {
   /**
-   * Class for creating [Fastly Named Loggers](https://developer.fastly.com/learning/integrations/logging/).
+   * Class for connecting to [Fastly named log endpoints](https://developer.fastly.com/learning/integrations/logging/).
    *
    * **Note**: Can only be used when processing requests, not during build-time initialization.
    *
    * @example
-   * <script async defer src="https://fiddle.fastly.dev/embed.js"></script>
-   * In this example we have a create a logger named 'splunk' and logs the incoming request method and destination.
+   * In this example we create a logger named `"splunk"` and log the incoming request method
+   * and destination.
    *
-   * <script type="application/json+fiddle">
-   * {
-   *   "type": "javascript",
-   *   "title": "Logger Example",
-   *   "origins": [
-   *     "https://http-me.fastly.dev"
-   *   ],
-   *   "src": {
-   *     "deps": "{\n  \"@fastly/js-compute\": \"^0.7.0\"\n}",
-   *     "main": "/// <reference types=\"@fastly/js-compute\" />\nimport { Logger } from \"fastly:logger\";\n\nasync function app (event) {\n  let logger = new Logger(\"splunk\");\n  logger.log(JSON.stringify({\n    method: event.request.method,\n    url: event.request.url\n  }));\n\n  return new Response('OK');\n}\n\naddEventListener(\"fetch\", event => event.respondWith(app(event)));\n"
-   *   },
-   *   "requests": [
-   *     {
-   *       "enableCluster": true,
-   *       "enableShield": false,
-   *       "enableWAF": false,
-   *       "data": {
-   *         "dictionaries": {
-   *           "animals": {
-   *             "cat": "meow"
-   *           }
-   *         }
-   *       },
-   *       "method": "GET",
-   *       "path": "/status=200",
-   *       "useFreshCache": false,
-   *       "followRedirects": false,
-   *       "tests": "",
-   *       "delay": 0
-   *     }
-   *   ],
-   *   "srcVersion": 26
-   * }
-   * </script>
-   * <noscript>
    * ```js
    * /// <reference types="@fastly/js-compute" />
    * import { Logger } from "fastly:logger";
    *
-   * async function app (event) {
+   * async function app(event) {
    *   let logger = new Logger("splunk");
    *   logger.log(JSON.stringify({
    *     method: event.request.method,
@@ -59,17 +24,17 @@ declare module 'fastly:logger' {
    *
    * addEventListener("fetch", event => event.respondWith(app(event)));
    * ```
-   * </noscript>
    */
   export class Logger {
     /**
-     * Creates a new Logger instance for the given [named log endpoint](https://developer.fastly.com/learning/integrations/logging).
+     * Creates a new Logger instance for the given
+     * [named log endpoint](https://developer.fastly.com/learning/integrations/logging).
      *
-     * **Note**: Can only be used when processing requests, not during build-time initialization.
+     * @param name The name of the Fastly log endpoint to associate with this Logger instance.
      */
     constructor(name: string);
     /**
-     * Send the given message, converted to a string, to this Logger instance's endpoint
+     * Send the given message, converted to a string, to this Logger instance's endpoint.
      */
     log(message: any): void;
   }
@@ -79,7 +44,7 @@ declare module 'fastly:logger' {
      * Whether to output string prefixes "Log: " | "Debug: " | "Info: " | "Warn: " | "Error: "
      * before messages.
      *
-     * Defaults to true.
+     * Defaults to false.
      */
     prefixing?: boolean;
     /**
@@ -92,10 +57,7 @@ declare module 'fastly:logger' {
 
   /**
    * Configure the behaviour of `console.log` and related console logging functions.
-   *
-   * Currently only supports customizing prefixing and stdio output.
-   *
-   * @param loggingOptions The console logging options
+   * @version 3.28.0
    */
   export function configureConsole(loggingOptions: ConsoleLoggingOptions): void;
 }
