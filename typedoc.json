@@ -22,5 +22,6 @@
     "includeVersion": true,
     "githubPages": false,
     "cleanOutputDir": true,
-    "out": "documentation/build"
+    "out": "documentation/build",
+    "favicon": "https://www.fastly.com/favicons/favicon.svg"
 }
