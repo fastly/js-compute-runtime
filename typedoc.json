@@ -21,6 +21,6 @@
     "categorizeByGroup": false,
     "includeVersion": true,
     "githubPages": false,
-    "cleanOutputDir": false,
-    "out": "reference-docs"
+    "cleanOutputDir": true,
+    "out": "documentation/build"
 }

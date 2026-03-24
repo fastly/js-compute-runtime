@@ -54,7 +54,8 @@
     "build:debug:info": "./runtime/fastly/build-debug.sh --keep-debug-info",
     "format-changelog": "node ci/format-changelog.js CHANGELOG.md",
     "format": "prettier --write 'src/**/*.ts' integration-tests types test-d",
-    "format:check": "prettier --check 'src/**/*.ts' integration-tests"
+    "format:check": "prettier --check 'src/**/*.ts' integration-tests",
+    "serve:docs": "npm run build:docs && cd documentation/app && npm run dev:publish && npm run dev:start"
   },
   "dependencies": {
     "@bytecodealliance/jco": "^1.7.0",
