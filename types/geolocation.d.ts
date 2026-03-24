@@ -39,7 +39,7 @@ declare module 'fastly:geolocation' {
    *
    * Can be retrieved for the incoming request's client IP address using the
    * {@link ClientInfo.geo} accessor, and for arbitrary addresses using
-   * {@link "fastly:geolocation".getGeolocationForIpAddress}.
+   * {@link geolocation!getGeolocationForIpAddress | getGeolocationForIpAddress}.
    */
   interface Geolocation {
     /**

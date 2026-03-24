@@ -28,8 +28,8 @@ declare module 'fastly:fanout' {
    * @param backend The name of the backend that Fanout should send the request
    * to. The name must be between 1 and 254 characters inclusive.
    * @returns A {@link Response} that can be passed to `event.respondWith`.
-   * @throws {Error} If `request` is not a {@link Request} instance.
-   * @throws {Error} If `backend` is an empty string or longer than 254 characters.
+   * @throws `Error` if `request` is not a {@link Request} instance, or
+   * if `backend` is an empty string or longer than 254 characters.
    */
   function createFanoutHandoff(request: Request, backend: string): Response;
 }
