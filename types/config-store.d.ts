@@ -21,8 +21,8 @@ declare module 'fastly:config-store' {
      * [Config Store resource](https://www.fastly.com/documentation/reference/api/services/resources/config-store/).
      *
      * @param name The resource link name for the Config Store.
-     * @throws {TypeError} If no Config Store exists with the provided name.
-     * @throws {TypeError} If the provided name is empty, longer than 255 characters,
+     * @throws `TypeError` if no Config Store exists with the provided name.
+     * @throws `TypeError` if the provided name is empty, longer than 255 characters,
      *   does not start with an ASCII alphabetical character, or contains characters
      *   other than ASCII alphanumerics, underscores, and spaces.
      */
@@ -32,7 +32,7 @@ declare module 'fastly:config-store' {
      * exist in the Config Store then this returns `null`.
      *
      * @param key The key to retrieve.
-     * @throws {TypeError} If the provided key is empty or longer than 255 characters.
+     * @throws `TypeError` if the provided key is empty or longer than 255 characters.
      */
     get(key: string): string | null;
   }
