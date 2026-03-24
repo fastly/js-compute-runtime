@@ -72,7 +72,7 @@ declare module 'fastly:experimental' {
    * Enable Dynamic Backends with default timeout configuration.
    *
    * @param defaultConfig Default timeout configuration for dynamic backends.
-   * @throws {RangeError} If any timeout value is negative or greater than or
+   * @throws `RangeError` if any timeout value is negative or greater than or
    *   equal to 2^32.
    * @experimental
    * @deprecated Use {@link enforceExplicitBackends} instead.
@@ -96,7 +96,7 @@ declare module 'fastly:experimental' {
    * neighboring lines of user code.
    *
    * @param error The error to retrieve information about. If a string is
-   *   provided, it is first converted to an Error.
+   *   provided, it is first converted to an `Error`.
    * @version 3.37.0
    */
   export function mapError(error: Error | string): (Error | string)[];
@@ -105,7 +105,7 @@ declare module 'fastly:experimental' {
    * Calls {@link mapError} and outputs the results to stderr.
    *
    * @param error The error to map and log. If a string is provided, it is
-   *   first converted to an Error.
+   *   first converted to an `Error`.
    * @version 3.37.0
    */
   export function mapAndLogError(error: Error | string): void;
