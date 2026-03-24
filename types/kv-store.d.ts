@@ -11,7 +11,7 @@ declare module 'fastly:kv-store' {
    * **Note**: Can only be used when processing requests, not during build-time initialization.
    *
    * @example
-   * In this example we connect to a KV store named `'files'` and save an entry to the store
+   * In this example we connect to a KV store named `'files'`, save an entry to the store
    * under the key `'hello'` and then read back the value and return it to the client.
    *
    * ```js
@@ -39,7 +39,7 @@ declare module 'fastly:kv-store' {
      *
      * @param name Name of the Fastly KV store to interact with. A name cannot be empty, contain
      *   control characters, or be longer than 255 characters.
-     * @throws {TypeError} If no KV store exists with the provided name, the name is empty,
+     * @throws `TypeError` if no KV store exists with the provided name, or the name is empty,
      *   longer than 255 characters, does not start with an ASCII alphabetical character,
      *   or contains control characters (`\u0000-\u001F`).
      */
@@ -52,7 +52,7 @@ declare module 'fastly:kv-store' {
      * - Start with the string ".well-known/acme-challenge/"
      * - Contain any of the characters "#;?^|\n\r"
      * - Be longer than 1024 characters
-     * @throws {TypeError} If the key violates any of the above constraints.
+     * @throws `TypeError` if the key violates any of the above constraints.
      * @version 3.13.0
      */
     delete(key: string): Promise<undefined>;
@@ -60,16 +60,16 @@ declare module 'fastly:kv-store' {
     /**
      * Gets the value associated with the key `key` in the KV store.
      *
-     * When the key is present, a resolved Promise containing a KVStoreEntry will be returned
-     * which contains the associated value. When the key is absent, a resolved Promise
-     * containing null is returned.
+     * When the key is present, a resolved `Promise` containing a `KVStoreEntry` will be returned
+     * which contains the associated value. When the key is absent, a resolved `Promise`
+     * containing `null` is returned.
      *
      * @param key The key to retrieve from within the KV store. A key cannot:
      * - Be any of the strings "", ".", or ".."
      * - Start with the string ".well-known/acme-challenge/"
      * - Contain any of the characters "#;?^|\n\r"
      * - Be longer than 1024 characters
-     * @throws {TypeError} If the key violates any of the above constraints.
+     * @throws Throws `TypeError` if the key violates any of the above constraints.
      */
     get(key: string): Promise<KVStoreEntry | null>;
 
@@ -86,8 +86,8 @@ declare module 'fastly:kv-store' {
      * - Contain any of the characters "#;?^|\n\r"
      * - Be longer than 1024 characters
      * @param value The value to store within the KV store. Maximum size is 30 MB.
-     * @throws {TypeError} If the key violates any of the above constraints.
-     * @throws {TypeError} If `gen` is provided and is not a positive integer.
+     * @throws `TypeError` if the key violates any of the above constraints or 
+     * if `gen` is provided and is not a positive integer.
      */
     put(
       key: string,
@@ -131,7 +131,7 @@ declare module 'fastly:kv-store' {
      * List keys in the KV store, optionally filtered by prefix.
      *
      * @param options Options for filtering and paginating the key list.
-     * @returns A Promise resolving with the list of keys and a cursor for pagination.
+     * @returns A `Promise` resolving with the list of keys and a cursor for pagination.
      * @version 3.26.0
      */
     list(options?: {
