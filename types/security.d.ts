@@ -51,13 +51,13 @@ declare module 'fastly:security' {
     /**
      * Set a corp name for the configuration.
      *
-     * This is currently required but will be made optional in the future.
+     * This is currently required, but will be made optional in the future.
      */
     corp: string;
     /**
      * Set a workspace name for the configuration.
      *
-     * This is currently required but will be made optional in the future.
+     * This is currently required, but will be made optional in the future.
      */
     workspace: string;
     /**
