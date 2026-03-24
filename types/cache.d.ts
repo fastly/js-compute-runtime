@@ -49,7 +49,7 @@ declare module 'fastly:cache' {
      *
      * @param key The key to retrieve from within the cache (up to 8,135 characters).
      * @returns The cached entry, or `null` if the key does not exist in the cache.
-     * @throws {TypeError} If the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
+     * @throws `TypeError` if the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
      */
     static get(key: string): SimpleCacheEntry | null;
     /**
@@ -59,7 +59,7 @@ declare module 'fastly:cache' {
      * @param key The key to store the entry under (up to 8,135 characters).
      * @param value The value to store in the cache.
      * @param ttl The time-to-live for this entry, in seconds.
-     * @throws {TypeError} If the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
+     * @throws `TypeError` if the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
      */
     static set(key: string, value: BodyInit, ttl: number): undefined;
     /**
@@ -70,7 +70,7 @@ declare module 'fastly:cache' {
      * @param value A `ReadableStream` to store in the cache.
      * @param ttl The time-to-live for this entry, in seconds.
      * @param length The length of the `ReadableStream` value, in bytes.
-     * @throws {TypeError} If the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
+     * @throws `TypeError` if the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
      */
     static set(
       key: string,
@@ -85,8 +85,8 @@ declare module 'fastly:cache' {
      *
      * @param key The key to lookup and/or store the entry under (up to 8,135 characters).
      * @param set A function to execute if the cache does not have a usable entry. Should return a Promise resolving with `value` and `ttl` (in seconds).
-     * @throws {TypeError} If the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
-     * @throws {TypeError} If the provided `ttl` cannot be coerced to a number, is negative, `NaN`, or `Infinity`.
+     * @throws `TypeError` if the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
+     * @throws `TypeError` if the provided `ttl` cannot be coerced to a number, is negative, `NaN`, or `Infinity`.
      */
     static getOrSet(
       key: string,
@@ -101,8 +101,8 @@ declare module 'fastly:cache' {
      *
      * @param key The key to lookup and/or store the entry under (up to 8,135 characters).
      * @param set A function to execute if the cache does not have a usable entry. Should return a Promise resolving with `value`, `ttl` (in seconds), and `length` (in bytes).
-     * @throws {TypeError} If the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
-     * @throws {TypeError} If the provided `ttl` cannot be coerced to a number, is negative, `NaN`, or `Infinity`.
+     * @throws `TypeError` if the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
+     * @throws `TypeError` if the provided `ttl` cannot be coerced to a number, is negative, `NaN`, or `Infinity`.
      */
     static getOrSet(
       key: string,
@@ -117,7 +117,7 @@ declare module 'fastly:cache' {
      *
      * @param key The key to purge from within the cache (up to 8,135 characters).
      * @param options Options controlling the scope of the purge.
-     * @throws {TypeError} If the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
+     * @throws `TypeError` if the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
      */
     static purge(key: string, options: PurgeOptions): undefined;
   }
@@ -201,8 +201,7 @@ declare module 'fastly:cache' {
      * Surrogate key purges are the only means to purge specific items from the cache. At least one surrogate key must be set in order to remove an item without performing a purge-all, waiting for the item's TTL to elapse, or overwriting the item with insert().
      * Surrogate keys must contain only printable ASCII characters (those between 0x21 and 0x7E, inclusive). Any invalid keys will be ignored.
      *
-     * See the Fastly surrogate keys guide for details.
-     * https://docs.fastly.com/en/guides/working-with-surrogate-keys
+     * See the [Fastly surrogate keys guide](https://docs.fastly.com/en/guides/working-with-surrogate-keys) for details.
      */
     surrogateKeys?: Array<string>;
     /**
@@ -219,8 +218,7 @@ declare module 'fastly:cache' {
      * Enable or disable PCI/HIPAA-compliant non-volatile caching.
      * By default, this is false.
      *
-     * See the Fastly PCI-Compliant Caching and Delivery documentation for details.
-     * https://docs.fastly.com/products/pci-compliant-caching-and-delivery
+     * See the [Fastly PCI-Compliant Caching and Delivery documentation](https://docs.fastly.com/products/pci-compliant-caching-and-delivery) for details.
      */
     sensitive?: boolean;
   }
@@ -243,7 +241,7 @@ declare module 'fastly:cache' {
      *
      * @param key A cache key which is a string with a length of up to 8,135 that identify a cached item. The cache key may not uniquely identify an item; headers can be used to augment the key when multiple items are associated with the same key.
      * @param options A set of options to used whilst performing this lookup into the cache.
-     * @throws {TypeError} If the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
+     * @throws `TypeError` if the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
      */
     static lookup(key: string, options?: LookupOptions): CacheEntry | null;
 
@@ -257,7 +255,7 @@ declare module 'fastly:cache' {
      *
      * @param key A cache key which is a string with a length of up to 8,135 that identify a cached item. The cache key may not uniquely identify an item; headers can be used to augment the key when multiple items are associated with the same key.
      * @param options A set of options to used whilst performing this insertion into the cache.
-     * @throws {TypeError} If the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
+     * @throws `TypeError` if the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
      */
     static insert(
       key: string,
@@ -279,7 +277,7 @@ declare module 'fastly:cache' {
      *
      * @param key A cache key which is a string with a length of up to 8,135 that identify a cached item. The cache key may not uniquely identify an item; headers can be used to augment the key when multiple items are associated with the same key.
      * @param options A set of options to used whilst performing this lookup into the cache.
-     * @throws {TypeError} If the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
+     * @throws `TypeError` if the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
      */
     static transactionLookup(
       key: string,
@@ -425,10 +423,9 @@ declare module 'fastly:cache' {
     /**
      * Sets the surrogate keys that can be used for purging this cached item.
      * Surrogate key purges are the only means to purge specific items from the cache. At least one surrogate key must be set in order to remove an item without performing a purge-all, waiting for the item's TTL to elapse, or overwriting the item with insert().
-     * Surrogate keys must contain only printable ASCII characters (those between 0x21 and 0x7E, inclusive). Any invalid keys will be ignored.
+     * Surrogate keys must contain only printable ASCII characters (those between `0x21` and `0x7E`, inclusive). Any invalid keys will be ignored.
      *
-     * See the Fastly surrogate keys guide for details.
-     * https://docs.fastly.com/en/guides/working-with-surrogate-keys
+     * See the [Fastly surrogate keys guide](https://docs.fastly.com/en/guides/working-with-surrogate-keys) for details.
      */
     surrogateKeys?: Array<string>;
     /**
