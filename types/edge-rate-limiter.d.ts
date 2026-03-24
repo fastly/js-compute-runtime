@@ -13,8 +13,8 @@ declare module 'fastly:edge-rate-limiter' {
      *
      * @param rateCounter The RateCounter instance to associate with this EdgeRateLimiter.
      * @param penaltyBox The PenaltyBox instance to associate with this EdgeRateLimiter.
-     * @throws {TypeError} If `rateCounter` is not an instance of RateCounter.
-     * @throws {TypeError} If `penaltyBox` is not an instance of PenaltyBox.
+     * @throws `TypeError` If `rateCounter` is not an instance of RateCounter.
+     * or if `penaltyBox` is not an instance of PenaltyBox.
      */
     constructor(rateCounter: RateCounter, penaltyBox: PenaltyBox);
     /**
@@ -31,10 +31,9 @@ declare module 'fastly:edge-rate-limiter' {
      *   into the penalty box. Value is truncated to the nearest minute.
      * @returns `true` if the entry has exceeded the average RPS for the window,
      *   otherwise `false`.
-     * @throws {TypeError} If `delta` is not a non-negative finite number.
-     * @throws {TypeError} If `window` is not 1, 10, or 60.
-     * @throws {TypeError} If `limit` is not a non-negative finite number.
-     * @throws {TypeError} If `timeToLive` is not a number between 1 and 60.
+     * @throws `TypeError` If `delta` is not a non-negative finite number,
+     * if `window` is not 1, 10, or 60, if `limit` is not a non-negative finite number,
+     * or if `timeToLive` is not a number between 1 and 60.
      */
     checkRate(
       entry: string,
@@ -66,7 +65,7 @@ declare module 'fastly:edge-rate-limiter' {
      * @param entry The entry to add.
      * @param timeToLive How long in minutes (1–60) the entry should be added
      *   into the penalty box. Value is truncated to the nearest minute.
-     * @throws {TypeError} If `timeToLive` is not a number between 1 and 60.
+     * @throws `TypeError` if `timeToLive` is not a number between 1 and 60.
      */
     add(entry: string, timeToLive: number): void;
     /**
@@ -98,7 +97,7 @@ declare module 'fastly:edge-rate-limiter' {
      *
      * @param entry The entry to increment.
      * @param delta The amount to increment the entry by.
-     * @throws {TypeError} If `delta` is not a non-negative finite number.
+     * @throws `TypeError` if `delta` is not a non-negative finite number.
      */
     increment(entry: string, delta: number): void;
     /**
@@ -107,7 +106,7 @@ declare module 'fastly:edge-rate-limiter' {
      * @param entry The entry to look up.
      * @param window The time window in seconds to look up alongside the entry.
      * @returns The rate for the given entry and window.
-     * @throws {TypeError} If `window` is not 1, 10, or 60.
+     * @throws `TypeError` if `window` is not 1, 10, or 60.
      */
     lookupRate(entry: string, window: 1 | 10 | 60): number;
     /**
@@ -116,7 +115,7 @@ declare module 'fastly:edge-rate-limiter' {
      * @param entry The entry to look up.
      * @param duration The duration in seconds to look up alongside the entry.
      * @returns The count for the given entry and duration.
-     * @throws {TypeError} If `duration` is not 10, 20, 30, 40, 50, or 60.
+     * @throws `TypeError` if `duration` is not 10, 20, 30, 40, 50, or 60.
      */
     lookupCount(entry: string, duration: 10 | 20 | 30 | 40 | 50 | 60): number;
   }
