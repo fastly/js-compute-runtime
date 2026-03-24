@@ -4,7 +4,7 @@ declare module 'fastly:dictionary' {
    *
    * **Note**: Can only be used when processing requests, not during build-time initialization.
    *
-   * @deprecated Use {@link ConfigStore} from `'fastly:config-store'` instead.
+   * @deprecated Use {@link config-store!ConfigStore | ConfigStore} from `'fastly:config-store'` instead.
    */
   class Dictionary {
     /**
@@ -12,11 +12,11 @@ declare module 'fastly:dictionary' {
      * [Edge Dictionary](https://docs.fastly.com/en/guides/about-edge-dictionaries).
      *
      * @param name The name of the Edge Dictionary.
-     * @throws {TypeError} If no Dictionary exists with the provided name.
-     * @throws {TypeError} If the provided name is empty, longer than 255 characters,
+     * @throws `TypeError` if no Dictionary exists with the provided name.
+     * @throws `TypeError` if the provided name is empty, longer than 255 characters,
      *   does not start with an ASCII alphabetical character, or contains characters
      *   other than ASCII alphanumerics, underscores, and spaces.
-     * @deprecated Use {@link ConfigStore} from `'fastly:config-store'` instead.
+     * @deprecated Use {@link config-store!ConfigStore | ConfigStore} from `'fastly:config-store'` instead.
      */
     constructor(name: string);
     /**
@@ -24,8 +24,8 @@ declare module 'fastly:dictionary' {
      * exist in the Dictionary then this returns `null`.
      *
      * @param key The key to retrieve.
-     * @throws {TypeError} If the provided key is empty or longer than 255 characters.
-     * @deprecated Use {@link ConfigStore} from `'fastly:config-store'` instead.
+     * @throws `TypeError` if the provided key is empty or longer than 255 characters.
+     * @deprecated Use {@link config-store!ConfigStore | ConfigStore} from `'fastly:config-store'` instead.
      */
     get(key: string): string | null;
   }
