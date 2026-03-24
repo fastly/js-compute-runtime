@@ -13,7 +13,7 @@ declare module 'fastly:device' {
      * Otherwise, `null` is returned.
      *
      * @param useragent The User-Agent string to look up.
-     * @throws {TypeError} If the provided User-Agent string is empty.
+     * @throws `TypeError` if the provided User-Agent string is empty.
      */
     static lookup(useragent: string): Device | null;
 
