@@ -48,7 +48,7 @@ declare module 'fastly:shielding' {
      * documentation (e.g. `"pdx-or-us"` for Portland, OR, USA or `"paris-fr"` for Paris, France).
      *
      * @param name The shield code identifying the shield POP
-     * @throws {Error} Thrown if no shield exists with the provided name
+     * @throws Throws an `Error` if no shield exists with the provided name
      */
     constructor(name: string);
 
@@ -62,7 +62,7 @@ declare module 'fastly:shielding' {
     runningOn(): boolean;
 
     /**
-     * Return a {@link import('fastly:backend').Backend | Backend} representing an unencrypted
+     * Return a {@link backend!Backend | Backend} representing an unencrypted
      * connection to this shield POP. Prefer {@link encryptedBackend} unless the data is already
      * encrypted, as data sent over this backend travels unencrypted over the open internet.
      *
@@ -73,7 +73,7 @@ declare module 'fastly:shielding' {
     ): import('fastly:backend').Backend;
 
     /**
-     * Return a {@link import('fastly:backend').Backend | Backend} representing an encrypted
+     * Return a {@link backend!Backend | Backend} representing an encrypted
      * connection to this shield POP. This is almost always the backend you want to use.
      *
      * @param configuration Optional backend configuration
