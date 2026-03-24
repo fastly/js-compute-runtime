@@ -1,4 +1,3 @@
-import { readFileSync } from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { Application, Context, Converter, DeclarationReflection, DefaultTheme, DefaultThemeRenderContext, JSX, ReflectionKind, SignatureReflection } from 'typedoc';
@@ -6,7 +5,6 @@ import { anchorIcon, classNames, getDisplayName, join, wbr, hasTypeParameters } 
 import { Fiddle, FiddleClientScript } from './fiddle.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const customCss = readFileSync(path.join(__dirname, 'custom.css'), 'utf8');
 
 function getVersionElement(refl: DeclarationReflection | SignatureReflection): JSX.Element {
     let version = refl.version;

@@ -47,15 +47,16 @@
     "clean": "rm -rf dist/ starling.wasm fastly.wasm fastly.debug.wasm fastly-weval.wasm fastly-ics.wevalcache fastly-js-compute-*.tgz",
     "build": "npm run clean && npm run build:cli && npm run build:debug && npm run build:release && npm run build:weval",
     "build:cli": "tsc",
-    "build:docs": "cd documentation/typedoc && npm run build && cd ../.. && typedoc",
     "build:release": "./runtime/fastly/build-release.sh",
     "build:debug": "./runtime/fastly/build-debug.sh",
     "build:weval": "./runtime/fastly/build-release-weval.sh",
     "build:debug:info": "./runtime/fastly/build-debug.sh --keep-debug-info",
+    "build:docs": "typedoc",
     "format-changelog": "node ci/format-changelog.js CHANGELOG.md",
     "format": "prettier --write 'src/**/*.ts' integration-tests types test-d",
     "format:check": "prettier --check 'src/**/*.ts' integration-tests",
-    "serve:docs": "npm run build:docs && cd documentation/app && npm run dev:publish && npm run dev:start"
+    "docs:serve": "npm run build:docs && cd documentation/app && npm run dev:publish && npm run dev:start",
+    "docs:publish": "npm run build:docs && cd documentation/app && npm run fastly:publish"
   },
   "dependencies": {
     "@bytecodealliance/jco": "^1.7.0",
@@ -73,7 +74,6 @@
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@jakechampion/cli-testing-library": "^1.0.0",
-    "@shipgirl/typedoc-plugin-versions": "^0.3.2",
     "@types/node": "^24.10.1",
     "@types/picomatch": "^4.0.2",
     "brittle": "^3.5.2",
@@ -83,12 +83,12 @@
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
     "tsd": "^0.33.0",
-    "typedoc": "^0.28.17",
-    "typedoc-plugin-fastly": "file:documentation/typedoc",
-    "typedoc-plugin-mdn-links": "^5.1.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.48.1",
-    "unified": "^11.0.5"
+    "unified": "^11.0.5",
+    "typedoc": "^0.28.17",
+    "typedoc-plugin-fastly": "file:documentation/typedoc",
+    "typedoc-plugin-mdn-links": "^5.1.1"
   },
   "peerDependencies": {
     "typescript": "^5.9.0"

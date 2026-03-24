@@ -1,8 +1,8 @@
 {
-  "name": "compute-js-static-site",
+  "name": "js-sdk-docs",
   "version": "0.1.0",
-  "description": "Fastly Compute static site",
-  "author": "you@example.com",
+  "description": "Fastly JavaScript SDK documentation",
+  "author": "sy.brand@fastly.com",
   "type": "module",
   "devDependencies": {
     "@fastly/cli": "^11.2.0",

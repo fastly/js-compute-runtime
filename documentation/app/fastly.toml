@@ -1,11 +1,11 @@
 # This file describes a Fastly Compute package. To learn more visit:
 # https://www.fastly.com/documentation/reference/compute/fastly-toml
 
-authors = ["you@example.com"]
-description = "Fastly Compute static site"
+authors = ["sy.brand@fastly.com"]
+description = "JS SDK documentation"
 language = "javascript"
 manifest_version = 3
-name = "compute-js-static-site"
+name = "js-sdk-docs"
 service_id = "w28lvGyqRRGQTcJK2rpOJL"
 
 [local_server]
