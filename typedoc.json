@@ -1,19 +1,27 @@
 {
     "$schema": "https://typedoc.org/schema.json",
-    "plugin": ["typedoc-plugin-versions", "typedoc-plugin-mdn-links"],
-    "theme": "default",
+    "plugin": [
+        "typedoc-plugin-fastly"
+    ],
+    "theme": "fastly",
     "tsconfig": "tsconfig.json",
-    "exclude": ["types/index.d.ts"],
+    "exclude": [
+        "types/index.d.ts"
+    ],
     "entryPointStrategy": "expand",
     "entryPoints": [
-        "types"
+        "types/*"
     ],
-    "excludeExternals":true,
+    "excludeExternals": true,
+    "externalPattern": [
+        "node_modules/**"
+    ],
     "excludeInternal": true,
     "excludePrivate": true,
     "categorizeByGroup": false,
     "includeVersion": true,
     "githubPages": false,
-    "cleanOutputDir": false,
-    "out": "reference-docs"
+    "cleanOutputDir": true,
+    "out": "documentation/build",
+    "favicon": "https://www.fastly.com/favicons/favicon.svg"
 }
