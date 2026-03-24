@@ -33,34 +33,34 @@ declare module 'fastly:secret-store' {
    */
   class SecretStore {
     /**
-     * Creates a new SecretStore object which interacts with the Fastly secret store named `name`.
+     * Creates a new `SecretStore` object which interacts with the Fastly secret store named `name`.
      *
      * @param name Name of the Fastly secret store to interact with. A name cannot be empty,
      *   longer than 255 characters, or contain characters other than letters, numbers, dashes
      *   (`-`), underscores (`_`), and periods (`.`).
-     * @throws {TypeError} If no secret store exists with the provided name, the name is empty,
+     * @throws Throws `TypeError` if no secret store exists with the provided name, the name is empty,
      *   longer than 255 characters, or contains invalid characters.
      */
     constructor(name: string);
     /**
      * Get the value associated with the key `key` in the secret store. If the key does not
-     * exist, the returned Promise resolves with `null`.
+     * exist, the returned `Promise` resolves with `null`.
      *
      * @param key The key to retrieve. A key cannot be empty, longer than 255 characters, or
      *   contain characters other than letters, numbers, dashes (`-`), underscores (`_`), and
      *   periods (`.`).
-     * @throws {TypeError} If the key is empty, longer than 255 characters, or contains
+     * @throws Throws `TypeError` if the key is empty, longer than 255 characters, or contains
      *   invalid characters.
      */
     get(key: string): Promise<SecretStoreEntry | null>;
 
     /**
-     * Construct a local in-memory SecretStoreEntry from the provided bytes, useful for
-     * passing bytes to APIs that only accept a SecretStoreEntry.
+     * Construct a local in-memory `SecretStoreEntry` from the provided bytes, useful for
+     * passing bytes to APIs that only accept a `SecretStoreEntry`.
      *
      * **Note**: This is not the recommended way to obtain secrets — use {@link get} instead.
      *
-     * @param bytes The raw bytes to wrap as a SecretStoreEntry.
+     * @param bytes The raw bytes to wrap as a `SecretStoreEntry`.
      * @version 3.15.0
      */
     static fromBytes(bytes: ArrayBufferView | ArrayBuffer): SecretStoreEntry;
@@ -71,14 +71,14 @@ declare module 'fastly:secret-store' {
      * Get the plaintext value of the secret as a UTF-8 string.
      *
      * **Note**: Using this method will bring the secret into user memory — avoid using it
-     * when possible, instead passing the SecretStoreEntry directly.
+     * when possible, instead passing the `SecretStoreEntry` directly.
      */
     plaintext(): string;
     /**
      * Get the raw byte value of the secret as a Uint8Array.
      *
      * **Note**: Using this method will bring the secret into user memory — avoid using it
-     * when possible, instead passing the SecretStoreEntry directly.
+     * when possible, instead passing the `SecretStoreEntry` directly.
      *
      * @version 3.15.0
      */
