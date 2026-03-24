@@ -35,8 +35,6 @@ declare module 'fastly:logger' {
     constructor(name: string);
     /**
      * Send the given message, converted to a string, to this Logger instance's endpoint.
-     *
-     * @param message The message to log.
      */
     log(message: any): void;
   }
@@ -59,8 +57,6 @@ declare module 'fastly:logger' {
 
   /**
    * Configure the behaviour of `console.log` and related console logging functions.
-   *
-   * @param loggingOptions The console logging options.
    * @version 3.28.0
    */
   export function configureConsole(loggingOptions: ConsoleLoggingOptions): void;
