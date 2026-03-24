@@ -65,8 +65,8 @@ declare module 'fastly:html-rewriter' {
      * @param selector CSS selector string
      * @param handler Function called with each matching Element
      * @returns The HTMLRewritingStream instance for chaining
-     * @throws {Error} If the provided selector is not a valid CSS selector.
-     * @throws {Error} If the provided handler is not a function.
+     * @throws `Error` If the provided selector is not a valid CSS selector or 
+     * if the handler is not a function.
      */
     onElement(selector: string, handler: (element: Element) => void): this;
 
