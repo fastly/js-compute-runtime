@@ -7,7 +7,7 @@ import {
 import { mkdir, readFile, mkdtemp } from 'node:fs/promises';
 import { rmSync } from 'node:fs';
 import weval from '@bytecodealliance/weval';
-import wizer from '@bytecodealliance/wizer';
+import wasmtime from '@fastly/wasmtime';
 
 import { isDirectory, isFile } from './files.js';
 import { CompilerContext } from './compilerPipeline.js';
@@ -232,15 +232,18 @@ export async function compileApplicationToWasm(
           }
           process.exitCode = wevalProcess.status;
         } else {
+          const wasmtimePath = await wasmtime();
           const wizerProcess = spawnSync(
-            `"${wizer}"`,
+            `"${wasmtimePath}"`,
             [
-              '--allow-wasi',
-              `--wasm-bulk-memory=true`,
+              'wizer',
+              '-S cli',
+              '-S inherit-env',
+              '-W bulk-memory',
+              '-W unknown-imports-trap',
               `--dir="${maybeWindowsPath(process.cwd())}"`,
-              '--inherit-env=true',
               '-r _start=wizer.resume',
-              `-o="${output}"`,
+              `-o "${output}"`,
               `"${wasmEngine}"`,
             ],
             spawnOpts,
@@ -274,16 +277,19 @@ export async function compileApplicationToWasm(
           }
           process.exitCode = wevalProcess.status;
         } else {
+          const wasmtimePath = await wasmtime();
           const wizerProcess = spawnSync(
-            `"${wizer}"`,
+            `"${wasmtimePath}"`,
             [
-              '--inherit-env=true',
-              '--allow-wasi',
+              'wizer',
+              '-S inherit-env',
+              '-S cli',
+              '-W bulk-memory',
+              '-W unknown-imports-trap',
               '--dir=.',
               `--dir=${maybeWindowsPath(dirname(input))}`,
               '-r _start=wizer.resume',
-              `--wasm-bulk-memory=true`,
-              `-o="${output}"`,
+              `-o "${output}"`,
               `"${wasmEngine}"`,
             ],
             spawnOpts,

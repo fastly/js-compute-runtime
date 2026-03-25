@@ -1461,7 +1461,7 @@
     "status": "PASS"
   },
   "Parsing: <??a=b&c=d> against <http://example.org/foo/bar>": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <http:> against <http://example.org/foo/bar>": {
     "status": "PASS"
@@ -1473,19 +1473,19 @@
     "status": "PASS"
   },
   "Parsing: <http://foo.bar/baz?qux#foo\bbar> without base": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <http://foo.bar/baz?qux#foo\"bar> without base": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <http://foo.bar/baz?qux#foo<bar> without base": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <http://foo.bar/baz?qux#foo>bar> without base": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <http://foo.bar/baz?qux#foo`bar> without base": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Parsing: <http://1.2.3.4/> against <http://other.com/>": {
     "status": "PASS"

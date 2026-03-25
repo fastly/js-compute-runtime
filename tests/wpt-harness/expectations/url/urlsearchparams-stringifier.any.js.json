@@ -36,7 +36,7 @@
     "status": "PASS"
   },
   "URLSearchParams connected to URL": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URLSearchParams must not do newline normalization": {
     "status": "PASS"
