@@ -7,7 +7,7 @@ import {
 import { mkdir, readFile, mkdtemp } from 'node:fs/promises';
 import { rmSync } from 'node:fs';
 import weval from '@bytecodealliance/weval';
-import wasmtime from './wasmtime.js';
+import wasmtime from '@fastly/wasmtime';
 
 import { isDirectory, isFile } from './files.js';
 import { CompilerContext } from './compilerPipeline.js';

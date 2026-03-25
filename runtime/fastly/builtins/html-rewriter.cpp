@@ -582,9 +582,8 @@ bool install(api::Engine *engine) {
     return false;
   }
 
-  RootedObject html_rewriter_obj(
-      engine->cx(),
-      JS_GetConstructor(engine->cx(), HTMLRewritingStream::proto_obj));
+  RootedObject html_rewriter_obj(engine->cx(),
+                                 JS_GetConstructor(engine->cx(), HTMLRewritingStream::proto_obj));
   RootedValue html_rewriter_val(engine->cx(), ObjectValue(*html_rewriter_obj));
   RootedObject html_rewriter_ns(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   if (!JS_SetProperty(engine->cx(), html_rewriter_ns, "HTMLRewritingStream", html_rewriter_val)) {
