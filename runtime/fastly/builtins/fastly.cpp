@@ -1025,7 +1025,7 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
     // before `buf` goes out of scope.)
     JS::AutoCheckCannotGC noGC;
     bool is_shared;
-    auto* data = JS_GetArrayBufferViewData(bodyObj, &is_shared, noGC);
+    auto *data = JS_GetArrayBufferViewData(bodyObj, &is_shared, noGC);
     std::memcpy(buf.get(), data, length);
     MOZ_ASSERT(!is_shared);
     return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
