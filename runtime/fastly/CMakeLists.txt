@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.27)
 
-#FIXME(1243)
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../rust-toolchain.toml" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/../StarlingMonkey")
-
 include("../StarlingMonkey/cmake/add_as_subproject.cmake")
 
 add_builtin(
@@ -40,9 +37,7 @@ add_builtin(fastly::fetch
     builtins/fetch/request-response.cpp
     builtins/fetch/request-response.cpp
     ../StarlingMonkey/builtins/web/fetch/headers.cpp
-    ../StarlingMonkey/builtins/web/fetch/fetch-utils.cpp
-  DEPENDENCIES
-    fmt)
+    ../StarlingMonkey/builtins/web/fetch/fetch-utils.cpp)
 
 add_builtin(fastly::cache_override SRC builtins/cache-override.cpp)
 

@@ -1,13 +1,12 @@
 #ifndef fastly_H
 #define fastly_H
 #ifdef __cplusplus
-extern "C" {
-namespace fastly {
-#endif
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+extern "C" {
+namespace fastly {
+#endif
 
 typedef struct fastly_world_string {
   uint8_t *ptr;
