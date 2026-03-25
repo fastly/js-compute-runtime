@@ -5,7 +5,7 @@ import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { extract } from 'tar';
+import { extract } from 'tar-fs';
 import lzma from 'lzma-native';
 import AdmZip from 'adm-zip';
 
@@ -53,8 +53,7 @@ async function extractTarXz(archivePath, destDir) {
   await pipeline(
     createReadStream(archivePath),
     lzma.createDecompressor(),
-    extract({
-      cwd: destDir,
+    extract(destDir, {
       strip: 1,
     })
   );
