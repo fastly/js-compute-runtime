@@ -1874,8 +1874,7 @@ bool install(api::Engine *engine) {
     return false;
   }
 
-  RootedObject backend_obj(engine->cx(),
-                           JS_GetConstructor(engine->cx(), BuiltinImpl<Backend>::proto_obj));
+  RootedObject backend_obj(engine->cx(), JS_GetConstructor(engine->cx(), Backend::proto_obj));
   RootedValue backend_val(engine->cx(), ObjectValue(*backend_obj));
   RootedObject backend_ns(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   if (!JS_SetProperty(engine->cx(), backend_ns, "Backend", backend_val)) {
