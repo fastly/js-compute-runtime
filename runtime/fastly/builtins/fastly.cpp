@@ -1017,15 +1017,16 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
   size_t length;
 
   if (bodyObj && JS_IsArrayBufferViewObject(bodyObj)) {
+    length = JS_GetArrayBufferViewByteLength(bodyObj);
+    buf.reset(reinterpret_cast<char *>(JS_malloc(cx, length)));
     // `maybeNoGC` needs to be populated for the lifetime of `buf` because
     // short typed arrays have inline data which can move on GC, so assert
     // that no GC happens. (Which it doesn't, because we're not allocating
     // before `buf` goes out of scope.)
     JS::AutoCheckCannotGC noGC;
     bool is_shared;
-    length = JS_GetArrayBufferViewByteLength(bodyObj);
-    buf = JS::UniqueChars(
-        reinterpret_cast<char *>(JS_GetArrayBufferViewData(bodyObj, &is_shared, noGC)));
+    auto *data = JS_GetArrayBufferViewData(bodyObj, &is_shared, noGC);
+    std::memcpy(buf.get(), data, length);
     MOZ_ASSERT(!is_shared);
     return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
   } else if (bodyObj && JS::IsArrayBufferObject(bodyObj)) {
@@ -1033,11 +1034,13 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
     uint8_t *bytes;
     JS::GetArrayBufferLengthAndData(bodyObj, &length, &is_shared, &bytes);
     MOZ_ASSERT(!is_shared);
-    buf.reset(reinterpret_cast<char *>(bytes));
+    buf.reset(reinterpret_cast<char *>(JS_malloc(cx, length)));
+    std::memcpy(buf.get(), bytes, length);
     return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
   } else if (bodyObj && URLSearchParams::is_instance(bodyObj)) {
     jsurl::SpecSlice slice = URLSearchParams::serialize(cx, bodyObj);
-    buf = JS::UniqueChars(reinterpret_cast<char *>(const_cast<uint8_t *>(slice.data)));
+    buf.reset(reinterpret_cast<char *>(JS_malloc(cx, slice.len)));
+    std::memcpy(buf.get(), slice.data, slice.len);
     length = slice.len;
     return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
   } else {
