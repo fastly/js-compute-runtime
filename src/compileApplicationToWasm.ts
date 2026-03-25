@@ -7,7 +7,7 @@ import {
 import { mkdir, readFile, mkdtemp } from 'node:fs/promises';
 import { rmSync } from 'node:fs';
 import weval from '@bytecodealliance/weval';
-import wizer from '@bytecodealliance/wizer';
+import wasmtime from './wasmtime.js';
 
 import { isDirectory, isFile } from './files.js';
 import { CompilerContext } from './compilerPipeline.js';
@@ -232,9 +232,11 @@ export async function compileApplicationToWasm(
           }
           process.exitCode = wevalProcess.status;
         } else {
+          const wasmtimePath = await wasmtime();
           const wizerProcess = spawnSync(
-            `"${wizer}"`,
+            `"${wasmtimePath}"`,
             [
+              'wizer',
               '--allow-wasi',
               `--wasm-bulk-memory=true`,
               `--dir="${maybeWindowsPath(process.cwd())}"`,
@@ -274,9 +276,11 @@ export async function compileApplicationToWasm(
           }
           process.exitCode = wevalProcess.status;
         } else {
+          const wasmtimePath = await wasmtime();
           const wizerProcess = spawnSync(
-            `"${wizer}"`,
+            `"${wasmtimePath}"`,
             [
+              'wizer',
               '--inherit-env=true',
               '--allow-wasi',
               '--dir=.',

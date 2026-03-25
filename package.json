@@ -38,6 +38,7 @@
     "CHANGELOG.md"
   ],
   "scripts": {
+    "postinstall": "node scripts/install-wasmtime.js",
     "test": "npm run test:types && npm run test:cli",
     "test:cli": "brittle --bail integration-tests/cli/**.test.js",
     "test:integration": "node ./integration-tests/js-compute/test.js",
@@ -57,8 +58,7 @@
   },
   "dependencies": {
     "@bytecodealliance/jco": "^1.7.0",
-    "@bytecodealliance/weval": "^0.3.2",
-    "@bytecodealliance/wizer": "^7.0.5",
+    "@bytecodealliance/weval": "^0.4.1",
     "@jridgewell/remapping": "^2.3.5",
     "@jridgewell/trace-mapping": "^0.3.31",
     "acorn": "^8.13.0",
