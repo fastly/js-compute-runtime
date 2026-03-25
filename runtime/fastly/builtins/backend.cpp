@@ -1883,8 +1883,17 @@ bool install(api::Engine *engine) {
     return false;
   }
 
+  if (JS_IsExceptionPending(engine->cx())) {
+      std::cerr << "Exception pending after initializing backend class\n";
+      return false;
+    }
+
   RootedObject backend_obj(engine->cx(),
-                           JS_GetConstructor(engine->cx(), BuiltinImpl<Backend>::proto_obj));
+                           JS_GetConstructor(engine->cx(), Backend::proto_obj));
+                             if (JS_IsExceptionPending(engine->cx())) {
+      std::cerr << "Exception pending after getting backend constructor\n";
+      return false;
+    }
   RootedValue backend_val(engine->cx(), ObjectValue(*backend_obj));
   RootedObject backend_ns(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   if (!JS_SetProperty(engine->cx(), backend_ns, "Backend", backend_val)) {

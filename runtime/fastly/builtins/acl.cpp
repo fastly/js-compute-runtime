@@ -156,7 +156,7 @@ bool install(api::Engine *engine) {
   }
 
   RootedObject acl_obj(engine->cx(),
-                       JS_GetConstructor(engine->cx(), BuiltinNoConstructor<Acl>::proto_obj));
+                       JS_GetConstructor(engine->cx(), Acl::proto_obj));
   RootedValue acl_val(engine->cx(), ObjectValue(*acl_obj));
   RootedObject acl_ns(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   if (!JS_SetProperty(engine->cx(), acl_ns, "Acl", acl_val)) {
