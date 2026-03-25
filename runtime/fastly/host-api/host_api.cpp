@@ -529,7 +529,7 @@ int32_t MonotonicClock::subscribe(const uint64_t when, const bool absolute) {
   return NEVER_HANDLE;
 }
 
-void MonotonicClock::unsubscribe(const int32_t handle_id){TRACE_CALL()}
+void MonotonicClock::unsubscribe(const int32_t handle_id) { TRACE_CALL() }
 
 // Fastly handle state is currently just a wrapper around
 // an arbitrary fastly handle, along with a bit indicating

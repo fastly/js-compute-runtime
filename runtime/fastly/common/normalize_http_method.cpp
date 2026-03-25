@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <cctype>
-#include <string_view>
 #include <cstdlib>
+#include <string_view>
 
 namespace fastly::common {
 

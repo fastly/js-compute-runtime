@@ -1,15 +1,21 @@
 #!/usr/bin/env node
-import { mkdir, chmod, writeFile } from 'node:fs/promises';
-import { createWriteStream } from 'node:fs';
+import { mkdir, chmod, readFile } from 'node:fs/promises';
+import { createReadStream, createWriteStream } from 'node:fs';
+import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { get } from 'node:https';
+import { extract } from 'tar';
+import lzma from 'lzma-native';
+import AdmZip from 'adm-zip';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const binDir = join(__dirname, '..', 'bin');
 
-const WASMTIME_VERSION = 'v43.0.0';
+const packageJson = JSON.parse(
+  await readFile(join(__dirname, '..', 'package.json'), 'utf-8')
+);
+const WASMTIME_VERSION = `v${packageJson.version}`;
 
 function getPlatformInfo() {
   const platform = process.platform;
@@ -35,46 +41,27 @@ function getPlatformInfo() {
 }
 
 async function downloadFile(url, dest) {
-  return new Promise((resolve, reject) => {
-    get(url, (response) => {
-      if (response.statusCode === 302 || response.statusCode === 301) {
-        downloadFile(response.headers.location, dest).then(resolve).catch(reject);
-        return;
-      }
-      if (response.statusCode !== 200) {
-        reject(new Error(`Failed to download: ${response.statusCode}`));
-        return;
-      }
-      const fileStream = createWriteStream(dest);
-      pipeline(response, fileStream)
-        .then(resolve)
-        .catch(reject);
-    }).on('error', reject);
-  });
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to download: ${response.status}`);
+  }
+  const fileStream = createWriteStream(dest);
+  await pipeline(Readable.fromWeb(response.body), fileStream);
 }
 
 async function extractTarXz(archivePath, destDir) {
-  const { spawn } = await import('node:child_process');
-  return new Promise((resolve, reject) => {
-    const tar = spawn('tar', ['xf', archivePath, '-C', destDir, '--strip-components=1']);
-    tar.on('close', (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`tar extraction failed with code ${code}`));
-    });
-    tar.on('error', reject);
-  });
+  await pipeline(
+    createReadStream(archivePath),
+    lzma.createDecompressor(),
+    extract({
+      cwd: destDir,
+      strip: 1,
+    })
+  );
 }
 
 async function extractZip(archivePath, destDir) {
-  const { spawn } = await import('node:child_process');
-  return new Promise((resolve, reject) => {
-    const unzip = spawn('unzip', ['-o', archivePath, '-d', destDir]);
-    unzip.on('close', (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`unzip failed with code ${code}`));
-    });
-    unzip.on('error', reject);
-  });
+  new AdmZip(archivePath).extractAllTo(destDir, true);
 }
 
 async function installWasmtime() {
