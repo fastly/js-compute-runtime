@@ -21,5 +21,8 @@ wpt-runtime.wasm
 docs-app/bin/main.wasm
 docs-app/pkg/*.tar.gz
 
+# Local wasmtime install
+/packages/wasmtime/bin
+
 yarn-error.log
 .vscode

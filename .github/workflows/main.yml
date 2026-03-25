@@ -99,13 +99,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: "Install wasi-sdk-20 (linux)"
+    - name: "Install wasi-sdk-30 (linux)"
       run: |
         set -x
-        curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-20.0-linux.tar.gz
-        tar xf wasi-sdk-20.0-linux.tar.gz
+        curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-30/wasi-sdk-30.0-x86_64-linux.tar.gz
+        tar xf wasi-sdk-30.0-x86_64-linux.tar.gz
         sudo mkdir -p /opt/wasi-sdk
-        sudo mv wasi-sdk-20.0/* /opt/wasi-sdk/
+        sudo mv wasi-sdk-30.0-x86_64-linux/* /opt/wasi-sdk/
         ls /opt/wasi-sdk/
     - run: |
         /opt/wasi-sdk/bin/clang-format --version
@@ -171,10 +171,10 @@ jobs:
       with:
         node-version: 'lts/*'
     - run: npm ci
-    - name: Install Rust 1.81.0
+    - name: Install Rust 1.88.0
       run: |
-        rustup toolchain install 1.81.0
-        rustup target add wasm32-wasip1 --toolchain 1.81.0
+        rustup toolchain install 1.88.0
+        rustup target add wasm32-wasip1 --toolchain 1.88.0
     - name: Restore wasm-tools from cache
       uses: actions/cache@v3
       id: wasm-tools
@@ -207,10 +207,10 @@ jobs:
       with:
         node-version: 'lts/*'
     - run: npm ci
-    - name: Install Rust 1.81.0
+    - name: Install Rust 1.88.0
       run: |
-        rustup toolchain install 1.81.0
-        rustup target add wasm32-wasip1 --toolchain 1.81.0
+        rustup toolchain install 1.88.0
+        rustup target add wasm32-wasip1 --toolchain 1.88.0
     - name: Restore wasm-tools from cache
       uses: actions/cache@v3
       id: wasm-tools
