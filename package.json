@@ -57,8 +57,8 @@
   },
   "dependencies": {
     "@bytecodealliance/jco": "^1.7.0",
-    "@bytecodealliance/weval": "^0.3.2",
-    "@bytecodealliance/wizer": "^7.0.5",
+    "@bytecodealliance/weval": "^0.4.1",
+    "@fastly/wasmtime": "file:packages/wasmtime",
     "@jridgewell/remapping": "^2.3.5",
     "@jridgewell/trace-mapping": "^0.3.31",
     "acorn": "^8.13.0",
