@@ -47,7 +47,7 @@ To build from source, you need to have the following tools installed to successf
   curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-30/wasi-sdk-30.0-x86_64-linux.tar.gz
   tar xf wasi-sdk-30.0-x86_64-linux.tar.gz
   sudo mkdir -p /opt/wasi-sdk
-  sudo mv wasi-sdk-30.0/* /opt/wasi-sdk/
+  sudo mv wasi-sdk-30.0-x86_64-linux/* /opt/wasi-sdk/
   ```
 
 Build the runtime using npm:
@@ -107,7 +107,7 @@ npm run build
   curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-30/wasi-sdk-30.0-arm64-macos.tar.gz
   tar xf wasi-sdk-30.0-arm64-macos.tar.gz
   sudo mkdir -p /opt/wasi-sdk
-  sudo mv wasi-sdk-30.0/* /opt/wasi-sdk/
+  sudo mv wasi-sdk-30.0-arm64-macos/* /opt/wasi-sdk/
   ```
 
 Build the runtime using npm:
