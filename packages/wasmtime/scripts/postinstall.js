@@ -83,7 +83,9 @@ async function installWasmtime() {
     }
     
     const binaryPath = join(binDir, binary);
-    await chmod(binaryPath, 0o755);
+    if (process.platform !== 'win32') {
+      await chmod(binaryPath, 0o755);
+    }
     
     console.log('✓ wasmtime installed successfully');
   } catch (error) {
