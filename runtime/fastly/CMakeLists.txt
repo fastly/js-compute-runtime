@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.27)
 
-#FIXME(1243)
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../rust-toolchain.toml" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/../StarlingMonkey")
-
 # Apply any local patches to StarlingMonkey before it is included as a subproject
 file(GLOB SM_PATCHES "${CMAKE_CURRENT_SOURCE_DIR}/patches/starlingmonkey-*.patch")
 foreach(patch IN LISTS SM_PATCHES)
@@ -61,9 +58,7 @@ add_builtin(fastly::fetch
     builtins/fetch/request-response.cpp
     builtins/fetch/request-response.cpp
     ../StarlingMonkey/builtins/web/fetch/headers.cpp
-    ../StarlingMonkey/builtins/web/fetch/fetch-utils.cpp
-  DEPENDENCIES
-    fmt)
+    ../StarlingMonkey/builtins/web/fetch/fetch-utils.cpp)
 
 add_builtin(fastly::cache_override SRC builtins/cache-override.cpp)
 
