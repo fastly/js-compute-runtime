@@ -56,6 +56,9 @@ add_builtin(fastly::html_rewriter
     ${CMAKE_CURRENT_SOURCE_DIR}/crates/rust-lol-html/include
 )
 
+# Stub implementation of parts of `AbortSignal` depended on by the `event` StarlingMonkey builtin
+add_builtin(fastly::abort SRC builtins/abort.cpp)
+
 add_compile_definitions(PUBLIC RUNTIME_VERSION=${RUNTIME_VERSION})
 
 project(FastlyJS)
