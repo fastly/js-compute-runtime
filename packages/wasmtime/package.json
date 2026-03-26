@@ -1,0 +1,23 @@
+{
+  "name": "@fastly/wasmtime",
+  "version": "43.0.0",
+  "description": "Wasmtime binary distribution for Node.js",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "node scripts/postinstall.js"
+  },
+  "files": [
+    "index.js",
+    "scripts/postinstall.js"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "tar-fs": "^3.1.2",
+    "extract-zip": "^2.0.1",
+    "lzma-native": "^8.0.6"
+  },
+  "license": "Apache-2.0"
+}

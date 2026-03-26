@@ -112,7 +112,7 @@ void sleep_until(uint64_t time_ns, uint64_t now) {
   }
 }
 
-size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
+size_t api::AsyncTask::select(std::vector<RefPtr<api::AsyncTask>> &tasks) {
   if (tasks.size() == 0) {
     TRACE_CALL()
   } else {
@@ -136,7 +136,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
   uint64_t soonest_deadline = 0;
   size_t soonest_deadline_idx = -1;
   for (size_t idx = 0; idx < tasks_len; ++idx) {
-    auto *task = tasks.at(idx);
+    auto task = tasks.at(idx);
     uint64_t deadline;
     if (task->id() == IMMEDIATE_TASK_HANDLE) {
       if (now == 0) {
@@ -529,16 +529,7 @@ int32_t MonotonicClock::subscribe(const uint64_t when, const bool absolute) {
   return NEVER_HANDLE;
 }
 
-void MonotonicClock::unsubscribe(const int32_t handle_id){TRACE_CALL()}
-
-// HttpHeaders and HttpHeadersReadOnly extend Resource.
-// Resource provdes handle_state_ which is a HandleState
-// which gets to be fully host-defined.
-Resource::~Resource() {
-  if (handle_state_ != nullptr) {
-    handle_state_ = nullptr;
-  }
-};
+void MonotonicClock::unsubscribe(const int32_t handle_id) { TRACE_CALL() }
 
 // Fastly handle state is currently just a wrapper around
 // an arbitrary fastly handle, along with a bit indicating
@@ -556,6 +547,15 @@ public:
   api::FastlyAsyncTask::Handle handle() { return handle_; }
   bool is_req() { return is_req_; }
   bool valid() const { return true; }
+};
+
+// HttpHeaders and HttpHeadersReadOnly extend Resource.
+// Resource provdes handle_state_ which is a HandleState
+// which gets to be fully host-defined.
+Resource::~Resource() {
+  if (handle_state_ != nullptr) {
+    handle_state_ = nullptr;
+  }
 };
 
 HttpHeaders *HttpHeadersReadOnly::clone() { return new HttpHeaders(*this); }
