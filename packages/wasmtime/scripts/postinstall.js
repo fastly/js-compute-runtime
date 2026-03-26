@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { mkdir, chmod, readFile } from 'node:fs/promises';
+import { mkdir, chmod, readFile, readdir, rename, rm } from 'node:fs/promises';
 import { createReadStream, createWriteStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { extract } from 'tar-fs';
 import lzma from 'lzma-native';
-import AdmZip from 'adm-zip';
+import extractZip from 'extract-zip';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const binDir = join(__dirname, '..', 'bin');
@@ -59,8 +59,24 @@ async function extractTarXz(archivePath, destDir) {
   );
 }
 
-async function extractZip(archivePath, destDir) {
-  new AdmZip(archivePath).extractAllTo(destDir, true);
+async function extractZipWithStrip(archivePath, destDir) {
+  const tempDir = join(destDir, '.extract-temp');
+  
+  await extractZip(archivePath, { dir: tempDir });
+  
+  const entries = await readdir(tempDir);
+  if (entries.length !== 1) {
+    throw new Error('Expected single root directory in zip file');
+  }
+  
+  const rootDir = join(tempDir, entries[0]);
+  const contents = await readdir(rootDir);
+  
+  for (const item of contents) {
+    await rename(join(rootDir, item), join(destDir, item));
+  }
+  
+  await rm(tempDir, { recursive: true });
 }
 
 async function installWasmtime() {
@@ -79,7 +95,7 @@ async function installWasmtime() {
     if (file.endsWith('.tar.xz')) {
       await extractTarXz(archivePath, binDir);
     } else if (file.endsWith('.zip')) {
-      await extractZip(archivePath, binDir);
+      await extractZipWithStrip(archivePath, binDir);
     }
     
     const binaryPath = join(binDir, binary);
