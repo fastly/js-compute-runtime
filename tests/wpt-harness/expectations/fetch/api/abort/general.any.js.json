@@ -12,7 +12,7 @@
     "status": "PASS"
   },
   "TypeError from request constructor takes priority - Input URL is not valid": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "TypeError from request constructor takes priority - Input URL has credentials": {
     "status": "PASS"
@@ -78,13 +78,13 @@
     "status": "FAIL"
   },
   "Signal removed by setting to null": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "Already aborted signal rejects immediately": {
     "status": "FAIL"
   },
   "Request is still 'used' if signal is aborted before fetching": {
-    "status": "PASS"
+    "status": "FAIL"
   },
   "response.arrayBuffer() rejects if already aborted": {
     "status": "FAIL"
