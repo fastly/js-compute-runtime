@@ -152,6 +152,7 @@ class Request final : public builtins::BuiltinImpl<Request> {
 
   static bool body_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool signal_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static bool setCacheOverride(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool setCacheKey(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -182,6 +183,7 @@ public:
     IsDownstream,
     AutoDecompressGzip,
     ImageOptimizerOptions,
+    Signal,
     Count,
   };
 
@@ -192,6 +194,7 @@ public:
 
   static JSObject *response_promise(JSObject *obj);
   static JSString *method(JSContext *cx, JS::HandleObject obj);
+  static JSObject *signal(JSObject *obj);
   // static JSString *override_cache_key(JSContext *cx)
   static bool set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValue cache_key_val);
   static bool set_cache_override(JSContext *cx, JS::HandleObject self,
@@ -275,6 +278,7 @@ public:
     SuggestedCacheWriteOptions,
     OverrideCacheWriteOptions,
     CacheBodyTransform,
+    Aborted,
     Count,
   };
   static const JSFunctionSpec static_methods[];
@@ -318,6 +322,8 @@ public:
   static host_api::HostString backend_str(JSContext *cx, JSObject *obj);
   static uint16_t status(JSObject *obj);
   static JSString *status_message(JSObject *obj);
+  static JS::Value aborted(JSObject *obj);
+  static void set_aborted(JSObject *obj, JS::HandleValue reason);
   static void set_status_message_from_code(JSContext *cx, JSObject *obj, uint16_t code);
 
   static bool add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,

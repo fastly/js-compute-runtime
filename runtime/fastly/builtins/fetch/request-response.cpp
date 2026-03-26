@@ -1,4 +1,5 @@
 #include "request-response.h"
+#include "../../../StarlingMonkey/builtins/web/abort/abort-signal.h"
 #include "../../../StarlingMonkey/builtins/web/base64.h"
 #include "../../../StarlingMonkey/builtins/web/blob.h"
 #include "../../../StarlingMonkey/builtins/web/form-data/form-data-encoder.h"
@@ -53,6 +54,8 @@ using builtins::web::dom_exception::DOMException;
 using builtins::web::form_data::FormData;
 using builtins::web::form_data::FormDataParser;
 using builtins::web::form_data::MultipartFormData;
+
+using builtins::web::abort::AbortSignal;
 
 // We use the StarlingMonkey Headers implementation, despite it supporting features that we do
 // not - specifically the ability to construct headers unassociated with requests and responses.
@@ -1070,6 +1073,11 @@ bool RequestOrResponse::append_body(JSContext *cx, JS::HandleObject self, JS::Ha
     return false;
   }
   return true;
+}
+
+JSObject *Request::signal(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+  return &JS::GetReservedSlot(obj, static_cast<uint32_t>(Request::Slots::Signal)).toObject();
 }
 
 JSObject *Request::headers(JSContext *cx, JS::HandleObject obj) {
@@ -2276,6 +2284,12 @@ bool Request::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool Request::signal_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+  args.rval().setObjectOrNull(Request::signal(cx, self));
+  return true;
+}
+
 bool Request::setCacheOverride(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
@@ -2447,6 +2461,23 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Method),
                       JS::StringValue(method));
+
+
+  // Assert: this's signal is non-null.
+  MOZ_ASSERT(Request::signal(self));
+
+  // Let clonedSignal be the result of creating a dependent abort signal from « this's signal »,
+  // using AbortSignal and this's relevant realm.
+  RootedValue signal_val(cx, GetReservedSlot(self, static_cast<uint32_t>(Slots::Signal)));
+  RootedValueArray<1> signals(cx);
+  signals[0].set(signal_val);
+
+  RootedObject signal(cx, AbortSignal::create_with_signals(cx, signals));
+  if (!signal) {
+    return false;
+  }
+  SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Signal), ObjectValue(*signal));
+
   JS::RootedValue cache_override(
       cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::CacheOverride)));
   if (!cache_override.isNullOrUndefined()) {
@@ -2505,6 +2536,7 @@ const JSPropertySpec Request::properties[] = {
     JS_PSG("body", body_get, JSPROP_ENUMERATE),
     JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
     JS_PSG("isCacheable", isCacheable_get, JSPROP_ENUMERATE),
+    JS_PSG("signal", signal_get, JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "Request", JSPROP_READONLY),
     JS_PS_END,
 };
@@ -2541,6 +2573,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance,
                       JS::NullValue());
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::IsDownstream),
                       JS::BooleanValue(is_downstream));
+  JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Signal), JS::NullValue());
   return requestInstance;
 }
 
@@ -2573,6 +2606,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
 
   JS::RootedString url_str(cx);
   JS::RootedString method_str(cx);
+  JS::RootedObject signal_obj(cx);
   bool method_needs_normalization = false;
 
   JS::RootedObject input_request(cx);
@@ -2601,7 +2635,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     // (implicit)
 
     // 3.  Set `signal` to `input`’s signal.
-    // (signals not yet supported)
+    signal_obj = Request::signal(input_request);
 
     // 12.  Set `request` to a new request with the following properties:
     // (moved into step 6 because we can leave everything at the default values
@@ -2709,6 +2743,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   JS::RootedValue cache_key(cx);
   JS::RootedValue fastly_val(cx);
   JS::RootedValue image_optimizer_options(cx);
+  JS::RootedValue signal_val(cx);
   bool hasManualFramingHeaders = false;
   bool setManualFramingHeaders = false;
   if (init_val.isObject()) {
@@ -2723,7 +2758,8 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
         !JS_GetProperty(cx, init, "fastly", &fastly_val) ||
         !JS_HasOwnProperty(cx, init, "manualFramingHeaders", &hasManualFramingHeaders) ||
         !JS_GetProperty(cx, init, "manualFramingHeaders", &manualFramingHeaders) ||
-        !JS_GetProperty(cx, init, "imageOptimizerOptions", &image_optimizer_options)) {
+        !JS_GetProperty(cx, init, "imageOptimizerOptions", &image_optimizer_options) ||
+        !JS_GetProperty(cx, init, "signal", &signal_val)) {
       return nullptr;
     }
     setManualFramingHeaders = manualFramingHeaders.isBoolean() && manualFramingHeaders.toBoolean();
@@ -2844,27 +2880,47 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   }
 
   // 26.  If `init["signal"]` exists, then set `signal` to it.
-  // (signals NYI)
+  if (!signal_val.isUndefined()) {
+    signal_obj = signal_val.toObjectOrNull();
+    if (signal_obj && !AbortSignal::is_instance(signal_obj)) {
+      api::throw_error(cx, FetchErrors::InvalidSignal);
+      return nullptr;
+    }
+  }
 
-  // 27.  Set this’s request to `request`.
+  // 27. If init["priority"] exists, then:
+  // (Prority NYI)
+
+  // 28.  Set this’s request to `request`.
   // (implicit)
 
-  // 28.  Set this’s signal to a new `AbortSignal` object with this’s relevant
-  // Realm.
-  // 29.  If `signal` is not null, then make this’s signal follow `signal`.
-  // (signals NYI)
+  // 29. Let signals be « signal » if signal is non-null; otherwise « ».
+  JS::RootedValueVector signals(cx);
+  if (signal_obj) {
+    auto res = signals.append(JS::ObjectValue(*signal_obj));
+    if (!res) return nullptr;
+  }
 
-  // 30.  Set this’s headers to a new `Headers` object with this’s relevant
+  // 30. Set this's signal to the result of creating a dependent abort signal from signals,
+  // using AbortSignal and this's relevant realm.
+  JS::RootedObject signal(cx, AbortSignal::create_with_signals(cx, signals));
+  if (!signal) {
+    return nullptr;
+  }
+
+  JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::Signal), JS::ObjectValue(*signal));
+
+  // 31.  Set this’s headers to a new `Headers` object with this’s relevant
   // Realm, whose header list is `request`’s header list and guard is
   // "`request`". (implicit)
 
-  // 31.  If this’s requests mode is "`no-cors`", then:
+  // 32.  If this’s requests mode is "`no-cors`", then:
   // 1.  If this’s requests method is not a CORS-safelisted method, then throw a
   // `TypeError`.
   // 2.  Set this’s headers’s guard to "`request-no-cors`".
   // (N/A)
 
-  // 32.  If `init` is not empty, then:
+  // 33.  If `init` is not empty, then:
   // 1.  Let `headers` be a copy of this’s headers and its associated header
   // list.
   // 2.  If `init["headers"]` exists, then set `headers` to `init["headers"]`.
@@ -2893,12 +2949,12 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
 
   JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::Headers), JS::ObjectValue(*headers));
 
-  // 33.  Let `inputBody` be `input`’s requests body if `input` is a `Request`
+  // 34.  Let `inputBody` be `input`’s requests body if `input` is a `Request`
   // object;
   //      otherwise null.
   // (skipped)
 
-  // 34.  If either `init["body"]` exists and is non-null or `inputBody` is
+  // 35.  If either `init["body"]` exists and is non-null or `inputBody` is
   // non-null, and `request`’s method is ``GET`` or ``HEAD``, then throw a
   // TypeError.
   if ((input_has_body || !body_val.isNullOrUndefined()) && is_get_or_head) {
@@ -2906,7 +2962,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     return nullptr;
   }
 
-  // 35.  Let `initBody` be null.
+  // 36.  Let `initBody` be null.
   // (skipped)
 
   // Note: steps 36-41 boil down to "if there's an init body, use that.
@@ -2914,7 +2970,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   // TransformStream to make sure it's not consumed by something else in the
   // meantime." Given that, we're restructuring things quite a bit below.
 
-  // 36.  If `init["body"]` exists and is non-null, then:
+  // 37.  If `init["body"]` exists and is non-null, then:
   if (!body_val.isNullOrUndefined()) {
     // 1.  Let `Content-Type` be null.
     // 2.  Set `initBody` and `Content-Type` to the result of extracting
@@ -2929,16 +2985,16 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
       return nullptr;
     }
   } else if (input_has_body) {
-    // 37.  Let `inputOrInitBody` be `initBody` if it is non-null; otherwise
+    // 38.  Let `inputOrInitBody` be `initBody` if it is non-null; otherwise
     // `inputBody`. (implicit)
-    // 38.  If `inputOrInitBody` is non-null and `inputOrInitBody`’s source is
+    // 39.  If `inputOrInitBody` is non-null and `inputOrInitBody`’s source is
     // null, then:
     // 1.  If this’s requests mode is neither "`same-origin`" nor "`cors`", then
     // throw a `TypeError.
     // 2.  Set this’s requests use-CORS-preflight flag.
     // (N/A)
-    // 39.  Let `finalBody` be `inputOrInitBody`.
-    // 40.  If `initBody` is null and `inputBody` is non-null, then:
+    // 40.  Let `finalBody` be `inputOrInitBody`.
+    // 41.  If `initBody` is null and `inputBody` is non-null, then:
     // (implicit)
     // 1.  If `input` is unusable, then throw a TypeError.
     // 2.  Set `finalBody` to the result of creating a proxy for `inputBody`.
@@ -2989,7 +3045,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::HasBody), JS::BooleanValue(true));
   }
 
-  // 41.  Set this’s requests body to `finalBody`.
+  // 42.  Set this’s requests body to `finalBody`.
   // (implicit)
 
   // Apply the Fastly Compute-proprietary `backend` property.
@@ -3127,6 +3183,16 @@ std::optional<host_api::HttpReq> Response::websocket_upgrade_request(JSObject *o
   }
 
   return host_api::HttpReq(websocket_upgrade_request.toInt32());
+}
+
+void Response::set_aborted(JSObject *obj, JS::HandleValue reason) {
+MOZ_ASSERT(is_instance(obj));
+  JS::SetReservedSlot(obj, static_cast<uint32_t>(Slots::Aborted), reason);
+}
+
+JS::Value Response::aborted(JSObject *obj) {
+  MOZ_ASSERT(is_instance(obj));
+  return JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::Aborted));
 }
 
 host_api::HostString Response::backend_str(JSContext *cx, JSObject *obj) {
