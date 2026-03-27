@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.41.0](https://github.com/fastly/js-compute-runtime/compare/v3.40.1...v3.41.0) (2026-03-27)
+
+
+### Features
+
+* Support installation in projects that use TypeScript 6 ([e4273a3](https://github.com/fastly/js-compute-runtime/commit/e4273a3f004e9af0a61d21c67a1cb6c5680cde29))
+
+
+### Bug Fixes
+
+* Double free in `convertBodyInit` ([#1387](https://github.com/fastly/js-compute-runtime/issues/1387)) ([72acfc3](https://github.com/fastly/js-compute-runtime/commit/72acfc3dc9077026746faaf323e5b11ecf48a4db))
+* GC fixes for edge rate limiter ([#1397](https://github.com/fastly/js-compute-runtime/issues/1397)) ([fd9e322](https://github.com/fastly/js-compute-runtime/commit/fd9e322fd852612f8df5d925b6e3a6c646b56109))
+* GC issue in handoffs ([#1396](https://github.com/fastly/js-compute-runtime/issues/1396)) ([b57fc8f](https://github.com/fastly/js-compute-runtime/commit/b57fc8f720cd530543ba8c8738c9dfe7bdff905e))
+
 ## 3.40.1 (2026-02-24)
 
 ### Fixed
