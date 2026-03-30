@@ -116,14 +116,27 @@ bool Shield::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   JS::RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+  if (!self) {
+    return false;
+  }
 
   bool is_me = out_buf[0] != 0;
   JS_SetReservedSlot(self, static_cast<uint32_t>(Slots::IsMe), JS::BooleanValue(is_me));
+  
+  JS::RootedString plain_target(cx, JS_NewStringCopyZ(cx, out_buf.data() + 1));
+  if (!plain_target) {
+    return false;
+  }
   JS_SetReservedSlot(self, static_cast<uint32_t>(Slots::PlainTarget),
-                     JS::StringValue(JS_NewStringCopyZ(cx, out_buf.data() + 1)));
+                     JS::StringValue(plain_target));
+  
   auto plain_bytes_end = std::find(begin(out_buf) + 1, end(out_buf), 0);
+  JS::RootedString ssl_target(cx, JS_NewStringCopyZ(cx, &*plain_bytes_end + 1));
+  if (!ssl_target) {
+    return false;
+  }
   JS_SetReservedSlot(self, static_cast<uint32_t>(Slots::SSLTarget),
-                     JS::StringValue(JS_NewStringCopyZ(cx, &*plain_bytes_end + 1)));
+                     JS::StringValue(ssl_target));
 
   args.rval().setObject(*self);
   return true;
