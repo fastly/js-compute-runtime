@@ -3,8 +3,11 @@
 import { parseInputs } from '../parseInputs.js';
 import { printHelp, printVersion } from '../printHelp.js';
 import { addSdkMetadataField } from '../addSdkMetadataField.js';
+import { readConfigFileAndCliArguments } from '../config.js';
 
-const parsedInputs = await parseInputs(process.argv.slice(2));
+const argv = await readConfigFileAndCliArguments(process.argv.slice(2));
+
+const parsedInputs = await parseInputs(argv);
 
 if (parsedInputs === 'version') {
   await printVersion();
