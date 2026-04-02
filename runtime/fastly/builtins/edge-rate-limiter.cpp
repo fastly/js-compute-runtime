@@ -425,7 +425,7 @@ bool EdgeRateLimiter::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto rc_name = RateCounter::get_name(rc.toObjectOrNull());
+  JS::RootedString rc_name(cx, RateCounter::get_name(rc.toObjectOrNull()));
   if (!rc_name) {
     return false;
   }
@@ -437,7 +437,7 @@ bool EdgeRateLimiter::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto pb_name = PenaltyBox::get_name(pb.toObjectOrNull());
+  JS::RootedString pb_name(cx, PenaltyBox::get_name(pb.toObjectOrNull()));
   if (!pb_name) {
     return false;
   }
