@@ -19,6 +19,9 @@ api::Engine *ENGINE;
 
 // Install corresponds to Wizer time, so we configure the engine here
 bool install(api::Engine *engine) {
+#if defined(JS_GC_ZEAL) && defined(FASTLY_GC_FREQUENCY)
+  JS::SetGCZeal(engine->cx(), 2, FASTLY_GC_FREQUENCY);
+#endif
   ENGINE = engine;
   return true;
 }

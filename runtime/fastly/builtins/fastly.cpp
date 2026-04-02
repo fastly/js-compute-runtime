@@ -351,7 +351,7 @@ bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
     JS_ReportErrorUTF8(cx, "createFanoutHandoff: request parameter must be an instance of Request");
     return false;
   }
-  auto grip_upgrade_request = &request_value.toObject();
+  JS::RootedObject grip_upgrade_request(cx, &request_value.toObject());
 
   RootedObject request(cx, grip_upgrade_request);
   if (!RequestOrResponse::commit_headers(cx, request)) {
@@ -422,7 +422,7 @@ bool Fastly::createWebsocketHandoff(JSContext *cx, unsigned argc, JS::Value *vp)
                        "createWebsocketHandoff: request parameter must be an instance of Request");
     return false;
   }
-  auto websocket_upgrade_request = &request_value.toObject();
+  JS::RootedObject websocket_upgrade_request(cx, &request_value.toObject());
 
   RootedObject request(cx, websocket_upgrade_request);
   if (!RequestOrResponse::commit_headers(cx, request)) {

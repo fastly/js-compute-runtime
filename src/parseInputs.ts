@@ -174,7 +174,7 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
       case '--debug-intermediate-files': {
         const value = cliInputs.shift();
         if (value == null) {
-          console.error('Error: --aot-cache requires a value');
+          console.error('Error: --debug-intermediate-files requires a value');
           process.exit(1);
         }
         if (isAbsolute(value)) {
@@ -207,6 +207,22 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
             wevalBin = value;
           } else {
             wevalBin = join(process.cwd(), value);
+          }
+          break;
+        } else if (cliInput.startsWith('--aot-cache=')) {
+          const value = cliInput.replace(/--aot-cache=/, '');
+          if (isAbsolute(value)) {
+            aotCache = value;
+          } else {
+            aotCache = join(process.cwd(), value);
+          }
+          break;
+        } else if (cliInput.startsWith('--debug-intermediate-files=')) {
+          const value = cliInput.replace(/--debug-intermediate-files=/, '');
+          if (isAbsolute(value)) {
+            debugIntermediateFilesDir = value;
+          } else {
+            debugIntermediateFilesDir = join(process.cwd(), value);
           }
           break;
         } else if (cliInput.startsWith('-')) {
