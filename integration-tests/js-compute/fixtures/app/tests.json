@@ -40,6 +40,9 @@
   "GET /cache-override/fetch/mode-pass": {
     "flake": true
   },
+  "GET /cache-override/fetch/null-304-body": {
+    "environments": ["compute"]
+  },
   "GET /secret-store/exposed-as-global": {
     "flake": true
   },
