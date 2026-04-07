@@ -63,6 +63,7 @@
     "@jridgewell/trace-mapping": "^0.3.31",
     "acorn": "^8.13.0",
     "acorn-walk": "^8.3.4",
+    "cosmiconfig": "^9.0.1",
     "esbuild": "^0.25.0",
     "magic-string": "^0.30.12",
     "picomatch": "^4.0.4",
