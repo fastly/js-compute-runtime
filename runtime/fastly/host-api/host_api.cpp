@@ -2340,12 +2340,10 @@ Result<HttpCacheEntry> HttpCacheEntry::transaction_lookup(const HttpReq &req,
                                                           std::span<uint8_t> override_key) {
 
   TRACE_CALL_ARGS(TSV(std::to_string(req.handle)));
-  DEBUG_LOG("override_key: " + std::string(override_key.begin(), override_key.end()));
   uint32_t handle_out;
   fastly::fastly_http_cache_lookup_options opts{};
   uint32_t opts_mask = 0;
 
-  MOZ_ASSERT(override_key.empty());
   if (!override_key.empty()) {
     MOZ_ASSERT(override_key.size() == 32);
     opts.override_key = reinterpret_cast<const char *>(override_key.data());
