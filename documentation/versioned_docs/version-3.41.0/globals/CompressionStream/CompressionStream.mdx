@@ -1,0 +1,30 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# CompressionStream()
+
+The **`CompressionStream()`** constructor creates a new `CompressionStream` object which compresses a stream of data.
+
+## Syntax
+
+```js
+new CompressionStream(format)
+```
+
+### Parameters
+
+- `format`
+
+  - : One of the following allowed compression formats:
+
+    - `"gzip"`
+    - `"deflate"`
+    - `"deflate-raw"`
+
+## Exceptions
+
+- `TypeError`
+  - : Thrown if the format passed to the constructor is not supported.
