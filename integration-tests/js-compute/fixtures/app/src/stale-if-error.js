@@ -244,9 +244,7 @@ routes.set(
         }),
       },
     );
-    return;
     goodRequest.setCacheKey(sharedCacheKey);
-    
 
     const goodResponse = await fetch(goodRequest);
     assert(goodResponse.status, 200, 'Initial response is 200');
