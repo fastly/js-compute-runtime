@@ -1010,7 +1010,7 @@ routes.set('/http-cache/cache-key-on-request', async () => {
   const cacheOverride = new CacheOverride({
     beforeSend(req) {
       backendCalls++;
-    }
+    },
   });
 
   const key = `custom-cache-key-${Math.random().toString().slice(2)}`;
