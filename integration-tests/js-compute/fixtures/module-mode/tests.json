@@ -293,10 +293,6 @@
     "environments": ["compute"],
     "features": ["http-cache"]
   },
-  "GET /http-cache/cache-key-on-request": {
-    "environments": ["compute"],
-    "features": ["http-cache"]
-  },
   "GET /kv-store-e2e/list": { "flake": true },
   "GET /kv-store/exposed-as-global": {},
   "GET /kv-store/interface": { "flake": true },
@@ -424,26 +420,5 @@
     "downstream_response": {
       "body": "This sentence will be streamed in chunks."
     }
-  },
-  "GET /stale-if-error/cache-override/constructor-with-staleIfError": {},
-  "GET /stale-if-error/cache-override/constructor-without-staleIfError": {},
-  "GET /stale-if-error/cache-override/set-staleIfError": {},
-  "GET /stale-if-error/response/property-undefined-on-non-cached": {},
-  "GET /stale-if-error/response/setter-throws-on-non-cached": {},
-  "GET /stale-if-error/response/staleIfErrorAvailable-throws-outside-afterSend": {
-    "environments": ["compute"],
-    "features": ["http-cache"]
-  },
-  "GET /stale-if-error/fetch/with-cache-override": {
-    "environments": ["compute"],
-    "features": ["http-cache"]
-  },
-  "GET /stale-if-error/fetch/staleIfErrorAvailable-after-caching": {
-    "environments": ["compute"],
-    "features": ["http-cache"]
-  },
-  "GET /stale-if-error/fetch/serve-stale-on-backend-error-with-cache-key": {
-    "environments": ["compute"],
-    "features": ["http-cache"]
   }
 }
