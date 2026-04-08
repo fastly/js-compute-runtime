@@ -12,6 +12,7 @@
 #include "builtin.h"
 #include "encode.h"
 #include "extension-api.h"
+#include "picosha2.h"
 
 using builtins::web::streams::NativeStreamSink;
 using builtins::web::streams::NativeStreamSource;
@@ -1158,18 +1159,19 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   auto request_handle = Request::request_handle(request);
 
   // Convert override cache key to span if present
-  host_api::HostString override_key_str;
-  std::span<uint8_t> override_key_span = {};
+  std::vector<uint8_t> override_key_hash;
   JS::RootedValue override_cache_key(
       cx, JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::OverrideCacheKey)));
   if (override_cache_key.isString()) {
-    override_key_str = core::encode(cx, override_cache_key);
-    override_key_span = std::span<uint8_t>(reinterpret_cast<uint8_t *>(override_key_str.ptr.get()),
-                                           override_key_str.size());
+    auto override_key_str = core::encode(cx, override_cache_key);
+    override_key_hash.resize(32); // SHA256 produces 32 bytes
+    picosha2::hash256(override_key_str.ptr.get(),
+                      override_key_str.ptr.get() + override_key_str.size(),
+                      override_key_hash.begin(), override_key_hash.end());
   }
 
   auto transaction_res =
-      host_api::HttpCacheEntry::transaction_lookup(request_handle, override_key_span);
+      host_api::HttpCacheEntry::transaction_lookup(request_handle, override_key_hash);
   if (auto *err = transaction_res.to_err()) {
     DEBUG_LOG("HTTP Cache: Transaction lookup error")
     if (host_api::error_is_limit_exceeded(*err)) {
