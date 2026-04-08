@@ -297,9 +297,7 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
 
     if (auto *err = res.to_err()) {
       if (host_api::error_is_generic(*err) || host_api::error_is_invalid_argument(*err)) {
-        JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                  fastly::JSMSG_REQUEST_BACKEND_DOES_NOT_EXIST,
-                                  backend_chars.ptr.get());
+      HANDLE_ERROR(cx, *err);
       } else {
         HANDLE_ERROR(cx, *err);
       }
@@ -862,6 +860,12 @@ std::optional<JSObject *> get_found_response(JSContext *cx, host_api::HttpCacheE
       return nullptr;
     }
     override_cache_options->stale_while_revalidate_ns = swr_res.unwrap();
+    auto sie_res = cache_entry.get_stale_if_error_ns();
+    if (auto *err = sie_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return nullptr;
+    }
+    override_cache_options->stale_if_error_ns = sie_res.unwrap();
     auto length_res = cache_entry.get_length();
     if (auto *err = length_res.to_err()) {
       HANDLE_ERROR(cx, *err);
@@ -909,6 +913,53 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
   // response process.
   auto cache_write_options = Response::override_cache_options(response_obj);
   MOZ_ASSERT(cache_write_options);
+  
+  // Check if we should use stale-if-error response instead of this error response
+  auto state_res = cache_entry.get_state();
+  if (!state_res.is_err()) {
+    auto cache_state = state_res.unwrap();
+    
+    DEBUG_LOG("cache_state for response is usable_if_error: " + std::to_string(cache_state.is_usable_if_error()));
+
+    // If we have a usable stale-if-error response and the current response indicates an error
+    // (DoNotStore or RecordUncacheable are typically returned for error responses)
+    if (cache_state.is_usable_if_error() &&
+        (storage_action == host_api::HttpStorageAction::DoNotStore ||
+         storage_action == host_api::HttpStorageAction::RecordUncacheable)) {
+      // Use the stale response instead of the error response
+      auto chose_stale_res = cache_entry.transaction_choose_stale();
+      if (auto *err = chose_stale_res.to_err()) {
+        HANDLE_ERROR(cx, *err);
+        return false;
+      }
+      
+      JS::RootedValue no_candidate(cx);
+      auto maybe_response = get_found_response(cx, cache_entry, request, no_candidate, false);
+      if (maybe_response.has_value() && !maybe_response.value()) {
+        return false;
+      }
+      
+      if (maybe_response.has_value()) {
+        JS::RootedObject stale_response(cx, maybe_response.value());
+        
+        // Store the error as a masked error on the response
+        JS::RootedValue error_response_val(cx, JS::ObjectValue(*response_obj));
+        JS_SetReservedSlot(stale_response, static_cast<uint32_t>(Response::Slots::MaskedError),
+                           error_response_val);
+        
+        RequestOrResponse::take_cache_entry(stale_response, true);
+        if (!Response::add_fastly_cache_headers(cx, stale_response, request, cache_entry,
+                                                "cached response")) {
+          return false;
+        }
+        
+        // Return the stale response
+        args.rval().setObject(*stale_response);
+        return true;
+      }
+    }
+  }
+  
   switch (storage_action) {
   case host_api::HttpStorageAction::Insert: {
     auto insert_res = cache_entry.transaction_insert_and_stream_back(
@@ -1166,6 +1217,11 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     override_key_str = core::encode(cx, override_cache_key);
     override_key_span = std::span<uint8_t>(reinterpret_cast<uint8_t *>(override_key_str.ptr.get()),
                                            override_key_str.size());
+    DEBUG_LOG("HTTP Cache: Override cache key provided, using override cache key: " +
+              std::string(override_key_str.ptr.get(), override_key_str.size()));
+  }
+  else {
+    DEBUG_LOG("HTTP Cache: No override cache key provided, using default cache key"); 
   }
 
   auto transaction_res =
@@ -1215,6 +1271,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   }
 
   if (maybe_response.has_value()) {
+    DEBUG_LOG("HTTP Cache: Found usable cached response, cache state: " + state_str);
     JS::RootedObject cached_response(cx, maybe_response.value());
 
     if (cache_state.must_insert_or_update()) {
@@ -1278,13 +1335,15 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   // No valid cached response, need to make backend request
   if (cache_state.must_insert_or_update()) {
+    DEBUG_LOG("HTTP Cache: No usable cached response, making backend request, cache state: " +
+              state_str);
     // We are responsible for fetching/revalidating
     JS::RootedValue stream_back_promise(cx, JS::ObjectValue(*JS::NewPromiseObject(cx, nullptr)));
     if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry, &stream_back_promise)) {
       if (cache_state.is_usable_if_error()) {
         // We've got a stale-if-error response, so swap it out for the error and notify any
         // request collapse followers.
-        auto chose_stale_res = cache_entry.transaction_record_choose_stale();
+        auto chose_stale_res = cache_entry.transaction_choose_stale();
         if (auto *err = chose_stale_res.to_err()) {
           HANDLE_ERROR(cx, *err);
           return false;

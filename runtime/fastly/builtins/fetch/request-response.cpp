@@ -603,6 +603,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
     // For a request made without caching (via the Request cache handle false convention), we must
     // add fastly headers to the Response
     auto maybe_not_cached = JS::GetReservedSlot(request, static_cast<uint32_t>(Slots::CacheEntry));
+    DEBUG_LOG("MAYBE NOT CACHED");
     if (maybe_not_cached.isBoolean() && maybe_not_cached.toBoolean() == false) {
       if (!Response::add_fastly_cache_headers(cx, response, request, std::nullopt,
                                               "cached response")) {
@@ -2082,6 +2083,7 @@ bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValu
   JS::RootedValue cache_key_str_val(cx, JS::StringValue(cache_key_str));
   // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
   auto keyString = core::encode(cx, cache_key_str_val);
+  DEBUG_LOG("Setting cache key to " + std::string(keyString));
   if (!keyString) {
     return false;
   }
@@ -2094,8 +2096,8 @@ bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValu
   if (!headers) {
     return false;
   }
-  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::OverrideCacheKey), cache_key_str_val);
   JS::RootedObject headers_val(cx, headers);
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::OverrideCacheKey), cache_key_str_val);
   JS::RootedValue value_val(
       cx, JS::StringValue(JS_NewStringCopyN(cx, hex_str.c_str(), hex_str.length())));
   if (!Headers::append_valid_header(cx, headers_val, "fastly-xqd-cache-key", value_val,
@@ -2460,6 +2462,11 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
     JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::CacheOverride),
                         cache_override);
   }
+
+  JS::RootedValue override_cache_key(
+      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::OverrideCacheKey)));
+  JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::OverrideCacheKey),
+                      override_cache_key);
 
   JS::RootedValue image_optimizer_options(
       cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ImageOptimizerOptions)));
@@ -3017,11 +3024,14 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   }
 
   // Apply the Fastly Compute-proprietary `cacheKey` property.
-  // (in the input_request case, the header will be copied across normally)
   if (!cache_key.isUndefined()) {
     if (!set_cache_key(cx, request, cache_key)) {
       return nullptr;
     }
+  } else if (input_request) {
+    JS::SetReservedSlot(
+        request, static_cast<uint32_t>(Slots::OverrideCacheKey),
+        JS::GetReservedSlot(input_request, static_cast<uint32_t>(Slots::OverrideCacheKey)));
   }
 
   // Apply the Fastly Compute-proprietary `imageOptimizerOptions` property.
@@ -3822,6 +3832,7 @@ const JSFunctionSpec Response::methods[] = {
     JS_FN("json", bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setManualFramingHeaders", Response::setManualFramingHeaders, 1, JSPROP_ENUMERATE),
+    JS_FN("staleIfErrorAvailable", staleIfErrorAvailable, 0, JSPROP_ENUMERATE),
     JS_FS_END,
 };
 
@@ -4469,15 +4480,23 @@ bool Response::pci_set(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Response::staleIfErrorAvailable(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
+  // This method is only valid on candidate responses (inside afterSend callback)
   auto cache_entry = RequestOrResponse::cache_entry(self);
   if (!cache_entry) {
-    args.rval().setBoolean(false);
+    DEBUG_LOG("Response::staleIfErrorAvailable called on a response with no cache entry");
+    // Cache entry has been taken - this is not a candidate response
+    api::throw_error(cx, api::Errors::TypeError, "Response", "staleIfErrorAvailable()",
+                     "can only be called on candidate responses inside afterSend callback");
+    return false;
   }
+
   auto res = cache_entry->get_state();
   if (auto *err = res.to_err()) {
+    DEBUG_LOG("Error getting cache entry state");
     HANDLE_ERROR(cx, *err);
     return false;
   }
+  DEBUG_LOG("Cache entry state " + std::to_string(res.unwrap().state));
   args.rval().setBoolean(res.unwrap().is_usable_if_error());
   return true;
 }

@@ -13,6 +13,7 @@ import './hono.js';
 import './http-cache.js';
 import './kv-store.js';
 import './transform-stream.js';
+import '../../app/src/stale-if-error.js';
 
 addEventListener('fetch', (event) => {
   const responsePromise = app(event);
