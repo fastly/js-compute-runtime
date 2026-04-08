@@ -710,28 +710,26 @@ Result<Void> HttpHeaders::remove(string_view name) {
 }
 
 Result<Void> HttpHeaders::set(string_view name, string_view value) {
-  auto handle = this->handle_state_.get()->handle();
-  TRACE_CALL_ARGS(TSV(std::to_string(handle)), &name, &value)
+  TRACE_CALL_ARGS(&name, &value)
   std::span<uint8_t> value_span = {reinterpret_cast<uint8_t *>(const_cast<char *>(value.data())),
                                    value.size()};
   if (this->handle_state_.get()->is_req()) {
-    return generic_header_op<fastly::req_header_insert>(handle, name,
+    return generic_header_op<fastly::req_header_insert>(this->handle_state_.get()->handle(), name,
                                                         value_span);
   } else {
-    return generic_header_op<fastly::resp_header_insert>(handle, name,
+    return generic_header_op<fastly::resp_header_insert>(this->handle_state_.get()->handle(), name,
                                                          value_span);
   }
 }
 Result<Void> HttpHeaders::append(string_view name, string_view value) {
-  auto handle = this->handle_state_.get()->handle();
-  TRACE_CALL_ARGS(TSV(std::to_string(handle)), &name, &value)
+  TRACE_CALL_ARGS(&name, &value)
   std::span<uint8_t> value_span = {reinterpret_cast<uint8_t *>(const_cast<char *>(value.data())),
                                    value.size()};
   if (this->handle_state_.get()->is_req()) {
-    return generic_header_op<fastly::req_header_append>(handle, name,
+    return generic_header_op<fastly::req_header_append>(this->handle_state_.get()->handle(), name,
                                                         value_span);
   } else {
-    return generic_header_op<fastly::resp_header_append>(handle, name,
+    return generic_header_op<fastly::resp_header_append>(this->handle_state_.get()->handle(), name,
                                                          value_span);
   }
 }
@@ -2448,8 +2446,8 @@ Result<HostString> Request::inspect(const InspectOptions *config) {
 
 Result<HttpCacheEntry> HttpCacheEntry::transaction_lookup(const HttpReq &req,
                                                           std::span<uint8_t> override_key) {
-
   TRACE_CALL_ARGS(TSV(std::to_string(req.handle)));
+  
   uint32_t handle_out;
   fastly::fastly_http_cache_lookup_options opts{};
   uint32_t opts_mask = 0;
