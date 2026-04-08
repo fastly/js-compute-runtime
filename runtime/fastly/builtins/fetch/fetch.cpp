@@ -1188,7 +1188,9 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   // This forces synchronous lookups, but we should be able to abstract a new CacheLookupTask, which
   // could be fully async based on its handle as an async select task handle, and then we could
-  // support multiple cache lookups in parallel together.
+  // support multiple cache lookups in parallel together. Note that we *must not* just use the existing
+  // AsyncTask infrastructure for this, because the resulting handle will *not* be one that can be passed
+  // to fastly_async_io::select.
   auto state_res = cache_entry.get_state();
   if (auto *err = state_res.to_err()) {
     HANDLE_ERROR(cx, *err);
