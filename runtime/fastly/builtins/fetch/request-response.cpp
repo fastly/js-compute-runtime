@@ -2458,6 +2458,11 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
                         cache_override);
   }
 
+  JS::RootedValue override_cache_key(
+      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::OverrideCacheKey)));
+  JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::OverrideCacheKey),
+                      override_cache_key);
+
   JS::RootedValue image_optimizer_options(
       cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ImageOptimizerOptions)));
   if (!image_optimizer_options.isNullOrUndefined()) {
@@ -3016,11 +3021,17 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   }
 
   // Apply the Fastly Compute-proprietary `cacheKey` property.
-  // (in the input_request case, the header will be copied across normally)
   if (!cache_key.isUndefined()) {
     if (!set_cache_key(cx, request, cache_key)) {
       return nullptr;
     }
+  } else if (input_request) {
+    // The fastly-xqd-cache-key header will be copied as part of the header copying logic,
+    // but we need to copy the slot as well to preserve the invariant that the slot and header are
+    // in sync.
+    JS::SetReservedSlot(
+        request, static_cast<uint32_t>(Slots::OverrideCacheKey),
+        JS::GetReservedSlot(input_request, static_cast<uint32_t>(Slots::OverrideCacheKey)));
   }
 
   // Apply the Fastly Compute-proprietary `imageOptimizerOptions` property.

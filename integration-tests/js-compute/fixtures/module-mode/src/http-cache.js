@@ -1002,3 +1002,30 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
     strictEqual(results2[1].cached, true);
   });
 }
+
+routes.set('/http-cache/cache-key-on-request', async () => {
+  const url = getTestUrl();
+  let backendCalls = 0;
+
+  const cacheOverride = new CacheOverride({
+    beforeSend(req) {
+      backendCalls++;
+    }
+  });
+
+  const key = `custom-cache-key-${Math.random().toString().slice(2)}`;
+
+  let req1 = new Request(url + '?req=1');
+  req1.setCacheKey(key);
+  const res1 = await fetch(req1, { cacheOverride });
+  strictEqual(backendCalls, 1);
+  strictEqual(res1.cached, false);
+
+  let req2 = new Request(url + '?req=2');
+  req2.setCacheKey(key);
+  const res2 = await fetch(req2, { cacheOverride });
+  strictEqual(backendCalls, 1);
+  strictEqual(res2.cached, true);
+
+  strictEqual(await res1.text(), await res2.text());
+});
