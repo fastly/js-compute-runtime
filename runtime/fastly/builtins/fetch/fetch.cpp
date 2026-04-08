@@ -922,9 +922,6 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
   if (!state_res.is_err()) {
     auto cache_state = state_res.unwrap();
 
-    DEBUG_LOG("cache_state for response is usable_if_error: " +
-              std::to_string(cache_state.is_usable_if_error()));
-
     // If we have a usable stale-if-error response and the current response indicates an error
     // (DoNotStore or RecordUncacheable are typically returned for error responses)
     if (cache_state.is_usable_if_error() &&
