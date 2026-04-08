@@ -293,6 +293,10 @@
     "environments": ["compute"],
     "features": ["http-cache"]
   },
+  "GET /http-cache/cache-key-on-request": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
   "GET /kv-store-e2e/list": { "flake": true },
   "GET /kv-store/exposed-as-global": {},
   "GET /kv-store/interface": { "flake": true },
