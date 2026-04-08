@@ -59,6 +59,20 @@ const privateRsaJsonWebKeyData = {
   qi: 'GyM_p6JrXySiz1toFgKbWV-JdI3jQ4ypu9rbMWx3rQJBfmt0FoYzgUIZEVFEcOqwemRN81zoDAaa-Bk0KWNGDjJHZDdDmFhW3AN7lI-puxk_mHZGJ11rxyR8O55XLSe3SPmRfKwZI6yU24ZxvQKFYItdldUKGzO6Ia6zTKhAVRU',
 };
 
+// Helper functions to create fresh copies of test data for tests that mutate them
+function freshPublicRsaKey() {
+  return structuredClone(publicRsaJsonWebKeyData);
+}
+function freshPublicEcdsaKey() {
+  return structuredClone(publicEcdsaJsonWebKeyData);
+}
+function freshPrivateEcdsaKey() {
+  return structuredClone(privateEcdsaJsonWebKeyData);
+}
+function freshPrivateRsaKey() {
+  return structuredClone(privateRsaJsonWebKeyData);
+}
+
 const rsaJsonWebKeyAlgorithm = {
   name: 'RSASSA-PKCS1-v1_5',
   hash: { name: 'SHA-256' },
@@ -202,13 +216,14 @@ routes.set('/crypto.subtle', async () => {
         '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-e-field',
         async () => {
           await assertRejects(async () => {
-            delete publicRsaJsonWebKeyData.e;
+            const testData = structuredClone(publicRsaJsonWebKeyData);
+            delete testData.e;
             await crypto.subtle.importKey(
               'jwk',
-              publicRsaJsonWebKeyData,
+              testData,
               rsaJsonWebKeyAlgorithm,
-              publicRsaJsonWebKeyData.ext,
-              publicRsaJsonWebKeyData.key_ops,
+              testData.ext,
+              testData.key_ops,
             );
           }, DOMException);
         },
@@ -219,17 +234,18 @@ routes.set('/crypto.subtle', async () => {
           let sentinel = Symbol('sentinel');
           const test = async () => {
             sentinel = Symbol();
-            publicRsaJsonWebKeyData.e = {
+            let webKeyData = structuredClone(publicRsaJsonWebKeyData);
+            webKeyData.e = {
               toString() {
                 throw sentinel;
               },
             };
             await crypto.subtle.importKey(
               'jwk',
-              publicRsaJsonWebKeyData,
+              webKeyData,
               rsaJsonWebKeyAlgorithm,
-              publicRsaJsonWebKeyData.ext,
-              publicRsaJsonWebKeyData.key_ops,
+              webKeyData.ext,
+              webKeyData.key_ops,
             );
           };
           await assertRejects(test);
@@ -245,13 +261,14 @@ routes.set('/crypto.subtle', async () => {
         async () => {
           await assertRejects(
             async () => {
-              publicRsaJsonWebKeyData.e = '`~!@#@#$Q%^%&^*';
+              let webKeyData = structuredClone(publicRsaJsonWebKeyData);
+              webKeyData.e = '`~!@#@#$Q%^%&^*';
               await crypto.subtle.importKey(
                 'jwk',
-                publicRsaJsonWebKeyData,
+                webKeyData,
                 rsaJsonWebKeyAlgorithm,
-                publicRsaJsonWebKeyData.ext,
-                publicRsaJsonWebKeyData.key_ops,
+                webKeyData.ext,
+                webKeyData.key_ops,
               );
             },
             Error,
@@ -263,13 +280,14 @@ routes.set('/crypto.subtle', async () => {
         '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-kty-field',
         async () => {
           await assertRejects(async () => {
-            delete publicRsaJsonWebKeyData.kty;
+            let webKeyData = structuredClone(publicRsaJsonWebKeyData);
+            delete webKeyData.kty;
             await crypto.subtle.importKey(
               'jwk',
-              publicRsaJsonWebKeyData,
+              webKeyData,
               rsaJsonWebKeyAlgorithm,
-              publicRsaJsonWebKeyData.ext,
-              publicRsaJsonWebKeyData.key_ops,
+              webKeyData.ext,
+              webKeyData.key_ops,
             );
           }, Error);
         },
@@ -278,13 +296,14 @@ routes.set('/crypto.subtle', async () => {
         '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-kty-field',
         async () => {
           await assertRejects(async () => {
-            publicRsaJsonWebKeyData.kty = 'jake';
+            let webKeyData = structuredClone(publicRsaJsonWebKeyData);
+            webKeyData.kty = 'jake';
             await crypto.subtle.importKey(
               'jwk',
-              publicRsaJsonWebKeyData,
+              webKeyData,
               rsaJsonWebKeyAlgorithm,
-              publicRsaJsonWebKeyData.ext,
-              publicRsaJsonWebKeyData.key_ops,
+              webKeyData.ext,
+              webKeyData.key_ops,
             );
           }, Error);
         },
@@ -293,13 +312,14 @@ routes.set('/crypto.subtle', async () => {
         '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-missing-key_ops-field',
         async () => {
           await assertResolves(async () => {
-            const key_ops = Array.from(publicRsaJsonWebKeyData.key_ops);
-            delete publicRsaJsonWebKeyData.key_ops;
+            let webKeyData = structuredClone(publicRsaJsonWebKeyData);
+            const key_ops = Array.from(webKeyData.key_ops);
+            delete webKeyData.key_ops;
             await crypto.subtle.importKey(
               'jwk',
-              publicRsaJsonWebKeyData,
+              webKeyData,
               rsaJsonWebKeyAlgorithm,
-              publicRsaJsonWebKeyData.ext,
+              webKeyData.ext,
               key_ops,
             );
           });
@@ -309,13 +329,14 @@ routes.set('/crypto.subtle', async () => {
         '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-non-sequence-key_ops-field',
         async () => {
           await assertRejects(async () => {
-            const key_ops = Array.from(publicRsaJsonWebKeyData.key_ops);
-            publicRsaJsonWebKeyData.key_ops = 'jake';
+            let webKeyData = structuredClone(publicRsaJsonWebKeyData);
+            const key_ops = Array.from(webKeyData.key_ops);
+            webKeyData.key_ops = 'jake';
             await crypto.subtle.importKey(
               'jwk',
-              publicRsaJsonWebKeyData,
+              webKeyData,
               rsaJsonWebKeyAlgorithm,
-              publicRsaJsonWebKeyData.ext,
+              webKeyData.ext,
               key_ops,
             );
           }, Error);
@@ -326,13 +347,14 @@ routes.set('/crypto.subtle', async () => {
         '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-empty-key_ops-field',
         async () => {
           await assertResolves(async () => {
-            const key_ops = Array.from(publicRsaJsonWebKeyData.key_ops);
-            publicRsaJsonWebKeyData.key_ops = [];
+            let webKeyData = structuredClone(publicRsaJsonWebKeyData);
+            const key_ops = Array.from(webKeyData.key_ops);
+            webKeyData.key_ops = [];
             await crypto.subtle.importKey(
               'jwk',
-              publicRsaJsonWebKeyData,
+              webKeyData,
               rsaJsonWebKeyAlgorithm,
-              publicRsaJsonWebKeyData.ext,
+              webKeyData.ext,
               key_ops,
             );
           });
@@ -342,13 +364,14 @@ routes.set('/crypto.subtle', async () => {
         '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-duplicated-key_ops-field',
         async () => {
           await assertRejects(async () => {
-            const key_ops = Array.from(publicRsaJsonWebKeyData.key_ops);
-            publicRsaJsonWebKeyData.key_ops = ['sign', 'sign'];
+            let webKeyData = structuredClone(publicRsaJsonWebKeyData);
+            const key_ops = Array.from(webKeyData.key_ops);
+            webKeyData.key_ops = ['sign', 'sign'];
             await crypto.subtle.importKey(
               'jwk',
-              publicRsaJsonWebKeyData,
+              webKeyData,
               rsaJsonWebKeyAlgorithm,
-              publicRsaJsonWebKeyData.ext,
+              webKeyData.ext,
               key_ops,
             );
           }, Error);
@@ -358,13 +381,14 @@ routes.set('/crypto.subtle', async () => {
         '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-invalid-key_ops-field',
         async () => {
           await assertRejects(async () => {
-            const key_ops = Array.from(publicRsaJsonWebKeyData.key_ops);
-            publicRsaJsonWebKeyData.key_ops = ['sign', 'jake'];
+            let webKeyData = structuredClone(publicRsaJsonWebKeyData);
+            const key_ops = Array.from(webKeyData.key_ops);
+            webKeyData.key_ops = ['sign', 'jake'];
             await crypto.subtle.importKey(
               'jwk',
-              publicRsaJsonWebKeyData,
+              webKeyData,
               rsaJsonWebKeyAlgorithm,
-              publicRsaJsonWebKeyData.ext,
+              webKeyData.ext,
               key_ops,
             );
           }, Error);
@@ -383,12 +407,14 @@ routes.set('/crypto.subtle', async () => {
                 throw sentinel;
               },
             };
-            publicRsaJsonWebKeyData.key_ops = ['sign', op];
+            let webKeyData = structuredClone(publicRsaJsonWebKeyData);
+            const key_ops = Array.from(webKeyData.key_ops);
+            webKeyData.key_ops = ['sign', op];
             await crypto.subtle.importKey(
               'jwk',
-              publicRsaJsonWebKeyData,
+              webKeyData,
               rsaJsonWebKeyAlgorithm,
-              publicRsaJsonWebKeyData.ext,
+              webKeyData.ext,
               key_ops,
             );
           };
@@ -406,13 +432,14 @@ routes.set('/crypto.subtle', async () => {
         async () => {
           await assertRejects(
             async () => {
-              delete publicRsaJsonWebKeyData.n;
+              const testData = structuredClone(publicRsaJsonWebKeyData);
+              delete testData.n;
               await crypto.subtle.importKey(
                 'jwk',
-                publicRsaJsonWebKeyData,
+                testData,
                 rsaJsonWebKeyAlgorithm,
-                publicRsaJsonWebKeyData.ext,
-                publicRsaJsonWebKeyData.key_ops,
+                testData.ext,
+                testData.key_ops,
               );
             },
             Error,
@@ -426,17 +453,18 @@ routes.set('/crypto.subtle', async () => {
           let sentinel = Symbol('sentinel');
           const test = async () => {
             sentinel = Symbol();
-            publicRsaJsonWebKeyData.n = {
+            let webKeyData = structuredClone(publicRsaJsonWebKeyData);
+            webKeyData.n = {
               toString() {
                 throw sentinel;
               },
             };
             await crypto.subtle.importKey(
               'jwk',
-              publicRsaJsonWebKeyData,
+              webKeyData,
               rsaJsonWebKeyAlgorithm,
-              publicRsaJsonWebKeyData.ext,
-              publicRsaJsonWebKeyData.key_ops,
+              webKeyData.ext,
+              webKeyData.key_ops,
             );
           };
           await assertRejects(test);
@@ -452,13 +480,14 @@ routes.set('/crypto.subtle', async () => {
         async () => {
           await assertRejects(
             async () => {
-              publicRsaJsonWebKeyData.n = '`~!@#@#$Q%^%&^*';
+              let webKeyData = structuredClone(publicRsaJsonWebKeyData);
+              webKeyData.n = '`~!@#@#$Q%^%&^*';
               await crypto.subtle.importKey(
                 'jwk',
-                publicRsaJsonWebKeyData,
+                webKeyData,
                 rsaJsonWebKeyAlgorithm,
-                publicRsaJsonWebKeyData.ext,
-                publicRsaJsonWebKeyData.key_ops,
+                webKeyData.ext,
+                webKeyData.key_ops,
               );
             },
             Error,
@@ -478,13 +507,14 @@ routes.set('/crypto.subtle', async () => {
         async () => {
           await assertRejects(
             async () => {
-              delete publicEcdsaJsonWebKeyData.x;
+              let webKeyData = structuredClone(publicEcdsaJsonWebKeyData);
+              delete webKeyData.x;
               await crypto.subtle.importKey(
                 'jwk',
-                publicEcdsaJsonWebKeyData,
+                webKeyData,
                 ecdsaJsonWebKeyAlgorithm,
-                publicEcdsaJsonWebKeyData.ext,
-                publicEcdsaJsonWebKeyData.key_ops,
+                webKeyData.ext,
+                webKeyData.key_ops,
               );
             },
             DOMException,
@@ -498,17 +528,18 @@ routes.set('/crypto.subtle', async () => {
           let sentinel = Symbol('sentinel');
           const test = async () => {
             sentinel = Symbol();
-            publicEcdsaJsonWebKeyData.x = {
+            let webKeyData = structuredClone(publicEcdsaJsonWebKeyData);
+            webKeyData.x = {
               toString() {
                 throw sentinel;
               },
             };
             await crypto.subtle.importKey(
               'jwk',
-              publicEcdsaJsonWebKeyData,
+              webKeyData,
               ecdsaJsonWebKeyAlgorithm,
-              publicEcdsaJsonWebKeyData.ext,
-              publicEcdsaJsonWebKeyData.key_ops,
+              webKeyData.ext,
+              webKeyData.key_ops,
             );
           };
           await assertRejects(test);
@@ -524,13 +555,14 @@ routes.set('/crypto.subtle', async () => {
         async () => {
           await assertRejects(
             async () => {
-              publicEcdsaJsonWebKeyData.x = '`~!@#@#$Q%^%&^*';
+              let webKeyData = structuredClone(publicEcdsaJsonWebKeyData);
+              webKeyData.x = '`~!@#@#$Q%^%&^*';
               await crypto.subtle.importKey(
                 'jwk',
-                publicEcdsaJsonWebKeyData,
+                webKeyData,
                 ecdsaJsonWebKeyAlgorithm,
-                publicEcdsaJsonWebKeyData.ext,
-                publicEcdsaJsonWebKeyData.key_ops,
+                webKeyData.ext,
+                webKeyData.key_ops,
               );
             },
             Error,
@@ -543,13 +575,14 @@ routes.set('/crypto.subtle', async () => {
         async () => {
           await assertRejects(
             async () => {
-              delete publicEcdsaJsonWebKeyData.y;
+              let webKeyData = structuredClone(publicEcdsaJsonWebKeyData);
+              delete webKeyData.y;
               await crypto.subtle.importKey(
                 'jwk',
-                publicEcdsaJsonWebKeyData,
+                webKeyData,
                 ecdsaJsonWebKeyAlgorithm,
-                publicEcdsaJsonWebKeyData.ext,
-                publicEcdsaJsonWebKeyData.key_ops,
+                webKeyData.ext,
+                webKeyData.key_ops,
               );
             },
             DOMException,
@@ -563,17 +596,18 @@ routes.set('/crypto.subtle', async () => {
           let sentinel = Symbol('sentinel');
           const test = async () => {
             sentinel = Symbol();
-            publicEcdsaJsonWebKeyData.y = {
+            let webKeyData = structuredClone(publicEcdsaJsonWebKeyData);
+            webKeyData.y = {
               toString() {
                 throw sentinel;
               },
             };
             await crypto.subtle.importKey(
               'jwk',
-              publicEcdsaJsonWebKeyData,
+              webKeyData,
               ecdsaJsonWebKeyAlgorithm,
-              publicEcdsaJsonWebKeyData.ext,
-              publicEcdsaJsonWebKeyData.key_ops,
+              webKeyData.ext,
+              webKeyData.key_ops,
             );
           };
           await assertRejects(test);
@@ -589,13 +623,14 @@ routes.set('/crypto.subtle', async () => {
         async () => {
           await assertRejects(
             async () => {
-              publicEcdsaJsonWebKeyData.y = '`~!@#@#$Q%^%&^*';
+              let webKeyData = structuredClone(publicEcdsaJsonWebKeyData);
+              webKeyData.y = '`~!@#@#$Q%^%&^*';
               await crypto.subtle.importKey(
                 'jwk',
-                publicEcdsaJsonWebKeyData,
+                webKeyData,
                 ecdsaJsonWebKeyAlgorithm,
-                publicEcdsaJsonWebKeyData.ext,
-                publicEcdsaJsonWebKeyData.key_ops,
+                webKeyData.ext,
+                webKeyData.key_ops,
               );
             },
             Error,
@@ -607,13 +642,14 @@ routes.set('/crypto.subtle', async () => {
         '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-kty-field',
         async () => {
           await assertRejects(async () => {
-            delete publicEcdsaJsonWebKeyData.kty;
+            let webKeyData = structuredClone(publicEcdsaJsonWebKeyData);
+            delete webKeyData.kty;
             await crypto.subtle.importKey(
               'jwk',
-              publicEcdsaJsonWebKeyData,
+              webKeyData,
               ecdsaJsonWebKeyAlgorithm,
-              publicEcdsaJsonWebKeyData.ext,
-              publicEcdsaJsonWebKeyData.key_ops,
+              webKeyData.ext,
+              webKeyData.key_ops,
             );
           }, Error);
         },
@@ -622,13 +658,14 @@ routes.set('/crypto.subtle', async () => {
         '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-kty-field',
         async () => {
           await assertRejects(async () => {
-            publicEcdsaJsonWebKeyData.kty = 'jake';
+            let webKeyData = structuredClone(publicEcdsaJsonWebKeyData);
+            webKeyData.kty = 'jake';
             await crypto.subtle.importKey(
               'jwk',
-              publicEcdsaJsonWebKeyData,
+              webKeyData,
               ecdsaJsonWebKeyAlgorithm,
-              publicEcdsaJsonWebKeyData.ext,
-              publicEcdsaJsonWebKeyData.key_ops,
+              webKeyData.ext,
+              webKeyData.key_ops,
             );
           }, Error);
         },
@@ -637,13 +674,14 @@ routes.set('/crypto.subtle', async () => {
         '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-missing-key_ops-field',
         async () => {
           await assertResolves(async () => {
-            const key_ops = Array.from(publicEcdsaJsonWebKeyData.key_ops);
-            delete publicEcdsaJsonWebKeyData.key_ops;
+            let webKeyData = structuredClone(publicEcdsaJsonWebKeyData);
+            const key_ops = Array.from(webKeyData.key_ops);
+            delete webKeyData.key_ops;
             await crypto.subtle.importKey(
               'jwk',
-              publicEcdsaJsonWebKeyData,
+              webKeyData,
               ecdsaJsonWebKeyAlgorithm,
-              publicEcdsaJsonWebKeyData.ext,
+              webKeyData.ext,
               key_ops,
             );
           });
@@ -653,13 +691,14 @@ routes.set('/crypto.subtle', async () => {
         '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-non-sequence-key_ops-field',
         async () => {
           await assertRejects(async () => {
-            const key_ops = Array.from(publicEcdsaJsonWebKeyData.key_ops);
-            publicEcdsaJsonWebKeyData.key_ops = 'jake';
+            let webKeyData = structuredClone(publicEcdsaJsonWebKeyData);
+            const key_ops = Array.from(webKeyData.key_ops);
+            webKeyData.key_ops = 'jake';
             await crypto.subtle.importKey(
               'jwk',
-              publicEcdsaJsonWebKeyData,
+              webKeyData,
               ecdsaJsonWebKeyAlgorithm,
-              publicEcdsaJsonWebKeyData.ext,
+              webKeyData.ext,
               key_ops,
             );
           }, Error);
@@ -670,13 +709,14 @@ routes.set('/crypto.subtle', async () => {
         '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-empty-key_ops-field',
         async () => {
           await assertResolves(async () => {
-            const key_ops = Array.from(publicEcdsaJsonWebKeyData.key_ops);
-            publicEcdsaJsonWebKeyData.key_ops = [];
+            let webKeyData = structuredClone(publicEcdsaJsonWebKeyData);
+            const key_ops = Array.from(webKeyData.key_ops);
+            webKeyData.key_ops = [];
             await crypto.subtle.importKey(
               'jwk',
-              publicEcdsaJsonWebKeyData,
+              webKeyData,
               ecdsaJsonWebKeyAlgorithm,
-              publicEcdsaJsonWebKeyData.ext,
+              webKeyData.ext,
               key_ops,
             );
           });
@@ -686,13 +726,14 @@ routes.set('/crypto.subtle', async () => {
         '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-duplicated-key_ops-field',
         async () => {
           await assertRejects(async () => {
-            const key_ops = Array.from(publicEcdsaJsonWebKeyData.key_ops);
-            publicEcdsaJsonWebKeyData.key_ops = ['sign', 'sign'];
+            const testData = structuredClone(publicEcdsaJsonWebKeyData);
+            const key_ops = Array.from(testData.key_ops);
+            testData.key_ops = ['sign', 'sign'];
             await crypto.subtle.importKey(
               'jwk',
-              publicEcdsaJsonWebKeyData,
+              testData,
               ecdsaJsonWebKeyAlgorithm,
-              publicEcdsaJsonWebKeyData.ext,
+              testData.ext,
               key_ops,
             );
           }, Error);
@@ -702,13 +743,14 @@ routes.set('/crypto.subtle', async () => {
         '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-invalid-key_ops-field',
         async () => {
           await assertRejects(async () => {
-            const key_ops = Array.from(publicEcdsaJsonWebKeyData.key_ops);
-            publicEcdsaJsonWebKeyData.key_ops = ['sign', 'jake'];
+            const testData = structuredClone(publicEcdsaJsonWebKeyData);
+            const key_ops = Array.from(testData.key_ops);
+            testData.key_ops = ['sign', 'jake'];
             await crypto.subtle.importKey(
               'jwk',
-              publicEcdsaJsonWebKeyData,
+              testData,
               ecdsaJsonWebKeyAlgorithm,
-              publicEcdsaJsonWebKeyData.ext,
+              testData.ext,
               key_ops,
             );
           }, Error);
@@ -719,20 +761,21 @@ routes.set('/crypto.subtle', async () => {
         '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-key_ops-field-calls-7.1.17-ToString',
         async () => {
           let sentinel = Symbol('sentinel');
-          const key_ops = Array.from(publicEcdsaJsonWebKeyData.key_ops);
           const test = async () => {
             sentinel = Symbol();
+            const testData = structuredClone(publicEcdsaJsonWebKeyData);
+            const key_ops = Array.from(testData.key_ops);
             const op = {
               toString() {
                 throw sentinel;
               },
             };
-            publicEcdsaJsonWebKeyData.key_ops = ['sign', op];
+            testData.key_ops = ['sign', op];
             await crypto.subtle.importKey(
               'jwk',
-              publicEcdsaJsonWebKeyData,
+              testData,
               ecdsaJsonWebKeyAlgorithm,
-              publicEcdsaJsonWebKeyData.ext,
+              testData.ext,
               key_ops,
             );
           };
@@ -751,17 +794,18 @@ routes.set('/crypto.subtle', async () => {
           let sentinel = Symbol('sentinel');
           const test = async () => {
             sentinel = Symbol();
-            privateEcdsaJsonWebKeyData.d = {
+            const testData = structuredClone(privateEcdsaJsonWebKeyData);
+            testData.d = {
               toString() {
                 throw sentinel;
               },
             };
             await crypto.subtle.importKey(
               'jwk',
-              privateEcdsaJsonWebKeyData,
+              testData,
               ecdsaJsonWebKeyAlgorithm,
-              privateEcdsaJsonWebKeyData.ext,
-              privateEcdsaJsonWebKeyData.key_ops,
+              testData.ext,
+              testData.key_ops,
             );
           };
           await assertRejects(test);
@@ -782,13 +826,14 @@ routes.set('/crypto.subtle', async () => {
         async () => {
           await assertRejects(
             async () => {
-              privateEcdsaJsonWebKeyData.d = '`~!@#@#$Q%^%&^*';
+              const testData = structuredClone(privateEcdsaJsonWebKeyData);
+              testData.d = '`~!@#@#$Q%^%&^*';
               await crypto.subtle.importKey(
                 'jwk',
-                privateEcdsaJsonWebKeyData,
+                testData,
                 ecdsaJsonWebKeyAlgorithm,
-                privateEcdsaJsonWebKeyData.ext,
-                privateEcdsaJsonWebKeyData.key_ops,
+                testData.ext,
+                testData.key_ops,
               );
             },
             Error,
@@ -827,7 +872,8 @@ routes.set('/crypto.subtle', async () => {
       async () => {
         const sentinel = Symbol('sentinel');
         const test = async () => {
-          rsaJsonWebKeyAlgorithm.name = {
+          let algorithm = structuredClone(rsaJsonWebKeyAlgorithm);
+          algorithm.name = {
             toString() {
               throw sentinel;
             },
@@ -835,7 +881,7 @@ routes.set('/crypto.subtle', async () => {
           await crypto.subtle.importKey(
             'jwk',
             publicRsaJsonWebKeyData,
-            rsaJsonWebKeyAlgorithm,
+            algorithm,
             publicRsaJsonWebKeyData.ext,
             publicRsaJsonWebKeyData.key_ops,
           );
@@ -852,11 +898,12 @@ routes.set('/crypto.subtle', async () => {
       '/crypto.subtle.importKey/third-parameter-invalid-name-field',
       async () => {
         await assertRejects(async () => {
-          rsaJsonWebKeyAlgorithm.name = '`~!@#@#$Q%^%&^*';
+          let algorithm = structuredClone(rsaJsonWebKeyAlgorithm);
+          algorithm.name = '`~!@#@#$Q%^%&^*';
           await crypto.subtle.importKey(
             'jwk',
             publicRsaJsonWebKeyData,
-            rsaJsonWebKeyAlgorithm,
+            algorithm,
             publicRsaJsonWebKeyData.ext,
             publicRsaJsonWebKeyData.key_ops,
           );
@@ -868,7 +915,8 @@ routes.set('/crypto.subtle', async () => {
       async () => {
         const sentinel = Symbol('sentinel');
         const test = async () => {
-          rsaJsonWebKeyAlgorithm.hash.name = {
+          let algorithm = structuredClone(rsaJsonWebKeyAlgorithm);
+          algorithm.hash.name = {
             toString() {
               throw sentinel;
             },
@@ -876,7 +924,7 @@ routes.set('/crypto.subtle', async () => {
           await crypto.subtle.importKey(
             'jwk',
             publicRsaJsonWebKeyData,
-            rsaJsonWebKeyAlgorithm,
+            algorithm,
             publicRsaJsonWebKeyData.ext,
             publicRsaJsonWebKeyData.key_ops,
           );
@@ -894,11 +942,12 @@ routes.set('/crypto.subtle', async () => {
       async () => {
         await assertRejects(
           async () => {
-            rsaJsonWebKeyAlgorithm.hash.name = 'SHA-1';
+            let algorithm = structuredClone(rsaJsonWebKeyAlgorithm);
+            algorithm.hash.name = 'SHA-1';
             await crypto.subtle.importKey(
               'jwk',
               publicRsaJsonWebKeyData,
-              rsaJsonWebKeyAlgorithm,
+              algorithm,
               publicRsaJsonWebKeyData.ext,
               publicRsaJsonWebKeyData.key_ops,
             );

@@ -30,6 +30,12 @@ namespace fastly::fetch_event {
 
 namespace {
 
+JSString *client_request_id(JSObject *obj) {
+  JS::Value val =
+      JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::ClientRequestId));
+  return val.isString() ? val.toString() : nullptr;
+}
+
 JSString *client_address(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::Address));
   return val.isString() ? val.toString() : nullptr;
@@ -73,10 +79,11 @@ JSString *protocol(JSObject *obj) {
   return val.isString() ? val.toString() : nullptr;
 }
 
-static JSString *retrieve_client_address(JSContext *cx, JS::HandleObject self) {
-  auto res = host_api::HttpReq::downstream_client_ip_addr();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
+} // namespace
+
+JSString *ClientInfo::retrieve_client_address(JSContext *cx, JS::HandleObject self) {
+  auto res = request_handle(cx, self).downstream_client_ip_addr();
+  if (res.is_err()) {
     return nullptr;
   }
 
@@ -90,7 +97,30 @@ static JSString *retrieve_client_address(JSContext *cx, JS::HandleObject self) {
   return address;
 }
 
-} // namespace
+host_api::HttpReq ClientInfo::request_handle(JSContext *cx, JS::HandleObject self) {
+  JS::RootedValue req(cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Request)));
+  return Request::request_handle(&req.toObject());
+}
+
+bool ClientInfo::request_id_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  JS::RootedString result(cx, client_request_id(self));
+  if (!result) {
+    auto res = request_handle(cx, self).http_req_downstream_client_request_id();
+    if (res.to_err() || !res.unwrap().has_value()) {
+      args.rval().setNull();
+      return true;
+    }
+
+    auto h2fp_str = std::move(res.unwrap().value());
+    result.set(JS_NewStringCopyN(cx, h2fp_str.ptr.get(), h2fp_str.len));
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::ClientRequestId),
+                        JS::StringValue(result));
+  }
+  args.rval().setString(result);
+  return true;
+}
 
 bool ClientInfo::address_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
@@ -98,8 +128,10 @@ bool ClientInfo::address_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedString address_str(cx, client_address(self));
   if (!address_str) {
     address_str = retrieve_client_address(cx, self);
-    if (!address_str)
-      return false;
+    if (!address_str) {
+      args.rval().setNull();
+      return true;
+    }
   }
 
   args.rval().setString(address_str);
@@ -114,8 +146,10 @@ bool ClientInfo::geo_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     JS::RootedString address_str(cx, client_address(self));
     if (!address_str) {
       address_str = retrieve_client_address(cx, self);
-      if (!address_str)
-        return false;
+      if (!address_str) {
+        args.rval().setNull();
+        return true;
+      }
     }
 
     // TODO: skip intermediate encoding, and rely on the fact that we already had the bytes before
@@ -144,12 +178,7 @@ bool ClientInfo::geo_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
 
     auto res = host_api::GeoIp::lookup(std::span<uint8_t>{octets, octets_len});
-    if (auto *err = res.to_err()) {
-      HANDLE_ERROR(cx, *err);
-      return false;
-    }
-
-    if (!res.unwrap().has_value()) {
+    if (res.is_err() || !res.unwrap().has_value()) {
       args.rval().setNull();
       return true;
     }
@@ -171,7 +200,7 @@ bool ClientInfo::tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::V
 
   JS::RootedString result(cx, cipher(self));
   if (!result) {
-    auto res = host_api::HttpReq::http_req_downstream_tls_cipher_openssl_name();
+    auto res = request_handle(cx, self).http_req_downstream_tls_cipher_openssl_name();
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
@@ -197,7 +226,7 @@ bool ClientInfo::tls_ja3_md5_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::RootedString result(cx, ja3(self));
   if (!result) {
-    auto res = host_api::HttpReq::http_req_downstream_tls_ja3_md5();
+    auto res = request_handle(cx, self).http_req_downstream_tls_ja3_md5();
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
@@ -225,7 +254,7 @@ bool ClientInfo::tls_ja4_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::RootedString result(cx, ja4(self));
   if (!result) {
-    auto res = host_api::HttpReq::http_req_downstream_tls_ja4();
+    auto res = request_handle(cx, self).http_req_downstream_tls_ja4();
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
@@ -250,7 +279,7 @@ bool ClientInfo::h2_fingerprint_get(JSContext *cx, unsigned argc, JS::Value *vp)
 
   JS::RootedString result(cx, h2Fingerprint(self));
   if (!result) {
-    auto res = host_api::HttpReq::http_req_downstream_client_h2_fingerprint();
+    auto res = request_handle(cx, self).http_req_downstream_client_h2_fingerprint();
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
@@ -275,7 +304,7 @@ bool ClientInfo::oh_fingerprint_get(JSContext *cx, unsigned argc, JS::Value *vp)
 
   JS::RootedString result(cx, ohFingerprint(self));
   if (!result) {
-    auto res = host_api::HttpReq::http_req_downstream_client_oh_fingerprint();
+    auto res = request_handle(cx, self).http_req_downstream_client_oh_fingerprint();
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
@@ -300,7 +329,7 @@ bool ClientInfo::tls_client_hello_get(JSContext *cx, unsigned argc, JS::Value *v
 
   JS::RootedObject buffer(cx, clientHello(self));
   if (!buffer) {
-    auto res = host_api::HttpReq::http_req_downstream_tls_client_hello();
+    auto res = request_handle(cx, self).http_req_downstream_tls_client_hello();
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
@@ -335,7 +364,7 @@ bool ClientInfo::tls_client_certificate_get(JSContext *cx, unsigned argc, JS::Va
 
   JS::RootedObject buffer(cx, clientCert(self));
   if (!buffer) {
-    auto res = host_api::HttpReq::http_req_downstream_tls_raw_client_certificate();
+    auto res = request_handle(cx, self).http_req_downstream_tls_raw_client_certificate();
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
@@ -371,7 +400,7 @@ bool ClientInfo::tls_protocol_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::RootedString result(cx, protocol(self));
   if (!result) {
-    auto res = host_api::HttpReq::http_req_downstream_tls_protocol();
+    auto res = request_handle(cx, self).http_req_downstream_tls_protocol();
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
@@ -405,6 +434,7 @@ const JSFunctionSpec ClientInfo::methods[] = {
 };
 
 const JSPropertySpec ClientInfo::properties[] = {
+    JS_PSG("requestId", request_id_get, JSPROP_ENUMERATE),
     JS_PSG("address", address_get, JSPROP_ENUMERATE),
     JS_PSG("geo", geo_get, JSPROP_ENUMERATE),
     JS_PSG("tlsCipherOpensslName", tls_cipher_openssl_name_get, JSPROP_ENUMERATE),
@@ -418,8 +448,13 @@ const JSPropertySpec ClientInfo::properties[] = {
     JS_PS_END,
 };
 
-JSObject *ClientInfo::create(JSContext *cx) {
-  return JS_NewObjectWithGivenProto(cx, &class_, proto_obj);
+JSObject *ClientInfo::create(JSContext *cx, JS::HandleValue req) {
+  JS::RootedObject obj(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+  if (!obj) {
+    return nullptr;
+  }
+  JS::SetReservedSlot(obj, static_cast<uint32_t>(Slots::Request), req);
+  return obj;
 }
 
 namespace {
@@ -429,8 +464,10 @@ JSString *server_address(JSObject *obj) {
   return val.isString() ? val.toString() : nullptr;
 }
 
-static JSString *retrieve_server_address(JSContext *cx, JS::HandleObject self) {
-  auto res = host_api::HttpReq::downstream_server_ip_addr();
+} // namespace
+
+JSString *ServerInfo::retrieve_server_address(JSContext *cx, JS::HandleObject self) {
+  auto res = request_handle(cx, self).downstream_server_ip_addr();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return nullptr;
@@ -446,7 +483,10 @@ static JSString *retrieve_server_address(JSContext *cx, JS::HandleObject self) {
   return address;
 }
 
-} // namespace
+host_api::HttpReq ServerInfo::request_handle(JSContext *cx, JS::HandleObject self) {
+  JS::RootedValue req(cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Request)));
+  return Request::request_handle(&req.toObject());
+}
 
 bool ServerInfo::address_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
@@ -479,8 +519,13 @@ const JSPropertySpec ServerInfo::properties[] = {
     JS_PS_END,
 };
 
-JSObject *ServerInfo::create(JSContext *cx) {
-  return JS_NewObjectWithGivenProto(cx, &class_, proto_obj);
+JSObject *ServerInfo::create(JSContext *cx, JS::HandleValue req) {
+  JS::RootedObject obj(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+  if (!obj) {
+    return nullptr;
+  }
+  JS::SetReservedSlot(obj, static_cast<uint32_t>(Slots::Request), req);
+  return obj;
 }
 
 namespace {
@@ -542,7 +587,8 @@ bool FetchEvent::client_get(JSContext *cx, unsigned argc, JS::Value *vp) {
                              JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ClientInfo)));
 
   if (clientInfo.isUndefined()) {
-    JS::RootedObject obj(cx, ClientInfo::create(cx));
+    JS::RootedValue req(cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Request)));
+    JS::RootedObject obj(cx, ClientInfo::create(cx, req));
     if (!obj)
       return false;
     clientInfo.setObject(*obj);
@@ -560,7 +606,8 @@ bool FetchEvent::server_get(JSContext *cx, unsigned argc, JS::Value *vp) {
                              JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ServerInfo)));
 
   if (serverInfo.isUndefined()) {
-    JS::RootedObject obj(cx, ServerInfo::create(cx));
+    JS::RootedValue req(cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Request)));
+    JS::RootedObject obj(cx, ServerInfo::create(cx, req));
     if (!obj) {
       return false;
     }
@@ -861,11 +908,6 @@ bool FetchEvent::sendEarlyHints(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
   MOZ_RELEASE_ASSERT(state(self) == State::unhandled || state(self) == State::waitToRespond);
 
-  if (!is_dispatching(self)) {
-    JS_ReportErrorUTF8(cx, "FetchEvent#sendEarlyHints must be called synchronously from "
-                           "within a FetchEvent handler");
-    return false;
-  }
   if (state(self) != State::unhandled && state(self) != State::waitToRespond) {
     JS_ReportErrorUTF8(
         cx, "FetchEvent#sendEarlyHints can't be called after the main response has been sent");
@@ -1011,14 +1053,23 @@ JSObject *FetchEvent::create(JSContext *cx) {
   if (!self)
     return nullptr;
 
+  if (!reset(cx, self)) {
+    return nullptr;
+  }
+
+  INSTANCE.init(cx, self);
+  return self;
+}
+
+bool FetchEvent::reset(JSContext *cx, JS::HandleObject self) {
   JS::RootedObject request(cx, prepare_downstream_request(cx));
   if (!request)
-    return nullptr;
+    return false;
 
   JS::RootedObject dec_count_handler(cx,
                                      create_internal_method<dec_pending_promise_count>(cx, self));
   if (!dec_count_handler)
-    return nullptr;
+    return false;
 
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::Request), JS::ObjectValue(*request));
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::Dispatch), JS::FalseValue());
@@ -1027,9 +1078,9 @@ JSObject *FetchEvent::create(JSContext *cx) {
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::PendingPromiseCount), JS::Int32Value(0));
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::DecPendingPromiseCountFunc),
                       JS::ObjectValue(*dec_count_handler));
-
-  INSTANCE.init(cx, self);
-  return self;
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::ClientInfo), JS::UndefinedValue());
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::ServerInfo), JS::UndefinedValue());
+  return true;
 }
 
 JS::HandleObject FetchEvent::instance() {

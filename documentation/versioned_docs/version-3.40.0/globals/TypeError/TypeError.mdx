@@ -1,0 +1,39 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# TypeError
+
+The **`TypeError()`** constructor creates a new error when an
+operation could not be performed, typically (but not exclusively) when a value is not of
+the expected type.
+
+## Syntax
+
+```js
+new TypeError()
+new TypeError(message)
+new TypeError(message, options)
+new TypeError(message, fileName)
+new TypeError(message, fileName, lineNumber)
+
+TypeError()
+TypeError(message)
+TypeError(message, options)
+TypeError(message, fileName)
+TypeError(message, fileName, lineNumber)
+```
+
+> **Note:** `TypeError()` can be called with or without `new`. Both create a new `TypeError` instance.
+
+### Parameters
+
+- `message` _**optional**_
+  - : Human-readable description of the error
+- `options` _**optional**_
+  - : An object that has the following properties:
+    - `cause` _**optional**_
+      - : A property indicating the specific cause of the error.
+        When catching and re-throwing an error with a more-specific or useful error message, this property can be used to pass the original error.

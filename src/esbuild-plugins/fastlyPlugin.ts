@@ -76,6 +76,7 @@ export const allowDynamicBackends = Object.getOwnPropertyDescriptor(globalThis.f
 export const sdkVersion = globalThis.fastly.sdkVersion;
 export const mapAndLogError = (e) => globalThis.__fastlyMapAndLogError(e);
 export const mapError = (e) => globalThis.__fastlyMapError(e);
+export const setReusableSandboxOptions = globalThis.fastly.setReusableSandboxOptions;
 `,
           };
         }

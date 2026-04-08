@@ -1,0 +1,36 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# WorkerLocation
+
+The **`WorkerLocation`** interface defines the absolute location of the script executed by the Worker. Such an object is initialized for each worker and is available via the [`location`](../../globals/location.mdx) property obtained by calling `globalThis.location`.
+
+## Instance properties
+
+- [`WorkerLocation.href`](../../globals/WorkerLocation/href.mdx) _**read-only**_
+  - : Returns a string containing the serialized [`URL`](../../globals/URL/URL.mdx) for the worker's location.
+- [`WorkerLocation.protocol`](../../globals/WorkerLocation/protocol.mdx) _**read-only**_
+  - : Returns the [`protocol`](../../globals/URL/prototype/protocol.mdx) part of the worker's location.
+- [`WorkerLocation.host`](../../globals/WorkerLocation/host.mdx) _**read-only**_
+  - : Returns the [`host`](../../globals/URL/prototype/host.mdx) part of the worker's location.
+- [`WorkerLocation.hostname`](../../globals/WorkerLocation/hostname.mdx) _**read-only**_
+  - : Returns the [`hostname`](../../globals/URL/prototype/hostname.mdx) part of the worker's location.
+- [`WorkerLocation.origin`](../../globals/WorkerLocation/origin.mdx) _**read-only**_
+  - : Returns the worker's [`origin`](../../globals/URL/prototype/origin.mdx).
+- [`WorkerLocation.port`](../../globals/WorkerLocation/port.mdx) _**read-only**_
+  - : Returns the [`port`](../../globals/URL/prototype/port.mdx) part of the worker's location.
+- [`WorkerLocation.pathname`](../../globals/WorkerLocation/pathname.mdx) _**read-only**_
+  - : Returns the [`pathname`](../../globals/URL/prototype/pathname.mdx) part of the worker's location.
+- [`WorkerLocation.search`](../../globals/WorkerLocation/search.mdx) _**read-only**_
+  - : Returns the [`search`](../../globals/URL/prototype/search.mdx) part of the worker's location.
+- [`WorkerLocation.hash`](../../globals/WorkerLocation/hash.mdx) _**read-only**_
+  - : Returns the [`hash`](../../globals/URL/prototype/hash.mdx) part of the worker's location.
+
+## Instance methods
+
+- [`WorkerLocation.toString`](../../globals/WorkerLocation/toString.mdx)
+  - : Returns a string containing the serialized [`URL`](../../globals/URL/URL.mdx) for the worker's location. It is a synonym for [`WorkerLocation.href`](../../globals/WorkerLocation/href.mdx).

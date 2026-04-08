@@ -54,6 +54,7 @@ JS::PersistentRooted<JSString *> Fastly::defaultBackend;
 bool allowDynamicBackendsCalled = false;
 bool Fastly::allowDynamicBackends = true;
 bool ENABLE_EXPERIMENTAL_HTTP_CACHE = false;
+ReusableSandboxOptions Fastly::reusableSandboxOptions{};
 
 bool Fastly::dump(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
@@ -350,7 +351,7 @@ bool Fastly::createFanoutHandoff(JSContext *cx, unsigned argc, JS::Value *vp) {
     JS_ReportErrorUTF8(cx, "createFanoutHandoff: request parameter must be an instance of Request");
     return false;
   }
-  auto grip_upgrade_request = &request_value.toObject();
+  JS::RootedObject grip_upgrade_request(cx, &request_value.toObject());
 
   RootedObject request(cx, grip_upgrade_request);
   if (!RequestOrResponse::commit_headers(cx, request)) {
@@ -421,7 +422,7 @@ bool Fastly::createWebsocketHandoff(JSContext *cx, unsigned argc, JS::Value *vp)
                        "createWebsocketHandoff: request parameter must be an instance of Request");
     return false;
   }
-  auto websocket_upgrade_request = &request_value.toObject();
+  JS::RootedObject websocket_upgrade_request(cx, &request_value.toObject());
 
   RootedObject request(cx, websocket_upgrade_request);
   if (!RequestOrResponse::commit_headers(cx, request)) {
@@ -682,6 +683,89 @@ bool Fastly::allowDynamicBackends_set(JSContext *cx, unsigned argc, JS::Value *v
   return true;
 }
 
+bool Fastly::setReusableSandboxOptions(JSContext *cx, unsigned argc, JS::Value *vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  if (Fastly::reusableSandboxOptions.frozen()) {
+    JS_ReportErrorUTF8(cx, "Reusable sandbox options can only be set at initialization time");
+    return false;
+  }
+  if (!args.requireAtLeast(cx, "fastly.setReusableSandboxOptions", 1)) {
+    return false;
+  }
+  JS::HandleValue options_value = args.get(0);
+  if (!options_value.isObject()) {
+    JS_ReportErrorUTF8(cx, "Options parameter must be an object");
+    return false;
+  }
+  RootedObject options_obj(cx, &options_value.toObject());
+
+  auto get_non_negative_int = [cx, &options_obj](const char *prop_name, bool *defined,
+                                                 int32_t *out_value) -> bool {
+    RootedValue val(cx);
+    if (!JS_GetProperty(cx, options_obj, prop_name, &val)) {
+      return false;
+    }
+    if (val.isUndefined()) {
+      *defined = false;
+      return true;
+    }
+    *defined = true;
+    if (!val.isInt32()) {
+      JS_ReportErrorUTF8(cx, "%s option must be an integer", prop_name);
+      return false;
+    }
+    int32_t int_val = val.toInt32();
+    if (int_val < 0) {
+      JS_ReportErrorUTF8(cx, "%s option must be a non-negative integer", prop_name);
+      return false;
+    }
+    *out_value = int_val;
+    return true;
+  };
+
+  bool defined = false;
+  int32_t max_requests;
+  if (get_non_negative_int("maxRequests", &defined, &max_requests)) {
+    if (defined) {
+      Fastly::reusableSandboxOptions.set_max_requests(max_requests);
+    }
+  } else {
+    return false;
+  }
+
+  int32_t between_request_timeout_ms;
+  if (get_non_negative_int("betweenRequestTimeoutMs", &defined, &between_request_timeout_ms)) {
+    if (defined) {
+      Fastly::reusableSandboxOptions.set_between_request_timeout(
+          std::chrono::milliseconds(between_request_timeout_ms));
+    }
+  } else {
+    return false;
+  }
+
+  int32_t max_memory_mib;
+  if (get_non_negative_int("maxMemoryMiB", &defined, &max_memory_mib)) {
+    if (defined) {
+      Fastly::reusableSandboxOptions.set_max_memory_mib(max_memory_mib);
+    }
+  } else {
+    return false;
+  }
+
+  int32_t sandbox_timeout_ms;
+  if (get_non_negative_int("sandboxTimeoutMs", &defined, &sandbox_timeout_ms)) {
+    if (defined) {
+      Fastly::reusableSandboxOptions.set_sandbox_timeout(
+          std::chrono::milliseconds(sandbox_timeout_ms));
+    }
+  } else {
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
 const JSPropertySpec Fastly::properties[] = {
     JS_PSG("env", env_get, JSPROP_ENUMERATE),
     JS_PSGS("baseURL", baseURL_get, baseURL_set, JSPROP_ENUMERATE),
@@ -731,6 +815,7 @@ bool install(api::Engine *engine) {
       JS_FN("includeBytes", Fastly::includeBytes, 1, JSPROP_ENUMERATE),
       JS_FN("createFanoutHandoff", Fastly::createFanoutHandoff, 2, JSPROP_ENUMERATE),
       JS_FN("createWebsocketHandoff", Fastly::createWebsocketHandoff, 2, JSPROP_ENUMERATE),
+      JS_FN("setReusableSandboxOptions", Fastly::setReusableSandboxOptions, 1, JSPROP_ENUMERATE),
       ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS ? nowfn : end,
       end};
 
@@ -830,6 +915,16 @@ bool install(api::Engine *engine) {
                       allow_dynamic_backends_val)) {
     return false;
   }
+  auto set_reusable_sandbox_options = JS_NewFunction(
+      engine->cx(), &Fastly::setReusableSandboxOptions, 1, 0, "setReusableSandboxOptions");
+  RootedObject set_reusable_sandbox_options_obj(engine->cx(),
+                                                JS_GetFunctionObject(set_reusable_sandbox_options));
+  RootedValue set_reusable_sandbox_options_val(engine->cx(),
+                                               ObjectValue(*set_reusable_sandbox_options_obj));
+  if (!JS_SetProperty(engine->cx(), experimental, "setReusableSandboxOptions",
+                      set_reusable_sandbox_options_val)) {
+    return false;
+  }
   RootedString version_str(
       engine->cx(), JS_NewStringCopyN(engine->cx(), RUNTIME_VERSION, strlen(RUNTIME_VERSION)));
   RootedValue version_str_val(engine->cx(), StringValue(version_str));
@@ -922,15 +1017,16 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
   size_t length;
 
   if (bodyObj && JS_IsArrayBufferViewObject(bodyObj)) {
+    length = JS_GetArrayBufferViewByteLength(bodyObj);
+    buf.reset(reinterpret_cast<char *>(JS_malloc(cx, length)));
     // `maybeNoGC` needs to be populated for the lifetime of `buf` because
     // short typed arrays have inline data which can move on GC, so assert
     // that no GC happens. (Which it doesn't, because we're not allocating
     // before `buf` goes out of scope.)
     JS::AutoCheckCannotGC noGC;
     bool is_shared;
-    length = JS_GetArrayBufferViewByteLength(bodyObj);
-    buf = JS::UniqueChars(
-        reinterpret_cast<char *>(JS_GetArrayBufferViewData(bodyObj, &is_shared, noGC)));
+    auto *data = JS_GetArrayBufferViewData(bodyObj, &is_shared, noGC);
+    std::memcpy(buf.get(), data, length);
     MOZ_ASSERT(!is_shared);
     return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
   } else if (bodyObj && JS::IsArrayBufferObject(bodyObj)) {
@@ -938,11 +1034,13 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
     uint8_t *bytes;
     JS::GetArrayBufferLengthAndData(bodyObj, &length, &is_shared, &bytes);
     MOZ_ASSERT(!is_shared);
-    buf.reset(reinterpret_cast<char *>(bytes));
+    buf.reset(reinterpret_cast<char *>(JS_malloc(cx, length)));
+    std::memcpy(buf.get(), bytes, length);
     return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
   } else if (bodyObj && URLSearchParams::is_instance(bodyObj)) {
     jsurl::SpecSlice slice = URLSearchParams::serialize(cx, bodyObj);
-    buf = JS::UniqueChars(reinterpret_cast<char *>(const_cast<uint8_t *>(slice.data)));
+    buf.reset(reinterpret_cast<char *>(JS_malloc(cx, slice.len)));
+    std::memcpy(buf.get(), slice.data, slice.len);
     length = slice.len;
     return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
   } else {

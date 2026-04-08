@@ -1,5 +1,50 @@
 # Changelog
 
+## 3.41.0 (2026-04-08)
+
+### Added
+
+* Add `--gc-frequency` option to `debug-build.sh` ([#1395](https://github.com/fastly/js-compute-runtime/issues/1395)) ([a6e4a1f](https://github.com/fastly/js-compute-runtime/commit/a6e4a1fd11acc62b7ce409f1aa2e017ff85b347c))
+* Allow the use of project-level external config file for js-compute-runtime CLI behavior ([#1405](https://github.com/fastly/js-compute-runtime/issues/1405)) ([9749cab](https://github.com/fastly/js-compute-runtime/commit/9749cab9f87be27a19a3a9c14bbddcfe2c590c1f))
+* Support installation in projects that use TypeScript 6 ([e4273a3](https://github.com/fastly/js-compute-runtime/commit/e4273a3f004e9af0a61d21c67a1cb6c5680cde29))
+
+### Fixed
+
+* Allow `--aot-cache` and `--debug-intermediate-files` flags to be specified with equals ([#1403](https://github.com/fastly/js-compute-runtime/issues/1403)) ([81a75f8](https://github.com/fastly/js-compute-runtime/commit/81a75f8704bd2befa899e55f382920f7da13f26f))
+* Double free in `convertBodyInit` ([#1387](https://github.com/fastly/js-compute-runtime/issues/1387)) ([72acfc3](https://github.com/fastly/js-compute-runtime/commit/72acfc3dc9077026746faaf323e5b11ecf48a4db))
+* GC fixes for edge rate limiter ([#1397](https://github.com/fastly/js-compute-runtime/issues/1397)) ([fd9e322](https://github.com/fastly/js-compute-runtime/commit/fd9e322fd852612f8df5d925b6e3a6c646b56109))
+* GC issue in handoffs ([#1396](https://github.com/fastly/js-compute-runtime/issues/1396)) ([b57fc8f](https://github.com/fastly/js-compute-runtime/commit/b57fc8f720cd530543ba8c8738c9dfe7bdff905e))
+* Shielding GC ([#1401](https://github.com/fastly/js-compute-runtime/issues/1401)) ([6de2f55](https://github.com/fastly/js-compute-runtime/commit/6de2f55b97c45dcd9aa246b22c7dbdafa883ee42))
+
+## 3.40.1 (2026-02-24)
+
+### Fixed
+
+* **early-hints:** early hints don't need to be sync inside a FetchEve… ([#1323](https://github.com/fastly/js-compute-runtime/issues/1323)) ([22ac0cc](https://github.com/fastly/js-compute-runtime/commit/22ac0ccd3205a0136e39621e2cfe93968a5be9f3))
+
+## 3.40.0 (2026-02-17)
+
+### Added
+
+* Allow custom weval binary ([#1315](https://github.com/fastly/js-compute-runtime/issues/1315)) ([b143150](https://github.com/fastly/js-compute-runtime/commit/b143150df609f217e8160759c0cf1dae2f86afb7))
+* Reusable sandboxes ([#1314](https://github.com/fastly/js-compute-runtime/issues/1314)) ([70a9d28](https://github.com/fastly/js-compute-runtime/commit/70a9d282d276176777d3369e164d8f89d3e96209))
+
+### Fixed
+
+* Add `security` to docs rename script ([#1316](https://github.com/fastly/js-compute-runtime/issues/1316)) ([7028c0b](https://github.com/fastly/js-compute-runtime/commit/7028c0bd819c44b870140d1536039f9aad6ddd4e))
+
+## 3.39.4 (2026-02-13)
+
+### Fixed
+
+* Body truncation error in chained extract\_body requests ([#1310](https://github.com/fastly/js-compute-runtime/issues/1310)) ([b929648](https://github.com/fastly/js-compute-runtime/commit/b929648bef34c0d41fe387fc755a2554372bb946))
+
+## 3.39.3 (2026-02-12)
+
+### Fixed
+
+* Don't throw from `event.client.geo` or `event.client.address` on hostcall error ([#1306](https://github.com/fastly/js-compute-runtime/issues/1306)) ([471b112](https://github.com/fastly/js-compute-runtime/commit/471b1128a32b3a2233a95eb14e2887abbb6183c0))
+
 ## 3.39.2 (2026-02-09)
 
 ### Fixed

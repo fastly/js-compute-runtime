@@ -17,6 +17,7 @@ export type ParsedInputs =
       excludeSources: boolean;
       debugIntermediateFilesDir: string | undefined;
       wasmEngine: string;
+      wevalBin: string | undefined;
       input: string;
       output: string;
       env: Record<string, string>;
@@ -40,6 +41,7 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
   let enableStackTraces = false;
   let excludeSources = false;
   let debugIntermediateFilesDir = undefined;
+  let wevalBin = undefined;
   let cliInput;
 
   const envParser = new EnvParser();
@@ -135,6 +137,19 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
         }
         break;
       }
+      case '--weval-bin': {
+        const value = cliInputs.shift();
+        if (value == null) {
+          console.error('Error: --weval-bin requires a value');
+          process.exit(1);
+        }
+        if (isAbsolute(value)) {
+          wevalBin = value;
+        } else {
+          wevalBin = join(process.cwd(), value);
+        }
+        break;
+      }
       case '--aot-cache': {
         const value = cliInputs.shift();
         if (value == null) {
@@ -159,7 +174,7 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
       case '--debug-intermediate-files': {
         const value = cliInputs.shift();
         if (value == null) {
-          console.error('Error: --aot-cache requires a value');
+          console.error('Error: --debug-intermediate-files requires a value');
           process.exit(1);
         }
         if (isAbsolute(value)) {
@@ -185,6 +200,30 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
         } else if (cliInput.startsWith('--env=')) {
           const value = cliInput.replace(/--env=/, '');
           envParser.parse(value);
+          break;
+        } else if (cliInput.startsWith('--weval-bin=')) {
+          const value = cliInput.replace(/--weval-bin=/, '');
+          if (isAbsolute(value)) {
+            wevalBin = value;
+          } else {
+            wevalBin = join(process.cwd(), value);
+          }
+          break;
+        } else if (cliInput.startsWith('--aot-cache=')) {
+          const value = cliInput.replace(/--aot-cache=/, '');
+          if (isAbsolute(value)) {
+            aotCache = value;
+          } else {
+            aotCache = join(process.cwd(), value);
+          }
+          break;
+        } else if (cliInput.startsWith('--debug-intermediate-files=')) {
+          const value = cliInput.replace(/--debug-intermediate-files=/, '');
+          if (isAbsolute(value)) {
+            debugIntermediateFilesDir = value;
+          } else {
+            debugIntermediateFilesDir = join(process.cwd(), value);
+          }
           break;
         } else if (cliInput.startsWith('-')) {
           unknownArgument(cliInput);
@@ -215,6 +254,12 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
     wasmEngine = join(__dirname, '../fastly-weval.wasm');
   }
 
+  if (wevalBin && !enableAOT) {
+    console.error(
+      'Warning: --weval-bin has no effect without --enable-aot, as weval is only used for AOT compilation',
+    );
+  }
+
   return {
     enableExperimentalHighResolutionTimeMethods,
     enableHttpCache,
@@ -228,6 +273,7 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
     input,
     output,
     wasmEngine,
+    wevalBin,
     env: envParser.getEnv(),
   };
 }
