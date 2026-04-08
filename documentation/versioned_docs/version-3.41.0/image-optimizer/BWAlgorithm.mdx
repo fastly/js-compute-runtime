@@ -1,0 +1,34 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# `BWAlgorithm`
+
+Enumerator options for [`imageOptimizerOptions.bw`](./imageOptimizerOptions.mdx).
+
+## Constants
+
+- `Threshold` (`"threshold"`) Uses a luminance threshold to convert the image to black and white.
+- `Atkinson` (`"atkinson"`)	Uses [Atkinson dithering](https://en.wikipedia.org/wiki/Atkinson_dithering) to convert the image to black and white.
+
+
+## Examples
+
+```js
+import { Region, BWAlgorithm } from 'fastly:image-optimizer';
+
+addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
+
+async function handleRequest(event) {
+  return await fetch('https://www.w3.org/Graphics/PNG/text2.png', {
+    imageOptimizerOptions: {
+      region: Region.UsEast,
+      bw: BWAlgorithm.Threshold
+    },
+    backend: 'w3'
+  });
+}
+```

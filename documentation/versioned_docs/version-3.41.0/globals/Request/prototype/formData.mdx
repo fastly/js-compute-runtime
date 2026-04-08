@@ -1,0 +1,30 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Request.formData()
+
+The **`formData()`** method of the `Request` interface reads the request body and returns it as a promise that resolves with a `FormData` object.
+
+## Syntax
+
+```js
+formData()
+```
+
+### Parameters
+
+None.
+
+### Return value
+
+A `Promise` that resolves with a [`FormData`](../../../globals/FormData/FormData.mdx) object.
+
+### Exceptions
+
+- `TypeError`
+  - : Thrown if the request body has already been used or if the request's method is `GET` or `HEAD`.
+- `SyntaxError`
+  - : Thrown if the request's content type is not `multipart/form-data` or `application/x-www-form-urlencoded`, or if the content cannot be parsed as form data.
