@@ -132,14 +132,15 @@ routes.set(
     // There's now a stale cached response with staleIfError available
     let staleIfErrorAvailableResult;
     let staleIfErrorValue;
-    
+
     const checkRequest = new Request('https://http-me.fastly.dev/now', {
       backend: 'httpme',
       cacheOverride: new CacheOverride('override', {
         staleIfError: 600,
         afterSend(candidateResponse) {
           // Check staleIfErrorAvailable() on the candidate response
-          staleIfErrorAvailableResult = candidateResponse.staleIfErrorAvailable();
+          staleIfErrorAvailableResult =
+            candidateResponse.staleIfErrorAvailable();
           staleIfErrorValue = candidateResponse.staleIfError;
         },
       }),
@@ -166,7 +167,7 @@ routes.set(
     const url = `https://http-me.fastly.dev/now?stale-if-error-test-no-sie-${Date.now()}`;
 
     let staleIfErrorAvailableResult;
-    
+
     await fetch(url, {
       backend: 'httpme',
       cacheOverride: new CacheOverride('override', {
@@ -174,7 +175,8 @@ routes.set(
         // No staleIfError configured
         afterSend(candidateResponse) {
           // Check staleIfErrorAvailable() on the candidate response
-          staleIfErrorAvailableResult = candidateResponse.staleIfErrorAvailable();
+          staleIfErrorAvailableResult =
+            candidateResponse.staleIfErrorAvailable();
         },
       }),
     });
@@ -254,16 +256,13 @@ routes.set(
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     // Step 3: Request with same cache key but URL that returns 503
-    const errorRequest = new Request(
-      'https://http-me.fastly.dev/status=503',
-      {
-        backend: 'httpme',
-        cacheOverride: new CacheOverride('override', {
-          staleIfError: 3600,
-        }),
-      },
-    );
-    errorRequest.setCacheKey(sharedCacheKey); 
+    const errorRequest = new Request('https://http-me.fastly.dev/status=503', {
+      backend: 'httpme',
+      cacheOverride: new CacheOverride('override', {
+        staleIfError: 3600,
+      }),
+    });
+    errorRequest.setCacheKey(sharedCacheKey);
 
     const staleResponse = await fetch(errorRequest);
 
