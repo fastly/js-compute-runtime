@@ -599,6 +599,14 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue p
 bool after_send_catch(JSContext *cx, JS::HandleObject response, JS::HandleValue promise,
                       JS::CallArgs args) {
   JS::RootedObject promise_obj(cx, &promise.toObject());
+  
+  auto maybe_stale = try_serve_stale_if_error(cx, response, args.get(0));
+  if (maybe_stale.has_value()) {
+    JS::RootedValue response_val(cx, JS::ObjectValue(*maybe_stale.value()));
+    return JS::ResolvePromise(cx, promise_obj, response_val);
+  }
+  
+  // No stale-if-error available, close cache and reject
   if (!RequestOrResponse::close_if_cache_entry(cx, response)) {
     return false;
   }
@@ -4492,7 +4500,6 @@ bool Response::staleIfErrorAvailable(JSContext *cx, unsigned argc, JS::Value *vp
   // This method is only valid on candidate responses (inside afterSend callback)
   auto cache_entry = RequestOrResponse::cache_entry(self);
   if (!cache_entry) {
-    DEBUG_LOG("Response::staleIfErrorAvailable called on a response with no cache entry");
     // Cache entry has been taken - this is not a candidate response
     api::throw_error(cx, api::Errors::TypeError, "Response", "staleIfErrorAvailable()",
                      "can only be called on candidate responses inside afterSend callback");
@@ -4501,11 +4508,10 @@ bool Response::staleIfErrorAvailable(JSContext *cx, unsigned argc, JS::Value *vp
 
   auto res = cache_entry->get_state();
   if (auto *err = res.to_err()) {
-    DEBUG_LOG("Error getting cache entry state");
     HANDLE_ERROR(cx, *err);
     return false;
   }
-  DEBUG_LOG("Cache entry state " + std::to_string(res.unwrap().state));
+  
   args.rval().setBoolean(res.unwrap().is_usable_if_error());
   return true;
 }

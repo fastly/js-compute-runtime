@@ -279,5 +279,139 @@ routes.set(
       initialBody,
       'Response body is from the original cached 200 response',
     );
+
+    strictEqual(
+      staleResponse.maskedError.status,
+      503,
+      'The masked error on the response is the original backend error (503)',
+    );
+  },
+);
+
+routes.set(
+  '/stale-if-error/fetch/serve-stale-on-afterSend-exception',
+  async () => {
+    const sharedCacheKey = 'stale-if-error-aftersend-exception-' + Date.now();
+
+    // Step 1: Cache a successful response with short TTL and long stale-if-error
+    const goodRequest = new Request('https://http-me.fastly.dev/now', {
+      backend: 'httpme',
+      cacheOverride: new CacheOverride('override', {
+        ttl: 1, // 1 second TTL - will be stale quickly
+        staleIfError: 3600, // 1 hour stale-if-error window
+      }),
+    });
+    goodRequest.setCacheKey(sharedCacheKey);
+
+    const goodResponse = await fetch(goodRequest);
+    assert(goodResponse.status, 200, 'Initial response is 200');
+    const initialBody = await goodResponse.text();
+
+    // Step 2: Wait for TTL to expire (make response stale)
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    // Step 3: Request with afterSend hook that throws an exception
+    const errorRequest = new Request('https://http-me.fastly.dev/now', {
+      backend: 'httpme',
+      cacheOverride: new CacheOverride('override', {
+        staleIfError: 3600,
+        afterSend(response) {
+          throw new Error('afterSend hook intentionally failed');
+        },
+      }),
+    });
+    errorRequest.setCacheKey(sharedCacheKey);
+
+    const staleResponse = await fetch(errorRequest);
+
+    // Step 4: Verify we got the stale 200 response despite afterSend throwing
+    assert(
+      staleResponse.status,
+      200,
+      'Stale-if-error serves cached response when afterSend throws',
+    );
+
+    const cachedBody = await staleResponse.text();
+    strictEqual(
+      cachedBody,
+      initialBody,
+      'Response body is from the original cached response',
+    );
+
+    // The masked error should be the exception that was thrown
+    assert(
+      staleResponse.maskedError instanceof Error,
+      true,
+      'The masked error is an Error object',
+    );
+    strictEqual(
+      staleResponse.maskedError.message,
+      'afterSend hook intentionally failed',
+      'The masked error message matches the thrown exception',
+    );
+  },
+);
+
+routes.set(
+  '/stale-if-error/fetch/serve-stale-on-beforeSend-exception',
+  async () => {
+    const sharedCacheKey = 'stale-if-error-beforesend-exception-' + Date.now();
+
+    // Step 1: Cache a successful response with short TTL and long stale-if-error
+    const goodRequest = new Request('https://http-me.fastly.dev/now', {
+      backend: 'httpme',
+      cacheOverride: new CacheOverride('override', {
+        ttl: 1, // 1 second TTL - will be stale quickly
+        staleIfError: 3600, // 1 hour stale-if-error window
+      }),
+    });
+    goodRequest.setCacheKey(sharedCacheKey);
+
+    const goodResponse = await fetch(goodRequest);
+    assert(goodResponse.status, 200, 'Initial response is 200');
+    const initialBody = await goodResponse.text();
+
+    // Step 2: Wait for TTL to expire (make response stale)
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    // Step 3: Request with beforeSend hook that throws an exception
+    const errorRequest = new Request('https://http-me.fastly.dev/now', {
+      backend: 'httpme',
+      cacheOverride: new CacheOverride('override', {
+        staleIfError: 3600,
+        beforeSend(request) {
+          throw new Error('beforeSend hook intentionally failed');
+        },
+      }),
+    });
+    errorRequest.setCacheKey(sharedCacheKey);
+
+    const staleResponse = await fetch(errorRequest);
+
+    // Step 4: Verify we got the stale 200 response despite beforeSend throwing
+    assert(
+      staleResponse.status,
+      200,
+      'Stale-if-error serves cached response when beforeSend throws',
+    );
+
+    const cachedBody = await staleResponse.text();
+    strictEqual(
+      cachedBody,
+      initialBody,
+      'Response body is from the original cached response',
+    );
+
+    // The masked error should be the exception that was thrown
+    assert(
+      staleResponse.maskedError instanceof Error,
+      true,
+      'The masked error is an Error object',
+    );
+    strictEqual(
+      staleResponse.maskedError.message,
+      'beforeSend hook intentionally failed',
+      'The masked error message matches the thrown exception',
+    );
   },
 );
