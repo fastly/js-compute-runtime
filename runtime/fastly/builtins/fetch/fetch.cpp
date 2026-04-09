@@ -1268,7 +1268,6 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   }
 
   if (maybe_response.has_value()) {
-    DEBUG_LOG("HTTP Cache: Found usable cached response, cache state: " + state_str);
     JS::RootedObject cached_response(cx, maybe_response.value());
 
     if (cache_state.must_insert_or_update()) {
