@@ -2088,7 +2088,6 @@ bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValu
   JS::RootedValue cache_key_str_val(cx, JS::StringValue(cache_key_str));
   // Convert the key argument into a String following https://tc39.es/ecma262/#sec-tostring
   auto keyString = core::encode(cx, cache_key_str_val);
-  DEBUG_LOG("Setting cache key to " + std::string(keyString));
   if (!keyString) {
     return false;
   }
