@@ -3232,7 +3232,10 @@
   "GET /stale-if-error/response/property-undefined-on-non-cached": {},
   "GET /stale-if-error/response/setter-throws-on-non-cached": {},
   "GET /stale-if-error/response/staleIfErrorAvailable-throws-outside-afterSend": {},
-  "GET /stale-if-error/fetch/staleIfErrorAvailable-false-without-staleIfError": {},
+  "GET /stale-if-error/fetch/staleIfErrorAvailable-false-without-staleIfError": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
   "GET /stale-if-error/fetch/with-cache-override": {
     "environments": ["compute"],
     "features": ["http-cache"]
