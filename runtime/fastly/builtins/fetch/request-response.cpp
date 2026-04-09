@@ -599,13 +599,13 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue p
 bool after_send_catch(JSContext *cx, JS::HandleObject response, JS::HandleValue promise,
                       JS::CallArgs args) {
   JS::RootedObject promise_obj(cx, &promise.toObject());
-  
+
   auto maybe_stale = try_serve_stale_if_error(cx, response, args.get(0));
   if (maybe_stale.has_value()) {
     JS::RootedValue response_val(cx, JS::ObjectValue(*maybe_stale.value()));
     return JS::ResolvePromise(cx, promise_obj, response_val);
   }
-  
+
   // No stale-if-error available, close cache and reject
   if (!RequestOrResponse::close_if_cache_entry(cx, response)) {
     return false;
@@ -4511,7 +4511,7 @@ bool Response::staleIfErrorAvailable(JSContext *cx, unsigned argc, JS::Value *vp
     HANDLE_ERROR(cx, *err);
     return false;
   }
-  
+
   args.rval().setBoolean(res.unwrap().is_usable_if_error());
   return true;
 }

@@ -395,13 +395,13 @@ bool fetch_process_cache_hooks_origin_request(JSContext *cx, JS::HandleObject re
 bool fetch_process_cache_hooks_before_send_reject(JSContext *cx, JS::HandleObject request,
                                                   JS::HandleValue ret_promise, JS::CallArgs args) {
   JS::RootedObject ret_promise_obj(cx, &ret_promise.toObject());
-  
+
   auto maybe_stale = fastly::fetch::try_serve_stale_if_error(cx, request, args.get(0));
   if (maybe_stale.has_value()) {
     JS::RootedValue response_val(cx, JS::ObjectValue(*maybe_stale.value()));
     return JS::ResolvePromise(cx, ret_promise_obj, response_val);
   }
-  
+
   // No stale-if-error available, close cache and reject
   if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
     return false;
@@ -930,8 +930,7 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
   if (!state_res.is_err()) {
     auto cache_state = state_res.unwrap();
     auto status = Response::status(response_obj);
-    if (cache_state.is_usable_if_error() &&
-        (status >= 500 && status < 600)) {
+    if (cache_state.is_usable_if_error() && (status >= 500 && status < 600)) {
       // Use the stale response instead of the error response
       auto chose_stale_res = cache_entry.transaction_choose_stale();
       if (auto *err = chose_stale_res.to_err()) {
@@ -1141,7 +1140,7 @@ bool stream_back_catch_handler(JSContext *cx, JS::HandleObject request, JS::Hand
     args.rval().setObject(*maybe_stale.value());
     return true;
   }
-  
+
   // No stale-if-error available, close cache and fail
   // we follow the Rust implementation calling "close" instead of "transaction_abandon" here
   // this could be reconsidered in future if alternative semantics are required
@@ -1161,7 +1160,8 @@ api::Engine *ENGINE;
 
 // Helper function to check for and serve stale-if-error responses when errors occur
 // Returns the stale response if available, or std::nullopt if not
-std::optional<JSObject *> try_serve_stale_if_error(JSContext *cx, JS::HandleObject request_or_response,
+std::optional<JSObject *> try_serve_stale_if_error(JSContext *cx,
+                                                   JS::HandleObject request_or_response,
                                                    JS::HandleValue error_val) {
   auto maybe_cache_entry = RequestOrResponse::cache_entry(request_or_response);
   if (!maybe_cache_entry.has_value()) {
@@ -1302,7 +1302,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     transaction_res = host_api::HttpCacheEntry::transaction_lookup(
         request_handle, std::span<uint8_t>{override_key_hash.data(), override_key_hash.size()});
   }
-  
+
   if (auto *err = transaction_res.to_err()) {
     DEBUG_LOG("HTTP Cache: Transaction lookup error")
     if (host_api::error_is_limit_exceeded(*err)) {
