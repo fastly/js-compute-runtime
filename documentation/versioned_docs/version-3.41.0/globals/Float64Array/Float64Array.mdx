@@ -1,0 +1,38 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Float64Array()
+
+The **`Float64Array()`** typed array constructor creates a new
+`Float64Array` object, which is, an array of 64-bit floating point numbers
+(corresponding to the C `double` data type) in the platform byte order. If
+control over byte order is needed, use [`DataView`](../../globals/DataView/DataView.mdx) instead. The contents are
+initialized to `0`. Once established, you can reference elements in the array
+using the object's methods, or using standard array index syntax (that is, using bracket
+notation).
+
+## Syntax
+
+```js
+new Float64Array()
+new Float64Array(length)
+new Float64Array(typedArray)
+new Float64Array(object)
+
+new Float64Array(buffer)
+new Float64Array(buffer, byteOffset)
+new Float64Array(buffer, byteOffset, length)
+```
+
+> **Note:** `Float64Array()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.mdx).
+
+### Parameters
+
+See [`TypedArray`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#parameters).
+
+### Exceptions
+
+See [`TypedArray`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#exceptions).

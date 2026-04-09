@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.41.0 (2026-04-08)
+
+### Added
+
+* Add `--gc-frequency` option to `debug-build.sh` ([#1395](https://github.com/fastly/js-compute-runtime/issues/1395)) ([a6e4a1f](https://github.com/fastly/js-compute-runtime/commit/a6e4a1fd11acc62b7ce409f1aa2e017ff85b347c))
+* Allow the use of project-level external config file for js-compute-runtime CLI behavior ([#1405](https://github.com/fastly/js-compute-runtime/issues/1405)) ([9749cab](https://github.com/fastly/js-compute-runtime/commit/9749cab9f87be27a19a3a9c14bbddcfe2c590c1f))
+* Support installation in projects that use TypeScript 6 ([e4273a3](https://github.com/fastly/js-compute-runtime/commit/e4273a3f004e9af0a61d21c67a1cb6c5680cde29))
+
+### Fixed
+
+* Allow `--aot-cache` and `--debug-intermediate-files` flags to be specified with equals ([#1403](https://github.com/fastly/js-compute-runtime/issues/1403)) ([81a75f8](https://github.com/fastly/js-compute-runtime/commit/81a75f8704bd2befa899e55f382920f7da13f26f))
+* Double free in `convertBodyInit` ([#1387](https://github.com/fastly/js-compute-runtime/issues/1387)) ([72acfc3](https://github.com/fastly/js-compute-runtime/commit/72acfc3dc9077026746faaf323e5b11ecf48a4db))
+* GC fixes for edge rate limiter ([#1397](https://github.com/fastly/js-compute-runtime/issues/1397)) ([fd9e322](https://github.com/fastly/js-compute-runtime/commit/fd9e322fd852612f8df5d925b6e3a6c646b56109))
+* GC issue in handoffs ([#1396](https://github.com/fastly/js-compute-runtime/issues/1396)) ([b57fc8f](https://github.com/fastly/js-compute-runtime/commit/b57fc8f720cd530543ba8c8738c9dfe7bdff905e))
+* Shielding GC ([#1401](https://github.com/fastly/js-compute-runtime/issues/1401)) ([6de2f55](https://github.com/fastly/js-compute-runtime/commit/6de2f55b97c45dcd9aa246b22c7dbdafa883ee42))
+
 ## 3.40.1 (2026-02-24)
 
 ### Fixed
