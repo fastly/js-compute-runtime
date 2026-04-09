@@ -630,7 +630,6 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
     // For a request made without caching (via the Request cache handle false convention), we must
     // add fastly headers to the Response
     auto maybe_not_cached = JS::GetReservedSlot(request, static_cast<uint32_t>(Slots::CacheEntry));
-    DEBUG_LOG("MAYBE NOT CACHED");
     if (maybe_not_cached.isBoolean() && maybe_not_cached.toBoolean() == false) {
       if (!Response::add_fastly_cache_headers(cx, response, request, std::nullopt,
                                               "cached response")) {
