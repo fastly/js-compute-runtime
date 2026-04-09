@@ -532,7 +532,6 @@ namespace {
 
 api::Engine *ENGINE;
 
-PersistentRooted<JSObject *> INSTANCE;
 JS::PersistentRootedObjectVector *FETCH_HANDLERS;
 
 void inc_pending_promise_count(JSObject *self) {
@@ -798,6 +797,10 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
   // very different.)
   JS::RootedObject response_obj(cx, &args[0].toObject());
 
+  // Store the FetchEvent on the Response so it can be accessed later
+  JS::SetReservedSlot(response_obj, static_cast<uint32_t>(Response::Slots::FetchEvent),
+                     JS::ObjectValue(*event));
+
   if (Response::is_upstream(response_obj)) {
     JS::RootedObject headers(cx, Response::headers(cx, response_obj));
     // Calling get_list() transitions to Mode::ContentOnly or Mode::CachedInContent.
@@ -1057,7 +1060,6 @@ JSObject *FetchEvent::create(JSContext *cx) {
     return nullptr;
   }
 
-  INSTANCE.init(cx, self);
   return self;
 }
 
@@ -1081,12 +1083,6 @@ bool FetchEvent::reset(JSContext *cx, JS::HandleObject self) {
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::ClientInfo), JS::UndefinedValue());
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::ServerInfo), JS::UndefinedValue());
   return true;
-}
-
-JS::HandleObject FetchEvent::instance() {
-  MOZ_ASSERT(INSTANCE);
-  MOZ_ASSERT(is_instance(INSTANCE));
-  return INSTANCE;
 }
 
 bool FetchEvent::is_active(JSObject *self) {
