@@ -1331,8 +1331,6 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   // No valid cached response, need to make backend request
   if (cache_state.must_insert_or_update()) {
-    DEBUG_LOG("HTTP Cache: No usable cached response, making backend request, cache state: " +
-              state_str);
     // We are responsible for fetching/revalidating
     JS::RootedValue stream_back_promise(cx, JS::ObjectValue(*JS::NewPromiseObject(cx, nullptr)));
     if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry, &stream_back_promise)) {
