@@ -11,7 +11,7 @@
     "@actions/core": "^3",
     "@iarna/toml": "^2",
     "fast-check": "^4",
-    "undici": "^7",
+    "undici": "^8",
     "zx": "^8"
   },
   "type": "module"
