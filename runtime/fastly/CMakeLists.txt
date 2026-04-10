@@ -61,4 +61,8 @@ add_builtin(fastly::abort SRC builtins/abort.cpp)
 
 add_compile_definitions(PUBLIC RUNTIME_VERSION=${RUNTIME_VERSION})
 
+if(DEFINED FASTLY_GC_FREQUENCY)
+  add_compile_definitions(PUBLIC FASTLY_GC_FREQUENCY=${FASTLY_GC_FREQUENCY})
+endif()
+
 project(FastlyJS)

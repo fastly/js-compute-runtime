@@ -1,0 +1,31 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Math.tan()
+
+The **`Math.tan()`** function returns the tangent of a number in radians.
+
+
+## Syntax
+
+```js
+Math.tan(x)
+```
+
+### Parameters
+
+- `x`
+  - : A number representing an angle in radians.
+
+### Return value
+
+The tangent of `x`. If `x` is `Infinity`, `-Infinity`, or `NaN`, returns `NaN`.
+
+> **Note:** Due to floating point precision, it's not possible to obtain the exact value π/2, so the result is always finite if not `NaN`.
+
+## Description
+
+Because `tan()` is a static method of `Math`, you always use it as `Math.tan()`, rather than as a method of a `Math` object you created (`Math` is not a constructor).

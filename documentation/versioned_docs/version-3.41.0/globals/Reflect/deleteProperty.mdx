@@ -1,0 +1,43 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Reflect.deleteProperty()
+
+The static
+**`Reflect.deleteProperty()`**
+method allows to delete properties. It is like the
+[`delete` operator](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/delete)
+as a function.
+
+## Syntax
+
+```js
+Reflect.deleteProperty(target, propertyKey)
+```
+
+### Parameters
+
+- `target`
+  - : The target object on which to delete the property.
+- `propertyKey`
+  - : The name of the property to be deleted.
+
+### Return value
+
+A `Boolean` indicating whether or not the property was successfully
+deleted.
+
+### Exceptions
+
+A [`TypeError`](../../globals/TypeError/TypeError.mdx), if `target` is not an
+`Object`.
+
+## Description
+
+The `Reflect.deleteProperty` method allows you to delete a property on an
+object. It returns a `Boolean` indicating whether or not the property was
+successfully deleted. It is almost identical to the non-strict
+[`delete` operator](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/delete).

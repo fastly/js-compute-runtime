@@ -1,0 +1,25 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# CacheState.usable
+
+The **`usable`** method of the `CacheState` interface returns `true` if the cached item is usable.
+
+A cached item is usable if its age is less than the sum of the `maxAge` and `staleWhileRevalidate` periods.
+
+## Syntax
+
+```js
+usable()
+```
+
+### Parameters
+
+None.
+
+### Return value
+
+A `boolean` which represents whether a cached item is usable or not.

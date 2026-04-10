@@ -2442,7 +2442,6 @@ Result<HttpCacheEntry> HttpCacheEntry::transaction_lookup(const HttpReq &req,
   fastly::fastly_http_cache_lookup_options opts{};
   uint32_t opts_mask = 0;
 
-  MOZ_ASSERT(override_key.empty());
   if (!override_key.empty()) {
     MOZ_ASSERT(override_key.size() == 32);
     opts.override_key = reinterpret_cast<const char *>(override_key.data());
