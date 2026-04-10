@@ -41,7 +41,8 @@
     "flake": true
   },
   "GET /cache-override/fetch/null-304-body": {
-    "environments": ["compute"]
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /secret-store/exposed-as-global": {
     "flake": true
