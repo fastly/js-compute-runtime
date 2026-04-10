@@ -1026,8 +1026,10 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
 
     // Body transfom
     // in order to stream from the response object we must unlock it
-    JS::SetReservedSlot(response_obj, static_cast<size_t>(Response::Slots::HasBody),
-                        JS::TrueValue());
+    if (!Response::has_bodyless_status(response_obj)) {
+      JS::SetReservedSlot(response_obj, static_cast<size_t>(Response::Slots::HasBody),
+                          JS::TrueValue());
+    }
 
     JS::RootedObject ret_promise(cx);
     if (!apply_body_transform(cx, response, body, &ret_promise)) {
@@ -1094,8 +1096,10 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
   }
   case host_api::HttpStorageAction::DoNotStore: {
     // promote the CandidateResponse -> body is now readable
-    JS::SetReservedSlot(response_obj, static_cast<size_t>(Response::Slots::HasBody),
-                        JS::TrueValue());
+    if (!Response::has_bodyless_status(response_obj)) {
+      JS::SetReservedSlot(response_obj, static_cast<size_t>(Response::Slots::HasBody),
+                          JS::TrueValue());
+    }
     auto res = cache_entry.transaction_abandon();
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
@@ -1106,8 +1110,10 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
   }
   case host_api::HttpStorageAction::RecordUncacheable: {
     // promote the CandidateResponse -> body is now readable
-    JS::SetReservedSlot(response_obj, static_cast<size_t>(Response::Slots::HasBody),
-                        JS::TrueValue());
+    if (!Response::has_bodyless_status(response_obj)) {
+      JS::SetReservedSlot(response_obj, static_cast<size_t>(Response::Slots::HasBody),
+                          JS::TrueValue());
+    }
     auto res = cache_entry.transaction_record_not_cacheable(cache_write_options->max_age_ns.value(),
                                                             cache_write_options->vary_rule);
     if (auto *err = res.to_err()) {

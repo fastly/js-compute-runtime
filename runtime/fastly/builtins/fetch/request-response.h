@@ -327,6 +327,7 @@ public:
                                        const char *fun_name);
 
   static bool has_body_transform(JSObject *self);
+  static bool has_bodyless_status(JSObject *obj);
 
   /**
    * Override cache options set by the user & suggested options, or final cache options if
