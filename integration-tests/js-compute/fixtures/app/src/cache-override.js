@@ -125,4 +125,22 @@ import { isRunningLocally, routes } from './routes.js';
       );
     }
   });
+  routes.set('/cache-override/fetch/null-304-body', async (event) => {
+    const resp = await fetch(
+      new Request('https://http-me.fastly.dev/body=foo?status=304', {
+        method: 'POST',
+        backend: 'httpme',
+        cacheOverride: new CacheOverride({
+          async afterSend(resp) {
+            resp.ttl = 1000000000;
+          },
+        }),
+      }),
+    );
+    assert(
+      resp.body,
+      null,
+      '304s should never have bodies even when processed through the caching code',
+    );
+  });
 }
