@@ -1,9 +1,8 @@
 # Changelog
 
-## [3.41.1](https://github.com/fastly/js-compute-runtime/compare/v3.41.0...v3.41.1) (2026-04-10)
+## 3.41.1 (2026-04-10)
 
-
-### Bug Fixes
+### Fixed
 
 * Deal with bodyless statuses in CandidateResponse situations ([#1414](https://github.com/fastly/js-compute-runtime/issues/1414)) ([cfd6c4b](https://github.com/fastly/js-compute-runtime/commit/cfd6c4bd0ac41bb3037bbcdfb7ba7c6608ce65e6))
 * Mark FetchEvent as done when we redirect to ws/grip proxies ([9831bd4](https://github.com/fastly/js-compute-runtime/commit/9831bd48f34ad6e80c7932a02b6acd5292ee2799))
