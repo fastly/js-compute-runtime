@@ -1161,11 +1161,7 @@ std::optional<JSObject *> try_serve_stale_if_error(JSContext *cx,
 
   JS::RootedValue no_candidate(cx);
   auto maybe_response = get_found_response(cx, cache_entry, request, no_candidate, false);
-  if (maybe_response.has_value() && !maybe_response.value()) {
-    return std::nullopt;
-  }
-
-  if (!maybe_response.has_value()) {
+  if (!maybe_response.has_value() || !maybe_response.value()) {
     return std::nullopt;
   }
 
@@ -1261,13 +1257,8 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
                       override_key_hash.begin(), override_key_hash.end());
   }
 
-  host_api::Result<host_api::HttpCacheEntry> transaction_res;
-  if (override_key_hash.empty()) {
-    transaction_res = host_api::HttpCacheEntry::transaction_lookup(request_handle, {});
-  } else {
-    transaction_res = host_api::HttpCacheEntry::transaction_lookup(
-        request_handle, std::span<uint8_t>{override_key_hash.data(), override_key_hash.size()});
-  }
+  host_api::Result<host_api::HttpCacheEntry> transaction_res =
+      host_api::HttpCacheEntry::transaction_lookup(request_handle, override_key_hash);
 
   if (auto *err = transaction_res.to_err()) {
     DEBUG_LOG("HTTP Cache: Transaction lookup error")
