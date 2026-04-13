@@ -36,7 +36,7 @@ void handle_incoming(host_api::Request req) {
     start = system_clock::now();
   }
 
-  __wasilibc_initialize_environ();
+  __wasilibc_ensure_environ();
 
   if (ENGINE->debug_logging_enabled()) {
     printf("Running JS handleRequest function for Fastly Compute service version %s\n",
@@ -44,11 +44,7 @@ void handle_incoming(host_api::Request req) {
     fflush(stdout);
   }
 
-  HandleObject fetch_event = FetchEvent::instance();
-  if (!FetchEvent::init_request(ENGINE->cx(), fetch_event, req.req, req.body)) {
-    ENGINE->dump_pending_exception("initialization of FetchEvent");
-    return;
-  }
+  RootedObject fetch_event(ENGINE->cx(), FetchEvent::create(ENGINE->cx()));
 
   if (ENGINE->debug_logging_enabled()) {
     fetch_event::dispatch_fetch_event(fetch_event, &total_compute);
@@ -174,13 +170,6 @@ int main(int argc, const char *argv[]) {
     req = next.unwrap().wait();
     if (req.is_err()) {
       HANDLE_ERROR(ENGINE->cx(), *req.to_err());
-      return -1;
-    }
-
-    // The FetchEvent instance is a singleton that we re-initialize here. It's originally
-    // initialized during engine setup.
-    if (!FetchEvent::reset(fastly::runtime::ENGINE->cx(), FetchEvent::instance())) {
-      fprintf(stderr, "Failed to reset FetchEvent instance for new request, exiting process.\n");
       return -1;
     }
   }

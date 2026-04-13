@@ -1754,7 +1754,14 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
     // `responseDone`.
     if (Response::is_instance(body_owner)) {
       ENGINE->decr_event_loop_interest();
-      FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
+      JS::RootedValue fetch_event_val(
+          cx, JS::GetReservedSlot(body_owner, static_cast<uint32_t>(Response::Slots::FetchEvent)));
+      if (!fetch_event_val.isObject()) {
+        JS_ReportErrorASCII(cx, "Response does not have an associated FetchEvent");
+        return false;
+      }
+      JS::RootedObject fetch_event(cx, &fetch_event_val.toObject());
+      FetchEvent::set_state(fetch_event, FetchEvent::State::responseDone);
     }
 
     auto res = body.close();
@@ -1844,7 +1851,14 @@ bool RequestOrResponse::body_reader_catch_handler(JSContext *cx, JS::HandleObjec
   // a response at all failed.)
   if (Response::is_instance(body_owner)) {
     ENGINE->decr_event_loop_interest();
-    FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
+    JS::RootedValue fetch_event_val(
+        cx, JS::GetReservedSlot(body_owner, static_cast<uint32_t>(Response::Slots::FetchEvent)));
+    if (!fetch_event_val.isObject()) {
+      JS_ReportErrorASCII(cx, "Response does not have an associated FetchEvent");
+      return false;
+    }
+    JS::RootedObject fetch_event(cx, &fetch_event_val.toObject());
+    FetchEvent::set_state(fetch_event, FetchEvent::State::responseDone);
   }
   return true;
 }
@@ -4721,11 +4735,6 @@ void Response::finalize(JS::GCContext *gcx, JSObject *self) {
   }
 }
 
-bool Response::has_bodyless_status(JSObject *obj) {
-  auto status(Response::status(obj));
-  return status == 103 || status == 204 || status == 205 || status == 304;
-}
-
 JSObject *Response::create(JSContext *cx, JS::HandleObject response,
                            host_api::HttpResp response_handle, host_api::HttpBody body_handle,
                            bool is_upstream, JSObject *grip_upgrade_request,
@@ -4774,7 +4783,7 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
     JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Status), JS::Int32Value(status));
     set_status_message_from_code(cx, response, status);
 
-    if (!Response::has_bodyless_status(response)) {
+    if (!(status == 103 || status == 204 || status == 205 || status == 304)) {
       JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::HasBody), JS::TrueValue());
     }
   }

@@ -22,6 +22,7 @@ public:
     Backend,
     CacheEntry,
     SourceRequest, // Tracks the original Request when body is proxied via TransformStream
+    FetchEvent,
     Count,
   };
 
@@ -174,6 +175,7 @@ public:
     Backend = static_cast<int>(RequestOrResponse::Slots::Backend),
     CacheEntry = static_cast<int>(RequestOrResponse::Slots::CacheEntry),
     SourceRequest = static_cast<int>(RequestOrResponse::Slots::SourceRequest),
+    FetchEvent = static_cast<int>(RequestOrResponse::Slots::FetchEvent),
     Method = static_cast<int>(RequestOrResponse::Slots::Count),
     OverrideCacheKey,
     CacheOverride,
@@ -265,6 +267,7 @@ public:
     Backend = static_cast<int>(RequestOrResponse::Slots::Backend),
     CacheEntry = static_cast<int>(RequestOrResponse::Slots::CacheEntry),
     SourceRequest = static_cast<int>(RequestOrResponse::Slots::SourceRequest),
+    FetchEvent = static_cast<int>(RequestOrResponse::Slots::FetchEvent),
     IsUpstream = static_cast<int>(RequestOrResponse::Slots::Count),
     Status,
     StatusMessage,
@@ -326,7 +329,6 @@ public:
                                        const char *fun_name);
 
   static bool has_body_transform(JSObject *self);
-  static bool has_bodyless_status(JSObject *obj);
 
   /**
    * Override cache options set by the user & suggested options, or final cache options if
