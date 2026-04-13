@@ -4049,7 +4049,7 @@ bool Response::staleIfError_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto entry = RequestOrResponse::cache_entry(self);
 
   // all caching paths should set the override options as the final options
-  // so if they aren't set we are in the undefiend cases of no caching API use / no hostcall support
+  // so if they aren't set we are in the undefined cases of no caching API use / no hostcall support
   auto override_opts = override_cache_options(self);
   if (!override_opts) {
     args.rval().setUndefined();
