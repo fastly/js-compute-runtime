@@ -4698,11 +4698,6 @@ host_api::HttpCacheWriteOptions *Response::suggested_cache_options(JSContext *cx
   return suggested_cache_options;
 }
 
-bool Response::has_bodyless_status(JSObject *obj) {
-  auto status(Response::status(obj));
-  return status == 103 || status == 204 || status == 205 || status == 304;
-}
-
 JSObject *Response::create(JSContext *cx, HandleObject request, host_api::Response res) {
   auto [response_handle, body] = res;
   JS::RootedObject response_instance(
@@ -4738,6 +4733,11 @@ void Response::finalize(JS::GCContext *gcx, JSObject *self) {
   if (override_cache_write_options) {
     delete override_cache_write_options;
   }
+}
+
+bool Response::has_bodyless_status(JSObject *obj) {
+  auto status(Response::status(obj));
+  return status == 103 || status == 204 || status == 205 || status == 304;
 }
 
 JSObject *Response::create(JSContext *cx, JS::HandleObject response,
