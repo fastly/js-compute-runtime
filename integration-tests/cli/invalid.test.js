@@ -30,20 +30,6 @@ bin/index.js:4:9: ERROR: Expected identifier but found end of file`.replace(
       ),
     );
   } catch {
-    let actual = stderr.join('').toString().replace(/\r?\n/g, '').slice(1);
-    console.log("ACTUAL")
-    console.log(actual);
-    console.log("EXPECTED")
-    console.log(` [ERROR] Expected identifier but found end of file
-bin/index.js:4:9:
-4 │ "hello";@
-╵          ^
-Error: Build failed with 1 error:
-bin/index.js:4:9: ERROR: Expected identifier but found end of file`.replace(
-      /\r?\n/g,
-      '',
-    ));
-
     strictEqual(
       stderr.join('').toString().replace(/\r?\n/g, '').slice(1),
       ` [ERROR] Expected identifier but found end of file
