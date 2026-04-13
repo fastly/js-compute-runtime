@@ -45,6 +45,10 @@ void handle_incoming(host_api::Request req) {
   }
 
   RootedObject fetch_event(ENGINE->cx(), FetchEvent::create(ENGINE->cx()));
+  if (!FetchEvent::init_request(ENGINE->cx(), fetch_event, req.req, req.body)) {
+    ENGINE->dump_pending_exception("initialization of FetchEvent");
+    return;
+  }
 
   if (ENGINE->debug_logging_enabled()) {
     fetch_event::dispatch_fetch_event(fetch_event, &total_compute);
