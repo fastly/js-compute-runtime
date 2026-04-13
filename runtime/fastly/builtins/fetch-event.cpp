@@ -799,7 +799,7 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
 
   // Store the FetchEvent on the Response so it can be accessed later
   JS::SetReservedSlot(response_obj, static_cast<uint32_t>(Response::Slots::FetchEvent),
-                     JS::ObjectValue(*event));
+                      JS::ObjectValue(*event));
 
   if (Response::is_upstream(response_obj)) {
     JS::RootedObject headers(cx, Response::headers(cx, response_obj));
