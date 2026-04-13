@@ -815,7 +815,8 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
-    }
+    }    
+    FetchEvent::mark_done(event, true, Response::status(response_obj));
     return true;
   }
 
@@ -827,6 +828,7 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
       HANDLE_ERROR(cx, *err);
       return false;
     }
+    FetchEvent::mark_done(event, true, Response::status(response_obj));
     return true;
   }
 
