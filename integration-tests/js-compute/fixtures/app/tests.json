@@ -3256,10 +3256,6 @@
     "environments": ["compute"],
     "features": ["http-cache"]
   },
-  "GET /stale-if-error/fetch/serve-stale-on-backend-error-with-cache-key": {
-    "environments": ["compute"],
-    "features": ["http-cache"]
-  },
   "GET /stale-if-error/fetch/serve-stale-on-afterSend-exception": {
     "environments": ["compute"],
     "features": ["http-cache"]

@@ -925,46 +925,6 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
   auto cache_write_options = Response::override_cache_options(response_obj);
   MOZ_ASSERT(cache_write_options);
 
-  // Check if we should use stale-if-error response instead of this error response
-  auto state_res = cache_entry.get_state();
-  if (!state_res.is_err()) {
-    auto cache_state = state_res.unwrap();
-    auto status = Response::status(response_obj);
-    if (cache_state.is_usable_if_error() && (status >= 500 && status < 600)) {
-      // Use the stale response instead of the error response
-      auto chose_stale_res = cache_entry.transaction_choose_stale();
-      if (auto *err = chose_stale_res.to_err()) {
-        HANDLE_ERROR(cx, *err);
-        return false;
-      }
-
-      JS::RootedValue no_candidate(cx);
-      auto maybe_response = get_found_response(cx, cache_entry, request, no_candidate, false);
-      if (maybe_response.has_value() && !maybe_response.value()) {
-        return false;
-      }
-
-      if (maybe_response.has_value()) {
-        JS::RootedObject stale_response(cx, maybe_response.value());
-
-        // Store the error as a masked error on the response
-        JS::RootedValue error_response_val(cx, JS::ObjectValue(*response_obj));
-        JS_SetReservedSlot(stale_response, static_cast<uint32_t>(Response::Slots::MaskedError),
-                           error_response_val);
-
-        RequestOrResponse::take_cache_entry(stale_response, true);
-        if (!Response::add_fastly_cache_headers(cx, stale_response, request, cache_entry,
-                                                "cached response")) {
-          return false;
-        }
-
-        // Return the stale response
-        args.rval().setObject(*stale_response);
-        return true;
-      }
-    }
-  }
-
   switch (storage_action) {
   case host_api::HttpStorageAction::Insert: {
     auto insert_res = cache_entry.transaction_insert_and_stream_back(
