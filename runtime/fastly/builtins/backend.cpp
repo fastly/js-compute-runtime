@@ -1826,11 +1826,10 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool finalize(JS::GCContext *gcx, JSObject *obj) {
+void Backend::finalize(JS::GCContext *gcx, JSObject *obj) {
   auto backend = static_cast<host_api::Backend *>(
       JS::GetReservedSlot(obj, Backend::Slots::HostBackend).toPrivate());
   free(backend);
-  return true;
 }
 
 bool set_default_backend_config(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -1884,8 +1883,7 @@ bool install(api::Engine *engine) {
     return false;
   }
 
-  RootedObject backend_obj(engine->cx(),
-                           JS_GetConstructor(engine->cx(), BuiltinImpl<Backend>::proto_obj));
+  RootedObject backend_obj(engine->cx(), JS_GetConstructor(engine->cx(), Backend::proto_obj));
   RootedValue backend_val(engine->cx(), ObjectValue(*backend_obj));
   RootedObject backend_ns(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   if (!JS_SetProperty(engine->cx(), backend_ns, "Backend", backend_val)) {
