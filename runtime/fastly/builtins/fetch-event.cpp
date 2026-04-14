@@ -396,7 +396,7 @@ bool ClientInfo::tls_client_certificate_get(JSContext *cx, unsigned argc, JS::Va
 }
 
 bool ClientInfo::tls_protocol_get(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(0);
+  METHOD_HEADER(0)
 
   JS::RootedString result(cx, protocol(self));
   if (!result) {
@@ -537,6 +537,7 @@ JS::PersistentRootedObjectVector *FETCH_HANDLERS;
 
 void inc_pending_promise_count(JSObject *self) {
   MOZ_ASSERT(FetchEvent::is_instance(self));
+  fprintf(stderr, "Increasing pending promise count\n");
   auto count =
       JS::GetReservedSlot(self, static_cast<uint32_t>(FetchEvent::Slots::PendingPromiseCount))
           .toInt32();
@@ -551,6 +552,7 @@ void inc_pending_promise_count(JSObject *self) {
 
 void dec_pending_promise_count(JSObject *self) {
   MOZ_ASSERT(FetchEvent::is_instance(self));
+  fprintf(stderr, "Decreasing pending promise count\n");
   auto count =
       JS::GetReservedSlot(self, static_cast<uint32_t>(FetchEvent::Slots::PendingPromiseCount))
           .toInt32();
@@ -631,6 +633,7 @@ void dispatch_fetch_event(HandleObject event) {
 
   for (size_t i = 0; i < FETCH_HANDLERS->length(); i++) {
     handler.setObject(*(*FETCH_HANDLERS)[i]);
+    fprintf(stderr, "Calling fetch handler\n");
     if (!JS_CallFunctionValue(ENGINE->cx(), ENGINE->global(), handler, argsv, &rval)) {
       ENGINE->dump_pending_exception("dispatching FetchEvent\n");
       break;
@@ -639,6 +642,7 @@ void dispatch_fetch_event(HandleObject event) {
       break;
     }
   }
+  fprintf(stderr, "Done dispatching fetch events\n");
 
   FetchEvent::stop_dispatching(event);
 }
@@ -817,24 +821,30 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
   }
 
   if (auto websocket_upgrade_request = Response::websocket_upgrade_request(response_obj)) {
+    fprintf(stderr, "doing a websocket upgrade\n");
     auto backend = Response::backend_str(cx, response_obj);
 
     auto res = websocket_upgrade_request->redirect_to_websocket_proxy(backend);
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
+      fprintf(stderr, "websocket redirect errored!\n");
       return false;
     }
+    fprintf(stderr, "returning from websocket redirect without changing response State!\n");
     return true;
   }
 
+  fprintf(stderr, "Doing a regular response.\n");
   bool streaming = false;
   if (!RequestOrResponse::maybe_stream_body(cx, response_obj, &streaming)) {
     return false;
   }
 
   if (streaming) {
+    fprintf(stderr, "Response is streaming. Increasing loop interest.\n");
     ENGINE->incr_event_loop_interest();
   }
+  fprintf(stderr, "Marking regular request done and starting response\n.");
   FetchEvent::mark_done(event, streaming, Response::status(response_obj));
   return start_response(cx, response_obj, streaming);
 }
@@ -879,6 +889,7 @@ bool FetchEvent::respondWith(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   // Step 4
+  fprintf(stderr, "Adding pending promise in JS `respondWith`\n");
   add_pending_promise(cx, self, response_promise);
 
   // Steps 5-7 (very roughly)
@@ -1018,6 +1029,7 @@ bool FetchEvent::waitUntil(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   // Steps 3-4
+  fprintf(stderr, "Adding pending promise in JS `waitUntil`\n");
   add_pending_promise(cx, self, promise);
 
   // Note: step 5 implemented in dec_pending_promise_count

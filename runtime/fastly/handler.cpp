@@ -50,6 +50,7 @@ void handle_incoming(host_api::Request req) {
     return;
   }
 
+  fprintf(stderr, "dispatching fetch event \n");
   if (ENGINE->debug_logging_enabled()) {
     fetch_event::dispatch_fetch_event(fetch_event, &total_compute);
   } else {
@@ -76,15 +77,18 @@ void handle_incoming(host_api::Request req) {
     }
   }
 
-  if (ENGINE->debug_logging_enabled() && ENGINE->has_pending_async_tasks()) {
-    fprintf(stderr, "Warming: JS event loop terminated with async tasks pending. "
+  // if (ENGINE->debug_logging_enabled() && ENGINE->has_pending_async_tasks()) {
+  if (ENGINE->has_pending_async_tasks()) {
+    fprintf(stderr, "Warning: JS event loop terminated with async tasks pending. "
                     "Use FetchEvent#waitUntil to extend the service's lifetime "
                     "if needed.\n");
-    return;
+    // ENGINE->clear_async_tasks();
+    // return;
   }
 
   // Respond with status `500` if no response was ever sent.
   if (!FetchEvent::response_started(fetch_event)) {
+    fprintf(stderr, "Warning: no response was ever sent. Responding with 500.\n");
     FetchEvent::respondWithError(ENGINE->cx(), fetch_event);
     return;
   }
