@@ -565,6 +565,9 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue p
     cache_write_options->stale_while_revalidate_ns =
         suggested_cache_write_options->stale_while_revalidate_ns;
   }
+  if (!cache_write_options->stale_if_error_ns.has_value()) {
+    cache_write_options->stale_if_error_ns = suggested_cache_write_options->stale_if_error_ns;
+  }
   if (!cache_write_options->surrogate_keys.has_value()) {
     cache_write_options->surrogate_keys = std::move(suggested_cache_write_options->surrogate_keys);
   }
@@ -596,6 +599,14 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue p
 bool after_send_catch(JSContext *cx, JS::HandleObject response, JS::HandleValue promise,
                       JS::CallArgs args) {
   JS::RootedObject promise_obj(cx, &promise.toObject());
+
+  auto maybe_stale = try_serve_stale_if_error(cx, response, args.get(0));
+  if (maybe_stale.has_value()) {
+    JS::RootedValue response_val(cx, JS::ObjectValue(*maybe_stale.value()));
+    return JS::ResolvePromise(cx, promise_obj, response_val);
+  }
+
+  // No stale-if-error available, close cache and reject
   if (!RequestOrResponse::close_if_cache_entry(cx, response)) {
     return false;
   }
@@ -705,10 +716,16 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
       override_cache_options->max_age_ns = ttl_ns + initial_age_ns;
     }
 
-    RootedValue override_swr(cx, CacheOverride::swr(cache_override));
+    RootedValue override_swr(cx, CacheOverride::staleWhileRevalidate(cache_override));
     if (!override_swr.isUndefined()) {
       override_cache_options->stale_while_revalidate_ns =
           static_cast<uint64_t>(override_swr.toInt32() * 1e9);
+    }
+
+    RootedValue override_sie(cx, CacheOverride::staleIfError(cache_override));
+    if (!override_sie.isUndefined()) {
+      override_cache_options->stale_if_error_ns =
+          static_cast<uint64_t>(override_sie.toInt32() * 1e9);
     }
 
     // overriding surrogate keys composes suggested surrogate keys with the original cache override
@@ -2105,8 +2122,8 @@ bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValu
   if (!headers) {
     return false;
   }
-  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::OverrideCacheKey), cache_key_str_val);
   JS::RootedObject headers_val(cx, headers);
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::OverrideCacheKey), cache_key_str_val);
   JS::RootedValue value_val(
       cx, JS::StringValue(JS_NewStringCopyN(cx, hex_str.c_str(), hex_str.length())));
   if (!Headers::append_valid_header(cx, headers_val, "fastly-xqd-cache-key", value_val,
@@ -2198,7 +2215,7 @@ bool Request::apply_cache_override(JSContext *cx, JS::HandleObject self) {
   }
 
   std::optional<uint32_t> stale_while_revalidate;
-  val = CacheOverride::swr(override);
+  val = CacheOverride::staleWhileRevalidate(override);
   if (!val.isUndefined()) {
     stale_while_revalidate = val.toInt32();
   }
@@ -3846,6 +3863,7 @@ const JSFunctionSpec Response::methods[] = {
     JS_FN("json", bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setManualFramingHeaders", Response::setManualFramingHeaders, 1, JSPROP_ENUMERATE),
+    JS_FN("staleIfErrorAvailable", staleIfErrorAvailable, 0, JSPROP_ENUMERATE),
     JS_FS_END,
 };
 
@@ -3867,10 +3885,14 @@ const JSPropertySpec Response::properties[] = {
     JS_PSG("stale", stale_get, JSPROP_ENUMERATE),
     JS_PSGS("ttl", ttl_get, ttl_set, JSPROP_ENUMERATE),
     JS_PSG("age", age_get, JSPROP_ENUMERATE),
-    JS_PSGS("swr", swr_get, swr_set, JSPROP_ENUMERATE),
+    JS_PSGS("swr", staleWhileRevalidate_get, staleWhileRevalidate_set, JSPROP_ENUMERATE),
+    JS_PSGS("staleWhileRevalidate", staleWhileRevalidate_get, staleWhileRevalidate_set,
+            JSPROP_ENUMERATE),
+    JS_PSGS("staleIfError", staleIfError_get, staleIfError_set, JSPROP_ENUMERATE),
     JS_PSGS("vary", vary_get, vary_set, JSPROP_ENUMERATE),
     JS_PSGS("surrogateKeys", surrogateKeys_get, surrogateKeys_set, JSPROP_ENUMERATE),
     JS_PSGS("pci", pci_get, pci_set, JSPROP_ENUMERATE),
+    JS_PSG("maskedError", maskedError_get, JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "Response", JSPROP_READONLY),
     JS_PS_END,
 };
@@ -4006,7 +4028,7 @@ bool Response::age_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool Response::swr_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool Response::staleWhileRevalidate_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto entry = RequestOrResponse::cache_entry(self);
@@ -4032,6 +4054,35 @@ bool Response::swr_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   args.rval().setNumber(static_cast<double>(swr_ns) / 1e9);
+  return true;
+}
+
+bool Response::staleIfError_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto entry = RequestOrResponse::cache_entry(self);
+
+  // all caching paths should set the override options as the final options
+  // so if they aren't set we are in the undefined cases of no caching API use / no hostcall support
+  auto override_opts = override_cache_options(self);
+  if (!override_opts) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  uint64_t sie_ns;
+  // a promoted candidate response must define all cache options
+  if (!entry.has_value() || override_opts->stale_if_error_ns.has_value()) {
+    sie_ns = override_opts->stale_if_error_ns.value();
+  } else {
+    auto suggested_opts = suggested_cache_options(cx, self);
+    if (!suggested_opts) {
+      return false;
+    }
+    sie_ns = suggested_opts->stale_if_error_ns.value();
+  }
+
+  args.rval().setNumber(static_cast<double>(sie_ns) / 1e9);
   return true;
 }
 
@@ -4198,6 +4249,12 @@ bool Response::pci_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool Response::maskedError_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+  args.rval().set(JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::MaskedError)));
+  return true;
+}
+
 // Setters for mutable properties
 
 bool Response::ttl_set(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -4236,12 +4293,12 @@ bool Response::ttl_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool Response::swr_set(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool Response::staleWhileRevalidate_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   auto override_opts = override_cache_options(self);
   if (!RequestOrResponse::cache_entry(self).has_value()) {
-    api::throw_error(cx, api::Errors::TypeError, "Response set", "swr",
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "staleWhileRevalidate",
                      "be set only on unsent cache transaction responses");
     return false;
   }
@@ -4253,12 +4310,40 @@ bool Response::swr_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   if (std::isnan(seconds) || seconds <= 0) {
-    api::throw_error(cx, api::Errors::TypeError, "Response set", "swr",
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "staleWhileRevalidate",
                      "be a number greater than zero");
     return false;
   }
 
   override_opts->stale_while_revalidate_ns = static_cast<uint64_t>(seconds * 1e9);
+
+  args.rval().setUndefined();
+  return true;
+}
+
+bool Response::staleIfError_set(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(1)
+
+  auto override_opts = override_cache_options(self);
+  if (!RequestOrResponse::cache_entry(self).has_value()) {
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "staleIfError",
+                     "be set only on unsent cache transaction responses");
+    return false;
+  }
+  MOZ_ASSERT(override_opts);
+
+  double seconds;
+  if (!JS::ToNumber(cx, args[0], &seconds)) {
+    return false;
+  }
+
+  if (std::isnan(seconds) || seconds <= 0) {
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "staleIfError",
+                     "be a number greater than zero");
+    return false;
+  }
+
+  override_opts->stale_if_error_ns = static_cast<uint64_t>(seconds * 1e9);
 
   args.rval().setUndefined();
   return true;
@@ -4423,6 +4508,27 @@ bool Response::pci_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool Response::staleIfErrorAvailable(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  // This method is only valid on candidate responses (inside afterSend callback)
+  auto cache_entry = RequestOrResponse::cache_entry(self);
+  if (!cache_entry) {
+    // Cache entry has been taken - this is not a candidate response
+    api::throw_error(cx, api::Errors::TypeError, "Response", "staleIfErrorAvailable()",
+                     "can only be called on candidate responses inside afterSend callback");
+    return false;
+  }
+
+  auto res = cache_entry->get_state();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  args.rval().setBoolean(res.unwrap().is_usable_if_error());
+  return true;
+}
 /**
  * The `Response` constructor https://fetch.spec.whatwg.org/#dom-response
  */

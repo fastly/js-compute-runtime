@@ -3230,6 +3230,40 @@
   "GET /shielding/invalid-shield": {
     "environments": ["compute"]
   },
+  "GET /stale-if-error/cache-override/constructor-with-staleIfError": {},
+  "GET /stale-if-error/cache-override/constructor-without-staleIfError": {},
+  "GET /stale-if-error/cache-override/set-staleIfError": {},
+  "GET /stale-if-error/response/property-undefined-on-non-cached": {},
+  "GET /stale-if-error/response/setter-throws-on-non-cached": {},
+  "GET /stale-if-error/response/staleIfErrorAvailable-throws-outside-afterSend": {},
+  "GET /stale-if-error/fetch/staleIfErrorAvailable-false-without-staleIfError": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /stale-if-error/fetch/with-cache-override": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /stale-if-error/fetch/staleIfErrorAvailable-after-caching": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /stale-if-error/fetch/with-swr-and-staleIfError": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /stale-if-error/fetch/zero-staleIfError": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /stale-if-error/fetch/serve-stale-on-afterSend-exception": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /stale-if-error/fetch/serve-stale-on-beforeSend-exception": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
   "GET /fastly/security/inspect/invalid-config": {
     "environments": ["viceroy"]
   },
