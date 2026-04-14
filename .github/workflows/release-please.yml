@@ -215,7 +215,7 @@ jobs:
         uses: fastly/compute-actions/setup@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          cli_version: '7.0.1'
+          cli_version: '14.2.0'
 
       - run: npm run deploy
         timeout-minutes: 120
