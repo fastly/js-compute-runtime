@@ -177,7 +177,7 @@ int main(int argc, const char *argv[]) {
       return -1;
     }
 
-    // In case there was an exception pending from the previous request handling, 
+    // In case there was an exception pending from the previous request handling,
     // clear it before starting the next one.
     JS_ClearPendingException(ENGINE->cx());
   }
