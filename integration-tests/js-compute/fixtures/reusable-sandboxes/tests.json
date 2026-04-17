@@ -1,0 +1,103 @@
+{
+  "session #1, request #1: GET /getGeolocationForIpAddress": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/getGeolocationForIpAddress",
+      "headers": ["x-forwarded-for", "2.216.196.179"]
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": {
+        "sandbox-id": "00000000000000000000000000000000",
+        "geo-as-name": "sky uk limited",
+        "geo-as-number": "5607",
+        "geo-city": "bircotes"
+      },
+      "body": "found"
+    }
+  },
+  "session #1, request #2: GET /createFanoutHandoff": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/createFanoutHandoff"
+    },
+    "downstream_response": {
+      "status": 500,
+      "body": "Error: Could not connect to Pushpin"
+    }
+  },
+  "session #1, request #3: GET /getGeolocationForIpAddress": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/getGeolocationForIpAddress",
+      "headers": ["x-forwarded-for", "2607:f0d0:1002:51::4"]
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": {
+        "sandbox-id": "00000000000000000000000000000000",
+        "geo-as-name": "softlayer technologies inc.",
+        "geo-as-number": "36351",
+        "geo-city": "dallas"
+      },
+      "body": "found"
+    }
+  },
+  "session #1, request #4: GET /httpMeRequest": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/httpMeRequest",
+      "headers": {
+        "HM-Status": "200",
+        "HM-Header": "FooName:FooValue",
+        "HM-Append-Header": "BarName:BarValue",
+        "HM-Wait": "1000"
+      }
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": {
+        "sandbox-id": "00000000000000000000000000000000",
+        "FooName": "FooValue",
+        "BarName": "BarValue"
+      }
+    }
+  },
+  "session #1, request #5: GET /createFanoutHandoff": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/createFanoutHandoff"
+    },
+    "downstream_response": {
+      "status": 500,
+      "body": "Error: Could not connect to Pushpin"
+    }
+  },
+
+  "session #2, request #1: GET /httpMeRequest": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/httpMeRequest",
+      "headers": {
+        "HM-Status": "200",
+        "HM-Header": "BazName:BazValue",
+        "HM-Append-Header": "QuuxName:QuuxValue",
+        "HM-Wait": "1000"
+      }
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": {
+        "sandbox-id": "00000000000000000000000000000006",
+        "BazName": "BazValue",
+        "QuuxName": "QuuxValue"
+      }
+    }
+  }
+}
