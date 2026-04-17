@@ -176,6 +176,10 @@ int main(int argc, const char *argv[]) {
       HANDLE_ERROR(ENGINE->cx(), *req.to_err());
       return -1;
     }
+
+    // In case there was an exception pending from the previous request handling, 
+    // clear it before starting the next one.
+    JS_ClearPendingException(ENGINE->cx());
   }
 
   if (fastly::runtime::ENGINE->debug_logging_enabled()) {
