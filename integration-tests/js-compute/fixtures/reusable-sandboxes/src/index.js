@@ -1,0 +1,82 @@
+/// <reference path="../../../../../types/index.d.ts" />
+/* eslint-env serviceworker */
+
+import { assert, assertThrows, strictEqual } from './assertions.js';
+import { isRunningLocally, routes } from './routes.js';
+import { env } from 'fastly:env';
+import { enableDebugLogging } from 'fastly:experimental';
+import { setReusableSandboxOptions } from "fastly:experimental";
+
+setReusableSandboxOptions({ maxRequests: 9001 });
+
+import './interleave.js';
+
+addEventListener('fetch', (event) => {
+  // Ensure these reusable sandboxes tests are running locally so that
+  // we don't flake due to requests landing on different cache nodes: 
+  assert(isRunningLocally());
+
+  const responsePromise = app(event);
+  if (responsePromise) event.respondWith(responsePromise);
+});
+
+if (env('FASTLY_DEBUG_LOGGING') === '1') {
+  if (fastly.debugMessages) {
+    const { debug: consoleDebug } = console;
+    console.debug = function debug(...args) {
+      fastly.debugLog(...args);
+      consoleDebug(...args);
+    };
+  }
+  enableDebugLogging(true);
+}
+
+/**
+ * @param {FetchEvent} event
+ * @returns {Response}
+ */
+async function app(event) {
+  const FASTLY_SERVICE_VERSION = env('FASTLY_SERVICE_VERSION') || 'local';
+  const FASTLY_TRACE_ID = env('FASTLY_TRACE_ID');
+  console.log(`FASTLY_SERVICE_VERSION: ${FASTLY_SERVICE_VERSION}`);
+  const path = new URL(event.request.url).pathname;
+  console.log(`path: ${path}`);
+  let res;
+  try {
+    const routeHandler = routes.get(path);
+    if (routeHandler) {
+      res = await routeHandler(event);
+      if (res !== null) {
+        res = res || new Response('ok');
+      }
+    } else {
+      return (res = new Response(`${path} endpoint does not exist`, {
+        status: 500,
+      }));
+    }
+  } catch (error) {
+    if (error instanceof Response) {
+      res = error;
+    } else {
+      try {
+        return (res = new Response(
+          `The routeHandler for ${path} threw a [${error.constructor?.name ?? error.name}] error: ${error.message || error}` +
+            '\n' +
+            error.stack +
+            (fastly.debugMessages
+              ? '\n[DEBUG BUILD MESSAGES]:\n\n  - ' +
+                fastly.debugMessages.join('\n  - ')
+              : ''),
+          { status: 500 },
+        ));
+      } catch (errRes) {
+        res = errRes;
+      }
+    }
+  } finally {
+    res.headers.set('fastly_service_version', FASTLY_SERVICE_VERSION);
+    res.headers.set('sandbox-id', FASTLY_TRACE_ID);
+  }
+
+  return res;
+}

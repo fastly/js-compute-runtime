@@ -40,7 +40,8 @@ let args = argv.slice(2);
 
 const local = args.includes('--local');
 const verbose = args.includes('--verbose');
-const moduleMode = args.includes('--module-mode');
+const serial = args.includes('--serial');
+const fixtureArg = args.find((arg) => arg.startsWith('--fixture='));
 const httpCache = args.includes('--http-cache');
 const aot = args.includes('--aot');
 const debugBuild = args.includes('--debug-build');
@@ -78,7 +79,11 @@ const branchName = (await zx`git branch --show-current`).stdout
   .trim()
   .replace(/[^a-zA-Z0-9_-]/g, '_');
 
-const fixture = !moduleMode ? 'app' : 'module-mode';
+var fixture = 'app';
+
+if (fixtureArg !== undefined) {
+    fixture = fixtureArg.split("=")[1];
+}
 
 // Service names are carefully unique to support parallel runs
 const serviceName = `${GLOBAL_PREFIX}app-${branchName}${aot ? '--aot' : ''}${httpCache ? '--http' : ''}${process.env.SUFFIX_STRING ? '--' + process.env.SUFFIX_STRING : ''}`;
@@ -151,7 +156,9 @@ if (!local) {
   serviceId = domainListing.ServiceID;
   core.notice(`Service is running on ${domain}`);
 } else {
-  localServer = zx`fastly compute serve --verbose --viceroy-args=${verbose ? '-vv' : ''}`;
+  const pushpin = '--local-pushpin-proxy-port=0';
+  const args = verbose ? '-vv ' + pushpin : pushpin;
+  localServer = zx`fastly compute serve --verbose --viceroy-args="${args}"`;
   domain = 'http://127.0.0.1:7676';
 }
 
@@ -212,7 +219,9 @@ function chunks(arr, size) {
 }
 
 let results = [];
-for (const chunk of chunks(Object.entries(tests), 100)) {
+let chunkSize = serial ? 1 : 100;
+
+for (const chunk of chunks(Object.entries(tests), chunkSize)) {
   results.push(
     ...(await (
       bail ? Promise.all.bind(Promise) : Promise.allSettled.bind(Promise)
