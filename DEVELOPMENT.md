@@ -179,8 +179,10 @@ In addition the following flags can be added after the command (passed via `npm 
 - `--verbose`: Adds verbose logging to `fastly compute publish` and Viceroy (which provides hostcall logging as well).
 - `--debug-build`: Use the debug build
 - `--debug-log`: Enable debug logging for the tests (engine-level DEBUG_LOG)
-- `--module-mode`: Run the module mode test suite (`fixtures/module-mode` instead of `fixtures/app`).
+- `--fixture=module-mode`: Run the module mode test suite (`fixtures/module-mode` instead of `fixtures/app`).
+- `--fixture=reusable-sandboxes`: Run the reusable sandboxes test suite (`fixtures/reusable-sandboxes`)
 - `--http-cache`: Run the HTTP cache test suite
+- `--serial`: Run tests serially rather than in concurrent batches (mostly useful for reusable sandbox tests)
 - `[...args]`: Additional arguments allow for filtering tests
 
 A typical development test command is therefore something like:
