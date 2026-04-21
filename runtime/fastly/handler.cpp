@@ -177,9 +177,10 @@ int main(int argc, const char *argv[]) {
       return -1;
     }
 
-    // In case there was an exception pending from the previous request handling,
-    // clear it before starting the next one.
-    JS_ClearPendingException(ENGINE->cx());
+    if (JS_IsExceptionPending(ENGINE->cx())) {
+      ENGINE->dump_pending_exception("running event loop");
+      return -1;
+    }
   }
 
   if (fastly::runtime::ENGINE->debug_logging_enabled()) {
