@@ -177,6 +177,10 @@ int main(int argc, const char *argv[]) {
       return -1;
     }
 
+    if (JS_IsExceptionPending(ENGINE->cx())) {
+      ENGINE->dump_pending_exception("running event loop");
+      return -1;
+    }
     ENGINE->reset();
   }
 
