@@ -181,6 +181,7 @@ int main(int argc, const char *argv[]) {
       ENGINE->dump_pending_exception("running event loop");
       return -1;
     }
+    ENGINE->reset();
   }
 
   if (fastly::runtime::ENGINE->debug_logging_enabled()) {
