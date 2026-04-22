@@ -191,7 +191,6 @@
     "features": ["http-cache"],
     "downstream_response": {
       "headers": {
-        "connection": true,
         "content-length": true,
         "date": true,
         "content-type": true,

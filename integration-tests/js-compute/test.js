@@ -60,7 +60,7 @@ if (!local && process.env.FASTLY_API_TOKEN === undefined) {
   try {
     zx.verbose = false;
     process.env.FASTLY_API_TOKEN = String(
-      await zx`fastly profile token --quiet`,
+      await zx`fastly auth show --reveal | grep 'Token:' | cut -d ' ' -f2-`,
     ).trim();
   } catch {
     console.error(
@@ -150,7 +150,7 @@ if (!local) {
 
   // get the public domain of the deployed application
   const domainListing = JSON.parse(
-    await $`fastly domain list --quiet --version latest --json`,
+    await $`fastly service domain list --quiet --version latest --json`,
   )[0];
   domain = `https://${domainListing.Name}`;
   serviceId = domainListing.ServiceID;
