@@ -176,6 +176,8 @@ int main(int argc, const char *argv[]) {
       HANDLE_ERROR(ENGINE->cx(), *req.to_err());
       return -1;
     }
+
+    ENGINE->reset();
   }
 
   if (fastly::runtime::ENGINE->debug_logging_enabled()) {

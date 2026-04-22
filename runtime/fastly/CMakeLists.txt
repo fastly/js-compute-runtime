@@ -3,6 +3,27 @@ cmake_minimum_required(VERSION 3.27)
 #FIXME(1243)
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../rust-toolchain.toml" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/../StarlingMonkey")
 
+# Apply any local patches to StarlingMonkey before it is included as a subproject
+file(GLOB SM_PATCHES "${CMAKE_CURRENT_SOURCE_DIR}/patches/starlingmonkey-*.patch")
+foreach(patch IN LISTS SM_PATCHES)
+  execute_process(
+    COMMAND git apply --check "${patch}"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../StarlingMonkey"
+    RESULT_VARIABLE patch_check_result
+    OUTPUT_QUIET ERROR_QUIET
+  )
+  if(patch_check_result EQUAL 0)
+    execute_process(
+      COMMAND git apply "${patch}"
+      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../StarlingMonkey"
+      RESULT_VARIABLE patch_result
+    )
+    if(NOT patch_result EQUAL 0)
+      message(FATAL_ERROR "Failed to apply StarlingMonkey patch: ${patch}")
+    endif()
+  endif()
+endforeach()
+
 include("../StarlingMonkey/cmake/add_as_subproject.cmake")
 
 add_builtin(
