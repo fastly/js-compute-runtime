@@ -53,6 +53,9 @@ new Backend(backendConfiguration)
       - Throws a [`RangeError`](../../globals/RangeError/RangeError.mdx) if the value is negative or greater than or equal to 2^32
     - `useSSL` _: boolean_ _**optional**_
       - Whether or not to require TLS for connections to this backend.
+    - `checkSSL` _: boolean_ _**optional**_
+      - Whether or not to validate the server certificate when using TLS.
+      - Defaults to `true` when using TLS.
     - `dontPool` _: boolean_ _**optional**_
       - Determine whether or not connections to the same backend should be pooled across different sessions.
       - Fastly considers two backends “the same” if they're registered with the same name and the exact same settings.

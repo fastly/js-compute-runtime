@@ -246,6 +246,15 @@ declare module 'fastly:backend' {
      */
     sniHostname?: string;
     /**
+     * Whether to verify the SSL certificate of the backend.
+     *
+     * When set to `false`, the `certificateHostname`, `caCertificate`, and `sniHostname` options
+     * are ignored and SSL certificate verification is disabled for connections to this backend.
+     *
+     * @defaultValue true
+     */
+    checkSSL?: boolean;
+    /**
      * @experimental
      *
      * When enabled, sets that this backend is to be used for gRPC traffic.

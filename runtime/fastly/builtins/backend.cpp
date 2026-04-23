@@ -1066,6 +1066,21 @@ bool apply_backend_config(JSContext *cx, host_api::BackendConfig &backend,
     }
   }
 
+  JS::RootedValue check_ssl_val(cx);
+  if (!JS_HasProperty(cx, configuration, "checkSSL", &found)) {
+    return false;
+  }
+  if (found) {
+    if (!JS_GetProperty(cx, configuration, "checkSSL", &check_ssl_val)) {
+      return false;
+    }
+    if (!JS::ToBoolean(check_ssl_val)) {
+      backend.cert_hostname = std::nullopt;
+      backend.ca_cert = std::nullopt;
+      backend.sni_hostname = std::nullopt;
+    }
+  }
+
   JS::RootedValue client_cert_val(cx);
   if (!JS_HasProperty(cx, configuration, "clientCertificate", &found)) {
     return false;

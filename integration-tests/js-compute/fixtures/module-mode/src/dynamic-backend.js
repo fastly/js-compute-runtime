@@ -1968,6 +1968,76 @@ routes.set('/backend/timeout', async () => {
       );
     }
 
+    // checkSSL property
+    {
+      routes.set(
+        '/backend/constructor/parameter-checkSSL-property-valid-boolean',
+        async () => {
+          const types = [{}, [], Symbol(), 1, '2'];
+          for (const type of types) {
+            assertDoesNotThrow(() => {
+              new Backend({
+                name: 'checkSSL-property-valid-boolean-' + String(type),
+                target: 'a',
+                checkSSL: type,
+              });
+            });
+          }
+          assertDoesNotThrow(() => {
+            new Backend({
+              name: 'checkSSL-property-valid-boolean-true',
+              target: 'a',
+              checkSSL: true,
+            });
+          });
+          assertDoesNotThrow(() => {
+            new Backend({
+              name: 'checkSSL-property-valid-boolean-false',
+              target: 'a',
+              checkSSL: false,
+            });
+          });
+        },
+      );
+
+      routes.set(
+        '/backend/constructor/parameter-checkSSL-false-clears-ssl-fields',
+        async () => {
+          // When checkSSL: false, certificateHostname, caCertificate, and sniHostname
+          // are cleared from the config so the backend registers without them.
+          assertDoesNotThrow(() => {
+            new Backend({
+              name: 'checkSSL-false-clears-ssl-fields',
+              target: 'a',
+              certificateHostname: 'example.com',
+              caCertificate: 'cert-content',
+              sniHostname: 'example.com',
+              checkSSL: false,
+            });
+          });
+        },
+      );
+
+      routes.set(
+        '/backend/constructor/parameter-checkSSL-false-with-default-ssl-fields',
+        async () => {
+          // checkSSL: false should also clear SSL fields that were set via
+          // setDefaultDynamicBackendConfig.
+          setDefaultDynamicBackendConfig({
+            certificateHostname: 'default-host.com',
+            caCertificate: 'default-cert',
+          });
+          assertDoesNotThrow(() => {
+            new Backend({
+              name: 'checkSSL-false-with-default-ssl-fields',
+              target: 'a',
+              checkSSL: false,
+            });
+          });
+        },
+      );
+    }
+
     // clientCertificate property
     {
       routes.set(
