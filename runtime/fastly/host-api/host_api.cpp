@@ -1964,6 +1964,124 @@ Result<std::optional<HostString>> HttpReq::http_req_downstream_client_oh_fingerp
   return res;
 }
 
+namespace {
+
+// Helper for bool-valued bot flags (uint32 != 0). Pass none_is_false=true to
+// return false instead of an error when the host signals OPTIONAL_NONE.
+template <typename Fn>
+Result<bool> bot_flag(uint32_t handle, Fn &&fn, bool none_is_false = false) {
+  fastly::fastly_host_error err;
+  uint32_t val = 0;
+  Result<bool> res;
+  if (!convert_result(fn(handle, &val), &err)) {
+    if (none_is_false && error_is_optional_none(err)) {
+      res.emplace(false);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(val != 0);
+  }
+  return res;
+}
+
+// Helper for optional string bot fields with automatic buffer resize.
+template <typename Fn>
+Result<std::optional<HostString>> bot_string(uint32_t handle, Fn &&fn) {
+  fastly::fastly_host_error err;
+  fastly::fastly_world_string ret;
+  auto default_size = 32;
+  ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
+  auto status = fn(handle, ret.ptr, default_size, &ret.len);
+  if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
+    status = fn(handle, ret.ptr, ret.len, &ret.len);
+  }
+  Result<std::optional<HostString>> res;
+  if (!convert_result(status, &err)) {
+    cabi_free(ret.ptr);
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(make_host_string(ret));
+  }
+  return res;
+}
+
+// Helper for optional uint32 bot fields; T defaults to uint32_t but can be
+// any type constructible from uint32_t (e.g. an enum class) via static_cast.
+template <typename T = uint32_t, typename Fn>
+Result<std::optional<T>> bot_optional_u32(uint32_t handle, Fn &&fn) {
+  fastly::fastly_host_error err;
+  uint32_t val = 0;
+  Result<std::optional<T>> res;
+  if (!convert_result(fn(handle, &val), &err)) {
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(static_cast<T>(val));
+  }
+  return res;
+}
+
+} // namespace
+
+HostString to_string(BotCategoryKind kind) {
+  switch (kind) {
+  case BotCategoryKind::None: return HostString("None");
+  case BotCategoryKind::Suspected: return HostString("Suspected");
+  case BotCategoryKind::Accessibility: return HostString("Accessibility");
+  case BotCategoryKind::AiCrawler: return HostString("AiCrawler");
+  case BotCategoryKind::AiFetcher: return HostString("AiFetcher");
+  case BotCategoryKind::ContentFetcher: return HostString("ContentFetcher");
+  case BotCategoryKind::MonitoringSiteTools: return HostString("MonitoringSiteTools");
+  case BotCategoryKind::OnlineMarketing: return HostString("OnlineMarketing");
+  case BotCategoryKind::PagePreview: return HostString("PagePreview");
+  case BotCategoryKind::PlatformIntegrations: return HostString("PlatformIntegrations");
+  case BotCategoryKind::Research: return HostString("Research");
+  case BotCategoryKind::SearchEngineCrawler: return HostString("SearchEngineCrawler");
+  case BotCategoryKind::SearchEngineSpecialization: return HostString("SearchEngineSpecialization");
+  case BotCategoryKind::SecurityTools: return HostString("SecurityTools");
+  case BotCategoryKind::Unknown: return HostString("Unknown");
+  }
+}
+
+Result<bool> HttpReq::downstream_bot_analyzed() {
+  TRACE_CALL()
+  return bot_flag(this->handle, fastly::http_downstream_bot_analyzed);
+}
+
+Result<bool> HttpReq::downstream_bot_detected() {
+  TRACE_CALL()
+  return bot_flag(this->handle, fastly::http_downstream_bot_detected);
+}
+
+Result<std::optional<HostString>> HttpReq::downstream_bot_name() {
+  TRACE_CALL()
+  return bot_string(this->handle, fastly::http_downstream_bot_name);
+}
+
+Result<std::optional<HostString>> HttpReq::downstream_bot_category() {
+  TRACE_CALL()
+  return bot_string(this->handle, fastly::http_downstream_bot_category);
+}
+
+Result<std::optional<BotCategoryKind>> HttpReq::downstream_bot_category_kind() {
+  TRACE_CALL()
+  return bot_optional_u32<BotCategoryKind>(this->handle, fastly::http_downstream_bot_category_kind);
+}
+
+Result<bool> HttpReq::downstream_bot_verified() {
+  TRACE_CALL()
+  return bot_flag(this->handle, fastly::http_downstream_bot_verified, /*none_is_false=*/true);
+}
+
 bool HttpReq::is_valid() const { return this->handle != HttpReq::invalid; }
 
 Result<HttpVersion> HttpReq::get_version() const {

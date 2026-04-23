@@ -552,6 +552,26 @@ public:
   explicit InspectOptions(uint32_t req, uint32_t body) : req_handle{req}, body_handle{body} {}
 };
 
+enum class BotCategoryKind : uint32_t {
+  None = 0,
+  Suspected = 1,
+  Accessibility = 2,
+  AiCrawler = 3,
+  AiFetcher = 4,
+  ContentFetcher = 5,
+  MonitoringSiteTools = 6,
+  OnlineMarketing = 7,
+  PagePreview = 8,
+  PlatformIntegrations = 9,
+  Research = 10,
+  SearchEngineCrawler = 11,
+  SearchEngineSpecialization = 12,
+  SecurityTools = 13,
+  Unknown = 14,
+};
+
+HostString to_string(BotCategoryKind kind);
+
 class HttpReq final : public HttpBase {
 public:
   using Handle = uint32_t;
@@ -594,6 +614,13 @@ public:
   Result<std::optional<HostString>> http_req_downstream_client_h2_fingerprint();
 
   Result<std::optional<HostString>> http_req_downstream_client_oh_fingerprint();
+
+  Result<bool> downstream_bot_analyzed();
+  Result<bool> downstream_bot_detected();
+  Result<std::optional<HostString>> downstream_bot_name();
+  Result<std::optional<HostString>> downstream_bot_category();
+  Result<std::optional<BotCategoryKind>> downstream_bot_category_kind();
+  Result<bool> downstream_bot_verified();
 
   Result<Void> auto_decompress_gzip();
 

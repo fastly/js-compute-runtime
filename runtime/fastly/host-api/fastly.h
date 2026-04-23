@@ -583,6 +583,26 @@ WASM_IMPORT("fastly_http_downstream", "downstream_client_oh_fingerprint")
 int http_downstream_client_oh_fingerprint(uint32_t req_handle, uint8_t *ret, size_t ret_len,
                                           size_t *nwritten);
 
+WASM_IMPORT("fastly_http_downstream", "downstream_bot_analyzed")
+int http_downstream_bot_analyzed(uint32_t req_handle, uint32_t *bot_analyzed_out);
+
+WASM_IMPORT("fastly_http_downstream", "downstream_bot_detected")
+int http_downstream_bot_detected(uint32_t req_handle, uint32_t *bot_detected_out);
+
+WASM_IMPORT("fastly_http_downstream", "downstream_bot_name")
+int http_downstream_bot_name(uint32_t req_handle, uint8_t *bot_name_out, size_t bot_name_max_len,
+                        size_t *nwritten);
+
+WASM_IMPORT("fastly_http_downstream", "downstream_bot_category")
+int http_downstream_bot_category(uint32_t req_handle, uint8_t *bot_category_out,
+                            size_t bot_category_max_len, size_t *nwritten);
+
+WASM_IMPORT("fastly_http_downstream", "downstream_bot_category_kind")
+int http_downstream_bot_category_kind(uint32_t req_handle, uint32_t *bot_category_kind_out);
+
+WASM_IMPORT("fastly_http_downstream", "downstream_bot_verified")
+int http_downstream_bot_verified(uint32_t req_handle, uint32_t *bot_verified_out);
+
 WASM_IMPORT("fastly_http_req", "new")
 int req_new(uint32_t *req_handle_out);
 

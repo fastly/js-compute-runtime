@@ -154,6 +154,13 @@ class Request final : public builtins::BuiltinImpl<Request> {
   static bool body_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
+  static bool getBotAnalyzed(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool getBotDetected(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool getBotName(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool getBotCategory(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool getBotCategoryKind(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool getBotVerified(JSContext *cx, unsigned argc, JS::Value *vp);
+
   static bool setCacheOverride(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool setCacheKey(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool setManualFramingHeaders(JSContext *cx, unsigned argc, JS::Value *vp);
