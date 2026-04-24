@@ -184,7 +184,7 @@ jobs:
     - name: Build CLI
       run: npm run build:cli
     - name: Build with full debug info
-      run: npm run build:debug:info -- --gc-frequency 10
+      run: npm run build:debug:info
     - uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
