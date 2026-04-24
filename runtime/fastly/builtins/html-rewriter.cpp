@@ -397,25 +397,25 @@ void HTMLRewritingStream::finalize(JS::GCContext *gcx, JSObject *self) {
 void HTMLRewritingStream::trace(JSTracer *trc, JSObject *self) {
   MOZ_ASSERT(is_instance(self));
 
-  auto element_handlers_val = JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ElementHandlers));
+  auto element_handlers_val =
+      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ElementHandlers));
   if (!element_handlers_val.isUndefined()) {
-  auto element_handlers = static_cast<std::vector<ElementHandlerData *> *>(
-      element_handlers_val.toPrivate());
-  if (element_handlers) {
-    for (auto *handler : *element_handlers) {
-      handler->trace(trc);
+    auto element_handlers =
+        static_cast<std::vector<ElementHandlerData *> *>(element_handlers_val.toPrivate());
+    if (element_handlers) {
+      for (auto *handler : *element_handlers) {
+        handler->trace(trc);
+      }
     }
   }
-}
 
   auto output_context_val = JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::OutputContext));
   if (!output_context_val.isUndefined()) {
-  auto output_context = static_cast<OutputContextData *>(
-      output_context_val.toPrivate());
-  if (output_context) {
-    output_context->trace(trc);
+    auto output_context = static_cast<OutputContextData *>(output_context_val.toPrivate());
+    if (output_context) {
+      output_context->trace(trc);
+    }
   }
-}
 }
 
 static void output_callback(const char *chunk, size_t chunk_len, void *user_data) {

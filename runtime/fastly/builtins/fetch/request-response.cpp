@@ -1081,7 +1081,8 @@ JSObject *Request::headers(JSContext *cx, JS::HandleObject obj) {
   if (!headers) {
     MOZ_ASSERT(is_instance(obj));
     if (is_downstream(obj)) {
-      headers.set(Headers::create(cx, request_handle(obj).headers(), Headers::HeadersGuard::Request));
+      headers.set(
+          Headers::create(cx, request_handle(obj).headers(), Headers::HeadersGuard::Request));
     } else {
       headers.set(Headers::create(cx, Headers::HeadersGuard::Request));
     }
@@ -3361,8 +3362,7 @@ void Response::set_status_message_from_code(JSContext *cx, JSObject *obj, uint16
     break;
   }
   JS::RootedString phrase_js(cx, JS_NewStringCopyZ(cx, phrase));
-  JS::SetReservedSlot(obj, static_cast<uint32_t>(Slots::StatusMessage),
-                      JS::StringValue(phrase_js));
+  JS::SetReservedSlot(obj, static_cast<uint32_t>(Slots::StatusMessage), JS::StringValue(phrase_js));
 }
 
 bool Response::ok_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -4731,12 +4731,12 @@ void Response::finalize(JS::GCContext *gcx, JSObject *self) {
   auto override_cache_write_options_val =
       JS::GetReservedSlot(self, static_cast<size_t>(Response::Slots::OverrideCacheWriteOptions));
   if (!override_cache_write_options_val.isUndefined()) {
-  auto override_cache_write_options = reinterpret_cast<host_api::HttpCacheWriteOptions *>(
-      override_cache_write_options_val.toPrivate());
-  if (override_cache_write_options) {
-    delete override_cache_write_options;
+    auto override_cache_write_options = reinterpret_cast<host_api::HttpCacheWriteOptions *>(
+        override_cache_write_options_val.toPrivate());
+    if (override_cache_write_options) {
+      delete override_cache_write_options;
+    }
   }
-}
 }
 
 bool Response::has_bodyless_status(JSObject *obj) {
