@@ -389,7 +389,8 @@ bool Response::add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
       }
       uint64_t hits = hits_res.unwrap();
 
-      JS::RootedValue hit_str_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, "HIT")));
+      JS::RootedString hit_str(cx, JS_NewStringCopyZ(cx, "HIT"));
+      JS::RootedValue hit_str_val(cx, JS::StringValue(hit_str));
       JS::RootedValueArray<2> args(cx);
       args[0].setString(JS_NewStringCopyZ(cx, "x-cache"));
       args[1].set(hit_str_val);
@@ -453,14 +454,16 @@ bool Response::add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
       return false;
     }
     {
-      JS::RootedValue key_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, "Surrogate-Key")));
+      JS::RootedString key_str(cx, JS_NewStringCopyZ(cx, "Surrogate-Key"));
+      JS::RootedValue key_val(cx, JS::StringValue(key_str));
       JS::RootedValue rval(cx);
       if (!JS::Call(cx, headers_val, delete_func, JS::HandleValueArray(key_val), &rval)) {
         return false;
       }
     }
     {
-      JS::RootedValue key_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, "Surrogate-Control")));
+      JS::RootedString key_str(cx, JS_NewStringCopyZ(cx, "Surrogate-Control"));
+      JS::RootedValue key_val(cx, JS::StringValue(key_str));
       JS::RootedValue rval(cx);
       if (!JS::Call(cx, headers_val, delete_func, JS::HandleValueArray(key_val), &rval)) {
         return false;
@@ -661,7 +664,8 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
   JS::RootedObject headers(cx, Response::headers(cx, response));
   MOZ_ASSERT(headers);
   JS::RootedValueArray<1> args(cx);
-  args[0].setString(JS_NewStringCopyZ(cx, "set-cookie"));
+  JS::RootedString set_cookie_str(cx, JS_NewStringCopyZ(cx, "set-cookie"));
+  args[0].setString(set_cookie_str);
   if (!JS::Call(cx, headers, "has", args, &result)) {
     return false;
   }
@@ -1073,13 +1077,13 @@ bool RequestOrResponse::append_body(JSContext *cx, JS::HandleObject self, JS::Ha
 }
 
 JSObject *Request::headers(JSContext *cx, JS::HandleObject obj) {
-  JSObject *headers = RequestOrResponse::maybe_headers(obj);
+  JS::RootedObject headers(cx, RequestOrResponse::maybe_headers(obj));
   if (!headers) {
     MOZ_ASSERT(is_instance(obj));
     if (is_downstream(obj)) {
-      headers = Headers::create(cx, request_handle(obj).headers(), Headers::HeadersGuard::Request);
+      headers.set(Headers::create(cx, request_handle(obj).headers(), Headers::HeadersGuard::Request));
     } else {
-      headers = Headers::create(cx, Headers::HeadersGuard::Request);
+      headers.set(Headers::create(cx, Headers::HeadersGuard::Request));
     }
     if (!headers) {
       return nullptr;
@@ -1092,14 +1096,14 @@ JSObject *Request::headers(JSContext *cx, JS::HandleObject obj) {
 }
 
 JSObject *Response::headers(JSContext *cx, JS::HandleObject obj) {
-  JSObject *headers = RequestOrResponse::maybe_headers(obj);
+  JS::RootedObject headers(cx, RequestOrResponse::maybe_headers(obj));
   if (!headers) {
     MOZ_ASSERT(is_instance(obj));
     if (is_upstream(obj)) {
-      headers =
-          Headers::create(cx, response_handle(obj).headers(), Headers::HeadersGuard::Response);
+      headers.set(
+          Headers::create(cx, response_handle(obj).headers(), Headers::HeadersGuard::Response));
     } else {
-      headers = Headers::create(cx, Headers::HeadersGuard::Response);
+      headers.set(Headers::create(cx, Headers::HeadersGuard::Response));
     }
     if (!headers) {
       return nullptr;
@@ -2101,15 +2105,14 @@ bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValu
   std::transform(hex_str.begin(), hex_str.end(), hex_str.begin(),
                  [](unsigned char c) { return std::toupper(c); });
 
-  JSObject *headers = Request::headers(cx, self);
+  JS::RootedObject headers(cx, Request::headers(cx, self));
   if (!headers) {
     return false;
   }
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::OverrideCacheKey), cache_key_str_val);
-  JS::RootedObject headers_val(cx, headers);
-  JS::RootedValue value_val(
-      cx, JS::StringValue(JS_NewStringCopyN(cx, hex_str.c_str(), hex_str.length())));
-  if (!Headers::append_valid_header(cx, headers_val, "fastly-xqd-cache-key", value_val,
+  JS::RootedString hex_str_js(cx, JS_NewStringCopyN(cx, hex_str.c_str(), hex_str.length()));
+  JS::RootedValue value_val(cx, JS::StringValue(hex_str_js));
+  if (!Headers::append_valid_header(cx, headers, "fastly-xqd-cache-key", value_val,
                                     "Request.prototype.setCacheKey")) {
     return false;
   }
@@ -2134,7 +2137,7 @@ bool Request::set_cache_override(JSContext *cx, JS::HandleObject self,
                                  JS::HandleValue cache_override) {
   MOZ_ASSERT(is_instance(self));
 
-  JSObject *override;
+  JS::RootedObject override(cx);
   if (CacheOverride::is_instance(cache_override)) {
     JS::RootedObject input(cx, &cache_override.toObject());
     override = CacheOverride::clone(cx, input);
@@ -2447,14 +2450,10 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (!headers) {
-    return false;
-  }
-
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Headers),
                       JS::ObjectValue(*headers));
 
-  JSString *method = Request::method(cx, self);
+  JS::RootedString method(cx, Request::method(cx, self));
   if (!method) {
     return false;
   }
@@ -2642,7 +2641,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
 
     // header list: A copy of `request`’s header list.
     // Note: copying the headers is postponed, see step 32 below.
-    JSObject *headers_obj = Request::headers(cx, input_request);
+    JS::RootedObject headers_obj(cx, Request::headers(cx, input_request));
     if (!headers_obj) {
       return nullptr;
     }
@@ -3361,8 +3360,9 @@ void Response::set_status_message_from_code(JSContext *cx, JSObject *obj, uint16
     phrase = "";
     break;
   }
+  JS::RootedString phrase_js(cx, JS_NewStringCopyZ(cx, phrase));
   JS::SetReservedSlot(obj, static_cast<uint32_t>(Slots::StatusMessage),
-                      JS::StringValue(JS_NewStringCopyN(cx, phrase, strlen(phrase))));
+                      JS::StringValue(phrase_js));
 }
 
 bool Response::ok_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -3637,8 +3637,9 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
   status = get_res.unwrap();
 
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Status), JS::Int32Value(status));
+  JS::RootedString statusText(cx, JS_GetEmptyString(cx));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::StatusMessage),
-                      JS::StringValue(JS_GetEmptyString(cx)));
+                      JS::StringValue(statusText));
   // 6. Let value be parsedURL, serialized and isomorphic encoded.
   // 7. Append (`Location`, value) to responseObject’s response’s header list.
   JS::RootedObject headers(cx, Headers::create(cx, Headers::HeadersGuard::Response));
@@ -4727,12 +4728,15 @@ void Response::finalize(JS::GCContext *gcx, JSObject *self) {
             suggested_cache_write_options_val.toPrivate());
     delete cache_write_options;
   }
+  auto override_cache_write_options_val =
+      JS::GetReservedSlot(self, static_cast<size_t>(Response::Slots::OverrideCacheWriteOptions));
+  if (!override_cache_write_options_val.isUndefined()) {
   auto override_cache_write_options = reinterpret_cast<host_api::HttpCacheWriteOptions *>(
-      JS::GetReservedSlot(self, static_cast<size_t>(Response::Slots::OverrideCacheWriteOptions))
-          .toPrivate());
+      override_cache_write_options_val.toPrivate());
   if (override_cache_write_options) {
     delete override_cache_write_options;
   }
+}
 }
 
 bool Response::has_bodyless_status(JSObject *obj) {

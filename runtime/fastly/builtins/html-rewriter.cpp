@@ -274,6 +274,11 @@ public:
   JSObject *handler() const { return handler_; }
   JSString *selector() const { return js_selector_; }
 
+  void trace(JSTracer *trc) {
+    TraceEdge(trc, &handler_, "ElementHandlerData handler");
+    TraceEdge(trc, &js_selector_, "ElementHandlerData selector");
+  }
+
 private:
   JSContext *cx_;
   JS::Heap<JSObject *> handler_;
@@ -357,6 +362,8 @@ struct OutputContextData {
   bool enqueue_failed;
 
   OutputContextData(JSContext *cx, JSObject *self) : cx(cx), self(self), enqueue_failed(false) {}
+
+  void trace(JSTracer *trc) { TraceEdge(trc, &self, "OutputContextData self"); }
 };
 
 void HTMLRewritingStream::finalize(JS::GCContext *gcx, JSObject *self) {
@@ -385,6 +392,30 @@ void HTMLRewritingStream::finalize(JS::GCContext *gcx, JSObject *self) {
   if (rewriter) {
     lol_html_rewriter_free(static_cast<lol_html_rewriter_t *>(rewriter));
   }
+}
+
+void HTMLRewritingStream::trace(JSTracer *trc, JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
+
+  auto element_handlers_val = JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ElementHandlers));
+  if (!element_handlers_val.isUndefined()) {
+  auto element_handlers = static_cast<std::vector<ElementHandlerData *> *>(
+      element_handlers_val.toPrivate());
+  if (element_handlers) {
+    for (auto *handler : *element_handlers) {
+      handler->trace(trc);
+    }
+  }
+}
+
+  auto output_context_val = JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::OutputContext));
+  if (!output_context_val.isUndefined()) {
+  auto output_context = static_cast<OutputContextData *>(
+      output_context_val.toPrivate());
+  if (output_context) {
+    output_context->trace(trc);
+  }
+}
 }
 
 static void output_callback(const char *chunk, size_t chunk_len, void *user_data) {
@@ -537,6 +568,8 @@ bool HTMLRewritingStream::constructor(JSContext *cx, unsigned argc, JS::Value *v
   set_builder(instance, builder);
   // We have no rewriter initially; it will be created on the first chunk processed
   set_raw_rewriter(instance, nullptr);
+  JS::SetReservedSlot(instance, static_cast<uint32_t>(Slots::OutputContext),
+                      JS::PrivateValue(nullptr));
   JS::RootedValue stream_val(cx, JS::ObjectValue(*instance));
   JS::RootedObject transform(cx, TransformStream::create(cx, 1, nullptr, 0, nullptr, stream_val,
                                                          nullptr, transformAlgo, flushAlgo));
