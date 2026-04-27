@@ -1771,7 +1771,14 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
     // `responseDone`.
     if (Response::is_instance(body_owner)) {
       ENGINE->decr_event_loop_interest();
-      FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
+      JS::RootedValue fetch_event_val(
+          cx, JS::GetReservedSlot(body_owner, static_cast<uint32_t>(Response::Slots::FetchEvent)));
+      if (!fetch_event_val.isObject()) {
+        JS_ReportErrorASCII(cx, "Response does not have an associated FetchEvent");
+        return false;
+      }
+      JS::RootedObject fetch_event(cx, &fetch_event_val.toObject());
+      FetchEvent::set_state(fetch_event, FetchEvent::State::responseDone);
     }
 
     auto res = body.close();
@@ -1861,7 +1868,14 @@ bool RequestOrResponse::body_reader_catch_handler(JSContext *cx, JS::HandleObjec
   // a response at all failed.)
   if (Response::is_instance(body_owner)) {
     ENGINE->decr_event_loop_interest();
-    FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
+    JS::RootedValue fetch_event_val(
+        cx, JS::GetReservedSlot(body_owner, static_cast<uint32_t>(Response::Slots::FetchEvent)));
+    if (!fetch_event_val.isObject()) {
+      JS_ReportErrorASCII(cx, "Response does not have an associated FetchEvent");
+      return false;
+    }
+    JS::RootedObject fetch_event(cx, &fetch_event_val.toObject());
+    FetchEvent::set_state(fetch_event, FetchEvent::State::responseDone);
   }
   return true;
 }

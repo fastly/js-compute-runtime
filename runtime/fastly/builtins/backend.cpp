@@ -1240,7 +1240,7 @@ bool apply_backend_config(JSContext *cx, host_api::BackendConfig &backend,
 JSString *Backend::name(JSContext *cx, JSObject *self) {
   auto backend = static_cast<host_api::Backend *>(
       JS::GetReservedSlot(self, Backend::Slots::HostBackend).toPrivate());
-  return JS_NewStringCopyZ(cx, backend->name().begin());
+  return JS_NewStringCopyN(cx, backend->name().begin(), backend->name().size());
 }
 
 bool Backend::name_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -1252,7 +1252,7 @@ bool Backend::name_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
   auto &name = backend->name();
-  auto name_str = JS_NewStringCopyZ(cx, name.begin());
+  auto name_str = JS_NewStringCopyN(cx, name.begin(), name.size());
   if (!name_str) {
     return false;
   }
