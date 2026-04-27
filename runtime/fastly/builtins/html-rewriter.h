@@ -33,7 +33,7 @@ public:
   static bool replaceWith(JSContext *cx, unsigned argc, JS::Value *vp);
 };
 
-class HTMLRewritingStream : public builtins::BuiltinImpl<HTMLRewritingStream> {
+class HTMLRewritingStream : public builtins::TraceableBuiltinImpl<HTMLRewritingStream> {
 private:
   static bool transformAlgorithm(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool flushAlgorithm(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -56,6 +56,7 @@ public:
 
   static bool finish_building(JSContext *cx, JS::HandleObject stream);
   static void finalize(JS::GCContext *gcx, JSObject *self);
+  static void trace(JSTracer *trc, JSObject *self);
 };
 } // namespace fastly::html_rewriter
 
