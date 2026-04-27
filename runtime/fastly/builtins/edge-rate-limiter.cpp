@@ -117,14 +117,18 @@ bool PenaltyBox::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   if (name.len == 0) {
     JS_ReportErrorASCII(cx, "PenaltyBox constructor: name parameter can not be an empty string.");
+    return false;
   }
 
   JS::RootedObject instance(cx, JS_NewObjectForConstructor(cx, &class_, args));
   if (!instance) {
     return false;
   }
-  JS::SetReservedSlot(instance, static_cast<uint32_t>(Slots::Name),
-                      JS::StringValue(JS_NewStringCopyZ(cx, name.begin())));
+  JS::RootedString name_str(cx, JS_NewStringCopyN(cx, name.begin(), name.len));
+  if (!name_str) {
+    return false;
+  }
+  JS::SetReservedSlot(instance, static_cast<uint32_t>(Slots::Name), JS::StringValue(name_str));
   args.rval().setObject(*instance);
   return true;
 }
@@ -291,14 +295,15 @@ bool RateCounter::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   if (name.len == 0) {
     JS_ReportErrorASCII(cx, "RateCounter constructor: name parameter can not be an empty string.");
+    return false;
   }
 
   JS::RootedObject instance(cx, JS_NewObjectForConstructor(cx, &class_, args));
   if (!instance) {
     return false;
   }
-  JS::SetReservedSlot(instance, static_cast<uint32_t>(Slots::Name),
-                      JS::StringValue(JS_NewStringCopyZ(cx, name.begin())));
+  JS::RootedString name_str(cx, JS_NewStringCopyN(cx, name.begin(), name.len));
+  JS::SetReservedSlot(instance, static_cast<uint32_t>(Slots::Name), JS::StringValue(name_str));
   args.rval().setObject(*instance);
   return true;
 }

@@ -1826,11 +1826,10 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool finalize(JS::GCContext *gcx, JSObject *obj) {
+void Backend::finalize(JS::GCContext *gcx, JSObject *obj) {
   auto backend = static_cast<host_api::Backend *>(
       JS::GetReservedSlot(obj, Backend::Slots::HostBackend).toPrivate());
   free(backend);
-  return true;
 }
 
 bool set_default_backend_config(JSContext *cx, unsigned argc, JS::Value *vp) {
