@@ -2038,6 +2038,223 @@ routes.set('/backend/timeout', async () => {
       );
     }
 
+    // checkSSL network behavior
+    {
+      // Expired certificate - no checkSSL param (thrown exception = success)
+      routes.set(
+        '/backend/checkSSL/expired-no-param-throws',
+        async () => {
+          if (isRunningLocally()) {
+            return;
+          }
+          const backend = new Backend({
+            name: 'checkSSL-expired-no-param',
+            target: 'expired.badssl.com',
+            useSSL: true,
+            sniHostname: 'expired.badssl.com',
+            certificateHostname: 'expired.badssl.com',
+          });
+          await assertRejects(async () =>
+            await fetch('https://expired.badssl.com/', {
+              backend,
+              cacheOverride: new CacheOverride('pass'),
+            }),
+          );
+        },
+      );
+
+      // Expired certificate - checkSSL: true (thrown exception = success)
+      routes.set(
+        '/backend/checkSSL/expired-true-throws',
+        async () => {
+          if (isRunningLocally()) {
+            return;
+          }
+          const backend = new Backend({
+            name: 'checkSSL-expired-true',
+            target: 'expired.badssl.com',
+            useSSL: true,
+            checkSSL: true,
+            sniHostname: 'expired.badssl.com',
+            certificateHostname: 'expired.badssl.com',
+          });
+          await assertRejects(async () =>
+            await fetch('https://expired.badssl.com/', {
+              backend,
+              cacheOverride: new CacheOverride('pass'),
+            }),
+          );
+        },
+      );
+
+      // Expired certificate - checkSSL: false (no throw = success)
+      routes.set(
+        '/backend/checkSSL/expired-false-does-not-throw',
+        async () => {
+          if (isRunningLocally()) {
+            return;
+          }
+          const backend = new Backend({
+            name: 'checkSSL-expired-false',
+            target: 'expired.badssl.com',
+            useSSL: true,
+            checkSSL: false,
+            sniHostname: 'expired.badssl.com',
+            certificateHostname: 'expired.badssl.com',
+          });
+          assertDoesNotThrow(async () => {
+            await fetch('https://expired.badssl.com/', {
+              backend,
+              cacheOverride: new CacheOverride('pass'),
+            });
+          });
+        },
+      );
+
+      // Wrong host cert - no checkSSL param (thrown exception = success)
+      routes.set(
+        '/backend/checkSSL/wrong-host-no-param-throws',
+        async () => {
+          if (isRunningLocally()) {
+            return;
+          }
+          const backend = new Backend({
+            name: 'checkSSL-wrong-host-no-param',
+            target: 'wrong.host.badssl.com',
+            useSSL: true,
+            sniHostname: 'wrong.host.badssl.com',
+            certificateHostname: 'wrong.host.badssl.com',
+          });
+          await assertRejects(async () =>
+            await fetch('https://wrong.host.badssl.com/', {
+              backend,
+              cacheOverride: new CacheOverride('pass'),
+            }),
+          );
+        },
+      );
+
+      // Wrong host cert - checkSSL: true (thrown exception = success)
+      routes.set(
+        '/backend/checkSSL/wrong-host-true-throws',
+        async () => {
+          if (isRunningLocally()) {
+            return;
+          }
+          const backend = new Backend({
+            name: 'checkSSL-wrong-host-true',
+            target: 'wrong.host.badssl.com',
+            useSSL: true,
+            checkSSL: true,
+            sniHostname: 'wrong.host.badssl.com',
+            certificateHostname: 'wrong.host.badssl.com',
+          });
+          await assertRejects(async () =>
+            await fetch('https://wrong.host.badssl.com/', {
+              backend,
+              cacheOverride: new CacheOverride('pass'),
+            }),
+          );
+        },
+      );
+
+      // Wrong host cert - checkSSL: false (no throw = success)
+      routes.set(
+        '/backend/checkSSL/wrong-host-false-does-not-throw',
+        async () => {
+          if (isRunningLocally()) {
+            return;
+          }
+          const backend = new Backend({
+            name: 'checkSSL-wrong-host-false',
+            target: 'wrong.host.badssl.com',
+            useSSL: true,
+            checkSSL: false,
+            sniHostname: 'wrong.host.badssl.com',
+            certificateHostname: 'wrong.host.badssl.com',
+          });
+          assertDoesNotThrow(async () => {
+            await fetch('https://wrong.host.badssl.com/', {
+              backend,
+              cacheOverride: new CacheOverride('pass'),
+            });
+          });
+        },
+      );
+
+      // Self signed cert - no checkSSL param (thrown exception = success)
+      routes.set(
+        '/backend/checkSSL/self-signed-no-param-throws',
+        async () => {
+          if (isRunningLocally()) {
+            return;
+          }
+          const backend = new Backend({
+            name: 'checkSSL-self-signed-no-param',
+            target: 'self-signed.badssl.com',
+            useSSL: true,
+            sniHostname: 'self-signed.badssl.com',
+            certificateHostname: 'self-signed.badssl.com',
+          });
+          await assertRejects(async () =>
+            await fetch('https://self-signed.badssl.com/', {
+              backend,
+              cacheOverride: new CacheOverride('pass'),
+            }),
+          );
+        },
+      );
+
+      // Self signed cert - checkSSL: true (thrown exception = success)
+      routes.set(
+        '/backend/checkSSL/self-signed-true-throws',
+        async () => {
+          if (isRunningLocally()) {
+            return;
+          }
+          const backend = new Backend({
+            name: 'checkSSL-self-signed-true',
+            target: 'self-signed.badssl.com',
+            useSSL: true,
+            checkSSL: true,
+            sniHostname: 'self-signed.badssl.com',
+            certificateHostname: 'self-signed.badssl.com',
+          });
+          await assertRejects(async () =>
+            await fetch('https://self-signed.badssl.com/', {
+              backend,
+              cacheOverride: new CacheOverride('pass'),
+            }),
+          );
+        },
+      );
+
+      // Self signed cert - checkSSL: false (no throw = success)
+      routes.set(
+        '/backend/checkSSL/self-signed-false-does-not-throw',
+        async () => {
+          if (isRunningLocally()) {
+            return;
+          }
+          const backend = new Backend({
+            name: 'checkSSL-self-signed-false',
+            target: 'self-signed.badssl.com',
+            useSSL: true,
+            checkSSL: false,
+            sniHostname: 'self-signed.badssl.com',
+            certificateHostname: 'self-signed.badssl.com',
+          });
+          assertDoesNotThrow(async () => {
+              await fetch('https://self-signed.badssl.com/', {
+                backend,
+                cacheOverride: new CacheOverride('pass'),
+              });
+            }
+          );
+        },
+      );
+    }
+
     // clientCertificate property
     {
       routes.set(
