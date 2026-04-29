@@ -2492,6 +2492,104 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool Request::getBotAnalyzed(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto res = request_handle(self).downstream_bot_analyzed();
+  if (res.is_err()) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  args.rval().setBoolean(res.unwrap());
+  return true;
+}
+
+bool Request::getBotDetected(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto res = request_handle(self).downstream_bot_detected();
+  if (res.is_err()) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  args.rval().setBoolean(res.unwrap());
+  return true;
+}
+
+bool Request::getBotName(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto res = request_handle(self).downstream_bot_name();
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
+  }
+
+  auto bot_name = std::move(res.unwrap());
+  if (!bot_name.has_value()) {
+    args.rval().setNull();
+    return true;
+  }
+
+  args.rval().setString(JS_NewStringCopyN(cx, bot_name->begin(), bot_name->size()));
+  return true;
+}
+
+bool Request::getBotCategory(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto res = request_handle(self).downstream_bot_category();
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
+  }
+
+  auto bot_category = std::move(res.unwrap());
+  if (!bot_category.has_value()) {
+    args.rval().setNull();
+    return true;
+  }
+
+  args.rval().setString(JS_NewStringCopyN(cx, bot_category->begin(), bot_category->size()));
+  return true;
+}
+
+bool Request::getBotCategoryKind(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto res = request_handle(self).downstream_bot_category_kind();
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
+  }
+
+  auto bot_category_kind = std::move(res.unwrap());
+  if (!bot_category_kind.has_value()) {
+    args.rval().setNull();
+    return true;
+  }
+
+  auto kind_str = to_string(bot_category_kind.value());
+  args.rval().setString(
+      JS_NewStringCopyN(cx, kind_str.begin(), kind_str.size()));
+  return true;
+}
+
+bool Request::getBotVerified(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto res = request_handle(self).downstream_bot_verified();
+  if (res.is_err()) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  args.rval().setBoolean(res.unwrap());
+  return true;
+}
+
 const JSFunctionSpec Request::static_methods[] = {
     JS_FS_END,
 };
@@ -2512,6 +2610,12 @@ const JSFunctionSpec Request::methods[] = {
     JS_FN("setCacheKey", Request::setCacheKey, 0, JSPROP_ENUMERATE),
     JS_FN("setManualFramingHeaders", Request::setManualFramingHeaders, 1, JSPROP_ENUMERATE),
     JS_FN("clone", Request::clone, 0, JSPROP_ENUMERATE),
+    JS_FN("getBotAnalyzed", Request::getBotAnalyzed, 0, JSPROP_ENUMERATE),
+    JS_FN("getBotDetected", Request::getBotDetected, 0, JSPROP_ENUMERATE),
+    JS_FN("getBotName", Request::getBotName, 0, JSPROP_ENUMERATE),
+    JS_FN("getBotCategory", Request::getBotCategory, 0, JSPROP_ENUMERATE),
+    JS_FN("getBotCategoryKind", Request::getBotCategoryKind, 0, JSPROP_ENUMERATE),
+    JS_FN("getBotVerified", Request::getBotVerified, 0, JSPROP_ENUMERATE),
     JS_FS_END,
 };
 
