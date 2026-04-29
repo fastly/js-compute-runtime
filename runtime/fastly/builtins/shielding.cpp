@@ -104,7 +104,7 @@ bool Shield::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
       break;
     } else if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
       buf_size *= 2;
-      out_buf = std::vector<char>(1024);
+      out_buf = std::vector<char>(buf_size);
     } else {
       HANDLE_ERROR(cx, status);
       return false;
