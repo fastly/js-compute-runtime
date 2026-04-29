@@ -1992,7 +1992,7 @@ async function kvStoreInterfaceTests() {
 routes.set('/kv-store/list/large-response', async () => {
   const store = new KVStore(KV_STORE_NAME);
   // 490 keys × ~1024-char names ≈ 507 KB of JSON
-  const prefix = 'large-list-' + 'a'.repeat(1013);
+  const prefix = 'large-list-' + 'a'.repeat(1009);
   await Promise.all(
     Array.from({ length: 490 }, (_, i) =>
       store.put(prefix + String(i).padStart(4, '0'), 'x'),
