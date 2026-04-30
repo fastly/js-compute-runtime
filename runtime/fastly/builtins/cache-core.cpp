@@ -24,7 +24,6 @@ namespace fastly::cache_core {
 namespace {
 
 api::Engine *ENGINE;
-
 // The JavaScript LookupOptions parameter we are parsing should have the below interface:
 // interface LookupOptions {
 //   headers?: HeadersInit;
@@ -121,12 +120,12 @@ JS::Result<host_api::CacheWriteOptions> parseTransactionUpdateOptions(JSContext 
     return JS::Result<host_api::CacheWriteOptions>(JS::Error());
   }
   // turn millisecond representation into nanosecond representation
-  options.max_age_ns = JS::ToUint64(maxAge) * 1'000'000;
-
-  if (options.max_age_ns > pow(2, 63)) {
+  constexpr double max_time_ms = static_cast<double>(std::numeric_limits<uint64_t>::max()) / 1'000'000;
+  if (maxAge > max_time_ms) {
     JS_ReportErrorASCII(cx, "maxAge can not be greater than 2^63.");
     return JS::Result<host_api::CacheWriteOptions>(JS::Error());
   }
+  options.max_age_ns = JS::ToUint64(maxAge) * 1'000'000;
 
   JS::RootedValue initialAge_val(cx);
   if (!JS_GetProperty(cx, options_obj, "initialAge", &initialAge_val)) {
@@ -145,12 +144,11 @@ JS::Result<host_api::CacheWriteOptions> parseTransactionUpdateOptions(JSContext 
       return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
     // turn millisecond representation into nanosecond representation
-    options.initial_age_ns = JS::ToUint64(initialAge) * 1'000'000;
-
-    if (options.initial_age_ns > pow(2, 63)) {
+    if (initialAge > max_time_ms) {
       JS_ReportErrorASCII(cx, "initialAge can not be greater than 2^63.");
       return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
+    options.initial_age_ns = JS::ToUint64(initialAge) * 1'000'000;
   }
 
   JS::RootedValue staleWhileRevalidate_val(cx);
@@ -171,12 +169,11 @@ JS::Result<host_api::CacheWriteOptions> parseTransactionUpdateOptions(JSContext 
       return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
     // turn millisecond representation into nanosecond representation
-    options.stale_while_revalidate_ns = JS::ToUint64(staleWhileRevalidate) * 1'000'000;
-
-    if (options.initial_age_ns > pow(2, 63)) {
+    if (staleWhileRevalidate > max_time_ms) {
       JS_ReportErrorASCII(cx, "staleWhileRevalidate can not be greater than 2^63.");
       return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
+    options.stale_while_revalidate_ns = JS::ToUint64(staleWhileRevalidate) * 1'000'000;
   }
 
   JS::RootedValue length_val(cx);
