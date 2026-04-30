@@ -187,19 +187,20 @@ bool SecretStore::from_bytes(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto bytes = args.get(0);
 
+  host_api::Result<host_api::Secret> res;
+  {
   auto maybe_byte_data = validate_bytes(cx, bytes, "SecretStore.fromBytes");
   if (!maybe_byte_data) {
     return false;
   }
-  // important no work is done here before the host call so our buffer doesn't move
-  const uint8_t *data;
-  size_t len;
-  std::tie(data, len) = maybe_byte_data.value();
-  auto res = host_api::SecretStore::from_bytes(data, len);
+  auto& [data, len, noGC] = *maybe_byte_data;
+  res = host_api::SecretStore::from_bytes(data, len);
+  noGC.reset();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
   }
+}
 
   JS::SetReservedSlot(entry, Slots::Handle, JS::Int32Value(res.unwrap().handle));
   args.rval().setObject(*entry);
