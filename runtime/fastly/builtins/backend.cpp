@@ -570,7 +570,7 @@ public:
         this->add(aliases, ciphers, element);
       } else if (element.find(AND) != std::string::npos) {
         std::vector<std::string_view> intersections;
-        for (auto r : element | std::views::split(std::string_view("+\\")))
+        for (auto r : element | std::views::split(AND))
           intersections.emplace_back(r.begin(), r.end());
         if (intersections.size() > 0) {
           auto found = aliases.find(intersections[0]);
@@ -579,12 +579,12 @@ public:
             for (int i = 1; i < intersections.size(); i++) {
               auto alias = aliases.find(intersections[i]);
               if (alias != aliases.end()) {
-                // make `result` only contain the aliases from `alias`
+                // make `result` only contain the ciphers also present in `alias`
                 result.erase(std::remove_if(result.begin(), result.end(),
                                             [&](auto x) {
                                               return std::find(alias->second.begin(),
                                                                alias->second.end(),
-                                                               x) != alias->second.end();
+                                                               x) == alias->second.end();
                                             }),
                              result.end());
               }
