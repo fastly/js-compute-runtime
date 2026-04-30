@@ -187,20 +187,17 @@ bool SecretStore::from_bytes(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto bytes = args.get(0);
 
-  host_api::Result<host_api::Secret> res;
-  {
   auto maybe_byte_data = validate_bytes(cx, bytes, "SecretStore.fromBytes");
   if (!maybe_byte_data) {
     return false;
   }
-  auto& [data, len, noGC] = *maybe_byte_data;
-  res = host_api::SecretStore::from_bytes(data, len);
+  auto &[data, len, noGC] = *maybe_byte_data;
+  auto res = host_api::SecretStore::from_bytes(data, len);
   noGC.reset();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
   }
-}
 
   JS::SetReservedSlot(entry, Slots::Handle, JS::Int32Value(res.unwrap().handle));
   args.rval().setObject(*entry);
