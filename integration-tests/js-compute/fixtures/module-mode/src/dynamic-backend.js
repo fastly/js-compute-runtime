@@ -1110,24 +1110,44 @@ routes.set('/backend/timeout', async () => {
         '/backend/constructor/parameter-ciphers-property-and-operator',
         async () => {
           assertDoesNotThrow(() => {
-            new Backend({ name: 'and-sha1-aes128', target: 'a', ciphers: 'SHA1+AES128' });
+            new Backend({
+              name: 'and-sha1-aes128',
+              target: 'a',
+              ciphers: 'SHA1+AES128',
+            });
           });
           assertDoesNotThrow(() => {
-            new Backend({ name: 'and-sha1-aes256', target: 'a', ciphers: 'SHA1+AES256' });
+            new Backend({
+              name: 'and-sha1-aes256',
+              target: 'a',
+              ciphers: 'SHA1+AES256',
+            });
           });
           assertDoesNotThrow(() => {
-            new Backend({ name: 'and-sha1-ecdhe', target: 'a', ciphers: 'SHA1+ECDHE' });
+            new Backend({
+              name: 'and-sha1-ecdhe',
+              target: 'a',
+              ciphers: 'SHA1+ECDHE',
+            });
           });
           assertThrows(
             () => {
-              new Backend({ name: 'and-sha1-aesgcm', target: 'a', ciphers: 'SHA1+AESGCM' });
+              new Backend({
+                name: 'and-sha1-aesgcm',
+                target: 'a',
+                ciphers: 'SHA1+AESGCM',
+              });
             },
             TypeError,
             `Backend constructor: none of the provided ciphers are supported by Fastly. The list of supported ciphers is available on https://developer.fastly.com/learning/concepts/routing-traffic-to-fastly/#use-a-tls-configuration`,
           );
           assertThrows(
             () => {
-              new Backend({ name: 'and-sha1-chacha20', target: 'a', ciphers: 'SHA1+CHACHA20' });
+              new Backend({
+                name: 'and-sha1-chacha20',
+                target: 'a',
+                ciphers: 'SHA1+CHACHA20',
+              });
             },
             TypeError,
             `Backend constructor: none of the provided ciphers are supported by Fastly. The list of supported ciphers is available on https://developer.fastly.com/learning/concepts/routing-traffic-to-fastly/#use-a-tls-configuration`,
