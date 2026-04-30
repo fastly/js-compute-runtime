@@ -4,6 +4,7 @@
 #include <charconv>
 #include <iostream>
 #include <optional>
+#include <ranges>
 #include <set>
 #include <string>
 #include <string_view>
@@ -359,21 +360,6 @@ private:
     return [val](auto &c) { return c.mac == val; };
   }
 
-  std::vector<std::string_view> split(std::string_view s, std::string_view delimiter) const {
-    size_t pos_start = 0, pos_end, delim_len = delimiter.length();
-    std::string token;
-    std::vector<std::string_view> res;
-
-    while ((pos_end = s.find(delimiter, pos_start)) != std::string::npos) {
-      token = s.substr(pos_start, pos_end - pos_start);
-      pos_start = pos_end + delim_len;
-      res.push_back(token);
-    }
-
-    res.push_back(s.substr(pos_start));
-    return res;
-  }
-
   std::pair<std::string_view, std::string_view> split_on(std::string_view str, char c) const {
     auto ix = str.find(c);
     if (ix == str.npos) {
@@ -583,7 +569,9 @@ public:
       } else if (aliases.find(element) != aliases.end()) {
         this->add(aliases, ciphers, element);
       } else if (element.find(AND) != std::string::npos) {
-        auto intersections = this->split(element, "+\\");
+        std::vector<std::string_view> intersections;
+        for (auto r : element | std::views::split(std::string_view("+\\")))
+          intersections.emplace_back(r.begin(), r.end());
         if (intersections.size() > 0) {
           auto found = aliases.find(intersections[0]);
           if (found != aliases.end()) {
@@ -617,19 +605,6 @@ public:
     return ciphers;
   }
 };
-
-std::vector<std::string_view> split(std::string_view string, char delimiter) {
-  auto start = 0;
-  auto end = string.find(delimiter, start);
-  std::vector<std::string_view> result;
-  while (end != std::string::npos) {
-    result.push_back(string.substr(start, end - start));
-    start = end + 1;
-    end = string.find(delimiter, start);
-  }
-  result.push_back(string.substr(start));
-  return result;
-}
 
 bool is_valid_ip(std::string_view ip) {
   int format = AF_INET;
@@ -677,9 +652,8 @@ bool is_valid_host(std::string_view host) {
     return false;
   }
 
-  auto labels = split(hostname, '.');
-
-  for (auto &label : labels) {
+  for (auto r : hostname | std::views::split('.')) {
+    auto label = std::string_view(r.begin(), r.end());
     // Each label in a hostname can not be longer than 63 characters
     // https://www.rfc-editor.org/rfc/rfc2181#section-11
     if (label.length() > 63) {
