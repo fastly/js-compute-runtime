@@ -12,9 +12,7 @@ bool normalize_http_method(char *method, size_t length) {
   constexpr std::string_view methods[] = {"GET", "HEAD", "OPTIONS", "POST", "PUT", "DELETE"};
   std::string_view m(method, length);
 
-  auto iequal = [](unsigned char a, unsigned char b) {
-    return std::toupper(a) == std::toupper(b);
-  };
+  auto iequal = [](unsigned char a, unsigned char b) { return std::toupper(a) == std::toupper(b); };
 
   auto it = std::ranges::find_if(methods, [&](std::string_view candidate) {
     return std::ranges::equal(m, candidate, iequal);
