@@ -120,7 +120,8 @@ JS::Result<host_api::CacheWriteOptions> parseTransactionUpdateOptions(JSContext 
     return JS::Result<host_api::CacheWriteOptions>(JS::Error());
   }
   // turn millisecond representation into nanosecond representation
-  constexpr double max_time_ms = static_cast<double>(std::numeric_limits<uint64_t>::max()) / 1'000'000;
+  constexpr double max_time_ms =
+      static_cast<double>(std::numeric_limits<uint64_t>::max()) / 1'000'000;
   if (maxAge > max_time_ms) {
     JS_ReportErrorASCII(cx, "maxAge can not be greater than 2^63.");
     return JS::Result<host_api::CacheWriteOptions>(JS::Error());
