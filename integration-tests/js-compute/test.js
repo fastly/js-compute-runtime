@@ -11,6 +11,7 @@ import { copyFile, readFile, writeFile } from 'node:fs/promises';
 import * as core from '@actions/core';
 import TOML from '@iarna/toml';
 import { getEnv, GLOBAL_PREFIX } from './env.js';
+import { $ } from './util.js';
 
 // test environment variable handling
 process.env.LOCAL_TEST = 'local val';
@@ -52,15 +53,11 @@ const filter = args.filter((arg) => !arg.startsWith('--'));
 const bail = args.includes('--bail');
 const ci = args.includes('--ci');
 
-async function $(...args) {
-  return await retry(10, () => zx(...args));
-}
-
 if (!local && process.env.FASTLY_API_TOKEN === undefined) {
   try {
     zx.verbose = false;
     process.env.FASTLY_API_TOKEN = String(
-      await zx`fastly auth show --reveal | grep 'Token:' | cut -d ' ' -f2-`,
+      await $`fastly auth show --reveal | grep 'Token:' | cut -d ' ' -f2-`,
     ).trim();
   } catch {
     console.error(
@@ -143,18 +140,27 @@ if (!local) {
     await zx`fastly service delete --quiet --service-name "${serviceName}" --force --token $FASTLY_API_TOKEN`;
   } catch {}
   core.endGroup();
+  await new Promise((resolve) => setTimeout(resolve, 5000));
   core.startGroup('Build and deploy service');
   await zx`npm i`;
   await $`fastly compute publish -i ${verbose ? '--verbose' : '--quiet'} --token $FASTLY_API_TOKEN --status-check-off`;
   core.endGroup();
 
-  // get the public domain of the deployed application
-  const domainListing = JSON.parse(
-    await $`fastly service domain list --quiet --version latest --json`,
-  )[0];
-  domain = `https://${domainListing.Name}`;
-  serviceId = domainListing.ServiceID;
-  core.notice(`Service is running on ${domain}`);
+  // It can take time for the new domain to show up on the list.
+  await Promise.all([
+    (async () => {
+      await retry(27, expBackoff('60s', '10s'), async () => {
+        // get the public domain of the deployed application
+        const domainListing = JSON.parse(
+          await $`fastly service domain list --quiet --version latest --json`,
+        )[0];
+        domain = `https://${domainListing.Name}`;
+        serviceId = domainListing.ServiceID;
+        core.notice(`Service is running on ${domain}`);
+      });
+    })(),
+    new Promise((resolve) => setTimeout(resolve, 60_000)),
+  ]);
 } else {
   const pushpin = '--local-pushpin-proxy-port=0';
   const args = verbose ? '-vv ' + pushpin : pushpin;
@@ -475,7 +481,7 @@ if (!local && !skipTeardown) {
 
   core.startGroup('Delete service');
   // Delete the service now the tests have finished
-  await zx`fastly service delete --quiet --service-name "${serviceName}" --force --token $FASTLY_API_TOKEN`;
+  await $`fastly service delete --quiet --service-name "${serviceName}" --force --token $FASTLY_API_TOKEN`;
   core.endGroup();
 }
 if (process.exitCode == undefined || process.exitCode == 0) {
