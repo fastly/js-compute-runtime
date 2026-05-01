@@ -1,0 +1,60 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Object.getOwnPropertyDescriptor()
+
+The **`Object.getOwnPropertyDescriptor()`** method returns an
+object describing the configuration of a specific property on a given object (that is,
+one directly present on an object and not in the object's prototype chain). The object
+returned is mutable but mutating it has no effect on the original property's
+configuration.
+
+## Syntax
+
+```js
+Object.getOwnPropertyDescriptor(obj, prop)
+```
+
+### Parameters
+
+- `obj`
+  - : The object in which to look for the property.
+- `prop`
+  - : The name or `Symbol` of the property whose description is to be
+    retrieved.
+
+### Return value
+
+A property descriptor of the given property if it exists on the object,
+[`undefined`](../../globals/undefined.mdx) otherwise.
+
+## Description
+
+This method permits examination of the precise description of a property. A
+_property_ in JavaScript consists of either a string-valued name or a
+`Symbol` and a property descriptor. Further information about property
+descriptor types and their attributes can be found in
+[`Object.defineProperty()`](../../globals/Object/defineProperty.mdx).
+
+A _property descriptor_ is a record with some of the following attributes:
+
+- `value`
+  - : The value associated with the property (data descriptors only).
+- `writable`
+  - : `true` if and only if the value associated with the property may be
+    changed (data descriptors only).
+- `get`
+  - : A function which serves as a getter for the property, or [`undefined`](../../globals/undefined.mdx) if
+    there is no getter (accessor descriptors only).
+- `set`
+  - : A function which serves as a setter for the property, or [`undefined`](../../globals/undefined.mdx) if
+    there is no setter (accessor descriptors only).
+- `configurable`
+  - : `true` if and only if the type of this property descriptor may be changed
+    and if the property may be deleted from the corresponding object.
+- `enumerable`
+  - : `true` if and only if this property shows up during enumeration of the
+    properties on the corresponding object.
