@@ -412,6 +412,7 @@
   "GET /kv-store-options/gen-invalid": { "flake": true },
   "GET /kv-store-entry/body": { "flake": true },
   "GET /kv-store-entry/bodyUsed": { "flake": true },
+  "GET /kv-store/list/large-response": { "flake": true },
   "GET /transform-stream/identity": {
     "downstream_response": { "body": "hello" }
   },
