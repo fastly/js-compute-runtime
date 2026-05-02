@@ -262,7 +262,7 @@ public:
     BodyUsed = static_cast<int>(RequestOrResponse::Slots::BodyUsed),
     Headers = static_cast<int>(RequestOrResponse::Slots::Headers),
     HeadersGen = static_cast<int>(RequestOrResponse::Slots::HeadersGen),
-    URL = static_cast<int>(RequestOrResponse::Slots::Headers),
+    URL = static_cast<int>(RequestOrResponse::Slots::URL),
     ManualFramingHeaders = static_cast<int>(RequestOrResponse::Slots::ManualFramingHeaders),
     Backend = static_cast<int>(RequestOrResponse::Slots::Backend),
     CacheEntry = static_cast<int>(RequestOrResponse::Slots::CacheEntry),
