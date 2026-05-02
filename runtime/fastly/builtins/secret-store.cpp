@@ -191,11 +191,9 @@ bool SecretStore::from_bytes(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!maybe_byte_data) {
     return false;
   }
-  // important no work is done here before the host call so our buffer doesn't move
-  const uint8_t *data;
-  size_t len;
-  std::tie(data, len) = maybe_byte_data.value();
+  auto &[data, len, noGC] = *maybe_byte_data;
   auto res = host_api::SecretStore::from_bytes(data, len);
+  noGC.reset();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
