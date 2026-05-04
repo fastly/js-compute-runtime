@@ -1723,6 +1723,16 @@ function ensureLion() {
       },
     );
     routes.set(
+      '/core-cache/insert/options-parameter-maxAge-field-too-large',
+      () => {
+        assertThrows(() => {
+          CoreCache.insert('cat', {
+            maxAge: 2e13,
+          });
+        });
+      },
+    );
+    routes.set(
       '/core-cache/insert/options-parameter-initialAge-field-valid-record',
       () => {
         let body;
@@ -1776,6 +1786,17 @@ function ensureLion() {
           CoreCache.insert('cat', {
             maxAge: 1,
             initialAge: -1,
+          });
+        });
+      },
+    );
+    routes.set(
+      '/core-cache/insert/options-parameter-initialAge-field-too-large',
+      () => {
+        assertThrows(() => {
+          CoreCache.insert('cat', {
+            maxAge: 1,
+            initialAge: 2e13,
           });
         });
       },
@@ -1837,6 +1858,17 @@ function ensureLion() {
           CoreCache.insert('cat', {
             maxAge: 1,
             staleWhileRevalidate: -1,
+          });
+        });
+      },
+    );
+    routes.set(
+      '/core-cache/insert/options-parameter-staleWhileRevalidate-field-too-large',
+      () => {
+        assertThrows(() => {
+          CoreCache.insert('cat', {
+            maxAge: 1,
+            staleWhileRevalidate: 2e13,
           });
         });
       },
@@ -3769,6 +3801,17 @@ function ensureLion() {
       },
     );
     routes.set(
+      '/transaction-cache-entry/insert/options-parameter-maxAge-field-too-large',
+      () => {
+        assertThrows(() => {
+          let entry = CoreCache.transactionLookup('1');
+          entry.insert({
+            maxAge: 2e13,
+          });
+        });
+      },
+    );
+    routes.set(
       '/transaction-cache-entry/insert/options-parameter-initialAge-field-valid-record',
       () => {
         let body;
@@ -3832,6 +3875,18 @@ function ensureLion() {
       },
     );
     routes.set(
+      '/transaction-cache-entry/insert/options-parameter-initialAge-field-too-large',
+      () => {
+        assertThrows(() => {
+          let entry = CoreCache.transactionLookup('1');
+          entry.insert({
+            maxAge: 1,
+            initialAge: 2e13,
+          });
+        });
+      },
+    );
+    routes.set(
       '/transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-valid-record',
       () => {
         let body;
@@ -3890,6 +3945,18 @@ function ensureLion() {
           entry.insert({
             maxAge: 1,
             staleWhileRevalidate: -1,
+          });
+        });
+      },
+    );
+    routes.set(
+      '/transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-too-large',
+      () => {
+        assertThrows(() => {
+          let entry = CoreCache.transactionLookup('1');
+          entry.insert({
+            maxAge: 1,
+            staleWhileRevalidate: 2e13,
           });
         });
       },
@@ -4081,6 +4148,18 @@ function ensureLion() {
       },
     );
     routes.set(
+      '/transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-too-large',
+      (event) => {
+        const path = new URL(event.request.url).pathname;
+        assertThrows(() => {
+          let entry = CoreCache.transactionLookup(path);
+          entry.insertAndStreamBack({
+            maxAge: 2e13,
+          });
+        });
+      },
+    );
+    routes.set(
       '/transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-valid-record',
       (event) => {
         const path = new URL(event.request.url).pathname;
@@ -4158,6 +4237,19 @@ function ensureLion() {
       },
     );
     routes.set(
+      '/transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-too-large',
+      (event) => {
+        const path = new URL(event.request.url).pathname;
+        assertThrows(() => {
+          let entry = CoreCache.transactionLookup(path);
+          entry.insertAndStreamBack({
+            maxAge: 1,
+            initialAge: 2e13,
+          });
+        });
+      },
+    );
+    routes.set(
       '/transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-valid-record',
       (event) => {
         const path = new URL(event.request.url).pathname;
@@ -4229,6 +4321,19 @@ function ensureLion() {
           entry.insertAndStreamBack({
             maxAge: 1,
             staleWhileRevalidate: -1,
+          });
+        });
+      },
+    );
+    routes.set(
+      '/transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-too-large',
+      (event) => {
+        const path = new URL(event.request.url).pathname;
+        assertThrows(() => {
+          let entry = CoreCache.transactionLookup(path);
+          entry.insertAndStreamBack({
+            maxAge: 1,
+            staleWhileRevalidate: 2e13,
           });
         });
       },
@@ -4445,6 +4550,18 @@ function ensureLion() {
       },
     );
     routes.set(
+      '/transaction-cache-entry/update/options-parameter-maxAge-field-too-large',
+      (event) => {
+        const path = new URL(event.request.url).pathname;
+        assertThrows(() => {
+          let entry = CoreCache.transactionLookup(path);
+          entry.update({
+            maxAge: 2e13,
+          });
+        });
+      },
+    );
+    routes.set(
       '/transaction-cache-entry/update/options-parameter-initialAge-field-valid-record',
       (event) => {
         const path = new URL(event.request.url).pathname;
@@ -4513,6 +4630,19 @@ function ensureLion() {
       },
     );
     routes.set(
+      '/transaction-cache-entry/update/options-parameter-initialAge-field-too-large',
+      (event) => {
+        const path = new URL(event.request.url).pathname;
+        assertThrows(() => {
+          let entry = CoreCache.transactionLookup(path);
+          entry.update({
+            maxAge: 1,
+            initialAge: 2e13,
+          });
+        });
+      },
+    );
+    routes.set(
       '/transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-valid-record',
       (event) => {
         const path = new URL(event.request.url).pathname;
@@ -4576,6 +4706,19 @@ function ensureLion() {
           entry.update({
             maxAge: 1,
             staleWhileRevalidate: -1,
+          });
+        });
+      },
+    );
+    routes.set(
+      '/transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-too-large',
+      (event) => {
+        const path = new URL(event.request.url).pathname;
+        assertThrows(() => {
+          let entry = CoreCache.transactionLookup(path);
+          entry.update({
+            maxAge: 1,
+            staleWhileRevalidate: 2e13,
           });
         });
       },
