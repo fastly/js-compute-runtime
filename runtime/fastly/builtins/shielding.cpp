@@ -104,7 +104,7 @@ bool Shield::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
       break;
     } else if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
       buf_size *= 2;
-      out_buf = std::vector<char>(1024);
+      out_buf = std::vector<char>(buf_size);
     } else {
       HANDLE_ERROR(cx, status);
       return false;
@@ -112,6 +112,7 @@ bool Shield::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   if (out_buf.size() < 3) {
+    JS_ReportErrorASCII(cx, "Shield: invalid response from host");
     return false;
   }
 
@@ -131,6 +132,10 @@ bool Shield::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
                      JS::StringValue(plain_target));
 
   auto plain_bytes_end = std::find(begin(out_buf) + 1, end(out_buf), 0);
+  if (plain_bytes_end == end(out_buf) || plain_bytes_end + 1 == end(out_buf)) {
+    JS_ReportErrorASCII(cx, "Shield: invalid response from host");
+    return false;
+  }
   JS::RootedString ssl_target(cx, JS_NewStringCopyZ(cx, &*plain_bytes_end + 1));
   if (!ssl_target) {
     return false;

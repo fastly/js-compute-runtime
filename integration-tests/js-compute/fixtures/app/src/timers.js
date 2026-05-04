@@ -315,7 +315,8 @@ import { CacheOverride } from 'fastly:cache-override';
     });
   });
   routes.set('/setTimeout/200-ms', async () => {
-    let controller, start;
+    let controller;
+    const start = Date.now();
     setTimeout(() => {
       const end = Date.now();
       controller.enqueue(new TextEncoder().encode(`END\n`));
@@ -332,7 +333,6 @@ import { CacheOverride } from 'fastly:cache-override';
       new ReadableStream({
         start(_controller) {
           controller = _controller;
-          start = Date.now();
           controller.enqueue(new TextEncoder().encode(`START\n`));
         },
       }),

@@ -467,8 +467,8 @@ bool process_pending_cache_lookup(JSContext *cx, host_api::CacheHandle::Handle h
     if (!JS_SetProperty(cx, lookup_state, "handle", handle_val)) {
       return false;
     }
-    JS::RootedValue keyVal(
-        cx, JS::StringValue(JS_NewStringCopyN(cx, key_chars.begin(), key_chars.len)));
+    JS::RootedString key_str(cx, JS_NewStringCopyN(cx, key_chars.begin(), key_chars.len));
+    JS::RootedValue keyVal(cx, JS::StringValue(key_str));
     if (!JS_SetProperty(cx, lookup_state, "key", keyVal)) {
       return false;
     }

@@ -261,7 +261,7 @@ jobs:
       with:
         path: "/home/runner/.cargo/bin/viceroy"
         key: crate-cache-viceroy-${{ env.viceroy_version }}
-    
+
     - name: Restore wasm-tools from cache
       uses: actions/cache@v3
       id: wasm-tools
@@ -403,18 +403,18 @@ jobs:
       run: npm run build:cli
 
     - name: Run Tests
-      run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js --ci --skip-teardown${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.profile == 'weval' && ' --aot' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
+      run: SUFFIX_STRING=${{matrix.profile}}-${{ github.run_id }}-${{ github.run_attempt }} node integration-tests/js-compute/test.js --ci --skip-teardown${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.profile == 'weval' && ' --aot' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
 
     - name: Run Module Mode Tests
-      run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js --ci --fixture=module-mode${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.profile == 'weval' && ' --aot' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
+      run: SUFFIX_STRING=${{matrix.profile}}-${{ github.run_id }}-${{ github.run_attempt }} node integration-tests/js-compute/test.js --ci --fixture=module-mode${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.profile == 'weval' && ' --aot' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
       env:
-        FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}  
+        FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
 
     - name: Run Reusable Sandbox Tests
       if: matrix.platform == 'viceroy'
-      run: SUFFIX_STRING=${{matrix.profile}} node integration-tests/js-compute/test.js --ci --serial --fixture=reusable-sandboxes --local${{ matrix.profile == 'weval' && ' --aot' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
+      run: SUFFIX_STRING=${{matrix.profile}}-${{ github.run_id }}-${{ github.run_attempt }} node integration-tests/js-compute/test.js --ci --serial --fixture=reusable-sandboxes --local${{ matrix.profile == 'weval' && ' --aot' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
 
@@ -478,17 +478,17 @@ jobs:
       run: npm run build:cli
 
     - name: Run Tests
-      run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --ci --skip-teardown --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
+      run: SUFFIX_STRING=debug-${{ github.run_id }}-${{ github.run_attempt }} node integration-tests/js-compute/test.js --ci --skip-teardown --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
 
     - name: Run Module Mode Tests
-      run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --ci --fixture=module-mode --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
+      run: SUFFIX_STRING=debug-${{ github.run_id }}-${{ github.run_attempt }} node integration-tests/js-compute/test.js --ci --fixture=module-mode --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
       env:
-        FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}  
+        FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
 
     - name: Run Reusable Sandbox Tests
       if: matrix.platform == 'viceroy'
-      run: SUFFIX_STRING=debug node integration-tests/js-compute/test.js --ci --serial --fixture=reusable-sandboxes --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
+      run: SUFFIX_STRING=debug-${{ github.run_id }}-${{ github.run_attempt }} node integration-tests/js-compute/test.js --ci --serial --fixture=reusable-sandboxes --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
       env:
-        FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}  
+        FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
