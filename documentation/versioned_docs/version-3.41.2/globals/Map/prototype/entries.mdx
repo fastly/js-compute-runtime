@@ -1,0 +1,24 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Map.prototype.entries()
+
+The **`entries()`** method returns a new
+_[iterator](https://developer.mozilla.org/docs/Web/JavaScript/Guide/Iterators_and_Generators)_ object
+that contains the `[key, value]` pairs for each element in the `Map` object in
+insertion order. In this particular case, this iterator object is also an
+iterable, so the for-of loop can be used. When the protocol `[Symbol.iterator]`
+is used, it returns a function that, when invoked, returns this iterator itself.
+
+## Syntax
+
+```js
+entries()
+```
+
+### Return value
+
+A new [Map](../../../globals/Map/Map.mdx) iterator object.
