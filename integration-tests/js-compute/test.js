@@ -134,364 +134,374 @@ await writeFile(
   TOML.stringify(config),
   'utf-8',
 );
-if (!local) {
-  core.startGroup('Delete service if already exists');
-  try {
-    await zx`fastly service delete --quiet --service-name "${serviceName}" --force --token $FASTLY_API_TOKEN`;
-  } catch {}
-  core.endGroup();
-  await new Promise((resolve) => setTimeout(resolve, 5000));
-  core.startGroup('Build and deploy service');
-  await zx`npm i`;
-  await $`fastly compute publish -i ${verbose ? '--verbose' : '--quiet'} --token $FASTLY_API_TOKEN --status-check-off`;
-  core.endGroup();
+try {
+  if (!local) {
+    core.startGroup('Delete service if already exists');
+    try {
+      await zx`fastly service delete --quiet --service-name "${serviceName}" --force --token $FASTLY_API_TOKEN`;
+    } catch {}
+    core.endGroup();
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    core.startGroup('Build and deploy service');
+    await zx`npm i`;
+    await $`fastly compute publish -i ${verbose ? '--verbose' : '--quiet'} --token $FASTLY_API_TOKEN --status-check-off`;
+    core.endGroup();
 
-  // It can take time for the new domain to show up on the list.
+    // It can take time for the new domain to show up on the list.
+    await Promise.all([
+      (async () => {
+        await retry(27, expBackoff('60s', '10s'), async () => {
+          // get the public domain of the deployed application
+          const domainListing = JSON.parse(
+            await $`fastly service domain list --quiet --version latest --json`,
+          )[0];
+          domain = `https://${domainListing.Name}`;
+          serviceId = domainListing.ServiceID;
+          core.notice(`Service is running on ${domain}`);
+        });
+      })(),
+      new Promise((resolve) => setTimeout(resolve, 60_000)),
+    ]);
+  } else {
+    const pushpin = '--local-pushpin-proxy-port=0';
+    const args = verbose ? '-vv ' + pushpin : pushpin;
+    localServer = zx`fastly compute serve --verbose --viceroy-args="${args}"`;
+    domain = 'http://127.0.0.1:7676';
+  }
+
+  core.startGroup(`Setting up service ${domain}`);
+
+  if (!local && !skipSetup) {
+    const setupPath = join(__dirname, 'setup.js');
+    if (existsSync(setupPath)) {
+      await zx`node ${setupPath} ${serviceId} ${ci ? serviceName : ''}`;
+    }
+  }
+
   await Promise.all([
     (async () => {
-      await retry(27, expBackoff('60s', '10s'), async () => {
-        // get the public domain of the deployed application
-        const domainListing = JSON.parse(
-          await $`fastly service domain list --quiet --version latest --json`,
-        )[0];
-        domain = `https://${domainListing.Name}`;
-        serviceId = domainListing.ServiceID;
-        core.notice(`Service is running on ${domain}`);
-      });
+      await retry(
+        27,
+        local
+          ? [
+              // we expect it to take ~10 seconds to deploy, so focus on that time
+              6000,
+              3000, 1500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+              500, 500, 500, 500, 500, 500, 500, 500,
+              // after more than 20 seconds, means we have an unusually slow build, start backoff before timeout
+              1500,
+              3000, 6000, 12000, 24000,
+            ].values()
+          : expBackoff('60s', '10s'),
+        async () => {
+          const response = await request(domain);
+          if (response.statusCode !== 200) {
+            throw new Error(
+              `Application "${fixture}" :: Not yet available on domain: ${domain}`,
+            );
+          }
+        },
+      );
     })(),
-    new Promise((resolve) => setTimeout(resolve, 60_000)),
+    // we need to wait for the service resource links to all activate,
+    // and we don't currently have a reliable way to poll on that
+    // (perhaps we could poll on the highest version as seen from setup.js resource-link return output
+    // being fully activated?)
+    local ? null : new Promise((resolve) => setTimeout(resolve, 60_000)),
   ]);
-} else {
-  const pushpin = '--local-pushpin-proxy-port=0';
-  const args = verbose ? '-vv ' + pushpin : pushpin;
-  localServer = zx`fastly compute serve --verbose --viceroy-args="${args}"`;
-  domain = 'http://127.0.0.1:7676';
-}
 
-core.startGroup(`Setting up service ${domain}`);
+  core.endGroup();
 
-if (!local && !skipSetup) {
-  const setupPath = join(__dirname, 'setup.js');
-  if (existsSync(setupPath)) {
-    await zx`node ${setupPath} ${serviceId} ${ci ? serviceName : ''}`;
+  core.startGroup('Running tests');
+
+  const { default: tests } = await import(join(fixturePath, 'tests.json'), {
+    with: { type: 'json' },
+  });
+
+  function chunks(arr, size) {
+    const output = [];
+    for (let i = 0; i < arr.length; i += size) {
+      output.push(arr.slice(i, i + size));
+    }
+    return output;
   }
-}
 
-await Promise.all([
-  (async () => {
-    await retry(
-      27,
-      local
-        ? [
-            // we expect it to take ~10 seconds to deploy, so focus on that time
-            6000, 3000, 1500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
-            500, 500, 500, 500, 500, 500, 500, 500, 500,
-            // after more than 20 seconds, means we have an unusually slow build, start backoff before timeout
-            1500,
-            3000, 6000, 12000, 24000,
-          ].values()
-        : expBackoff('60s', '10s'),
-      async () => {
-        const response = await request(domain);
-        if (response.statusCode !== 200) {
-          throw new Error(
-            `Application "${fixture}" :: Not yet available on domain: ${domain}`,
-          );
-        }
-      },
-    );
-  })(),
-  // we need to wait for the service resource links to all activate,
-  // and we don't currently have a reliable way to poll on that
-  // (perhaps we could poll on the highest version as seen from setup.js resource-link return output
-  // being fully activated?)
-  local ? null : new Promise((resolve) => setTimeout(resolve, 60_000)),
-]);
+  let results = [];
+  let chunkSize = serial ? 1 : 100;
 
-core.endGroup();
+  for (const chunk of chunks(Object.entries(tests), chunkSize)) {
+    results.push(
+      ...(await (
+        bail ? Promise.all.bind(Promise) : Promise.allSettled.bind(Promise)
+      )(
+        chunk.map(async ([title, test]) => {
+          // test defaults
+          if (!test.downstream_request) {
+            const [method, pathname, extra] = title.split(' ');
+            if (typeof extra === 'string')
+              throw new Error('Cannot infer downstream_request from title');
+            test.downstream_request = { method, pathname };
+          }
+          if (!test.downstream_response) {
+            test.downstream_response = {
+              status: 200,
+            };
+          }
+          if (!test.environments) {
+            test.environments = ['viceroy', 'compute'];
+          }
 
-core.startGroup('Running tests');
-
-const { default: tests } = await import(join(fixturePath, 'tests.json'), {
-  with: { type: 'json' },
-});
-
-function chunks(arr, size) {
-  const output = [];
-  for (let i = 0; i < arr.length; i += size) {
-    output.push(arr.slice(i, i + size));
-  }
-  return output;
-}
-
-let results = [];
-let chunkSize = serial ? 1 : 100;
-
-for (const chunk of chunks(Object.entries(tests), chunkSize)) {
-  results.push(
-    ...(await (
-      bail ? Promise.all.bind(Promise) : Promise.allSettled.bind(Promise)
-    )(
-      chunk.map(async ([title, test]) => {
-        // test defaults
-        if (!test.downstream_request) {
-          const [method, pathname, extra] = title.split(' ');
-          if (typeof extra === 'string')
-            throw new Error('Cannot infer downstream_request from title');
-          test.downstream_request = { method, pathname };
-        }
-        if (!test.downstream_response) {
-          test.downstream_response = {
-            status: 200,
-          };
-        }
-        if (!test.environments) {
-          test.environments = ['viceroy', 'compute'];
-        }
-
-        // basic test filtering
-        if (
-          test.skip ||
-          (filter.length > 0 && filter.every((f) => !title.includes(f)))
-        ) {
-          return {
-            title,
-            test,
-            skipped: true,
-            skipReason: test.skip
-              ? 'MARKED AS SKIPPED (pending further work)'
-              : null, // dont mention filtered tests
-          };
-        }
-        // feature based test filtering
-        if (
-          (!httpCache &&
-            test.features &&
-            test.features.includes('http-cache')) ||
-          (httpCache &&
-            test.features &&
-            test.features.includes('skip-http-cache'))
-        ) {
-          return {
-            title,
-            test,
-            skipped: true,
-            skipReason: `feature "http-cache" ${httpCache ? '' : 'not '}"enabled`,
-          };
-        }
-        async function getBodyChunks(response) {
-          const bodyChunks = [];
-          let downstreamTimeout;
-          await Promise.race([
-            (async () => {
-              // This body_streaming property allows us to test different cases
-              // of consumer streamining behaviours.
-              switch (test.body_streaming) {
-                case 'first-chunk-only':
-                  for await (const chunk of response.body) {
-                    bodyChunks.push(chunk);
+          // basic test filtering
+          if (
+            test.skip ||
+            (filter.length > 0 && filter.every((f) => !title.includes(f)))
+          ) {
+            return {
+              title,
+              test,
+              skipped: true,
+              skipReason: test.skip
+                ? 'MARKED AS SKIPPED (pending further work)'
+                : null, // dont mention filtered tests
+            };
+          }
+          // feature based test filtering
+          if (
+            (!httpCache &&
+              test.features &&
+              test.features.includes('http-cache')) ||
+            (httpCache &&
+              test.features &&
+              test.features.includes('skip-http-cache'))
+          ) {
+            return {
+              title,
+              test,
+              skipped: true,
+              skipReason: `feature "http-cache" ${httpCache ? '' : 'not '}"enabled`,
+            };
+          }
+          async function getBodyChunks(response) {
+            const bodyChunks = [];
+            let downstreamTimeout;
+            await Promise.race([
+              (async () => {
+                // This body_streaming property allows us to test different cases
+                // of consumer streamining behaviours.
+                switch (test.body_streaming) {
+                  case 'first-chunk-only':
+                    for await (const chunk of response.body) {
+                      bodyChunks.push(chunk);
+                      response.body.on('error', () => {});
+                      break;
+                    }
+                    break;
+                  case 'none':
                     response.body.on('error', () => {});
                     break;
+                  case 'full':
+                  default:
+                    for await (const chunk of response.body) {
+                      bodyChunks.push(chunk);
+                    }
+                }
+              })(),
+              new Promise((_, reject) => {
+                downstreamTimeout = setTimeout(() => {
+                  reject(
+                    new Error(`Test downstream response body chunk timeout`),
+                  );
+                }, 30_000);
+              }),
+            ]);
+            clearTimeout(downstreamTimeout);
+            return bodyChunks;
+          }
+          let onInfoHandler = test.downstream_info
+            ? async (status, headers) => {
+                if (
+                  test.downstream_info.status !== undefined &&
+                  test.downstream_info.status != status
+                ) {
+                  throw new Error(
+                    `[DownstreamInfo: Status mismatch] Expected: ${configResponse.status} - Got: ${status}}`,
+                  );
+                }
+                if (headers) {
+                  compareHeaders(
+                    configResponse.headers,
+                    headers,
+                    configResponse.headersExhaustive,
+                  );
+                }
+              }
+            : undefined;
+
+          if (local) {
+            if (test.environments.includes('viceroy')) {
+              return (bail || !test.flake ? (_, __, fn) => fn() : retry)(
+                5,
+                expBackoff('10s', '1s'),
+                async () => {
+                  let path = test.downstream_request.pathname;
+                  let url = `${domain}${path}`;
+                  try {
+                    const response = await request(url, {
+                      method: test.downstream_request.method || 'GET',
+                      headers: test.downstream_request.headers || undefined,
+                      body: test.downstream_request.body || undefined,
+                    });
+                    const bodyChunks = await getBodyChunks(response);
+                    await compareDownstreamResponse(
+                      test.downstream_response,
+                      response,
+                      bodyChunks,
+                    );
+                    return {
+                      title,
+                      test,
+                      skipped: false,
+                    };
+                  } catch (error) {
+                    console.error('\n' + test.downstream_request.pathname);
+                    throw new Error(`${title} ${error.message}`, {
+                      cause: error,
+                    });
                   }
-                  break;
-                case 'none':
-                  response.body.on('error', () => {});
-                  break;
-                case 'full':
-                default:
-                  for await (const chunk of response.body) {
-                    bodyChunks.push(chunk);
-                  }
-              }
-            })(),
-            new Promise((_, reject) => {
-              downstreamTimeout = setTimeout(() => {
-                reject(
-                  new Error(`Test downstream response body chunk timeout`),
-                );
-              }, 30_000);
-            }),
-          ]);
-          clearTimeout(downstreamTimeout);
-          return bodyChunks;
-        }
-        let onInfoHandler = test.downstream_info
-          ? async (status, headers) => {
-              if (
-                test.downstream_info.status !== undefined &&
-                test.downstream_info.status != status
-              ) {
-                throw new Error(
-                  `[DownstreamInfo: Status mismatch] Expected: ${configResponse.status} - Got: ${status}}`,
-                );
-              }
-              if (headers) {
-                compareHeaders(
-                  configResponse.headers,
-                  headers,
-                  configResponse.headersExhaustive,
-                );
-              }
+                },
+              );
+            } else {
+              return {
+                title,
+                test,
+                skipped: true,
+                skipReason: 'no environments',
+              };
             }
-          : undefined;
-
-        if (local) {
-          if (test.environments.includes('viceroy')) {
-            return (bail || !test.flake ? (_, __, fn) => fn() : retry)(
-              5,
-              expBackoff('10s', '1s'),
-              async () => {
-                let path = test.downstream_request.pathname;
-                let url = `${domain}${path}`;
-                try {
-                  const response = await request(url, {
-                    method: test.downstream_request.method || 'GET',
-                    headers: test.downstream_request.headers || undefined,
-                    body: test.downstream_request.body || undefined,
-                  });
-                  const bodyChunks = await getBodyChunks(response);
-                  await compareDownstreamResponse(
-                    test.downstream_response,
-                    response,
-                    bodyChunks,
-                  );
-                  return {
-                    title,
-                    test,
-                    skipped: false,
-                  };
-                } catch (error) {
-                  console.error('\n' + test.downstream_request.pathname);
-                  throw new Error(`${title} ${error.message}`, {
-                    cause: error,
-                  });
-                }
-              },
-            );
           } else {
-            return {
-              title,
-              test,
-              skipped: true,
-              skipReason: 'no environments',
-            };
+            if (test.environments.includes('compute')) {
+              return retry(
+                test.flake ? 15 : bail ? 1 : 4,
+                expBackoff(
+                  test.flake ? '60s' : '30s',
+                  test.flake ? '30s' : '1s',
+                ),
+                async () => {
+                  let path = test.downstream_request.pathname;
+                  let url = `${domain}${path}`;
+                  try {
+                    const response = await request(url, {
+                      method: test.downstream_request.method || 'GET',
+                      headers: test.downstream_request.headers || undefined,
+                      body: test.downstream_request.body || undefined,
+                      onInfo: onInfoHandler,
+                    });
+                    const bodyChunks = await getBodyChunks(response);
+                    await compareDownstreamResponse(
+                      test.downstream_response,
+                      response,
+                      bodyChunks,
+                    );
+                    return {
+                      title,
+                      test,
+                      skipped: false,
+                    };
+                  } catch (error) {
+                    console.error('\n' + test.downstream_request.pathname);
+                    throw new Error(`${title} ${error.message}`);
+                  }
+                },
+              );
+            } else {
+              return {
+                title,
+                test,
+                skipped: true,
+                skipReason: 'no environments',
+              };
+            }
           }
-        } else {
-          if (test.environments.includes('compute')) {
-            return retry(
-              test.flake ? 15 : bail ? 1 : 4,
-              expBackoff(test.flake ? '60s' : '30s', test.flake ? '30s' : '1s'),
-              async () => {
-                let path = test.downstream_request.pathname;
-                let url = `${domain}${path}`;
-                try {
-                  const response = await request(url, {
-                    method: test.downstream_request.method || 'GET',
-                    headers: test.downstream_request.headers || undefined,
-                    body: test.downstream_request.body || undefined,
-                    onInfo: onInfoHandler,
-                  });
-                  const bodyChunks = await getBodyChunks(response);
-                  await compareDownstreamResponse(
-                    test.downstream_response,
-                    response,
-                    bodyChunks,
-                  );
-                  return {
-                    title,
-                    test,
-                    skipped: false,
-                  };
-                } catch (error) {
-                  console.error('\n' + test.downstream_request.pathname);
-                  throw new Error(`${title} ${error.message}`);
-                }
-              },
-            );
-          } else {
-            return {
-              title,
-              test,
-              skipped: true,
-              skipReason: 'no environments',
-            };
-          }
-        }
-      }),
-    )),
-  );
-}
-core.endGroup();
-
-console.log('Test results');
-core.startGroup('Test results');
-let passed = 0;
-const failed = [];
-const green = '\u001b[32m';
-const red = '\u001b[31m';
-const reset = '\u001b[0m';
-const white = '\u001b[39m';
-const info = '\u2139';
-const tick = '\u2714';
-const cross = '\u2716';
-for (const result of results) {
-  if (result.status === 'fulfilled' || bail) {
-    const value = bail ? result : result.value;
-    if (value.skipped) {
-      if (value.skipReason)
-        console.log(
-          white,
-          info,
-          `Skipped ${value.title} due to ${value.skipReason}`,
-          reset,
-        );
-    } else {
-      passed += 1;
-      console.log(green, tick, value.title, reset);
-    }
-  } else {
-    console.log(red, cross, result.reason, reset);
-    failed.push(result.reason);
-  }
-}
-core.endGroup();
-
-if (failed.length) {
-  process.exitCode = 1;
-  core.startGroup('Failed tests');
-
-  for (const result of failed) {
-    console.log(red, cross, result, reset);
+        }),
+      )),
+    );
   }
 
   core.endGroup();
-}
 
-if (!local && failed.length) {
-  core.notice(`Tests failed.`);
-}
+  console.log('Test results');
+  core.startGroup('Test results');
+  let passed = 0;
+  const failed = [];
+  const green = '\u001b[32m';
+  const red = '\u001b[31m';
+  const reset = '\u001b[0m';
+  const white = '\u001b[39m';
+  const info = '\u2139';
+  const tick = '\u2714';
+  const cross = '\u2716';
+  for (const result of results) {
+    if (result.status === 'fulfilled' || bail) {
+      const value = bail ? result : result.value;
+      if (value.skipped) {
+        if (value.skipReason)
+          console.log(
+            white,
+            info,
+            `Skipped ${value.title} due to ${value.skipReason}`,
+            reset,
+          );
+      } else {
+        passed += 1;
+        console.log(green, tick, value.title, reset);
+      }
+    } else {
+      console.log(red, cross, result.reason, reset);
+      failed.push(result.reason);
+    }
+  }
+  core.endGroup();
 
-if (!local && !skipTeardown) {
-  const teardownPath = join(__dirname, 'teardown.js');
-  if (existsSync(teardownPath)) {
-    core.startGroup('Tear down the extra set-up for the service');
-    await zx`${teardownPath} ${serviceId} ${ci ? serviceName : ''}`;
+  if (failed.length) {
+    process.exitCode = 1;
+    core.startGroup('Failed tests');
+
+    for (const result of failed) {
+      console.log(red, cross, result, reset);
+    }
+
     core.endGroup();
   }
+  if (!local && failed.length) {
+    core.notice(`Tests failed.`);
+  }
+} finally {
+  if (!local && !skipTeardown) {
+    const teardownPath = join(__dirname, 'teardown.js');
+    if (existsSync(teardownPath)) {
+      core.startGroup('Tear down the extra set-up for the service');
+      await zx`${teardownPath} ${serviceId} ${ci ? serviceName : ''}`;
+      core.endGroup();
+    }
 
-  core.startGroup('Delete service');
-  // Delete the service now the tests have finished
-  await $`fastly service delete --quiet --service-name "${serviceName}" --force --token $FASTLY_API_TOKEN`;
-  core.endGroup();
+    core.startGroup('Delete service');
+    // Delete the service now the tests have finished
+    try {
+      await $`fastly service delete --quiet --service-name "${serviceName}" --force --token $FASTLY_API_TOKEN`;
+    } catch (e) {
+      console.log('Failed to delete service:', e.message);
+    }
+    core.endGroup();
+  }
+  if (process.exitCode == undefined || process.exitCode == 0) {
+    console.log(
+      `All tests passed! Took ${(Date.now() - startTime) / 1000} seconds to complete`,
+    );
+  } else {
+    console.log(`Tests failed!`);
+  }
+  if (localServer) {
+    await killPortProcess(7676);
+  }
+  process.exit();
 }
-if (process.exitCode == undefined || process.exitCode == 0) {
-  console.log(
-    `All tests passed! Took ${(Date.now() - startTime) / 1000} seconds to complete`,
-  );
-} else {
-  console.log(`Tests failed!`);
-}
-if (localServer) {
-  await killPortProcess(7676);
-}
-process.exit();

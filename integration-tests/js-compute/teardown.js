@@ -133,10 +133,26 @@ async function removeAcl() {
   }
 }
 
-await removeConfigStores();
-await removeKVStore();
-await removeSecretStore();
-await removeAcl();
+try {
+  await removeConfigStores();
+} catch (e) {
+  console.error(e.message);
+}
+try {
+  await removeKVStore();
+} catch (e) {
+  console.error(e.message);
+}
+try {
+  await removeSecretStore();
+} catch (e) {
+  console.error(e.message);
+}
+try {
+  await removeAcl();
+} catch (e) {
+  console.error(e.message);
+}
 
 console.log(
   `Tear down has finished! Took ${(Date.now() - startTime) / 1000} seconds to complete`,
