@@ -3,8 +3,6 @@
 #include "../builtins/fastly.h"
 #include "../host-api/host_api_fastly.h"
 #include "encode.h"
-#include "mozilla/Maybe.h"
-
 using fastly::FastlyGetErrorMessage;
 
 namespace fastly::common {
@@ -34,7 +32,7 @@ std::optional<uint32_t> parse_and_validate_timeout(JSContext *cx, JS::HandleValu
   return std::round(native_value);
 }
 
-std::optional<std::tuple<const uint8_t *, size_t, mozilla::Maybe<JS::AutoCheckCannotGC>>>
+std::optional<std::tuple<const uint8_t *, size_t, std::optional<JS::AutoCheckCannotGC>>>
 validate_bytes(JSContext *cx, JS::HandleValue bytes, const char *subsystem) {
   if (!bytes.isObject()) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_INVALID_BUFFER, subsystem);
@@ -51,7 +49,7 @@ validate_bytes(JSContext *cx, JS::HandleValue bytes, const char *subsystem) {
   const uint8_t *buf;
   size_t length;
   bool is_shared;
-  mozilla::Maybe<JS::AutoCheckCannotGC> noGC;
+  std::optional<JS::AutoCheckCannotGC> noGC;
   if (JS_IsArrayBufferViewObject(bytes_obj)) {
     noGC.emplace();
     length = JS_GetArrayBufferViewByteLength(bytes_obj);
