@@ -91,8 +91,11 @@ bool Shield::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   JS::HandleValue name_arg = args.get(0);
   auto name = core::encode(cx, name_arg);
+  if (!name) {
+    return false;
+  }
 
-  // Keep calling fastly_shielding_shield_info with a increasingly large buffer until it returns OK
+  // Keep calling fastly_shielding_shield_info with an increasingly large buffer until it returns OK
   std::uint32_t buf_size = 1024;
   std::vector<char> out_buf(buf_size);
   while (true) {
@@ -103,8 +106,12 @@ bool Shield::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
       out_buf.resize(used_amount);
       break;
     } else if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+      if (buf_size > UINT32_MAX / 2) {
+        JS_ReportErrorASCII(cx, "Shield: response from host is too large");
+        return false;
+      }
       buf_size *= 2;
-      out_buf = std::vector<char>(buf_size);
+      out_buf.resize(buf_size);
     } else {
       HANDLE_ERROR(cx, status);
       return false;
@@ -124,19 +131,26 @@ bool Shield::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   bool is_me = out_buf[0] != 0;
   JS_SetReservedSlot(self, static_cast<uint32_t>(Slots::IsMe), JS::BooleanValue(is_me));
 
-  JS::RootedString plain_target(cx, JS_NewStringCopyZ(cx, out_buf.data() + 1));
+  auto plain_end = std::find(begin(out_buf) + 1, end(out_buf), '\0');
+  if (plain_end == end(out_buf)) {
+    JS_ReportErrorASCII(cx, "Shield: invalid response from host");
+    return false;
+  }
+  JS::RootedString plain_target(
+      cx, JS_NewStringCopyN(cx, out_buf.data() + 1, plain_end - (begin(out_buf) + 1)));
   if (!plain_target) {
     return false;
   }
   JS_SetReservedSlot(self, static_cast<uint32_t>(Slots::PlainTarget),
                      JS::StringValue(plain_target));
 
-  auto plain_bytes_end = std::find(begin(out_buf) + 1, end(out_buf), 0);
-  if (plain_bytes_end == end(out_buf) || plain_bytes_end + 1 == end(out_buf)) {
+  auto ssl_begin = plain_end + 1;
+  auto ssl_end = std::find(ssl_begin, end(out_buf), '\0');
+  if (ssl_end == end(out_buf)) {
     JS_ReportErrorASCII(cx, "Shield: invalid response from host");
     return false;
   }
-  JS::RootedString ssl_target(cx, JS_NewStringCopyZ(cx, &*plain_bytes_end + 1));
+  JS::RootedString ssl_target(cx, JS_NewStringCopyN(cx, &*ssl_begin, ssl_end - ssl_begin));
   if (!ssl_target) {
     return false;
   }
