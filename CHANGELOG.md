@@ -1,9 +1,23 @@
 # Changelog
 
-## [3.41.1](https://github.com/fastly/js-compute-runtime/compare/v3.41.0...v3.41.1) (2026-04-10)
+## 3.41.2 (2026-05-04)
 
+### Fixed
 
-### Bug Fixes
+* `HttpBody::read_all` for large bodies ([#1444](https://github.com/fastly/js-compute-runtime/issues/1444)) ([99f45b5](https://github.com/fastly/js-compute-runtime/commit/99f45b53253d1109202c24cddc3357752873ca90))
+* Check pending exceptions between requests in reusable sandbox mode ([#1425](https://github.com/fastly/js-compute-runtime/issues/1425)) ([64a6b21](https://github.com/fastly/js-compute-runtime/commit/64a6b213c605d2ae714b8a49faad9893284998a5))
+* Memory issues exposed by high GC zeal ([#1442](https://github.com/fastly/js-compute-runtime/issues/1442)) ([f406308](https://github.com/fastly/js-compute-runtime/commit/f406308ce6ced5b8475839ce43736fb588d3e4b5))
+* Memory leak in normalize\_http\_method ([#1449](https://github.com/fastly/js-compute-runtime/issues/1449)) ([669b58a](https://github.com/fastly/js-compute-runtime/commit/669b58a0f34a03f56571723c442b3fee61c90b3b))
+* mislabeled `Response::Slots::URL` slot ([#1445](https://github.com/fastly/js-compute-runtime/issues/1445)) ([6d4d268](https://github.com/fastly/js-compute-runtime/commit/6d4d26815acc817365bc41d0784095650847765a))
+* Numeric overflow issue in Core Cache API ([#1448](https://github.com/fastly/js-compute-runtime/issues/1448)) ([360c9bf](https://github.com/fastly/js-compute-runtime/commit/360c9bfff611e226c5dbf5fac61d98e993feded3))
+* Potential buffer size issues in shielding ([#1443](https://github.com/fastly/js-compute-runtime/issues/1443)) ([4bf9d72](https://github.com/fastly/js-compute-runtime/commit/4bf9d722b68893f188a89c1e6019c9a7699a023b))
+* Reset StarlingMonkey engine between requests ([#1426](https://github.com/fastly/js-compute-runtime/issues/1426)) ([238cf70](https://github.com/fastly/js-compute-runtime/commit/238cf70ecd743f73c662ae3757244859d4d2aaad))
+* SSL string cipher intersection ([#1446](https://github.com/fastly/js-compute-runtime/issues/1446)) ([13ef2d5](https://github.com/fastly/js-compute-runtime/commit/13ef2d59a4a0c2e93cc0faa8cd98387e3bdee731))
+* Use length rather than NUL-terminator when copying `HostString`s ([#1429](https://github.com/fastly/js-compute-runtime/issues/1429)) ([8aa3f4c](https://github.com/fastly/js-compute-runtime/commit/8aa3f4c2cfa441585ac5d3ee1a0ac4d58196162a))
+
+## 3.41.1 (2026-04-10)
+
+### Fixed
 
 * Deal with bodyless statuses in CandidateResponse situations ([#1414](https://github.com/fastly/js-compute-runtime/issues/1414)) ([cfd6c4b](https://github.com/fastly/js-compute-runtime/commit/cfd6c4bd0ac41bb3037bbcdfb7ba7c6608ce65e6))
 * Mark FetchEvent as done when we redirect to ws/grip proxies ([9831bd4](https://github.com/fastly/js-compute-runtime/commit/9831bd48f34ad6e80c7932a02b6acd5292ee2799))

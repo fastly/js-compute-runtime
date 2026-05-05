@@ -1931,6 +1931,9 @@
   "GET /core-cache/insert/options-parameter-maxAge-field-negative-number": {
     "environments": ["compute"]
   },
+  "GET /core-cache/insert/options-parameter-maxAge-field-too-large": {
+    "environments": ["compute"]
+  },
   "GET /core-cache/insert/options-parameter-initialAge-field-valid-record": {
     "environments": ["compute"]
   },
@@ -1944,6 +1947,9 @@
     "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-initialAge-field-negative-number": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/insert/options-parameter-initialAge-field-too-large": {
     "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-staleWhileRevalidate-field-valid-record": {
@@ -1960,6 +1966,9 @@
     "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-staleWhileRevalidate-field-negative-number": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/insert/options-parameter-staleWhileRevalidate-field-too-large": {
     "environments": ["compute"]
   },
   "GET /core-cache/insert/options-parameter-length-field-valid-record": {
@@ -2185,6 +2194,9 @@
   "GET /transaction-cache-entry/insert/options-parameter-maxAge-field-negative-number": {
     "environments": ["compute"]
   },
+  "GET /transaction-cache-entry/insert/options-parameter-maxAge-field-too-large": {
+    "environments": ["compute"]
+  },
   "GET /transaction-cache-entry/insert/options-parameter-initialAge-field-valid-record": {
     "flake": true,
     "environments": ["compute"]
@@ -2201,6 +2213,9 @@
   "GET /transaction-cache-entry/insert/options-parameter-initialAge-field-negative-number": {
     "environments": ["compute"]
   },
+  "GET /transaction-cache-entry/insert/options-parameter-initialAge-field-too-large": {
+    "environments": ["compute"]
+  },
   "GET /transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-valid-record": {
     "flake": true,
     "environments": ["compute"]
@@ -2215,6 +2230,9 @@
     "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-negative-number": {
+    "environments": ["compute"]
+  },
+  "GET /transaction-cache-entry/insert/options-parameter-staleWhileRevalidate-field-too-large": {
     "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insert/options-parameter-length-field-valid-record": {
@@ -2262,6 +2280,9 @@
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-negative-number": {
     "environments": ["compute"]
   },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-maxAge-field-too-large": {
+    "environments": ["compute"]
+  },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-valid-record": {
     "environments": ["compute"]
   },
@@ -2277,6 +2298,9 @@
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-negative-number": {
     "environments": ["compute"]
   },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-initialAge-field-too-large": {
+    "environments": ["compute"]
+  },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-valid-record": {
     "environments": ["compute"]
   },
@@ -2290,6 +2314,9 @@
     "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-negative-number": {
+    "environments": ["compute"]
+  },
+  "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-staleWhileRevalidate-field-too-large": {
     "environments": ["compute"]
   },
   "GET /transaction-cache-entry/insertAndStreamBack/options-parameter-length-field-valid-record": {
@@ -2337,6 +2364,9 @@
   "GET /transaction-cache-entry/update/options-parameter-maxAge-field-negative-number": {
     "environments": ["compute"]
   },
+  "GET /transaction-cache-entry/update/options-parameter-maxAge-field-too-large": {
+    "environments": ["compute"]
+  },
   "GET /transaction-cache-entry/update/options-parameter-initialAge-field-valid-record": {
     "environments": ["compute"]
   },
@@ -2352,6 +2382,9 @@
   "GET /transaction-cache-entry/update/options-parameter-initialAge-field-negative-number": {
     "environments": ["compute"]
   },
+  "GET /transaction-cache-entry/update/options-parameter-initialAge-field-too-large": {
+    "environments": ["compute"]
+  },
   "GET /transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-valid-record": {
     "environments": ["compute"]
   },
@@ -2365,6 +2398,9 @@
     "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-negative-number": {
+    "environments": ["compute"]
+  },
+  "GET /transaction-cache-entry/update/options-parameter-staleWhileRevalidate-field-too-large": {
     "environments": ["compute"]
   },
   "GET /transaction-cache-entry/update/options-parameter-length-field-valid-record": {
