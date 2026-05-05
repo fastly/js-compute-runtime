@@ -844,49 +844,50 @@ std::optional<JSObject *> get_found_response(JSContext *cx, host_api::HttpCacheE
     // Perhaps we can consider making these hostcalls lazy, requires a Response state enum to know
     // we are in a state we can do this and then keeping the cache handle around, where it is not
     // yet clear if holding handles for longer periods on responses is okay.
-    override_cache_options = new host_api::HttpCacheWriteOptions();
+    auto cache_options = std::make_unique<host_api::HttpCacheWriteOptions>();
     auto age_res = cache_entry.get_age_ns();
     if (auto *err = age_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->initial_age_ns = age_res.unwrap();
+    cache_options->initial_age_ns = age_res.unwrap();
     auto max_age_ns = cache_entry.get_max_age_ns();
     if (auto *err = max_age_ns.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->max_age_ns = max_age_ns.unwrap();
+    cache_options->max_age_ns = max_age_ns.unwrap();
     auto swr_res = cache_entry.get_stale_while_revalidate_ns();
     if (auto *err = swr_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->stale_while_revalidate_ns = swr_res.unwrap();
+    cache_options->stale_while_revalidate_ns = swr_res.unwrap();
     auto length_res = cache_entry.get_length();
     if (auto *err = length_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->length = length_res.unwrap();
+    cache_options->length = length_res.unwrap();
     auto sensitive_res = cache_entry.get_sensitive_data();
     if (auto *err = sensitive_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->sensitive_data = sensitive_res.unwrap();
+    cache_options->sensitive_data = sensitive_res.unwrap();
     auto vary_res = cache_entry.get_vary_rule();
     if (auto *err = vary_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->vary_rule = std::move(vary_res.unwrap());
+    cache_options->vary_rule = std::move(vary_res.unwrap());
     auto surrogate_keys_res = cache_entry.get_surrogate_keys();
     if (auto *err = surrogate_keys_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->surrogate_keys = std::move(surrogate_keys_res.unwrap());
+    cache_options->surrogate_keys = std::move(surrogate_keys_res.unwrap());
+    override_cache_options = cache_options.release();
   }
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::OverrideCacheWriteOptions),
                       JS::PrivateValue(reinterpret_cast<uint32_t>(override_cache_options)));
