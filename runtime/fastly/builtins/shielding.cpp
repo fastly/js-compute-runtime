@@ -106,12 +106,8 @@ bool Shield::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
       out_buf.resize(used_amount);
       break;
     } else if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
-      if (buf_size > UINT32_MAX / 2) {
-        JS_ReportErrorASCII(cx, "Shield: response from host is too large");
-        return false;
-      }
       buf_size *= 2;
-      out_buf.resize(buf_size);
+      out_buf = std::vector<char>(buf_size);
     } else {
       HANDLE_ERROR(cx, status);
       return false;
