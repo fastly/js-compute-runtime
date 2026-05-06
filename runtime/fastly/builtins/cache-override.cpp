@@ -233,7 +233,10 @@ bool CacheOverride::ttl_set(JSContext *cx, JS::HandleObject self, JS::HandleValu
     int32_t ttl;
     if (!JS::ToInt32(cx, val, &ttl))
       return false;
-
+    if (ttl < 0) {
+      return api::throw_error(cx, api::Errors::TypeError, "CacheOverride", "ttl",
+                              "be a non-negative integer");
+    }
     set_ttl(self, ttl);
   }
   rval.set(ttl(self));
@@ -262,7 +265,10 @@ bool CacheOverride::swr_set(JSContext *cx, JS::HandleObject self, JS::HandleValu
     int32_t swr;
     if (!JS::ToInt32(cx, val, &swr))
       return false;
-
+    if (swr < 0) {
+      return api::throw_error(cx, api::Errors::TypeError, "CacheOverride", "swr",
+                              "be a non-negative integer");
+    }
     set_swr(self, swr);
   }
   rval.set(swr(self));

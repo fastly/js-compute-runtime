@@ -35,6 +35,8 @@
   "GET /cache-override/constructor/invalid-mode": {
     "flake": true
   },
+  "GET /cache-override/constructor/negative-ttl": {},
+  "GET /cache-override/constructor/negative-swr": {},
   "GET /cache-override/constructor/valid-mode": {},
   "GET /cache-override/fetch/mode-none": {},
   "GET /cache-override/fetch/mode-pass": {

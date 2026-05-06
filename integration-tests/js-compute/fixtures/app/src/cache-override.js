@@ -43,6 +43,24 @@ import { isRunningLocally, routes } from './routes.js';
       `CacheOverride constructor: 'mode' has to be "none", "pass", or "override", but got "be nice to the cache"`,
     );
   });
+  routes.set('/cache-override/constructor/negative-ttl', async () => {
+    assertThrows(
+      () => {
+        new CacheOverride('override', { ttl: -1 });
+      },
+      TypeError,
+      `CacheOverride: ttl must be a non-negative integer`,
+    );
+  });
+  routes.set('/cache-override/constructor/negative-swr', async () => {
+    assertThrows(
+      () => {
+        new CacheOverride('override', { swr: -1 });
+      },
+      TypeError,
+      `CacheOverride: swr must be a non-negative integer`,
+    );
+  });
   routes.set('/cache-override/constructor/valid-mode', async () => {
     assertDoesNotThrow(() => {
       new CacheOverride('none');
