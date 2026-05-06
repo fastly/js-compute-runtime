@@ -508,7 +508,6 @@ const debug = sdkVersion.endsWith('-debug');
       await assertRejects(
         async () => {
           let store = new KVStore(KV_STORE_NAME);
-          // Key is 'a\x00;b' — the ; is after a null byte and must still be rejected
           await store.put('a\x00;b', '');
         },
         TypeError,
