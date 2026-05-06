@@ -325,6 +325,7 @@
   "GET /kv-store/put/key-parameter-containing-special-characters": {
     "flake": true
   },
+  "GET /kv-store/put/key-parameter-containing-nul-byte": { "flake": true },
   "GET /kv-store/put/value-parameter-as-undefined": { "flake": true },
   "GET /kv-store/put/value-parameter-not-supplied": { "flake": true },
   "GET /kv-store/put/value-parameter-readablestream-empty": { "flake": true },

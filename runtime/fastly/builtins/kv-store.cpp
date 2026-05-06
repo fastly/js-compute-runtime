@@ -41,10 +41,10 @@ api::Engine *ENGINE;
 
 std::string_view bad_chars{"#;?^|\n\r"};
 
-std::optional<char> find_invalid_character_for_kv_store_key(const char *str) {
+std::optional<char> find_invalid_character_for_kv_store_key(const char *str, size_t len) {
   std::optional<char> res;
 
-  std::string_view view{str, strlen(str)};
+  std::string_view view{str, len};
 
   auto it = std::find_if(view.begin(), view.end(),
                          [](auto c) { return bad_chars.find(c) != std::string_view::npos; });
@@ -195,7 +195,7 @@ bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
   }
 
   auto key_chars = key;
-  auto res = find_invalid_character_for_kv_store_key(key_chars);
+  auto res = find_invalid_character_for_kv_store_key(key_chars, len);
   if (res.has_value()) {
     std::string character;
     switch (res.value()) {
@@ -231,7 +231,7 @@ bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
     return false;
   }
 
-  if (strcmp(key_chars, ".") == 0 || strcmp(key_chars, "..") == 0) {
+  if ((len == 1 && key_chars[0] == '.') || (len == 2 && key_chars[0] == '.' && key_chars[1] == '.')) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_KV_STORE_KEY_RELATIVE);
     return false;
   }

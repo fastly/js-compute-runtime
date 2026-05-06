@@ -504,6 +504,17 @@ const debug = sdkVersion.endsWith('-debug');
         }
       },
     );
+    routes.set('/kv-store/put/key-parameter-containing-nul-byte', async () => {
+      await assertRejects(
+        async () => {
+          let store = new KVStore(KV_STORE_NAME);
+          // Key is 'a\x00;b' — the ; is after a null byte and must still be rejected
+          await store.put('a\x00;b', '');
+        },
+        TypeError,
+        `KVStore key can not contain ; character`,
+      );
+    });
     routes.set('/kv-store/put/value-parameter-as-undefined', async () => {
       const store = new KVStore(KV_STORE_NAME);
       let result = store.put('undefined', undefined);
