@@ -2124,6 +2124,9 @@
   "GET /cache-entry/body/options-end-zero": {
     "environments": ["compute"]
   },
+  "GET /cache-entry/body/options-end-before-start": {
+    "environments": ["compute"]
+  },
   "GET /cache-entry/length/called-as-constructor": {
     "environments": ["compute"]
   },

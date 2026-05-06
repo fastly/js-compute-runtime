@@ -3154,7 +3154,7 @@ function ensureLion() {
       });
       writer.append('hello');
       writer.close();
-      let result = CoreCache.lookup(key).body({ start: 1, end: 0 });
+      let result = CoreCache.lookup(key).body({ start: 0, end: 0 });
       assert(
         result instanceof ReadableStream,
         true,
