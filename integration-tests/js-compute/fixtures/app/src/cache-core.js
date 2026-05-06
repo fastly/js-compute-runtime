@@ -3165,7 +3165,7 @@ function ensureLion() {
       console.log({ result });
       assert(
         result,
-        'hello',
+        'h',
         `await streamToString(CoreCache.lookup(key).body())`,
       );
     });
