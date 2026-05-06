@@ -3169,6 +3169,21 @@ function ensureLion() {
         `await streamToString(CoreCache.lookup(key).body())`,
       );
     });
+    routes.set('/cache-entry/body/options-end-before-start', async () => {
+      let key = '/cache-entry/body/options-end-before-start' + Math.random();
+      let writer = CoreCache.insert(key, {
+        maxAge: 60 * 1000,
+      });
+      writer.append('hello');
+      writer.close();
+      assertThrows(
+        () => {
+          CoreCache.lookup(key).body({ start: 10, end: 5 });
+        },
+        Error,
+        'end field is before the start field',
+      );
+    });
   }
 
   // length(): number;
