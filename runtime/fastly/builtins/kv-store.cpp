@@ -564,7 +564,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
           auto &[data, len, noGC] = *metadata_buf;
           metadata = std::make_tuple(data, len);
           if (noGC) {
-            no_gc.emplace();
+            no_gc.emplace(cx);
           }
         }
       }
@@ -637,7 +637,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
         auto &[data, len, noGC] = *metadata_buf;
         metadata = std::make_tuple(data, len);
         if (noGC) {
-          no_gc.emplace();
+          no_gc.emplace(cx);
         }
       }
     }

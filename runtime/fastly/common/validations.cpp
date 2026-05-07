@@ -51,7 +51,7 @@ validate_bytes(JSContext *cx, JS::HandleValue bytes, const char *subsystem) {
   bool is_shared;
   std::optional<JS::AutoCheckCannotGC> noGC;
   if (JS_IsArrayBufferViewObject(bytes_obj)) {
-    noGC.emplace();
+    noGC.emplace(cx);
     length = JS_GetArrayBufferViewByteLength(bytes_obj);
     buf = (const uint8_t *)JS_GetArrayBufferViewData(bytes_obj, &is_shared, *noGC);
     MOZ_ASSERT(!is_shared);

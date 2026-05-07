@@ -1023,7 +1023,7 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
     // short typed arrays have inline data which can move on GC, so assert
     // that no GC happens. (Which it doesn't, because we're not allocating
     // before `buf` goes out of scope.)
-    JS::AutoCheckCannotGC noGC;
+    JS::AutoCheckCannotGC noGC(cx);
     bool is_shared;
     auto *data = JS_GetArrayBufferViewData(bodyObj, &is_shared, noGC);
     std::memcpy(buf.get(), data, length);

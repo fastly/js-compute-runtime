@@ -1368,7 +1368,7 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
         return false;
       }
       {
-        JS::AutoCheckCannotGC nogc;
+        JS::AutoCheckCannotGC nogc(cx);
         MOZ_ASSERT(val.isObject());
         JSObject *array = &val.toObject();
         MOZ_ASSERT(JS_IsUint8Array(array));
@@ -1398,7 +1398,7 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
         return false;
       }
       {
-        JS::AutoCheckCannotGC nogc;
+        JS::AutoCheckCannotGC nogc(cx);
         MOZ_ASSERT(val.isObject());
         JSObject *array = &val.toObject();
         MOZ_ASSERT(JS_IsUint8Array(array));
@@ -1816,7 +1816,7 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
 
   host_api::Result<host_api::Void> res;
   {
-    JS::AutoCheckCannotGC nogc;
+    JS::AutoCheckCannotGC nogc(cx);
     JSObject *array = &val.toObject();
     bool is_shared;
     uint8_t *bytes = JS_GetUint8ArrayData(array, &is_shared, nogc);
