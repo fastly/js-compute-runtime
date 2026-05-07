@@ -564,14 +564,14 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
           auto &[data, len, noGC] = *metadata_buf;
           metadata = std::make_tuple(data, len);
           if (noGC) {
-            no_gc.emplace();
+            no_gc = std::move(noGC);
           }
         }
       }
 
       auto res = kv_store(self).insert(key_chars, body, mode, std::nullopt, metadata, ttl);
-      if (no_gc)
-        no_gc->reset(); // allow GC after hostcall
+      // if (no_gc)
+      //   no_gc->reset(); // allow GC after hostcall
       if (auto *err = res.to_err()) {
         HANDLE_ERROR(cx, *err);
         return ReturnPromiseRejectedWithPendingError(cx, args);
