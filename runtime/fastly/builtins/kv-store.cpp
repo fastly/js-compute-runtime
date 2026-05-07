@@ -549,6 +549,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       JS::RootedObject source_owner(cx, NativeStreamSource::owner(stream_source));
       auto body = RequestOrResponse::body_handle(source_owner);
 
+      std::optional<JS::AutoAssertNoGC> no_gc;
       // metadata object is read last because no JS can run after getting byte reference
       if (!metadata_val.isUndefined()) {
         if (metadata_val.isString()) {
@@ -556,15 +557,21 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
           metadata = std::make_tuple(reinterpret_cast<const uint8_t *>(metadata_str.ptr.get()),
                                      metadata_str.len);
         } else {
-          auto maybe_byte_data = validate_bytes(cx, metadata_val, "KVStore.put metadata");
-          if (!maybe_byte_data) {
+          auto metadata_buf = validate_bytes(cx, metadata_val, "KVStore.put metadata");
+          if (!metadata_buf) {
             return ReturnPromiseRejectedWithPendingError(cx, args);
           }
-          metadata = maybe_byte_data;
+          auto &[data, len, noGC] = *metadata_buf;
+          metadata = std::make_tuple(data, len);
+          if (noGC) {
+            no_gc.emplace();
+          }
         }
       }
 
       auto res = kv_store(self).insert(key_chars, body, mode, std::nullopt, metadata, ttl);
+      if (no_gc)
+        no_gc->reset(); // allow GC after hostcall
       if (auto *err = res.to_err()) {
         HANDLE_ERROR(cx, *err);
         return ReturnPromiseRejectedWithPendingError(cx, args);
@@ -615,6 +622,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
+    std::optional<JS::AutoAssertNoGC> no_gc;
     // metadata object is read last because no JS can run after getting byte reference
     if (!metadata_val.isUndefined()) {
       if (metadata_val.isString()) {
@@ -622,15 +630,21 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
         metadata = std::make_tuple(reinterpret_cast<const uint8_t *>(metadata_str.ptr.get()),
                                    metadata_str.len);
       } else {
-        auto maybe_byte_data = validate_bytes(cx, metadata_val, "KVStore.put metadata");
-        if (!maybe_byte_data) {
+        auto metadata_buf = validate_bytes(cx, metadata_val, "KVStore.put metadata");
+        if (!metadata_buf) {
           return ReturnPromiseRejectedWithPendingError(cx, args);
         }
-        metadata = maybe_byte_data;
+        auto &[data, len, noGC] = *metadata_buf;
+        metadata = std::make_tuple(data, len);
+        if (noGC) {
+          no_gc.emplace();
+        }
       }
     }
 
     auto insert_res = kv_store(self).insert(key_chars, body, mode, if_gen, metadata, ttl);
+    if (no_gc)
+      no_gc->reset(); // allow GC after hostcall
     if (auto *err = insert_res.to_err()) {
       // Ensure that we throw an exception for all unexpected host errors.
       HANDLE_ERROR(cx, *err);
