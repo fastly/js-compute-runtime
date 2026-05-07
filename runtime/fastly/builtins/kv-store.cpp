@@ -571,7 +571,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
 
       auto res = kv_store(self).insert(key_chars, body, mode, std::nullopt, metadata, ttl);
       if (no_gc)
-        no_gc->reset(); // allow GC after hostcall
+        no_gc.reset(); // allow GC after hostcall
       if (auto *err = res.to_err()) {
         HANDLE_ERROR(cx, *err);
         return ReturnPromiseRejectedWithPendingError(cx, args);
@@ -644,7 +644,7 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
 
     auto insert_res = kv_store(self).insert(key_chars, body, mode, if_gen, metadata, ttl);
     if (no_gc)
-      no_gc->reset(); // allow GC after hostcall
+      no_gc.reset(); // allow GC after hostcall
     if (auto *err = insert_res.to_err()) {
       // Ensure that we throw an exception for all unexpected host errors.
       HANDLE_ERROR(cx, *err);
