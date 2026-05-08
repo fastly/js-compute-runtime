@@ -303,6 +303,9 @@ bool RateCounter::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
   JS::RootedString name_str(cx, JS_NewStringCopyN(cx, name.begin(), name.len));
+  if (!name_str) {
+    return false;
+  }
   JS::SetReservedSlot(instance, static_cast<uint32_t>(Slots::Name), JS::StringValue(name_str));
   args.rval().setObject(*instance);
   return true;

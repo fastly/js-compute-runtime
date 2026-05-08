@@ -297,7 +297,7 @@
     "environments": ["compute"],
     "features": ["http-cache"]
   },
-  "GET /kv-store-e2e/list": { "flake": true },
+  "GET /kv-store-e2e/list": {},
   "GET /kv-store/exposed-as-global": {},
   "GET /kv-store/interface": { "flake": true },
   "GET /kv-store/constructor/called-as-regular-function": {},
