@@ -2442,6 +2442,7 @@ Result<HostString> Request::inspect(const InspectOptions *config) {
   if (!convert_result(fastly::req_inspect(this->req.handle, this->body.handle, inspect_opts_mask,
                                           &opts, ret.ptr, HOSTCALL_BUFFER_LEN, &ret.len),
                       &err)) {
+    cabi_free(ret.ptr);
     res.emplace_err(err);
   } else {
     res.emplace(make_host_string(ret));
