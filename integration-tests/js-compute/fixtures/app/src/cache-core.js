@@ -3163,11 +3163,7 @@ function ensureLion() {
 
       result = await streamToString(result);
       console.log({ result });
-      assert(
-        result,
-        'h',
-        `await streamToString(CoreCache.lookup(key).body())`,
-      );
+      assert(result, 'h', `await streamToString(CoreCache.lookup(key).body())`);
     });
     routes.set('/cache-entry/body/options-end-before-start', async () => {
       let key = '/cache-entry/body/options-end-before-start' + Math.random();
