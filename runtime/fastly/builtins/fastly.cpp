@@ -1019,6 +1019,9 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
   if (bodyObj && JS_IsArrayBufferViewObject(bodyObj)) {
     length = JS_GetArrayBufferViewByteLength(bodyObj);
     buf.reset(reinterpret_cast<char *>(JS_malloc(cx, length)));
+    if (!buf) {
+      return JS::Result<std::tuple<JS::UniqueChars, size_t>>(JS::Error());
+    }
     // `maybeNoGC` needs to be populated for the lifetime of `buf` because
     // short typed arrays have inline data which can move on GC, so assert
     // that no GC happens. (Which it doesn't, because we're not allocating
@@ -1040,6 +1043,9 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
   } else if (bodyObj && URLSearchParams::is_instance(bodyObj)) {
     jsurl::SpecSlice slice = URLSearchParams::serialize(cx, bodyObj);
     buf.reset(reinterpret_cast<char *>(JS_malloc(cx, slice.len)));
+    if (!buf) {
+      return JS::Result<std::tuple<JS::UniqueChars, size_t>>(JS::Error());
+    }
     std::memcpy(buf.get(), slice.data, slice.len);
     length = slice.len;
     return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
