@@ -486,7 +486,7 @@ bool process_pending_cache_lookup(JSContext *cx, host_api::CacheHandle::Handle h
     JS::RootedValue result_promise_val(cx, JS::ObjectValue(*result_promise));
     JS::RootedObject catch_handler(
         cx, create_internal_method<get_or_set_catch_handler>(cx, lookup_state, result_promise_val));
-    if (!then_handler) {
+    if (!catch_handler) {
       return false;
     }
     if (!JS::AddPromiseReactions(cx, result_promise, then_handler, catch_handler)) {
