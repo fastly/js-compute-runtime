@@ -231,7 +231,8 @@ bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
     return false;
   }
 
-  if ((len == 1 && key_chars[0] == '.') || (len == 2 && key_chars[0] == '.' && key_chars[1] == '.')) {
+  if ((len == 1 && key_chars[0] == '.') ||
+      (len == 2 && key_chars[0] == '.' && key_chars[1] == '.')) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_KV_STORE_KEY_RELATIVE);
     return false;
   }
