@@ -612,8 +612,10 @@ bool is_valid_ip(std::string_view ip) {
     format = AF_INET6;
   }
 
+  // Ensure that the IP is NUL-terminated for inet_pton
+  std::string ip_str(ip);
   char octets[sizeof(struct in6_addr)];
-  if (inet_pton(format, ip.data(), octets) != 1) {
+  if (inet_pton(format, ip_str.data(), octets) != 1) {
     return false;
   }
   return true;
