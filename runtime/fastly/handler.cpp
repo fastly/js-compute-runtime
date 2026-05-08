@@ -26,7 +26,7 @@ bool install(api::Engine *engine) {
   return true;
 }
 
-void handle_incoming(host_api::Request req) {
+bool handle_incoming(host_api::Request req) {
   builtins::web::performance::Performance::timeOrigin.emplace(
       std::chrono::high_resolution_clock::now());
 
@@ -47,7 +47,7 @@ void handle_incoming(host_api::Request req) {
   RootedObject fetch_event(ENGINE->cx(), FetchEvent::create(ENGINE->cx()));
   if (!FetchEvent::init_request(ENGINE->cx(), fetch_event, req.req, req.body)) {
     ENGINE->dump_pending_exception("initialization of FetchEvent");
-    return;
+    return false;
   }
 
   if (ENGINE->debug_logging_enabled()) {
@@ -66,27 +66,32 @@ void handle_incoming(host_api::Request req) {
 
   if (JS_IsExceptionPending(ENGINE->cx())) {
     ENGINE->dump_pending_exception("evaluating code");
+    return false;
   } else if (!success) {
     if (ENGINE->has_pending_async_tasks()) {
       fprintf(stderr, "Warning: JS event loop terminated with async tasks pending. "
                       "Use FetchEvent#waitUntil to extend the service's lifetime "
                       "if needed.\n");
+      return false;
     } else {
       fprintf(stderr, "Warning: JS event loop terminated without completing the request.\n");
+      return false;
     }
   }
 
-  if (ENGINE->debug_logging_enabled() && ENGINE->has_pending_async_tasks()) {
-    fprintf(stderr, "Warming: JS event loop terminated with async tasks pending. "
-                    "Use FetchEvent#waitUntil to extend the service's lifetime "
-                    "if needed.\n");
-    return;
+  if (ENGINE->has_pending_async_tasks()) {
+    if (ENGINE->debug_logging_enabled()) {
+      fprintf(stderr, "Warning: JS event loop terminated with async tasks pending. "
+                      "Use FetchEvent#waitUntil to extend the service's lifetime "
+                      "if needed.\n");
+    }
+    return false;
   }
 
   // Respond with status `500` if no response was ever sent.
   if (!FetchEvent::response_started(fetch_event)) {
     FetchEvent::respondWithError(ENGINE->cx(), fetch_event);
-    return;
+    return false;
   }
 
   if (ENGINE->debug_logging_enabled()) {
@@ -95,7 +100,7 @@ void handle_incoming(host_api::Request req) {
     printf("Done. Total request processing time: %fms. Total compute time: %fms\n", diff / 1000,
            total_compute / 1000);
   }
-  return;
+  return true;
 }
 
 } // namespace fastly::runtime
@@ -121,7 +126,16 @@ int main(int argc, const char *argv[]) {
   std::size_t requests_handled = 0;
   const auto start_time = std::chrono::high_resolution_clock::now();
   while (true) {
-    fastly::runtime::handle_incoming(req.unwrap());
+    bool success = fastly::runtime::handle_incoming(req.unwrap());
+
+    if (!success) {
+      if (ENGINE->debug_logging_enabled()) {
+        printf("Request handling not successful, exiting process.\n");
+        fflush(stdout);
+      }
+      return -1;
+    }
+
     requests_handled++;
 
     // Check if we should exit based on configured max requests
