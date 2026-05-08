@@ -134,6 +134,9 @@ await writeFile(
   TOML.stringify(config),
   'utf-8',
 );
+
+let passed = 0;
+const failed = [];
 try {
   if (!local) {
     core.startGroup('Delete service if already exists');
@@ -141,8 +144,8 @@ try {
       await zx`fastly service delete --quiet --service-name "${serviceName}" --force --token $FASTLY_API_TOKEN`;
     } catch {}
     core.endGroup();
-    await new Promise((resolve) => setTimeout(resolve, 5000));
     core.startGroup('Build and deploy service');
+    await new Promise((resolve) => setTimeout(resolve, 5000));
     await zx`npm i`;
     await $`fastly compute publish -i ${verbose ? '--verbose' : '--quiet'} --token $FASTLY_API_TOKEN --status-check-off`;
     core.endGroup();
@@ -431,8 +434,6 @@ try {
 
   console.log('Test results');
   core.startGroup('Test results');
-  let passed = 0;
-  const failed = [];
   const green = '\u001b[32m';
   const red = '\u001b[31m';
   const reset = '\u001b[0m';
@@ -457,26 +458,29 @@ try {
       }
     } else {
       console.log(red, cross, result.reason, reset);
-      failed.push(result.reason);
+      failed.push(`${value.title} - ${result.reason}`);
     }
   }
   core.endGroup();
-
-  if (failed.length) {
+} finally {
+  if (failed.length || !passed) {
     process.exitCode = 1;
     core.startGroup('Failed tests');
 
     for (const result of failed) {
       console.log(red, cross, result, reset);
     }
+    if (!passed) {
+      console.log('No tests passed/ran.');
+    }
 
     core.endGroup();
   }
-  if (!local && failed.length) {
+  if (!local && (failed.length || !passed)) {
     core.notice(`Tests failed.`);
   }
-} finally {
-  if (!local && !skipTeardown) {
+  // No need to tear down the service if what failed was setting it up.
+  if (!local && !skipTeardown && serviceId) {
     const teardownPath = join(__dirname, 'teardown.js');
     if (existsSync(teardownPath)) {
       core.startGroup('Tear down the extra set-up for the service');
