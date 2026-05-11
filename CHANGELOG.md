@@ -1,14 +1,12 @@
 # Changelog
 
-## [3.42.0](https://github.com/fastly/js-compute-runtime/compare/v3.41.2...v3.42.0) (2026-05-11)
+## 3.42.0 (2026-05-11)
 
-
-### Features
+### Added
 
 * Bail out of reusable sandbox if request fails ([#1453](https://github.com/fastly/js-compute-runtime/issues/1453)) ([b6f41b0](https://github.com/fastly/js-compute-runtime/commit/b6f41b0bcf429705f1a70530e39774f3fedd3c07))
 
-
-### Bug Fixes
+### Fixed
 
 * Allocation failure checks ([#1457](https://github.com/fastly/js-compute-runtime/issues/1457)) ([c882105](https://github.com/fastly/js-compute-runtime/commit/c882105b1daf2f16c54e25105a1d6bd45336cba5))
 * Avoid dereferencing one-past-the-end iterator in `host_api` ([#1461](https://github.com/fastly/js-compute-runtime/issues/1461)) ([acf2b25](https://github.com/fastly/js-compute-runtime/commit/acf2b25fddda2960a5e5ed7b0e0e9802a2ce21c2))
@@ -16,7 +14,7 @@
 * Cache body range check ([#1463](https://github.com/fastly/js-compute-runtime/issues/1463)) ([f38ce55](https://github.com/fastly/js-compute-runtime/commit/f38ce550419001c09e1337f2b98fd3a0b2fee947))
 * Cache override getters for `beforeSend` and `afterSend` ([#1466](https://github.com/fastly/js-compute-runtime/issues/1466)) ([5261936](https://github.com/fastly/js-compute-runtime/commit/52619361172eaaed4493693f309d52e4c4f98386))
 * Correct GC guard type in KVStore::put to prevent wasm unreachable crashes and fix some CI issues ([#1475](https://github.com/fastly/js-compute-runtime/issues/1475)) ([15f850d](https://github.com/fastly/js-compute-runtime/commit/15f850d47c2a407d5261f3b46047bb533bcca1dd))
-* Ensure nul-termination of string for inet_pton ([#1462](https://github.com/fastly/js-compute-runtime/issues/1462)) ([0e3afbe](https://github.com/fastly/js-compute-runtime/commit/0e3afbe335a6cc29744d28283880addc780d3a04))
+* Ensure nul-termination of string for inet\_pton ([#1462](https://github.com/fastly/js-compute-runtime/issues/1462)) ([0e3afbe](https://github.com/fastly/js-compute-runtime/commit/0e3afbe335a6cc29744d28283880addc780d3a04))
 * Find invalid characters after nul bytes in KV store keys ([#1464](https://github.com/fastly/js-compute-runtime/issues/1464)) ([5f0f0f2](https://github.com/fastly/js-compute-runtime/commit/5f0f0f2100dce30fe8163846613d91deec783aba))
 * Incorrect catch handler failure check ([#1458](https://github.com/fastly/js-compute-runtime/issues/1458)) ([fb3c01a](https://github.com/fastly/js-compute-runtime/commit/fb3c01acd8a1c696f231b265d78b26bc163adb1a))
 * Memory leak in `get_found_response` ([#1456](https://github.com/fastly/js-compute-runtime/issues/1456)) ([17559d3](https://github.com/fastly/js-compute-runtime/commit/17559d350dad3969fc5d0352c1d74e38f617f78f))
