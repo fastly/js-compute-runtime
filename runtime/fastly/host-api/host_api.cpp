@@ -4605,7 +4605,8 @@ KVStorePendingLookup::wait() {
     res.emplace(std::nullopt);
   } else {
     if (metadata_nwritten > 0) {
-      cabi_realloc(metadata_buf, HOSTCALL_BUFFER_LEN, 1, metadata_nwritten);
+      metadata_buf = reinterpret_cast<uint8_t *>(
+          cabi_realloc(metadata_buf, HOSTCALL_BUFFER_LEN, 1, metadata_nwritten));
       res.emplace(std::make_tuple(body, make_host_bytes(metadata_buf, metadata_nwritten), gen_out));
     } else {
       cabi_free(metadata_buf);

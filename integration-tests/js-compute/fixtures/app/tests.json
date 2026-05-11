@@ -36,6 +36,8 @@
     "flake": true
   },
   "GET /cache-override/constructor/valid-mode": {},
+  "GET /cache-override/beforeSend/get": {},
+  "GET /cache-override/afterSend/get": {},
   "GET /cache-override/fetch/mode-none": {},
   "GET /cache-override/fetch/mode-pass": {
     "flake": true
@@ -2122,6 +2124,9 @@
     "environments": ["compute"]
   },
   "GET /cache-entry/body/options-end-zero": {
+    "environments": ["compute"]
+  },
+  "GET /cache-entry/body/options-end-before-start": {
     "environments": ["compute"]
   },
   "GET /cache-entry/length/called-as-constructor": {

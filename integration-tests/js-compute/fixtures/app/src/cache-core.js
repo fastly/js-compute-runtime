@@ -3154,7 +3154,7 @@ function ensureLion() {
       });
       writer.append('hello');
       writer.close();
-      let result = CoreCache.lookup(key).body({ start: 1, end: 0 });
+      let result = CoreCache.lookup(key).body({ start: 0, end: 0 });
       assert(
         result instanceof ReadableStream,
         true,
@@ -3163,10 +3163,21 @@ function ensureLion() {
 
       result = await streamToString(result);
       console.log({ result });
-      assert(
-        result,
-        'hello',
-        `await streamToString(CoreCache.lookup(key).body())`,
+      assert(result, 'h', `await streamToString(CoreCache.lookup(key).body())`);
+    });
+    routes.set('/cache-entry/body/options-end-before-start', async () => {
+      let key = '/cache-entry/body/options-end-before-start' + Math.random();
+      let writer = CoreCache.insert(key, {
+        maxAge: 60 * 1000,
+      });
+      writer.append('hello');
+      writer.close();
+      assertThrows(
+        () => {
+          CoreCache.lookup(key).body({ start: 10, end: 5 });
+        },
+        Error,
+        'end field is before the start field',
       );
     });
   }
