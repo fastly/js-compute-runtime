@@ -36,6 +36,8 @@
     "flake": true
   },
   "GET /cache-override/constructor/valid-mode": {},
+  "GET /cache-override/beforeSend/get": {},
+  "GET /cache-override/afterSend/get": {},
   "GET /cache-override/fetch/mode-none": {},
   "GET /cache-override/fetch/mode-pass": {
     "flake": true

@@ -597,9 +597,10 @@ Result<vector<tuple<HostString, HostString>>> HttpHeadersReadOnly::entries() con
       // original js-compute-runtime also skipped here, but should this be an error or empty entry?
       continue;
     }
-    auto last_val = &(*values.value().end());
-    for (auto &value : values.value()) {
-      if (&value == last_val) {
+    auto &vals = values.value();
+    auto *last_val = vals.data() + vals.size();
+    for (auto &value : vals) {
+      if (&value + 1 == last_val) {
         entries_vec.emplace_back(std::move(name), std::move(value));
       } else {
         std::string_view host_name_view(name);
@@ -4604,7 +4605,8 @@ KVStorePendingLookup::wait() {
     res.emplace(std::nullopt);
   } else {
     if (metadata_nwritten > 0) {
-      cabi_realloc(metadata_buf, HOSTCALL_BUFFER_LEN, 1, metadata_nwritten);
+      metadata_buf = reinterpret_cast<uint8_t *>(
+          cabi_realloc(metadata_buf, HOSTCALL_BUFFER_LEN, 1, metadata_nwritten));
       res.emplace(std::make_tuple(body, make_host_bytes(metadata_buf, metadata_nwritten), gen_out));
     } else {
       cabi_free(metadata_buf);

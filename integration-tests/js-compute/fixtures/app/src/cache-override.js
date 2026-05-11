@@ -57,6 +57,32 @@ import { isRunningLocally, routes } from './routes.js';
       new CacheOverride({});
     });
   });
+  routes.set('/cache-override/beforeSend/get', async () => {
+    const fn = () => {};
+    const co = new CacheOverride('override', { beforeSend: fn });
+    assert(co.beforeSend, fn, 'co.beforeSend === fn');
+    assert(
+      co.beforeSend instanceof CacheOverride,
+      false,
+      'co.beforeSend is not a CacheOverride',
+    );
+
+    const co2 = new CacheOverride('override', {});
+    assert(co2.beforeSend, undefined, 'co2.beforeSend === undefined');
+  });
+  routes.set('/cache-override/afterSend/get', async () => {
+    const fn = () => {};
+    const co = new CacheOverride('override', { afterSend: fn });
+    assert(co.afterSend, fn, 'co.afterSend === fn');
+    assert(
+      co.afterSend instanceof CacheOverride,
+      false,
+      'co.afterSend is not a CacheOverride',
+    );
+
+    const co2 = new CacheOverride('override', {});
+    assert(co2.afterSend, undefined, 'co2.afterSend === undefined');
+  });
 }
 // Using CacheOverride
 {
