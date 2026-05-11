@@ -597,9 +597,10 @@ Result<vector<tuple<HostString, HostString>>> HttpHeadersReadOnly::entries() con
       // original js-compute-runtime also skipped here, but should this be an error or empty entry?
       continue;
     }
-    auto last_val = &(*values.value().end());
-    for (auto &value : values.value()) {
-      if (&value == last_val) {
+    auto &vals = values.value();
+    auto *last_val = vals.data() + vals.size();
+    for (auto &value : vals) {
+      if (&value + 1 == last_val) {
         entries_vec.emplace_back(std::move(name), std::move(value));
       } else {
         std::string_view host_name_view(name);
