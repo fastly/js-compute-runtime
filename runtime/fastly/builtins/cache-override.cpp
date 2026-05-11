@@ -330,12 +330,12 @@ bool CacheOverride::before_send_get(JSContext *cx, JS::HandleObject self,
   if (self == proto_obj) {
     return api::throw_error(cx, api::Errors::WrongReceiver, "beforeSend get", "CacheOverride");
   }
-  JSObject *beforeSend(self);
-  if (!beforeSend) {
+  JSObject *bs = beforeSend(self);
+  if (!bs) {
     rval.setUndefined();
     return true;
   }
-  rval.setObject(*beforeSend);
+  rval.setObject(*bs);
   return true;
 }
 
@@ -366,12 +366,12 @@ bool CacheOverride::after_send_get(JSContext *cx, JS::HandleObject self,
   if (self == proto_obj) {
     return api::throw_error(cx, api::Errors::WrongReceiver, "afterSend get", "CacheOverride");
   }
-  JSObject *afterSend(self);
-  if (!afterSend) {
+  JSObject *as = afterSend(self);
+  if (!as) {
     rval.setUndefined();
     return true;
   }
-  rval.setObject(*afterSend);
+  rval.setObject(*as);
   return true;
 }
 
