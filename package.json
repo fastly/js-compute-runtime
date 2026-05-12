@@ -66,6 +66,7 @@
     "cosmiconfig": "^9.0.1",
     "esbuild": "^0.25.0",
     "magic-string": "^0.30.12",
+    "npm": "^11.14.1",
     "picomatch": "^4.0.4",
     "regexpu-core": "^6.4.0"
   },
@@ -96,6 +97,11 @@
   "tsd": {
     "compilerOptions": {
       "types": []
+    }
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm"
     }
   }
 }
