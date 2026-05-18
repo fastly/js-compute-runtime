@@ -112,8 +112,7 @@ public:
 
   static JSObject *create_body_stream(JSContext *cx, JS::HandleObject owner);
 
-  static bool body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self,
-                       bool create_if_undefined);
+  static bool body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
   static bool backend_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
   static JSString *backend(JSObject *obj);
 
