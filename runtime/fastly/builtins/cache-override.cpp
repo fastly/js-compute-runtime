@@ -247,7 +247,10 @@ bool CacheOverride::ttl_set(JSContext *cx, JS::HandleObject self, JS::HandleValu
     int32_t ttl;
     if (!JS::ToInt32(cx, val, &ttl))
       return false;
-
+    if (ttl < 0) {
+      return api::throw_error(cx, api::Errors::TypeError, "CacheOverride", "ttl",
+                              "be a non-negative integer");
+    }
     set_ttl(self, ttl);
   }
   rval.set(ttl(self));
@@ -310,7 +313,12 @@ bool CacheOverride::staleIfError_set(JSContext *cx, JS::HandleObject self, JS::H
     if (!JS::ToInt32(cx, val, &swr))
       return false;
 
+    if (swr < 0) {
+      return api::throw_error(cx, api::Errors::TypeError, "CacheOverride", "swr",
+                              "be a non-negative integer");
+    }
     set_staleIfError(self, swr);
+    set_swr(self, swr);
   }
   rval.set(staleIfError(self));
   return true;
@@ -377,12 +385,12 @@ bool CacheOverride::before_send_get(JSContext *cx, JS::HandleObject self,
   if (self == proto_obj) {
     return api::throw_error(cx, api::Errors::WrongReceiver, "beforeSend get", "CacheOverride");
   }
-  JSObject *beforeSend(self);
-  if (!beforeSend) {
+  JSObject *bs = beforeSend(self);
+  if (!bs) {
     rval.setUndefined();
     return true;
   }
-  rval.setObject(*beforeSend);
+  rval.setObject(*bs);
   return true;
 }
 
@@ -413,12 +421,12 @@ bool CacheOverride::after_send_get(JSContext *cx, JS::HandleObject self,
   if (self == proto_obj) {
     return api::throw_error(cx, api::Errors::WrongReceiver, "afterSend get", "CacheOverride");
   }
-  JSObject *afterSend(self);
-  if (!afterSend) {
+  JSObject *as = afterSend(self);
+  if (!as) {
     rval.setUndefined();
     return true;
   }
-  rval.setObject(*afterSend);
+  rval.setObject(*as);
   return true;
 }
 

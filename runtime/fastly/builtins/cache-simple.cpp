@@ -34,7 +34,7 @@ bool SimpleCacheEntry::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::HasBody)).isBoolean()) {
     JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::HasBody), JS::BooleanValue(false));
   }
-  return RequestOrResponse::body_get(cx, args, self, true);
+  return RequestOrResponse::body_get(cx, args, self);
 }
 
 bool SimpleCacheEntry::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -467,8 +467,8 @@ bool process_pending_cache_lookup(JSContext *cx, host_api::CacheHandle::Handle h
     if (!JS_SetProperty(cx, lookup_state, "handle", handle_val)) {
       return false;
     }
-    JS::RootedValue keyVal(
-        cx, JS::StringValue(JS_NewStringCopyN(cx, key_chars.begin(), key_chars.len)));
+    JS::RootedString key_str(cx, JS_NewStringCopyN(cx, key_chars.begin(), key_chars.len));
+    JS::RootedValue keyVal(cx, JS::StringValue(key_str));
     if (!JS_SetProperty(cx, lookup_state, "key", keyVal)) {
       return false;
     }
@@ -486,7 +486,7 @@ bool process_pending_cache_lookup(JSContext *cx, host_api::CacheHandle::Handle h
     JS::RootedValue result_promise_val(cx, JS::ObjectValue(*result_promise));
     JS::RootedObject catch_handler(
         cx, create_internal_method<get_or_set_catch_handler>(cx, lookup_state, result_promise_val));
-    if (!then_handler) {
+    if (!catch_handler) {
       return false;
     }
     if (!JS::AddPromiseReactions(cx, result_promise, then_handler, catch_handler)) {

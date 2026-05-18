@@ -112,8 +112,7 @@ public:
 
   static JSObject *create_body_stream(JSContext *cx, JS::HandleObject owner);
 
-  static bool body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self,
-                       bool create_if_undefined);
+  static bool body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
   static bool backend_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
   static JSString *backend(JSObject *obj);
 
@@ -262,7 +261,7 @@ public:
     BodyUsed = static_cast<int>(RequestOrResponse::Slots::BodyUsed),
     Headers = static_cast<int>(RequestOrResponse::Slots::Headers),
     HeadersGen = static_cast<int>(RequestOrResponse::Slots::HeadersGen),
-    URL = static_cast<int>(RequestOrResponse::Slots::Headers),
+    URL = static_cast<int>(RequestOrResponse::Slots::URL),
     ManualFramingHeaders = static_cast<int>(RequestOrResponse::Slots::ManualFramingHeaders),
     Backend = static_cast<int>(RequestOrResponse::Slots::Backend),
     CacheEntry = static_cast<int>(RequestOrResponse::Slots::CacheEntry),

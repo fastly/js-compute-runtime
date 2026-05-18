@@ -597,9 +597,10 @@ Result<vector<tuple<HostString, HostString>>> HttpHeadersReadOnly::entries() con
       // original js-compute-runtime also skipped here, but should this be an error or empty entry?
       continue;
     }
-    auto last_val = &(*values.value().end());
-    for (auto &value : values.value()) {
-      if (&value == last_val) {
+    auto &vals = values.value();
+    auto *last_val = vals.data() + vals.size();
+    for (auto &value : vals) {
+      if (&value + 1 == last_val) {
         entries_vec.emplace_back(std::move(name), std::move(value));
       } else {
         std::string_view host_name_view(name);
@@ -998,13 +999,27 @@ Result<size_t> HttpBody::read_into(uint8_t *ptr, size_t chunk_size) const {
 }
 
 constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
-constexpr size_t HANDLE_READ_BUFFER_SIZE = 500000;
 
 Result<HostBytes> HttpBody::read_all() const {
   Result<HostBytes> res;
+  size_t buf_cap = HANDLE_READ_CHUNK_SIZE;
   size_t buf_len = 0;
-  uint8_t *buf = static_cast<uint8_t *>(malloc(HANDLE_READ_BUFFER_SIZE));
+  uint8_t *buf = static_cast<uint8_t *>(malloc(buf_cap));
+  if (!buf) {
+    res.emplace_err(FASTLY_HOST_ERROR_GENERIC_ERROR);
+    return res;
+  }
   do {
+    if (buf_len + HANDLE_READ_CHUNK_SIZE > buf_cap) {
+      buf_cap *= 2;
+      uint8_t *new_buf = static_cast<uint8_t *>(realloc(buf, buf_cap));
+      if (!new_buf) {
+        free(buf);
+        res.emplace_err(FASTLY_HOST_ERROR_GENERIC_ERROR);
+        return res;
+      }
+      buf = new_buf;
+    }
     host_api::Result<size_t> chunk = this->read_into((buf + buf_len), HANDLE_READ_CHUNK_SIZE);
     if (auto *err = chunk.to_err()) {
       free(buf);
@@ -1013,15 +1028,15 @@ Result<HostBytes> HttpBody::read_all() const {
     }
     size_t len = chunk.unwrap();
     if (len == 0) {
-      buf = static_cast<uint8_t *>(realloc(buf, buf_len));
+      if (buf_len == 0) {
+        free(buf);
+        buf = nullptr;
+      } else {
+        buf = static_cast<uint8_t *>(realloc(buf, buf_len));
+      }
       break;
     }
     buf_len += len;
-    if (buf_len > HANDLE_READ_BUFFER_SIZE) {
-      free(buf);
-      res.emplace_err(FASTLY_HOST_ERROR_BUFFER_LEN);
-      return res;
-    }
   } while (true);
   res.emplace(make_host_bytes(buf, buf_len));
   return res;
@@ -2437,6 +2452,7 @@ Result<HostString> Request::inspect(const InspectOptions *config) {
   if (!convert_result(fastly::req_inspect(this->req.handle, this->body.handle, inspect_opts_mask,
                                           &opts, ret.ptr, HOSTCALL_BUFFER_LEN, &ret.len),
                       &err)) {
+    cabi_free(ret.ptr);
     res.emplace_err(err);
   } else {
     res.emplace(make_host_string(ret));
@@ -4627,7 +4643,8 @@ KVStorePendingLookup::wait() {
     res.emplace(std::nullopt);
   } else {
     if (metadata_nwritten > 0) {
-      cabi_realloc(metadata_buf, HOSTCALL_BUFFER_LEN, 1, metadata_nwritten);
+      metadata_buf = reinterpret_cast<uint8_t *>(
+          cabi_realloc(metadata_buf, HOSTCALL_BUFFER_LEN, 1, metadata_nwritten));
       res.emplace(std::make_tuple(body, make_host_bytes(metadata_buf, metadata_nwritten), gen_out));
     } else {
       cabi_free(metadata_buf);
