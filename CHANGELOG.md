@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.42.1](https://github.com/fastly/js-compute-runtime/compare/v3.42.0...v3.42.1) (2026-05-18)
+
+
+### Bug Fixes
+
+* Null body for non-downstream requests with no stream created for them ([#1479](https://github.com/fastly/js-compute-runtime/issues/1479)) ([511c667](https://github.com/fastly/js-compute-runtime/commit/511c6672e18b8872f707a3942a5d53c651e03797))
+
 ## 3.42.0 (2026-05-11)
 
 ### Added
