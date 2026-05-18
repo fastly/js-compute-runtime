@@ -69,7 +69,7 @@ bool KVStoreEntry::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::HasBody)).isBoolean()) {
     JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::HasBody), JS::BooleanValue(false));
   }
-  return RequestOrResponse::body_get(cx, args, self, true);
+  return RequestOrResponse::body_get(cx, args, self);
 }
 
 bool KVStoreEntry::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {

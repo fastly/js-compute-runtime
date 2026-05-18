@@ -1986,21 +1986,20 @@ bool RequestOrResponse::backend_get(JSContext *cx, JS::CallArgs args, JS::Handle
   return true;
 }
 
-bool RequestOrResponse::body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self,
-                                 bool create_if_undefined) {
+bool RequestOrResponse::body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self) {
   if (!has_body(self)) {
     args.rval().setNull();
     return true;
   }
 
   JS::RootedObject body_stream(cx, RequestOrResponse::body_stream(self));
-  if (!body_stream && create_if_undefined) {
+  if (!body_stream) {
     body_stream = create_body_stream(cx, self);
     if (!body_stream)
       return false;
   }
 
-  args.rval().setObjectOrNull(body_stream);
+  args.rval().setObject(*body_stream);
   return true;
 }
 
@@ -2285,7 +2284,7 @@ bool Request::backend_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Request::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
-  return RequestOrResponse::body_get(cx, args, self, is_downstream(self));
+  return RequestOrResponse::body_get(cx, args, self);
 }
 
 bool Request::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -3481,7 +3480,7 @@ bool Response::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Response::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  return RequestOrResponse::body_get(cx, args, self, true);
+  return RequestOrResponse::body_get(cx, args, self);
 }
 
 bool Response::backend_get(JSContext *cx, unsigned argc, JS::Value *vp) {
