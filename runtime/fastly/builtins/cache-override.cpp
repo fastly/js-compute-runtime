@@ -318,7 +318,6 @@ bool CacheOverride::staleIfError_set(JSContext *cx, JS::HandleObject self, JS::H
                               "be a non-negative integer");
     }
     set_staleIfError(self, swr);
-    set_swr(self, swr);
   }
   rval.set(staleIfError(self));
   return true;
