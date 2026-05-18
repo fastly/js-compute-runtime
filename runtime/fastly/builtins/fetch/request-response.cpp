@@ -985,7 +985,6 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
     JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyStream),
                        stream_val);
   } else if (body_obj && JS::IsReadableStream(body_obj)) {
-    DEBUG_LOG("Extracting body from ReadableStream");
     if (RequestOrResponse::body_unusable(cx, body_obj)) {
       JS_ReportErrorNumberLatin1(cx, FastlyGetErrorMessage, nullptr,
                                  JSMSG_READABLE_STREAM_LOCKED_OR_DISTRUBED);
