@@ -1,0 +1,30 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Math.exp()
+
+The **`Math.exp()`** function returns [E](./E.mdx) raised to the power of a number.
+
+## Syntax
+
+```js
+Math.exp(x)
+```
+
+### Parameters
+
+- `x`
+  - : A number.
+
+### Return value
+
+A nonnegative number representing e<sup>x</sup>, where e is [the base of the natural logarithm](./E.mdx).
+
+## Description
+
+Because `exp()` is a static method of `Math`, you always use it as `Math.exp()`, rather than as a method of a `Math` object you created (`Math` is not a constructor).
+
+Beware that `e` to the power of a number very close to 0 will be very close to 1 and suffer from loss of precision. In this case, you may want to use `Math.expm1` instead, and obtain a much higher-precision fractional part of the answer.
