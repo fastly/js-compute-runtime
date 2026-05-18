@@ -36,7 +36,11 @@ routes.set('/request/body/body-property-non-downstream', () => {
 
   // .body should always return a ReadableStream for a request with a body,
   // regardless of whether the request is downstream (from the client) or not.
-  assert(req.body instanceof ReadableStream, true, 'req.body instanceof ReadableStream');
+  assert(
+    req.body instanceof ReadableStream,
+    true,
+    'req.body instanceof ReadableStream',
+  );
   assert(req.bodyUsed, false, 'req.bodyUsed is false before reading');
 });
 
@@ -55,5 +59,9 @@ routes.set('/request/body/body-from-arraybuffer-passthrough', async () => {
   });
 
   const text = await forwarded.text();
-  assert(text, 'binary body', 'forwarded ArrayBuffer body text matches original');
+  assert(
+    text,
+    'binary body',
+    'forwarded ArrayBuffer body text matches original',
+  );
 });
