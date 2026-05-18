@@ -282,7 +282,10 @@ bool CacheOverride::staleWhileRevalidate_set(JSContext *cx, JS::HandleObject sel
     int32_t swr;
     if (!JS::ToInt32(cx, val, &swr))
       return false;
-
+    if (swr < 0) {
+      return api::throw_error(cx, api::Errors::TypeError, "CacheOverride", "swr",
+                              "be a non-negative integer");
+    }
     set_staleWhileRevalidate(self, swr);
   }
   rval.set(staleWhileRevalidate(self));
