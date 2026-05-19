@@ -55,14 +55,26 @@ routes.set('/request/clone/headers-are-independent', () => {
 
   // Mutating the clone's headers must not affect the original
   cloned.headers.set('x-foo', 'mutated');
-  assert(request.headers.get('x-foo'), 'original', 'original header unchanged after mutating clone');
+  assert(
+    request.headers.get('x-foo'),
+    'original',
+    'original header unchanged after mutating clone',
+  );
 
   // Mutating the original's headers must not affect the clone
   request.headers.set('x-bar', 'added');
-  assert(cloned.headers.get('x-bar'), null, 'clone does not see header added to original');
+  assert(
+    cloned.headers.get('x-bar'),
+    null,
+    'clone does not see header added to original',
+  );
 
   // Clone must carry the headers that existed at clone time
-  assert(cloned.headers.get('x-foo'), 'mutated', 'clone has header value set on it');
+  assert(
+    cloned.headers.get('x-foo'),
+    'mutated',
+    'clone has header value set on it',
+  );
 });
 routes.set('/request/clone/invalid', async () => {
   const request = new Request('https://www.fastly.com', {
