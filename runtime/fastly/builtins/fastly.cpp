@@ -838,6 +838,13 @@ bool install(api::Engine *engine) {
       initialized_env.emplace(std::string(entry, eq - entry), std::string(eq + 1));
     }
   }
+
+  DEBUG_LOG("Initialized environment variables:");
+  for (const auto &[key, value] : initialized_env) {
+    DEBUG_LOG(key);
+    DEBUG_LOG(value);
+  }
+
   RootedValue env_get(engine->cx());
   if (!JS_GetProperty(engine->cx(), Fastly::env, "get", &env_get)) {
     return false;
