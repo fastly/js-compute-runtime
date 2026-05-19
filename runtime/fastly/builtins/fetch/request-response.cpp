@@ -2450,8 +2450,15 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
+  JS::RootedValue headers_val(cx, JS::ObjectValue(*headers));
+  JS::RootedObject cloned_headers(
+      cx, Headers::create(cx, headers_val, Headers::guard(headers)));
+  if (!cloned_headers) {
+    return false;
+  }
+
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Headers),
-                      JS::ObjectValue(*headers));
+                      JS::ObjectValue(*cloned_headers));
 
   JS::RootedString method(cx, Request::method(cx, self));
   if (!method) {
