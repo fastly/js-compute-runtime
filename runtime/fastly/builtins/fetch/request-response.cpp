@@ -674,7 +674,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
     suggested_storage_action = host_api::HttpStorageAction::RecordUncacheable;
   }
 
-  host_api::HttpCacheWriteOptions *override_cache_options = new host_api::HttpCacheWriteOptions();
+  auto override_cache_options = std::make_unique<host_api::HttpCacheWriteOptions>();
 
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::StorageAction),
                       JS::Int32Value(static_cast<uint32_t>(suggested_storage_action)));
@@ -770,7 +770,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
   }
 
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::OverrideCacheWriteOptions),
-                      JS::PrivateValue(override_cache_options));
+                      JS::PrivateValue(override_cache_options.release()));
 
   JS::RootedObject after_send_promise(cx);
   if (after_send) {
