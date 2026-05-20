@@ -46,6 +46,10 @@ new CacheOverride(init)
       - See the [Fastly surrogate keys guide](https://docs.fastly.com/en/guides/purging-api-cache-with-surrogate-keys) for details.
     - `swr` _: number_ _**optional**_
       - Override the caching behavior of this request to use the given `stale-while-revalidate` time, in seconds
+    - `staleWhileRevalidate` _: number_ _**optional**_
+      - A synonym for `swr`.
+    - `staleIfError` _: number_ _**optional**_
+      - Override the caching behavior of this request to use the given `stale-if-error` time, in seconds
 
     - `ttl` _: number_ _**optional**_
       - Override the caching behavior of this request to use the given Time to Live (TTL), in seconds.

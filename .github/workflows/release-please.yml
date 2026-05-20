@@ -45,7 +45,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
           node-version: 'lts/*'
 
@@ -96,7 +96,7 @@ jobs:
       with:
         submodules: true
     - name: Set up Node LTS
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v6
       with:
         node-version: 'lts/*'
     - run: npm ci
@@ -142,11 +142,11 @@ jobs:
           submodules: true
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
           node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
-      
+
       - name: Restore wasm-tools from cache
         uses: actions/cache@v3
         id: wasm-tools
