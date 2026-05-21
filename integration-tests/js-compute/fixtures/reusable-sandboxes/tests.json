@@ -99,5 +99,8 @@
         "QuuxName": "QuuxValue"
       }
     }
-  }
+  },
+
+  "session #3, request #1: GET /backend/ephemeral1": {},
+  "session #3, request #2: GET /backend/ephemeral2": {}
 }

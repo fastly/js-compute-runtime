@@ -1,4 +1,5 @@
 #include "../StarlingMonkey/builtins/web/performance.h"
+#include "./builtins/backend.h"
 #include "./builtins/fastly.h"
 #include "./builtins/fetch-event.h"
 #include "./host-api/fastly.h"
@@ -17,12 +18,35 @@ namespace fastly::runtime {
 
 api::Engine *ENGINE;
 
+bool snapshot_builtin_state() {
+  JSContext *cx(ENGINE->cx());
+  if (!::fastly::backend::Backend::snapshot_global_state(cx)) {
+    return false;
+  }
+  return true;
+}
+
+int restore_builtin_state() {
+  if (!::fastly::backend::Backend::restore_global_state(ENGINE->cx())) {
+    if (ENGINE->debug_logging_enabled()) {
+      fprintf(stderr, "Warning: Failed to restore Backend state processing next request. Exiting.\n");
+    }
+    return false;
+  }
+  return true;
+}
+
 // Install corresponds to Wizer time, so we configure the engine here
 bool install(api::Engine *engine) {
 #if defined(JS_GC_ZEAL) && defined(FASTLY_GC_FREQUENCY)
   JS::SetGCZeal(engine->cx(), 2, FASTLY_GC_FREQUENCY);
 #endif
   ENGINE = engine;
+
+  if (!snapshot_builtin_state()) {
+    return false;
+  }
+
   return true;
 }
 
@@ -42,6 +66,10 @@ bool handle_incoming(host_api::Request req) {
     printf("Running JS handleRequest function for Fastly Compute service version %s\n",
            getenv("FASTLY_SERVICE_VERSION"));
     fflush(stdout);
+  }
+
+  if (!restore_builtin_state()) {
+    return false;
   }
 
   RootedObject fetch_event(ENGINE->cx(), FetchEvent::create(ENGINE->cx()));
