@@ -781,6 +781,8 @@ const JSPropertySpec Fastly::properties[] = {
 bool Fastly::restore_builtin_state(JSContext *cx) {
   Fastly::baseURL.reset();
   Fastly::defaultBackend.reset();
+  Fastly::baseURL.init(cx);
+  Fastly::defaultBackend.init(cx);
   return true;
 }
 

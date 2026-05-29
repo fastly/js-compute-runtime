@@ -65,10 +65,6 @@ bool handle_incoming(host_api::Request req) {
     fflush(stdout);
   }
 
-  if (!restore_builtin_state()) {
-    return false;
-  }
-
   RootedObject fetch_event(ENGINE->cx(), FetchEvent::create(ENGINE->cx()));
   if (!FetchEvent::init_request(ENGINE->cx(), fetch_event, req.req, req.body)) {
     ENGINE->dump_pending_exception("initialization of FetchEvent");
@@ -125,6 +121,11 @@ bool handle_incoming(host_api::Request req) {
     printf("Done. Total request processing time: %fms. Total compute time: %fms\n", diff / 1000,
            total_compute / 1000);
   }
+
+  if (!restore_builtin_state()) {
+    return false;
+  }
+
   return true;
 }
 
