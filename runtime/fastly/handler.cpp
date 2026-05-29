@@ -18,18 +18,19 @@ namespace fastly::runtime {
 
 api::Engine *ENGINE;
 
-bool snapshot_builtin_state() {
+int restore_builtin_state() {
   JSContext *cx(ENGINE->cx());
-  if (!::fastly::backend::Backend::snapshot_global_state(cx)) {
+  if (!::fastly::backend::Backend::restore_global_state(cx)) {
+    if (ENGINE->debug_logging_enabled()) {
+      fprintf(stderr,
+              "Warning: Failed to restore Backend state processing next request. Exiting.\n");
+    }
     return false;
   }
-  return true;
-}
-
-int restore_builtin_state() {
-  if (!::fastly::backend::Backend::restore_global_state(ENGINE->cx())) {
+  if (!fastly::Fastly::restore_builtin_state(cx)) {
     if (ENGINE->debug_logging_enabled()) {
-      fprintf(stderr, "Warning: Failed to restore Backend state processing next request. Exiting.\n");
+      fprintf(stderr,
+              "Warning: Failed to restore Backend state processing next request. Exiting.\n");
     }
     return false;
   }
@@ -42,10 +43,6 @@ bool install(api::Engine *engine) {
   JS::SetGCZeal(engine->cx(), 2, FASTLY_GC_FREQUENCY);
 #endif
   ENGINE = engine;
-
-  if (!snapshot_builtin_state()) {
-    return false;
-  }
 
   return true;
 }

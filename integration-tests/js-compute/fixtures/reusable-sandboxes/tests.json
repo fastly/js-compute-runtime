@@ -101,6 +101,16 @@
     }
   },
 
-  "session #3, request #1: GET /backend/ephemeral1": {},
-  "session #3, request #2: GET /backend/ephemeral2": {}
+  "session #3, request #1: GET /backend/ephemeral1": {
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/ephemeral1"
+    }
+  },
+  "session #3, request #2: GET /backend/ephemeral2": {
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/ephemeral2"
+    }
+  }
 }
