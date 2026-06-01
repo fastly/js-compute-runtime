@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.43.0](https://github.com/fastly/js-compute-runtime/compare/v3.42.1...v3.43.0) (2026-06-01)
+
+
+### Features
+
+* stale-if-error support ([#1307](https://github.com/fastly/js-compute-runtime/issues/1307)) ([3e06237](https://github.com/fastly/js-compute-runtime/commit/3e06237878338394451f808e5cb7cd52b993d61e))
+
+
+### Bug Fixes
+
+* Remove memory leak of cache write options in error cases ([#1483](https://github.com/fastly/js-compute-runtime/issues/1483)) ([79874b6](https://github.com/fastly/js-compute-runtime/commit/79874b6e501be0fa3a3f4557a442659357968d83))
+
 ## 3.42.1 (2026-05-18)
 
 ### Fixed
