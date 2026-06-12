@@ -23,3 +23,5 @@ docs-app/pkg/*.tar.gz
 
 yarn-error.log
 .vscode
+
+/packages/wasmtime/bin
