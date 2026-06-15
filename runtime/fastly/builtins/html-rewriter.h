@@ -33,7 +33,8 @@ public:
   static bool replaceWith(JSContext *cx, unsigned argc, JS::Value *vp);
 };
 
-class HTMLRewritingStream : public builtins::TraceableBuiltinImpl<HTMLRewritingStream> {
+class HTMLRewritingStream
+    : public builtins::BuiltinImpl<HTMLRewritingStream, builtins::TraceableClassPolicy> {
 private:
   static bool transformAlgorithm(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool flushAlgorithm(JSContext *cx, unsigned argc, JS::Value *vp);
