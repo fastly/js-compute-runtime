@@ -1,6 +1,5 @@
-import { assert, assertDoesNotThrow, assertThrows } from './assertions.js';
+import { assert, assertDoesNotThrow } from './assertions.js';
 import { routes } from './routes.js';
-import { createFanoutHandoff } from 'fastly:fanout';
 
 routes.set('/form-data/quoted-boundary', async () => {
     const data = new FormData();
