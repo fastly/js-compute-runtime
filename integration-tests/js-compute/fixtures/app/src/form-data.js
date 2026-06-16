@@ -16,7 +16,10 @@ routes.set('/form-data/boundary-is-content-type-safe', async () => {
   // If this test fails as a one-off, it indicates that the boundary generation is not producing a content-type-safe string,
   // which should NOT be ignored, as this has lead to 5XX errors in production in the past.
   let contentType = body.headers['content-type'];
-  assert(/boundary="--StarlingMonkeyFormBoundary[a-zA-Z0-9]+"/.test(contentType), true, 
-    'content-type header contains a safe boundary string, DO NOT IGNORE FAILURES');
+  assert(
+    /boundary="--StarlingMonkeyFormBoundary[a-zA-Z0-9]+"/.test(contentType),
+    true,
+    'content-type header contains a safe boundary string, DO NOT IGNORE FAILURES',
+  );
   return new Response('ok');
 });
