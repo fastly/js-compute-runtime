@@ -1,14 +1,12 @@
 # Changelog
 
-## [3.43.0](https://github.com/fastly/js-compute-runtime/compare/v3.42.1...v3.43.0) (2026-06-16)
+## 3.43.0 (2026-06-16)
 
-
-### Features
+### Added
 
 * stale-if-error support ([#1307](https://github.com/fastly/js-compute-runtime/issues/1307)) ([3e06237](https://github.com/fastly/js-compute-runtime/commit/3e06237878338394451f808e5cb7cd52b993d61e))
 
-
-### Bug Fixes
+### Fixed
 
 * Make boundary parameter of multi-part form data requests safe for use in `Content-Type` headers ([#1493](https://github.com/fastly/js-compute-runtime/issues/1493)) ([938f15f](https://github.com/fastly/js-compute-runtime/commit/938f15fc36faaf6ed188897cde533691475a0779))
 * Remove memory leak of cache write options in error cases ([#1483](https://github.com/fastly/js-compute-runtime/issues/1483)) ([79874b6](https://github.com/fastly/js-compute-runtime/commit/79874b6e501be0fa3a3f4557a442659357968d83))

@@ -1,0 +1,35 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# Response.redirect()
+
+The **`redirect()`** static method of the `Response` interface returns a `Response` resulting in a redirect to the specified URL.
+
+## Syntax
+
+```js
+Response.redirect(url)
+Response.redirect(url, status)
+```
+
+### Parameters
+
+- `url`
+  - : The URL that the new response is to originate from.
+- `status` __optional__
+  - : An optional status code for the response (e.g., `302`.)
+
+### Return value
+
+A `Response` object.
+
+### Exceptions
+
+- `RangeError`
+  - : The specified status is not a redirect status.
+- `TypeError`
+  - : The specified URL is invalid.
