@@ -82,6 +82,15 @@ using fastly::cache_simple::SimpleCacheEntry;
 using fastly::fetch_event::FetchEvent;
 using fastly::kv_store::KVStoreEntry;
 
+namespace {
+  std::string ensure_quoted(const std::string& str) {
+    if (str.size() >= 2 && str.front() == '"' && str.back() == '"') {
+        return str; // Already quoted, return as is
+    }
+    return "\"" + str + "\"";
+  }
+}
+
 namespace builtins::web::streams {
 
 bool NativeStreamSource::stream_is_body(JSContext *cx, JS::HandleObject stream) {
@@ -987,7 +996,10 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
     }
 
     auto boundary = MultipartFormData::boundary(encoder);
-    std::string content_type_str = "multipart/form-data; boundary=" + boundary;
+    // We ensure the boundary is quoted as per RFC 2046, section 5.1.1, to avoid issues with special characters in the boundary string.
+    // Currently, StarlingMonkey does not quote the boundary, but in case this changes in the future, we check if the string is already quoted
+    // before quoting it ourselves.
+    std::string content_type_str = "multipart/form-data; boundary=" + ensure_quoted(boundary);
     host_type_str = host_api::HostString(content_type_str.c_str());
 
     auto length = MultipartFormData::query_length(cx, encoder);

@@ -22,6 +22,7 @@ import './early-hints.js';
 import './edge-rate-limiter.js';
 import './env.js';
 import './fanout.js';
+import './form-data.js';
 import './websocket.js';
 import './fastly-global.js';
 import './fetch-errors.js';
