@@ -1,9 +1,8 @@
 # Changelog
 
-## [3.43.1](https://github.com/fastly/js-compute-runtime/compare/v3.43.0...v3.43.1) (2026-06-17)
+## 3.43.1 (2026-06-17)
 
-
-### Bug Fixes
+### Fixed
 
 * base64 patch wasn't applying cleanly ([#1494](https://github.com/fastly/js-compute-runtime/issues/1494)) ([9311b97](https://github.com/fastly/js-compute-runtime/commit/9311b97299bdfe958c10d41ee37d767320cd0f8f))
 
