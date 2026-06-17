@@ -1,0 +1,31 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# Backend.health()
+
+:::info
+
+This method is deprecated, use [`Backend.prototype.health`](./prototype/health.mdx) instead.
+
+:::
+
+The **`Backend.health()`** method returns a string representing the health of the given Backend instance.
+
+## Syntax
+
+```js
+Backend.health(backend)
+```
+
+### Return value
+
+A string representing the health of the specified Backend value.
+
+Possible values are:
+- `"healthy"` - The backend's health check has succeeded, indicating the backend is working as expected and should receive requests.
+- `"unhealthy"` - The backend's health check has failed, indicating the backend is not working as expected and should not receive requests.
+- `"unknown"` - The backend does not have a health check configured.
