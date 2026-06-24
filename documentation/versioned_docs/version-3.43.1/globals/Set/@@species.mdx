@@ -1,0 +1,25 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# get Set\[Symbol.species]
+
+The **`Set[Symbol.species]`** accessor property is an unused accessor property specifying how to copy `Set` objects.
+
+## Syntax
+
+```js
+Set[Symbol.species]
+```
+
+### Return value
+
+The value of the constructor (`this`) on which `get Symbol.species` was called. The return value is used to construct copied `Set` instances.
+
+## Description
+
+The `Symbol.species` accessor property returns the default constructor for `Set` objects. Subclass constructors may override it to change the constructor assignment.
+
+> **Note:** This property is currently unused by all `Set` methods.

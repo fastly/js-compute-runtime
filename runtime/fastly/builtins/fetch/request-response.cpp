@@ -987,6 +987,10 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
     }
 
     auto boundary = MultipartFormData::boundary(encoder);
+    // We ensure the boundary is quoted as per RFC 2046, section 5.1.1, to avoid issues with special
+    // characters in the boundary string. Currently, StarlingMonkey does not quote the boundary, but
+    // in case this changes in the future, we check if the string is already quoted before quoting
+    // it ourselves.
     std::string content_type_str = "multipart/form-data; boundary=" + boundary;
     host_type_str = host_api::HostString(content_type_str.c_str());
 

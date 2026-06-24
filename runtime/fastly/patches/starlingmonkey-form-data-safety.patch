@@ -1,0 +1,18 @@
+diff --git a/builtins/web/form-data/form-data-encoder.cpp b/builtins/web/form-data/form-data-encoder.cpp
+index 013626d..e4e82fd 100644
+--- a/builtins/web/form-data/form-data-encoder.cpp
++++ b/builtins/web/form-data/form-data-encoder.cpp
+@@ -675,7 +675,12 @@ JSObject *MultipartFormData::create(JSContext *cx, HandleObject form_data) {
+   // Gecko:  ----geckoformboundary8c79e61efa53dc5d441481912ad86113
+   auto bytes = std::move(res.unwrap());
+   auto bytes_str = std::string_view((char *)(bytes.ptr.get()), bytes.size());
+-  auto base64_str = base64::forgivingBase64Encode(bytes_str, base64::base64EncodeTable);
++  // Ensure the base64 encoding is safe for use in a content type by using a custom encoding table that replaces '+' and '/' with 'A' and 'B'.
++  // This follows the WebKit implementation.
++  const char base64EncodeTableContentTypeSafe[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
++                      "abcdefghijklmnopqrstuvwxyz"
++                      "0123456789AB";
++  auto base64_str = base64::forgivingBase64Encode(bytes_str, base64EncodeTableContentTypeSafe);
+
+   auto boundary = fmt::format("--StarlingMonkeyFormBoundary{}", base64_str);
+   auto impl = new (std::nothrow) MultipartFormDataImpl(boundary);
