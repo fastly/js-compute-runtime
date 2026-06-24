@@ -4280,9 +4280,9 @@ bool Response::ttl_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (std::isnan(seconds) || seconds <= 0) {
+  if (std::isnan(seconds) || seconds < 0) {
     api::throw_error(cx, api::Errors::TypeError, "Response set", "ttl",
-                     "be a number greater than zero");
+                     "be a number greater than or equal to zero");
     return false;
   }
 
@@ -4310,9 +4310,9 @@ bool Response::staleWhileRevalidate_set(JSContext *cx, unsigned argc, JS::Value 
     return false;
   }
 
-  if (std::isnan(seconds) || seconds <= 0) {
+  if (std::isnan(seconds) || seconds < 0) {
     api::throw_error(cx, api::Errors::TypeError, "Response set", "staleWhileRevalidate",
-                     "be a number greater than zero");
+                     "be a number greater than or equal to zero");
     return false;
   }
 
@@ -4338,9 +4338,9 @@ bool Response::staleIfError_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (std::isnan(seconds) || seconds <= 0) {
+  if (std::isnan(seconds) || seconds < 0) {
     api::throw_error(cx, api::Errors::TypeError, "Response set", "staleIfError",
-                     "be a number greater than zero");
+                     "be a number greater than or equal to zero");
     return false;
   }
 
