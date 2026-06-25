@@ -685,7 +685,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
     suggested_storage_action = host_api::HttpStorageAction::RecordUncacheable;
   }
 
-  host_api::HttpCacheWriteOptions *override_cache_options = new host_api::HttpCacheWriteOptions();
+  auto override_cache_options = std::make_unique<host_api::HttpCacheWriteOptions>();
 
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::StorageAction),
                       JS::Int32Value(static_cast<uint32_t>(suggested_storage_action)));
@@ -787,7 +787,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
   }
 
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::OverrideCacheWriteOptions),
-                      JS::PrivateValue(override_cache_options));
+                      JS::PrivateValue(override_cache_options.release()));
 
   JS::RootedObject after_send_promise(cx);
   if (after_send) {
@@ -987,6 +987,10 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
     }
 
     auto boundary = MultipartFormData::boundary(encoder);
+    // We ensure the boundary is quoted as per RFC 2046, section 5.1.1, to avoid issues with special
+    // characters in the boundary string. Currently, StarlingMonkey does not quote the boundary, but
+    // in case this changes in the future, we check if the string is already quoted before quoting
+    // it ourselves.
     std::string content_type_str = "multipart/form-data; boundary=" + boundary;
     host_type_str = host_api::HostString(content_type_str.c_str());
 

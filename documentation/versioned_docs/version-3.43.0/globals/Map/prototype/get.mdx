@@ -1,0 +1,28 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Map.prototype.get()
+
+The **`get()`** method returns a specified element from a `Map` object. If the
+value that is associated to the provided key is an object, then you will get a
+reference to that object and any change made to that object will effectively
+modify it inside the `Map` object.
+
+## Syntax
+
+```js
+get(key)
+```
+
+### Parameters
+
+- `key`
+  - : The key of the element to return from the `Map` object.
+
+### Return value
+
+The element associated with the specified key, or
+[`undefined`](../../../globals/undefined.mdx) if the key can't be found in the `Map` object.

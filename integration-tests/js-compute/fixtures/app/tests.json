@@ -3372,5 +3372,11 @@
       "pathname": "/proxy-transform-stream/framing",
       "body": "hello world"
     }
+  },
+  "GET /form-data/boundary-is-content-type-safe": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
   }
 }

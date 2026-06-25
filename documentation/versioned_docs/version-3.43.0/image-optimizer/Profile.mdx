@@ -1,0 +1,34 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# `Profile`
+
+Enumerator options for [`imageOptimizerOptions.profile`](./imageOptimizerOptions.mdx).
+
+## Constants
+
+- `Baseline` (`"baseline"`) The profile recommended for video conferencing and mobile applications. (Default)
+- `Main` (`"main"`) The profile recommended for standard-definition broadcasts.
+- `High` (`"high"`) The profile recommended for high-definition broadcasts.
+
+## Examples
+
+```js
+import { Profile, Region } from 'fastly:image-optimizer';
+
+addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
+
+async function handleRequest(event) {
+  return await fetch('https://www.w3.org/Graphics/PNG/text2.png', {
+    imageOptimizerOptions: {
+      region: Region.UsEast,
+      profile: Profile.Main
+    },
+    backend: 'w3'
+  });
+}
+```
