@@ -479,7 +479,7 @@ int log_write(uint32_t endpoint_handle, const char *msg, size_t msg_len, size_t 
 // Module fastly_http_downstream
 
 typedef struct fastly_http_downstream_next_request_options {
-  uint32_t timeout_ms;
+  uint64_t timeout_ms;
 } fastly_http_downstream_next_request_options;
 
 #define FASTLY_HTTP_DOWNSTREAM_NEXT_REQUEST_OPTIONS_MASK_RESERVED (1 << 0)
