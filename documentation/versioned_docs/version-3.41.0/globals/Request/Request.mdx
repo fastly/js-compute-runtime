@@ -4,6 +4,7 @@ hide_table_of_contents: false
 pagination_next: null
 pagination_prev: null
 ---
+
 # Request()
 
 The **`Request()`** constructor creates a new
@@ -12,8 +13,8 @@ The **`Request()`** constructor creates a new
 ## Syntax
 
 ```js
-new Request(input)
-new Request(input, options)
+new Request(input);
+new Request(input, options);
 ```
 
 ### Parameters
@@ -39,7 +40,7 @@ new Request(input, options)
     - `body`
       - : Any body that you want to add to your request: this can be an `ArrayBuffer`, a `TypedArray`, a `DataView`, a `URLSearchParams`, string object or literal, a `ReadableStream` object, a [`Blob`](../../globals/Blob/Blob.mdx) object, or a [`FormData`](../../globals/FormData/FormData.mdx) object.
     - `backend` _**Fastly-specific**_
-    - `cacheOverride` _**Fastly-specific**_, see [`CacheOverride`](../../fastly:cache-override/CacheOverride/CacheOverride.mdx).
+    - `cacheOverride` _**Fastly-specific**_, see [`CacheOverride`](pathname://../../fastly:cache-override/CacheOverride/CacheOverride.mdx).
     - `cacheKey` _**Fastly-specific**_
     - `manualFramingHeaders`_: boolean_ _**optional**_ _**Fastly-specific**_
       - : The default value is `false`, which means that the framing headers are automatically created based on the message body.
