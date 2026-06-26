@@ -6,7 +6,7 @@ pagination_prev: null
 ---
 # FetchEvent
 
-This is the event type for `fetch` events. It contains information about the fetch, including the request and how the receiver will treat the response. 
+This is the event type for `fetch` events. It contains information about the fetch, including the request and how the receiver will treat the response.
 It provides the [`event.respondWith()`](./prototype/respondWith.mdx) method, which allows us to provide a response to this fetch.
 
 ## Instance properties
@@ -22,7 +22,7 @@ It provides the [`event.respondWith()`](./prototype/respondWith.mdx) method, whi
     - `FetchEvent.client.address` _**readonly**_
         - : A string representation of the IPv4 or IPv6 address of the downstream client.
     - `FetchEvent.client.geo` _**readonly**_
-        - : Either `null`, or a [geolocation dictionary](../../fastly:geolocation/getGeolocationForIpAddress.mdx) corresponding to the IP address of the downstream client.
+        - : Either `null`, or a [geolocation dictionary](pathname://../../fastly%3Ageolocation/getGeolocationForIpAddress.mdx) corresponding to the IP address of the downstream client.
     - `FetchEvent.client.tlsJA3MD5` _**readonly**_
         - : Either `null` or a string representation of the JA3 hash of the TLS ClientHello message.
     - `FetchEvent.client.tlsCipherOpensslName` _**readonly**_
