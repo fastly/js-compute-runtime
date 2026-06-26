@@ -41,13 +41,13 @@ To build from source, you need to have the following tools installed to successf
   ```sh
   cargo install cbindgen
   ```
-- [wasi-sdk, version 20](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-20),
+- [wasi-sdk, version 30](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-30),
   with alternate [install instructions](https://github.com/WebAssembly/wasi-sdk#install)
   ```sh
-  curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-20.0-linux.tar.gz
-  tar xf wasi-sdk-20.0-linux.tar.gz
+  curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-30/wasi-sdk-30.0-x86_64-linux.tar.gz
+  tar xf wasi-sdk-30.0-x86_64-linux.tar.gz
   sudo mkdir -p /opt/wasi-sdk
-  sudo mv wasi-sdk-20.0/* /opt/wasi-sdk/
+  sudo mv wasi-sdk-30.0-x86_64-linux/* /opt/wasi-sdk/
   ```
 
 Build the runtime using npm:
@@ -101,13 +101,13 @@ npm run build
   cargo install --locked wasm-tools
   ```
 
-- [wasi-sdk, version 20](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-20),
+- [wasi-sdk, version 30](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-30),
   with alternate [install instructions](https://github.com/WebAssembly/wasi-sdk#install)
   ```sh
-  curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-20.0-macos.tar.gz
-  tar xf wasi-sdk-20.0-macos.tar.gz
+  curl -sS -L -O https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-30/wasi-sdk-30.0-arm64-macos.tar.gz
+  tar xf wasi-sdk-30.0-arm64-macos.tar.gz
   sudo mkdir -p /opt/wasi-sdk
-  sudo mv wasi-sdk-20.0/* /opt/wasi-sdk/
+  sudo mv wasi-sdk-30.0-arm64-macos/* /opt/wasi-sdk/
   ```
 
 Build the runtime using npm:
