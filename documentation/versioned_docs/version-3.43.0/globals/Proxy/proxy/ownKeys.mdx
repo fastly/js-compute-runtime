@@ -1,0 +1,58 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# handler.ownKeys()
+
+The **`handler.ownKeys()`** method is a trap for
+[`Reflect.ownKeys()`](../../../globals/Reflect/ownKeys.mdx).
+
+## Syntax
+
+```js
+new Proxy(target, {
+  ownKeys(target) {
+  }
+});
+```
+
+### Parameters
+
+The following parameter is passed to the `ownKeys()` method.
+`this` is bound to the handler.
+
+- `target`
+  - : The target object.
+
+### Return value
+
+The `ownKeys()` method must return an enumerable object.
+
+## Description
+
+The **`handler.ownKeys()`** method is a trap for
+[`Reflect.ownKeys()`](../../../globals/Reflect/ownKeys.mdx).
+
+### Interceptions
+
+This trap can intercept these operations:
+
+- [`Object.getOwnPropertyNames()`](../../../globals/Object/getOwnPropertyNames.mdx)
+- [`Object.getOwnPropertySymbols()`](../../../globals/Object/getOwnPropertySymbols.mdx)
+- [`Object.keys()`](../../../globals/Object/keys.mdx)
+- [`Reflect.ownKeys()`](../../../globals/Reflect/ownKeys.mdx)
+
+Or any other operation that invokes the `[[OwnPropertyKeys]]` [internal method](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Proxy#object_internal_methods).
+
+### Invariants
+
+If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.mdx) when invoked.
+
+- The result of `ownKeys()` must be an array.
+- The type of each array element is either a `String` or a `Symbol`.
+- The result List must contain the keys of all non-configurable own properties of the
+  target object.
+- If the target object is not extensible, then the result List must contain all the
+  keys of the own properties of the target object and no other values.

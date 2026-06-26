@@ -1,6 +1,6 @@
 {
   "name": "@fastly/js-compute",
-  "version": "3.42.1",
+  "version": "3.43.1",
   "license": "Apache-2.0",
   "main": "types/index.js",
   "types": "types/index.d.ts",
@@ -44,7 +44,7 @@
     "test:wpt": "tests/wpt-harness/build-wpt-runtime.sh && node ./tests/wpt-harness/run-wpt.mjs -vv",
     "test:wpt:debug": "tests/wpt-harness/build-wpt-runtime.sh --debug-build && node ./tests/wpt-harness/run-wpt.mjs -vv",
     "test:types": "tsd",
-    "clean": "rm -rf dist/ starling.wasm fastly.wasm fastly.debug.wasm fastly-weval.wasm fastly-ics.wevalcache fastly-js-compute-*.tgz",
+    "clean": "rm -rf dist/ starling.wasm fastly.wasm fastly.debug.wasm fastly-weval.wasm fastly-ics.wevalcache fastly-js-compute-*.tgz runtime/fastly/build-debug runtime/fastly/build-release runtime/fastly/build-release-weval",
     "build": "npm run clean && npm run build:cli && npm run build:debug && npm run build:release && npm run build:weval",
     "build:cli": "tsc",
     "build:release": "./runtime/fastly/build-release.sh",
@@ -57,8 +57,8 @@
   },
   "dependencies": {
     "@bytecodealliance/jco": "^1.7.0",
-    "@bytecodealliance/weval": "^0.3.2",
-    "@bytecodealliance/wizer": "^7.0.5",
+    "@bytecodealliance/weval": "^0.4.1",
+    "@fastly/wasmtime": "file:packages/wasmtime",
     "@jridgewell/remapping": "^2.3.5",
     "@jridgewell/trace-mapping": "^0.3.31",
     "acorn": "^8.13.0",
@@ -103,5 +103,6 @@
     "packageManager": {
       "name": "npm"
     }
-  }
+  },
+  "allowScripts": {}
 }

@@ -1,0 +1,36 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# eval
+
+> **Warning:** Executing JavaScript from a string is an enormous security risk. It is far too easy for a bad actor to run arbitrary code when you use `eval()`. See [never use direct eval](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval#never_use_direct_eval!) for details.
+
+The **`eval()`** function evaluates JavaScript code represented as a string and returns its completion value. The source is parsed as a script.
+
+## Syntax
+
+```js
+eval(script)
+```
+
+### Parameters
+
+- `script`
+  - : A string representing a JavaScript expression, statement, or sequence of statements. The expression can include variables and properties of existing objects. It will be parsed as a script, so [`import`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/import) declarations (which can only exist in modules) are not allowed.
+
+### Return value
+
+The completion value of evaluating the given code. If the completion value is empty, [`undefined`](./undefined.mdx) is returned. If `script` is not a string primitive, `eval()` returns the argument unchanged.
+
+### Exceptions
+
+Throws any exception that occurs during evaluation of the code, including[ `SyntaxError`](./SyntaxError/SyntaxError.mdx) if `script` fails to be parsed as a script.
+
+## Description
+
+`eval()` is a function property of the global object.
+
+The argument of the `eval()` function is a string. It will evaluate the source string as a script body, which means both statements and expressions are allowed. It returns the completion value of the code. For expressions, it's the value the expression evaluates to. Many statements and declarations have completion values as well, but the result may be surprising (for example, the completion value of an assignment is the assigned value, but the completion value of [`let`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/let) is undefined), so it's recommended to not rely on statements' completion values.

@@ -7,7 +7,7 @@
 
 namespace fastly::backend {
 
-class Backend : public builtins::FinalizableBuiltinImpl<Backend> {
+class Backend : public builtins::BuiltinImpl<Backend, builtins::FinalizableClassPolicy> {
 public:
   static constexpr const char *class_name = "Backend";
   static const int ctor_length = 1;
