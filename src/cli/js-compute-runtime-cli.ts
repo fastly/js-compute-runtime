@@ -37,9 +37,8 @@ if (parsedInputs === 'version') {
   // js-compute-runtime cli's --version and --help flags to work as
   // it could be that the user is using an older version of js-compute-runtime
   // and a newer version does not support the platform they are using.
-  const { compileApplicationToWasm } = await import(
-    '../compileApplicationToWasm.js'
-  );
+  const { compileApplicationToWasm } =
+    await import('../compileApplicationToWasm.js');
   await compileApplicationToWasm({
     input,
     output,

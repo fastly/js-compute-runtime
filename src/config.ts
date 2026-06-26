@@ -39,9 +39,7 @@ export async function readConfigFileAndCliArguments(cliArgs: string[]) {
 
     // Wrap in an array if it isn't one already
     const items = (Array.isArray(val) ? val : [val]) as (
-      | string
-      | boolean
-      | object
+      string | boolean | object
     )[];
 
     for (const item of items) {
