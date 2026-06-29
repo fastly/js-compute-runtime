@@ -778,6 +778,14 @@ const JSPropertySpec Fastly::properties[] = {
 #endif
     JS_PS_END};
 
+bool Fastly::restore_builtin_state(JSContext *cx) {
+  Fastly::baseURL.reset();
+  Fastly::defaultBackend.reset();
+  Fastly::baseURL.init(cx);
+  Fastly::defaultBackend.init(cx);
+  return true;
+}
+
 bool install(api::Engine *engine) {
   ENGINE = engine;
 

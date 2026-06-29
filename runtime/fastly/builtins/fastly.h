@@ -114,6 +114,7 @@ public:
   static bool allowDynamicBackends_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool inspect(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool setReusableSandboxOptions(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool restore_builtin_state(JSContext *cx);
 };
 
 JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
