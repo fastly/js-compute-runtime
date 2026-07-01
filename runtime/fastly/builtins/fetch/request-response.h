@@ -157,6 +157,11 @@ class Request final : public builtins::BuiltinImpl<Request> {
   static bool setCacheKey(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool setManualFramingHeaders(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool clone(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool bot_analyzed_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool bot_detected_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool bot_name_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool bot_category_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool bot_verified_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:
   static constexpr const char *class_name = "Request";
@@ -184,6 +189,7 @@ public:
     AutoDecompressGzip,
     ImageOptimizerOptions,
     Count,
+    BotCategories,
   };
 
   /**

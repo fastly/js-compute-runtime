@@ -6,6 +6,7 @@ import { env } from 'fastly:env';
 import { enableDebugLogging } from 'fastly:experimental';
 
 import './async-select.js';
+import './bot-detection.js';
 import './btoa.js';
 import './byob.js';
 import './byte-repeater.js';

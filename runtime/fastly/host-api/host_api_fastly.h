@@ -595,6 +595,13 @@ public:
 
   Result<std::optional<HostString>> http_req_downstream_client_oh_fingerprint();
 
+  Result<bool> http_req_downstream_bot_analyzed();
+  Result<bool> http_req_downstream_bot_detected();
+  Result<std::optional<HostString>> http_req_downstream_bot_name();
+  Result<std::optional<HostString>> http_req_downstream_bot_category();
+  Result<std::optional<uint32_t>> http_req_downstream_bot_category_kind();
+  Result<std::optional<bool>> http_req_downstream_bot_verified();
+
   Result<Void> auto_decompress_gzip();
 
   /// Send this request synchronously, and wait for the response.
