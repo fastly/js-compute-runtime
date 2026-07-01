@@ -15,4 +15,7 @@ index 013626d..e4e82fd 100644
 +  auto base64_str = base64::forgivingBase64Encode(bytes_str, base64EncodeTableContentTypeSafe);
 
    auto boundary = fmt::format("--StarlingMonkeyFormBoundary{}", base64_str);
-   auto impl = new (std::nothrow) MultipartFormDataImpl(boundary);
+   auto impl = js::MakeUnique<MultipartFormDataImpl>(boundary);
+   if (!impl) {
+     return nullptr;
+   }

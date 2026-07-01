@@ -2519,6 +2519,170 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool Request::bot_analyzed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  if (!is_downstream(self)) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  auto req{Request::request_handle(self)};
+
+  auto bot_analyzed = req.http_req_downstream_bot_analyzed();
+  if (auto *err = bot_analyzed.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  } else {
+    args.rval().setBoolean(bot_analyzed.unwrap());
+    return true;
+  }
+}
+
+bool Request::bot_detected_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  if (!is_downstream(self)) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  auto req{Request::request_handle(self)};
+
+  auto bot_detected = req.http_req_downstream_bot_detected();
+  if (auto *err = bot_detected.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  } else {
+    args.rval().setBoolean(bot_detected.unwrap());
+    return true;
+  }
+}
+
+bool Request::bot_name_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  if (!is_downstream(self)) {
+    args.rval().setNull();
+    return true;
+  }
+
+  auto req{Request::request_handle(self)};
+
+  auto bot_name_res = req.http_req_downstream_bot_name();
+  if (auto *err = bot_name_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  } else {
+    if (bot_name_res.unwrap().has_value()) {
+      auto bot_name_str = std::move(bot_name_res.unwrap().value());
+      args.rval().setString(JS_NewStringCopyN(cx, bot_name_str.ptr.get(), bot_name_str.len));
+    } else {
+      args.rval().setNull();
+    }
+    return true;
+  }
+}
+
+bool Request::bot_category_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  if (!is_downstream(self)) {
+    args.rval().setNull();
+    return true;
+  }
+
+  auto req{Request::request_handle(self)};
+
+  auto bot_category_res = req.http_req_downstream_bot_category_kind();
+  if (auto *err = bot_category_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  } else {
+    if (bot_category_res.unwrap().has_value()) {
+      std::string kind_str;
+      switch (bot_category_res.unwrap().value()) {
+      case 0:
+        kind_str = "none";
+        break;
+      case 1:
+        kind_str = "suspected";
+        break;
+      case 2:
+        kind_str = "accessibility";
+        break;
+      case 3:
+        kind_str = "ai-crawler";
+        break;
+      case 4:
+        kind_str = "ai-fetcher";
+        break;
+      case 5:
+        kind_str = "content-fetcher";
+        break;
+      case 6:
+        kind_str = "monitoring-site-tools";
+        break;
+      case 7:
+        kind_str = "online-marketing";
+        break;
+      case 8:
+        kind_str = "page-preview";
+        break;
+      case 9:
+        kind_str = "platform-integrations";
+        break;
+      case 10:
+        kind_str = "research";
+        break;
+      case 11:
+        kind_str = "search-engine-crawler";
+        break;
+      case 12:
+        kind_str = "search-engine-specialization";
+        break;
+      case 13:
+        kind_str = "security-tools";
+        break;
+      case 14:
+        kind_str = "headless";
+        break;
+      default:
+        kind_str = "unknown";
+        break;
+      }
+      args.rval().setString(JS_NewStringCopyN(cx, kind_str.data(), kind_str.length()));
+    } else {
+      args.rval().setNull();
+    }
+    return true;
+  }
+}
+
+bool Request::bot_verified_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  if (!is_downstream(self)) {
+    args.rval().setNull();
+    return true;
+  }
+
+  auto req{Request::request_handle(self)};
+
+  auto bot_verified_res = req.http_req_downstream_bot_verified();
+  if (auto *err = bot_verified_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  } else {
+    if (bot_verified_res.unwrap().has_value()) {
+      args.rval().setBoolean(bot_verified_res.unwrap().value());
+    } else {
+      args.rval().setNull();
+    }
+    return true;
+  }
+}
+
 const JSFunctionSpec Request::static_methods[] = {
     JS_FS_END,
 };
@@ -2551,6 +2715,11 @@ const JSPropertySpec Request::properties[] = {
     JS_PSG("body", body_get, JSPROP_ENUMERATE),
     JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
     JS_PSG("isCacheable", isCacheable_get, JSPROP_ENUMERATE),
+    JS_PSG("botAnalyzed", bot_analyzed_get, JSPROP_ENUMERATE),
+    JS_PSG("botDetected", bot_detected_get, JSPROP_ENUMERATE),
+    JS_PSG("botName", bot_name_get, JSPROP_ENUMERATE),
+    JS_PSG("botCategory", bot_category_get, JSPROP_ENUMERATE),
+    JS_PSG("botVerified", bot_verified_get, JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "Request", JSPROP_READONLY),
     JS_PS_END,
 };
