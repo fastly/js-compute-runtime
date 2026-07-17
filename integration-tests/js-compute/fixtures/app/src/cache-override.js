@@ -170,6 +170,8 @@ import { isRunningLocally, routes } from './routes.js';
     }
   });
   routes.set('/cache-override/fetch/null-304-body', async (event) => {
+    if (isRunningLocally()) return;
+
     const resp = await fetch(
       new Request('https://http-me.fastly.dev/body=foo?status=304', {
         method: 'POST',
