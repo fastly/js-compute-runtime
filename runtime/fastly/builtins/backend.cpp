@@ -1808,6 +1808,21 @@ void Backend::finalize(JS::GCContext *gcx, JSObject *obj) {
   free(backend);
 }
 
+bool Backend::restore_global_state(JSContext *cx) {
+  JS::Rooted<JS::IdVector> props(cx, cx);
+  if (!JS_Enumerate(cx, Backend::backends, &props)) {
+    return false;
+  }
+  JS::RootedValue backend(cx);
+  for (uint32_t i = 0, len = props.length(); i < len; i++) {
+    if (!JS_GetPropertyById(cx, Backend::backends, props[i], &backend)) {
+      return false;
+    }
+    JS_DeletePropertyById(cx, Backend::backends, props[i]);
+  }
+  return true;
+}
+
 bool set_default_backend_config(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "setDefaultDynamicBackendConfiguration", 1)) {
@@ -1859,8 +1874,7 @@ bool install(api::Engine *engine) {
     return false;
   }
 
-  RootedObject backend_obj(engine->cx(),
-                           JS_GetConstructor(engine->cx(), BuiltinImpl<Backend>::proto_obj));
+  RootedObject backend_obj(engine->cx(), JS_GetConstructor(engine->cx(), Backend::proto_obj));
   RootedValue backend_val(engine->cx(), ObjectValue(*backend_obj));
   RootedObject backend_ns(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   if (!JS_SetProperty(engine->cx(), backend_ns, "Backend", backend_val)) {

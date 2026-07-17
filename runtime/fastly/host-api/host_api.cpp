@@ -112,7 +112,7 @@ void sleep_until(uint64_t time_ns, uint64_t now) {
   }
 }
 
-size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
+size_t api::AsyncTask::select(std::vector<RefPtr<api::AsyncTask>> &tasks) {
   if (tasks.size() == 0) {
     TRACE_CALL()
   } else {
@@ -136,7 +136,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
   uint64_t soonest_deadline = 0;
   size_t soonest_deadline_idx = -1;
   for (size_t idx = 0; idx < tasks_len; ++idx) {
-    auto *task = tasks.at(idx);
+    auto task = tasks.at(idx);
     uint64_t deadline;
     if (task->id() == IMMEDIATE_TASK_HANDLE) {
       if (now == 0) {
@@ -529,16 +529,7 @@ int32_t MonotonicClock::subscribe(const uint64_t when, const bool absolute) {
   return NEVER_HANDLE;
 }
 
-void MonotonicClock::unsubscribe(const int32_t handle_id){TRACE_CALL()}
-
-// HttpHeaders and HttpHeadersReadOnly extend Resource.
-// Resource provdes handle_state_ which is a HandleState
-// which gets to be fully host-defined.
-Resource::~Resource() {
-  if (handle_state_ != nullptr) {
-    handle_state_ = nullptr;
-  }
-};
+void MonotonicClock::unsubscribe(const int32_t handle_id) { TRACE_CALL() }
 
 // Fastly handle state is currently just a wrapper around
 // an arbitrary fastly handle, along with a bit indicating
@@ -556,6 +547,15 @@ public:
   api::FastlyAsyncTask::Handle handle() { return handle_; }
   bool is_req() { return is_req_; }
   bool valid() const { return true; }
+};
+
+// HttpHeaders and HttpHeadersReadOnly extend Resource.
+// Resource provdes handle_state_ which is a HandleState
+// which gets to be fully host-defined.
+Resource::~Resource() {
+  if (handle_state_ != nullptr) {
+    handle_state_ = nullptr;
+  }
 };
 
 HttpHeaders *HttpHeadersReadOnly::clone() { return new HttpHeaders(*this); }
@@ -2260,6 +2260,11 @@ FastlyCacheWriteOptionsOwned to_fastly_cache_write_options(const HttpCacheWriteO
     result.mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS;
   }
 
+  if (opts->stale_if_error_ns) {
+    result.options->stale_if_error_ns = *opts->stale_if_error_ns;
+    result.mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_IF_ERROR_NS;
+  }
+
   if (opts->surrogate_keys.has_value()) {
     const auto &keys = opts->surrogate_keys.value();
     if (keys.size() == 1) {
@@ -2328,6 +2333,10 @@ from_fastly_cache_write_options(const fastly::fastly_http_cache_write_options &f
 
   if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS) {
     opts->stale_while_revalidate_ns = fastly_opts.stale_while_revalidate_ns;
+  }
+
+  if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_IF_ERROR_NS) {
+    opts->stale_if_error_ns = fastly_opts.stale_if_error_ns;
   }
 
   if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS && fastly_opts.surrogate_keys &&
@@ -2453,7 +2462,8 @@ Result<HostString> Request::inspect(const InspectOptions *config) {
 
 Result<HttpCacheEntry> HttpCacheEntry::transaction_lookup(const HttpReq &req,
                                                           std::span<uint8_t> override_key) {
-  TRACE_CALL_ARGS(TSV(std::to_string(req.handle)))
+  TRACE_CALL_ARGS(TSV(std::to_string(req.handle)));
+
   uint32_t handle_out;
   fastly::fastly_http_cache_lookup_options opts{};
   uint32_t opts_mask = 0;
@@ -2538,6 +2548,16 @@ HttpCacheEntry::transaction_update_and_return_fresh(const HttpResp &resp,
   return Result<HttpCacheEntry>::ok(HttpCacheEntry(fresh_handle_out));
 }
 
+Result<Void> HttpCacheEntry::transaction_choose_stale() {
+  TRACE_CALL()
+  auto res = fastly::http_cache_transaction_choose_stale(this->handle);
+  if (res != 0) {
+    return Result<Void>::err(host_api::APIError(res));
+  }
+
+  return Result<Void>::ok(Void{});
+}
+
 Result<Void>
 HttpCacheEntry::transaction_record_not_cacheable(uint64_t max_age_ns,
                                                  std::optional<std::string_view> vary_rule) {
@@ -2600,7 +2620,8 @@ HttpCacheEntry::get_suggested_cache_options(const HttpResp &resp) const {
                                 FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS |
                                 FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS |
                                 FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_LENGTH |
-                                FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA;
+                                FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA |
+                                FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_IF_ERROR_NS;
 
   // Allocate initial buffers
   uint8_t *vary_buffer = static_cast<uint8_t *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 4));
@@ -2685,6 +2706,7 @@ Result<CacheState> HttpCacheEntry::get_state() const {
   if (!convert_result(fastly::http_cache_get_state(this->handle, &state), &err)) {
     res.emplace_err(err);
   } else {
+    TRACE_CALL_RET(TSV(std::to_string(state)))
     res.emplace(CacheState{state});
   }
 
@@ -2728,6 +2750,18 @@ Result<uint64_t> HttpCacheEntry::get_stale_while_revalidate_ns() const {
   }
 
   return Result<uint64_t>::ok(swr_out);
+}
+
+Result<uint64_t> HttpCacheEntry::get_stale_if_error_ns() const {
+  TRACE_CALL()
+  uint64_t sie_out;
+  auto res = fastly::http_cache_get_stale_if_error_ns(this->handle, &sie_out);
+
+  if (res != 0) {
+    return Result<uint64_t>::err(host_api::APIError(res));
+  }
+
+  return Result<uint64_t>::ok(sie_out);
 }
 
 Result<uint64_t> HttpCacheEntry::get_age_ns() const {
@@ -3281,6 +3315,10 @@ bool CacheState::is_stale() const { return this->state & FASTLY_HOST_CACHE_LOOKU
 
 bool CacheState::must_insert_or_update() const {
   return this->state & FASTLY_HOST_CACHE_LOOKUP_STATE_MUST_INSERT_OR_UPDATE;
+}
+
+bool CacheState::is_usable_if_error() const {
+  return this->state & FASTLY_HOST_CACHE_LOOKUP_STATE_USABLE_IF_ERROR;
 }
 
 Result<CacheHandle> CacheHandle::lookup(std::string_view key, const CacheLookupOptions &opts) {
