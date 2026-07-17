@@ -110,6 +110,18 @@ This includes all configuration options above except for `name`, `target`, `host
 
 A new `Backend` object.
 
+### Disable TLS verification
+
+TLS certificate verification for a backend can be disabled by leaving the following fields **unset** in your `backendConfiguration`:
+
+- `sniHostname`
+- `caCertificate`
+- `certificateHostname`
+
+If these fields are not configured, the Compute app does not validate the certificate presented by the backend. As a result, it will accept certificates that are expired, self-signed, issued for a different hostname or otherwise invalid.
+
+However, as a best practice, your origin should serve a valid TLS certificate and your Compute app should verify it to help protect backend connections from man-in-the-middle attacks.
+
 ## Examples
 
 In this example an explicit Dynamic Backend is created and supplied to the fetch request, the response is then returned to the client.
