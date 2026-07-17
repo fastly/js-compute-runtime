@@ -1,9 +1,12 @@
 #include "../StarlingMonkey/builtins/web/performance.h"
+#include "./builtins/backend.h"
+#include "./builtins/fastly.h"
 #include "./builtins/fetch-event.h"
 #include "./host-api/fastly.h"
 #include "./host-api/host_api_fastly.h"
 #include "extension-api.h"
 #include "host_api.h"
+#include <chrono>
 #include <wasi/libc-environ.h>
 
 using fastly::fetch_event::FetchEvent;
@@ -15,13 +18,36 @@ namespace fastly::runtime {
 
 api::Engine *ENGINE;
 
-// Install corresponds to Wizer time, so we configure the engine here
-bool install(api::Engine *engine) {
-  ENGINE = engine;
+bool restore_builtin_state() {
+  JSContext *cx(ENGINE->cx());
+  if (!::fastly::backend::Backend::restore_global_state(cx)) {
+    if (ENGINE->debug_logging_enabled()) {
+      fprintf(stderr,
+              "Warning: Failed to restore Backend state processing next request. Exiting.\n");
+    }
+    return false;
+  }
+  if (!fastly::Fastly::restore_builtin_state(cx)) {
+    if (ENGINE->debug_logging_enabled()) {
+      fprintf(stderr,
+              "Warning: Failed to restore Backend state processing next request. Exiting.\n");
+    }
+    return false;
+  }
   return true;
 }
 
-void handle_incoming(host_api::Request req) {
+// Install corresponds to Wizer time, so we configure the engine here
+bool install(api::Engine *engine) {
+#if defined(JS_GC_ZEAL) && defined(FASTLY_GC_FREQUENCY)
+  JS::SetGCZeal(engine->cx(), 2, FASTLY_GC_FREQUENCY);
+#endif
+  ENGINE = engine;
+
+  return true;
+}
+
+bool handle_incoming(host_api::Request req) {
   builtins::web::performance::Performance::timeOrigin.emplace(
       std::chrono::high_resolution_clock::now());
 
@@ -31,7 +57,7 @@ void handle_incoming(host_api::Request req) {
     start = system_clock::now();
   }
 
-  __wasilibc_initialize_environ();
+  __wasilibc_ensure_environ();
 
   if (ENGINE->debug_logging_enabled()) {
     printf("Running JS handleRequest function for Fastly Compute service version %s\n",
@@ -39,10 +65,10 @@ void handle_incoming(host_api::Request req) {
     fflush(stdout);
   }
 
-  HandleObject fetch_event = FetchEvent::instance();
+  RootedObject fetch_event(ENGINE->cx(), FetchEvent::create(ENGINE->cx()));
   if (!FetchEvent::init_request(ENGINE->cx(), fetch_event, req.req, req.body)) {
     ENGINE->dump_pending_exception("initialization of FetchEvent");
-    return;
+    return false;
   }
 
   if (ENGINE->debug_logging_enabled()) {
@@ -61,27 +87,32 @@ void handle_incoming(host_api::Request req) {
 
   if (JS_IsExceptionPending(ENGINE->cx())) {
     ENGINE->dump_pending_exception("evaluating code");
+    return false;
   } else if (!success) {
     if (ENGINE->has_pending_async_tasks()) {
       fprintf(stderr, "Warning: JS event loop terminated with async tasks pending. "
                       "Use FetchEvent#waitUntil to extend the service's lifetime "
                       "if needed.\n");
+      return false;
     } else {
       fprintf(stderr, "Warning: JS event loop terminated without completing the request.\n");
+      return false;
     }
   }
 
-  if (ENGINE->debug_logging_enabled() && ENGINE->has_pending_async_tasks()) {
-    fprintf(stderr, "Warming: JS event loop terminated with async tasks pending. "
-                    "Use FetchEvent#waitUntil to extend the service's lifetime "
-                    "if needed.\n");
-    return;
+  if (ENGINE->has_pending_async_tasks()) {
+    if (ENGINE->debug_logging_enabled()) {
+      fprintf(stderr, "Warning: JS event loop terminated with async tasks pending. "
+                      "Use FetchEvent#waitUntil to extend the service's lifetime "
+                      "if needed.\n");
+    }
+    return false;
   }
 
   // Respond with status `500` if no response was ever sent.
   if (!FetchEvent::response_started(fetch_event)) {
     FetchEvent::respondWithError(ENGINE->cx(), fetch_event);
-    return;
+    return false;
   }
 
   if (ENGINE->debug_logging_enabled()) {
@@ -90,21 +121,116 @@ void handle_incoming(host_api::Request req) {
     printf("Done. Total request processing time: %fms. Total compute time: %fms\n", diff / 1000,
            total_compute / 1000);
   }
-  return;
+
+  if (!restore_builtin_state()) {
+    return false;
+  }
+
+  return true;
 }
 
 } // namespace fastly::runtime
 
-// Fastly uses main to then pull the backend request
 int main(int argc, const char *argv[]) {
-  host_api::Request req;
+  using fastly::fastly::Fastly;
+  using fastly::runtime::ENGINE;
+  Fastly::reusableSandboxOptions.freeze();
 
-  if (fastly::req_body_downstream_get(&req.req.handle, &req.body.handle) != 0) {
-    abort();
+  host_api::HttpReqPromise::DownstreamNextOptions options;
+  if (Fastly::reusableSandboxOptions.between_request_timeout()) {
+    options.timeout_ms = static_cast<uint32_t>(
+        Fastly::reusableSandboxOptions.between_request_timeout().value().count());
+  }
+
+  auto req = host_api::Request::downstream_get();
+  if (req.is_err()) {
+    HANDLE_ERROR(ENGINE->cx(), *req.to_err());
     return 1;
   }
 
-  fastly::runtime::handle_incoming(req);
+  const auto max_requests = Fastly::reusableSandboxOptions.max_requests().value_or(1);
+  std::size_t requests_handled = 0;
+  const auto start_time = std::chrono::high_resolution_clock::now();
+  while (true) {
+    bool success = fastly::runtime::handle_incoming(req.unwrap());
+
+    if (!success) {
+      if (ENGINE->debug_logging_enabled()) {
+        printf("Request handling not successful, exiting process.\n");
+        fflush(stdout);
+      }
+      return 1;
+    }
+
+    requests_handled++;
+
+    // Check if we should exit based on configured max requests
+    // Note that a max request value of 0 means unlimited,
+    // so we only check the max requests condition if max_requests is greater than 0.
+    if (max_requests > 0 && requests_handled >= max_requests) {
+      if (fastly::runtime::ENGINE->debug_logging_enabled()) {
+        printf("Max requests handled (%zu), exiting process.\n", requests_handled);
+      }
+      break;
+    }
+
+    // Check if we should exit based on configured sandbox timeout
+    if (Fastly::reusableSandboxOptions.sandbox_timeout()) {
+      auto now = std::chrono::high_resolution_clock::now();
+      auto elapsed = now - start_time;
+      if (elapsed >= Fastly::reusableSandboxOptions.sandbox_timeout().value()) {
+        if (fastly::runtime::ENGINE->debug_logging_enabled()) {
+          printf("Sandbox timeout reached (%llu ms), exiting process.\n",
+                 std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count());
+        }
+        break;
+      }
+    }
+
+    // Check if we should exit based on configured max memory usage
+    if (Fastly::reusableSandboxOptions.max_memory_mib()) {
+      uint32_t heap_mib;
+      if (fastly::compute_get_heap_mib(&heap_mib) != 0) {
+        // If we fail to get heap memory usage, log a warning but continue anyway since this isn't a
+        // critical failure.
+        if (fastly::runtime::ENGINE->debug_logging_enabled()) {
+          printf("Failed to get heap memory usage, continuing anyway.\n");
+        }
+      } else if (heap_mib >= Fastly::reusableSandboxOptions.max_memory_mib().value()) {
+        if (fastly::runtime::ENGINE->debug_logging_enabled()) {
+          printf("Max memory exceeded (heap usage: %u MiB, max: %u MiB), exiting process.\n",
+                 heap_mib, Fastly::reusableSandboxOptions.max_memory_mib().value());
+        }
+        break;
+      }
+    }
+
+    auto next = host_api::HttpReqPromise::downstream_next(options);
+    if (next.is_err()) {
+      if (fastly::runtime::ENGINE->debug_logging_enabled()) {
+        printf("HOSTCALL: downstream_next() failed with code %hhu\n", *req.to_err());
+      }
+      HANDLE_ERROR(ENGINE->cx(), *next.to_err());
+      return 1;
+    }
+
+    req = next.unwrap().wait();
+    if (req.is_err()) {
+      HANDLE_ERROR(ENGINE->cx(), *req.to_err());
+      return 1;
+    }
+
+    if (JS_IsExceptionPending(ENGINE->cx())) {
+      ENGINE->dump_pending_exception("running event loop");
+      return 1;
+    }
+    ENGINE->reset();
+  }
+
+  if (fastly::runtime::ENGINE->debug_logging_enabled()) {
+    printf("Exiting process after handling %zu requests.\n", requests_handled);
+    fflush(stdout);
+  }
 
   return 0;
 }

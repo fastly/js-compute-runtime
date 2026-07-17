@@ -21,6 +21,8 @@ public:
     ManualFramingHeaders,
     Backend,
     CacheEntry,
+    SourceRequest, // Tracks the original Request when body is proxied via TransformStream
+    FetchEvent,
     Count,
   };
 
@@ -110,8 +112,7 @@ public:
 
   static JSObject *create_body_stream(JSContext *cx, JS::HandleObject owner);
 
-  static bool body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self,
-                       bool create_if_undefined);
+  static bool body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
   static bool backend_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
   static JSString *backend(JSObject *obj);
 
@@ -172,6 +173,8 @@ public:
     ManualFramingHeaders = static_cast<int>(RequestOrResponse::Slots::ManualFramingHeaders),
     Backend = static_cast<int>(RequestOrResponse::Slots::Backend),
     CacheEntry = static_cast<int>(RequestOrResponse::Slots::CacheEntry),
+    SourceRequest = static_cast<int>(RequestOrResponse::Slots::SourceRequest),
+    FetchEvent = static_cast<int>(RequestOrResponse::Slots::FetchEvent),
     Method = static_cast<int>(RequestOrResponse::Slots::Count),
     OverrideCacheKey,
     CacheOverride,
@@ -179,6 +182,7 @@ public:
     ResponsePromise,
     IsDownstream,
     AutoDecompressGzip,
+    ImageOptimizerOptions,
     Count,
   };
 
@@ -195,6 +199,8 @@ public:
                                  JS::HandleValue cache_override_val);
   static bool apply_cache_override(JSContext *cx, JS::HandleObject self);
   static bool apply_auto_decompress_gzip(JSContext *cx, JS::HandleObject self);
+  static bool set_image_optimizer_options(JSContext *cx, JS::HandleObject self,
+                                          JS::HandleValue image_optimizer_options);
 
   static bool isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static host_api::HttpReq request_handle(JSObject *obj);
@@ -219,7 +225,7 @@ public:
   static JSObject *create_instance(JSContext *cx);
 };
 
-class Response final : public builtins::FinalizableBuiltinImpl<Response> {
+class Response final : public builtins::BuiltinImpl<Response, builtins::FinalizableClassPolicy> {
   static bool waitUntil(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool ok_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool status_get(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -255,10 +261,12 @@ public:
     BodyUsed = static_cast<int>(RequestOrResponse::Slots::BodyUsed),
     Headers = static_cast<int>(RequestOrResponse::Slots::Headers),
     HeadersGen = static_cast<int>(RequestOrResponse::Slots::HeadersGen),
-    URL = static_cast<int>(RequestOrResponse::Slots::Headers),
+    URL = static_cast<int>(RequestOrResponse::Slots::URL),
     ManualFramingHeaders = static_cast<int>(RequestOrResponse::Slots::ManualFramingHeaders),
     Backend = static_cast<int>(RequestOrResponse::Slots::Backend),
     CacheEntry = static_cast<int>(RequestOrResponse::Slots::CacheEntry),
+    SourceRequest = static_cast<int>(RequestOrResponse::Slots::SourceRequest),
+    FetchEvent = static_cast<int>(RequestOrResponse::Slots::FetchEvent),
     IsUpstream = static_cast<int>(RequestOrResponse::Slots::Count),
     Status,
     StatusMessage,
@@ -269,6 +277,7 @@ public:
     SuggestedCacheWriteOptions,
     OverrideCacheWriteOptions,
     CacheBodyTransform,
+    MaskedError, // An error that occured, but was masked by a cached stale-if-error response
     Count,
   };
   static const JSFunctionSpec static_methods[];
@@ -320,6 +329,7 @@ public:
                                        const char *fun_name);
 
   static bool has_body_transform(JSObject *self);
+  static bool has_bodyless_status(JSObject *obj);
 
   /**
    * Override cache options set by the user & suggested options, or final cache options if
@@ -345,14 +355,18 @@ public:
   static bool ttl_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool ttl_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool age_get(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool swr_get(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool swr_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool staleWhileRevalidate_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool staleWhileRevalidate_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool staleIfError_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool staleIfError_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool vary_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool vary_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool surrogateKeys_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool pci_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool pci_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool staleIfErrorAvailable(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool maskedError_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static void finalize(JS::GCContext *gcx, JSObject *self);
 };

@@ -1,5 +1,211 @@
 # Changelog
 
+## 3.43.1 (2026-06-17)
+
+### Fixed
+
+* base64 patch wasn't applying cleanly ([#1494](https://github.com/fastly/js-compute-runtime/issues/1494)) ([9311b97](https://github.com/fastly/js-compute-runtime/commit/9311b97299bdfe958c10d41ee37d767320cd0f8f))
+
+## 3.43.0 (2026-06-16)
+
+### Added
+
+* stale-if-error support ([#1307](https://github.com/fastly/js-compute-runtime/issues/1307)) ([3e06237](https://github.com/fastly/js-compute-runtime/commit/3e06237878338394451f808e5cb7cd52b993d61e))
+
+### Fixed
+
+* Make boundary parameter of multi-part form data requests safe for use in `Content-Type` headers ([#1493](https://github.com/fastly/js-compute-runtime/issues/1493)) ([938f15f](https://github.com/fastly/js-compute-runtime/commit/938f15fc36faaf6ed188897cde533691475a0779))
+* Remove memory leak of cache write options in error cases ([#1483](https://github.com/fastly/js-compute-runtime/issues/1483)) ([79874b6](https://github.com/fastly/js-compute-runtime/commit/79874b6e501be0fa3a3f4557a442659357968d83))
+
+## 3.42.1 (2026-05-18)
+
+### Fixed
+
+* Null body for non-downstream requests with no stream created for them ([#1479](https://github.com/fastly/js-compute-runtime/issues/1479)) ([511c667](https://github.com/fastly/js-compute-runtime/commit/511c6672e18b8872f707a3942a5d53c651e03797))
+
+## 3.42.0 (2026-05-11)
+
+### Added
+
+* Bail out of reusable sandbox if request fails ([#1453](https://github.com/fastly/js-compute-runtime/issues/1453)) ([b6f41b0](https://github.com/fastly/js-compute-runtime/commit/b6f41b0bcf429705f1a70530e39774f3fedd3c07))
+
+### Fixed
+
+* Allocation failure checks ([#1457](https://github.com/fastly/js-compute-runtime/issues/1457)) ([c882105](https://github.com/fastly/js-compute-runtime/commit/c882105b1daf2f16c54e25105a1d6bd45336cba5))
+* Avoid dereferencing one-past-the-end iterator in `host_api` ([#1461](https://github.com/fastly/js-compute-runtime/issues/1461)) ([acf2b25](https://github.com/fastly/js-compute-runtime/commit/acf2b25fddda2960a5e5ed7b0e0e9802a2ce21c2))
+* Be more defensive in `ip_octets_to_js_string` ([#1468](https://github.com/fastly/js-compute-runtime/issues/1468)) ([60bbec1](https://github.com/fastly/js-compute-runtime/commit/60bbec1f639a47ad3c384f4517aa628a2115507d))
+* Cache body range check ([#1463](https://github.com/fastly/js-compute-runtime/issues/1463)) ([f38ce55](https://github.com/fastly/js-compute-runtime/commit/f38ce550419001c09e1337f2b98fd3a0b2fee947))
+* Cache override getters for `beforeSend` and `afterSend` ([#1466](https://github.com/fastly/js-compute-runtime/issues/1466)) ([5261936](https://github.com/fastly/js-compute-runtime/commit/52619361172eaaed4493693f309d52e4c4f98386))
+* Correct GC guard type in KVStore::put to prevent wasm unreachable crashes and fix some CI issues ([#1475](https://github.com/fastly/js-compute-runtime/issues/1475)) ([15f850d](https://github.com/fastly/js-compute-runtime/commit/15f850d47c2a407d5261f3b46047bb533bcca1dd))
+* Ensure nul-termination of string for inet\_pton ([#1462](https://github.com/fastly/js-compute-runtime/issues/1462)) ([0e3afbe](https://github.com/fastly/js-compute-runtime/commit/0e3afbe335a6cc29744d28283880addc780d3a04))
+* Find invalid characters after nul bytes in KV store keys ([#1464](https://github.com/fastly/js-compute-runtime/issues/1464)) ([5f0f0f2](https://github.com/fastly/js-compute-runtime/commit/5f0f0f2100dce30fe8163846613d91deec783aba))
+* Incorrect catch handler failure check ([#1458](https://github.com/fastly/js-compute-runtime/issues/1458)) ([fb3c01a](https://github.com/fastly/js-compute-runtime/commit/fb3c01acd8a1c696f231b265d78b26bc163adb1a))
+* Memory leak in `get_found_response` ([#1456](https://github.com/fastly/js-compute-runtime/issues/1456)) ([17559d3](https://github.com/fastly/js-compute-runtime/commit/17559d350dad3969fc5d0352c1d74e38f617f78f))
+* Memory leak on failed inspect hostcall ([#1455](https://github.com/fastly/js-compute-runtime/issues/1455)) ([9b77977](https://github.com/fastly/js-compute-runtime/commit/9b779773849b93d1d1b955aaea068d5e4ae73649))
+* Protect against GC from `validate_bytes` ([#1447](https://github.com/fastly/js-compute-runtime/issues/1447)) ([be0867b](https://github.com/fastly/js-compute-runtime/commit/be0867ba1f7632dab107c3db15800db3a52a49ec))
+* Shrinking realloc in KVStorePendingLookup ([#1467](https://github.com/fastly/js-compute-runtime/issues/1467)) ([5a72d13](https://github.com/fastly/js-compute-runtime/commit/5a72d13684679f79ff956004ff6f77fa257a6aa3))
+* Throw error on negative `ttl` and `swr` ([#1465](https://github.com/fastly/js-compute-runtime/issues/1465)) ([7d29650](https://github.com/fastly/js-compute-runtime/commit/7d2965014d979dcb725b1e0c2dbbe5dcb4a20b78))
+
+## 3.41.2 (2026-05-04)
+
+### Fixed
+
+* `HttpBody::read_all` for large bodies ([#1444](https://github.com/fastly/js-compute-runtime/issues/1444)) ([99f45b5](https://github.com/fastly/js-compute-runtime/commit/99f45b53253d1109202c24cddc3357752873ca90))
+* Check pending exceptions between requests in reusable sandbox mode ([#1425](https://github.com/fastly/js-compute-runtime/issues/1425)) ([64a6b21](https://github.com/fastly/js-compute-runtime/commit/64a6b213c605d2ae714b8a49faad9893284998a5))
+* Memory issues exposed by high GC zeal ([#1442](https://github.com/fastly/js-compute-runtime/issues/1442)) ([f406308](https://github.com/fastly/js-compute-runtime/commit/f406308ce6ced5b8475839ce43736fb588d3e4b5))
+* Memory leak in normalize\_http\_method ([#1449](https://github.com/fastly/js-compute-runtime/issues/1449)) ([669b58a](https://github.com/fastly/js-compute-runtime/commit/669b58a0f34a03f56571723c442b3fee61c90b3b))
+* mislabeled `Response::Slots::URL` slot ([#1445](https://github.com/fastly/js-compute-runtime/issues/1445)) ([6d4d268](https://github.com/fastly/js-compute-runtime/commit/6d4d26815acc817365bc41d0784095650847765a))
+* Numeric overflow issue in Core Cache API ([#1448](https://github.com/fastly/js-compute-runtime/issues/1448)) ([360c9bf](https://github.com/fastly/js-compute-runtime/commit/360c9bfff611e226c5dbf5fac61d98e993feded3))
+* Potential buffer size issues in shielding ([#1443](https://github.com/fastly/js-compute-runtime/issues/1443)) ([4bf9d72](https://github.com/fastly/js-compute-runtime/commit/4bf9d722b68893f188a89c1e6019c9a7699a023b))
+* Reset StarlingMonkey engine between requests ([#1426](https://github.com/fastly/js-compute-runtime/issues/1426)) ([238cf70](https://github.com/fastly/js-compute-runtime/commit/238cf70ecd743f73c662ae3757244859d4d2aaad))
+* SSL string cipher intersection ([#1446](https://github.com/fastly/js-compute-runtime/issues/1446)) ([13ef2d5](https://github.com/fastly/js-compute-runtime/commit/13ef2d59a4a0c2e93cc0faa8cd98387e3bdee731))
+* Use length rather than NUL-terminator when copying `HostString`s ([#1429](https://github.com/fastly/js-compute-runtime/issues/1429)) ([8aa3f4c](https://github.com/fastly/js-compute-runtime/commit/8aa3f4c2cfa441585ac5d3ee1a0ac4d58196162a))
+
+## 3.41.1 (2026-04-10)
+
+### Fixed
+
+* Deal with bodyless statuses in CandidateResponse situations ([#1414](https://github.com/fastly/js-compute-runtime/issues/1414)) ([cfd6c4b](https://github.com/fastly/js-compute-runtime/commit/cfd6c4bd0ac41bb3037bbcdfb7ba7c6608ce65e6))
+* Mark FetchEvent as done when we redirect to ws/grip proxies ([9831bd4](https://github.com/fastly/js-compute-runtime/commit/9831bd48f34ad6e80c7932a02b6acd5292ee2799))
+* Support `setCacheKey` for HTTP cache ([#1411](https://github.com/fastly/js-compute-runtime/issues/1411)) ([a707c3d](https://github.com/fastly/js-compute-runtime/commit/a707c3d1156893f969b02da1fec3807c0d095860))
+
+## 3.41.0 (2026-04-08)
+
+### Added
+
+* Add `--gc-frequency` option to `debug-build.sh` ([#1395](https://github.com/fastly/js-compute-runtime/issues/1395)) ([a6e4a1f](https://github.com/fastly/js-compute-runtime/commit/a6e4a1fd11acc62b7ce409f1aa2e017ff85b347c))
+* Allow the use of project-level external config file for js-compute-runtime CLI behavior ([#1405](https://github.com/fastly/js-compute-runtime/issues/1405)) ([9749cab](https://github.com/fastly/js-compute-runtime/commit/9749cab9f87be27a19a3a9c14bbddcfe2c590c1f))
+* Support installation in projects that use TypeScript 6 ([e4273a3](https://github.com/fastly/js-compute-runtime/commit/e4273a3f004e9af0a61d21c67a1cb6c5680cde29))
+
+### Fixed
+
+* Allow `--aot-cache` and `--debug-intermediate-files` flags to be specified with equals ([#1403](https://github.com/fastly/js-compute-runtime/issues/1403)) ([81a75f8](https://github.com/fastly/js-compute-runtime/commit/81a75f8704bd2befa899e55f382920f7da13f26f))
+* Double free in `convertBodyInit` ([#1387](https://github.com/fastly/js-compute-runtime/issues/1387)) ([72acfc3](https://github.com/fastly/js-compute-runtime/commit/72acfc3dc9077026746faaf323e5b11ecf48a4db))
+* GC fixes for edge rate limiter ([#1397](https://github.com/fastly/js-compute-runtime/issues/1397)) ([fd9e322](https://github.com/fastly/js-compute-runtime/commit/fd9e322fd852612f8df5d925b6e3a6c646b56109))
+* GC issue in handoffs ([#1396](https://github.com/fastly/js-compute-runtime/issues/1396)) ([b57fc8f](https://github.com/fastly/js-compute-runtime/commit/b57fc8f720cd530543ba8c8738c9dfe7bdff905e))
+* Shielding GC ([#1401](https://github.com/fastly/js-compute-runtime/issues/1401)) ([6de2f55](https://github.com/fastly/js-compute-runtime/commit/6de2f55b97c45dcd9aa246b22c7dbdafa883ee42))
+
+## 3.40.1 (2026-02-24)
+
+### Fixed
+
+* **early-hints:** early hints don't need to be sync inside a FetchEve… ([#1323](https://github.com/fastly/js-compute-runtime/issues/1323)) ([22ac0cc](https://github.com/fastly/js-compute-runtime/commit/22ac0ccd3205a0136e39621e2cfe93968a5be9f3))
+
+## 3.40.0 (2026-02-17)
+
+### Added
+
+* Allow custom weval binary ([#1315](https://github.com/fastly/js-compute-runtime/issues/1315)) ([b143150](https://github.com/fastly/js-compute-runtime/commit/b143150df609f217e8160759c0cf1dae2f86afb7))
+* Reusable sandboxes ([#1314](https://github.com/fastly/js-compute-runtime/issues/1314)) ([70a9d28](https://github.com/fastly/js-compute-runtime/commit/70a9d282d276176777d3369e164d8f89d3e96209))
+
+### Fixed
+
+* Add `security` to docs rename script ([#1316](https://github.com/fastly/js-compute-runtime/issues/1316)) ([7028c0b](https://github.com/fastly/js-compute-runtime/commit/7028c0bd819c44b870140d1536039f9aad6ddd4e))
+
+## 3.39.4 (2026-02-13)
+
+### Fixed
+
+* Body truncation error in chained extract\_body requests ([#1310](https://github.com/fastly/js-compute-runtime/issues/1310)) ([b929648](https://github.com/fastly/js-compute-runtime/commit/b929648bef34c0d41fe387fc755a2554372bb946))
+
+## 3.39.3 (2026-02-12)
+
+### Fixed
+
+* Don't throw from `event.client.geo` or `event.client.address` on hostcall error ([#1306](https://github.com/fastly/js-compute-runtime/issues/1306)) ([471b112](https://github.com/fastly/js-compute-runtime/commit/471b1128a32b3a2233a95eb14e2887abbb6183c0))
+
+## 3.39.2 (2026-02-09)
+
+### Fixed
+
+* NPM publication ([f80c089](https://github.com/fastly/js-compute-runtime/commit/f80c089fa9a50835955c0b1a1b42bc24b5eceb3d))
+
+## 3.39.1 (2026-02-09)
+
+### Fixed
+
+* For now, go back to old behavior for default exported types. ([#1298](https://github.com/fastly/js-compute-runtime/issues/1298)) ([e6d96d4](https://github.com/fastly/js-compute-runtime/commit/e6d96d47206821855d80d651bfa248a6d7da4453))
+* TransformStream shortcutting fixes ([#1301](https://github.com/fastly/js-compute-runtime/issues/1301)) ([51369ae](https://github.com/fastly/js-compute-runtime/commit/51369ae51d721199e0bbc6f6d168f4b8f7aee947))
+
+## 3.39.0 (2026-01-28)
+
+### Added
+
+* Add `isBot` support to device detection ([#1287](https://github.com/fastly/js-compute-runtime/issues/1287)) ([fe079b1](https://github.com/fastly/js-compute-runtime/commit/fe079b16858ff18da3fe9210da0f5cc3c6bee0b0))
+* Implement `firstByteTimeout` for shielding ([#1286](https://github.com/fastly/js-compute-runtime/issues/1286)) ([ad445b7](https://github.com/fastly/js-compute-runtime/commit/ad445b70ddd56bcd39d6201ad3f15e860cb85db4))
+* Map the FastlyStatus values into KVStoreError values the same way the Rust SDK does ([#1280](https://github.com/fastly/js-compute-runtime/issues/1280)) ([726f4e2](https://github.com/fastly/js-compute-runtime/commit/726f4e285805e91cfcc0c7fdd58f127e4d2e9094))
+
+### Fixed
+
+* Correct default export ([#1269](https://github.com/fastly/js-compute-runtime/issues/1269)) ([58d872e](https://github.com/fastly/js-compute-runtime/commit/58d872e2ff6b6351ac4018f590f3a27a1e015297))
+* suppress sourcemap for bundle() step when `--enable-stack-traces` is not set ([#1277](https://github.com/fastly/js-compute-runtime/issues/1277)) ([ab8c12e](https://github.com/fastly/js-compute-runtime/commit/ab8c12e6aaf22dcf52ca74834fb5712a7ed83b42))
+
+## 3.38.4 (2026-01-23)
+
+### Fixed
+
+* Don't shortcut transform too early ([#1281](https://github.com/fastly/js-compute-runtime/issues/1281)) ([291814e](https://github.com/fastly/js-compute-runtime/commit/291814e330ae5e1e894f0a57db0dedc8b27fd9bd))
+
+## 3.38.3 (2026-01-22)
+
+### Fixed
+
+* clean script to include TypeScript output directory ([#1270](https://github.com/fastly/js-compute-runtime/issues/1270)) ([015e40c](https://github.com/fastly/js-compute-runtime/commit/015e40c7f6cf6bf95f5a2ff7c52f4225948146a1))
+* pin lol\_html to 2.7.0 ([#1276](https://github.com/fastly/js-compute-runtime/issues/1276)) ([363550a](https://github.com/fastly/js-compute-runtime/commit/363550ae80056fb0e6fda2c7b67ddf4859d67fa8))
+* Rename shielding docs ([#1272](https://github.com/fastly/js-compute-runtime/issues/1272)) ([e12ab47](https://github.com/fastly/js-compute-runtime/commit/e12ab476821e9656dcdb5025e6ed54f40daf8da5))
+* Try and shortcut transform stream reading before doing a regular read ([#1279](https://github.com/fastly/js-compute-runtime/issues/1279)) ([6b9b939](https://github.com/fastly/js-compute-runtime/commit/6b9b939471e1589091f6cfa2f7864a528df35b1c))
+
+## 3.38.2 (2025-12-19)
+
+### Fixed
+
+* Handle cross-volume renames of intermediate files ([#1264](https://github.com/fastly/js-compute-runtime/issues/1264)) ([94e5671](https://github.com/fastly/js-compute-runtime/commit/94e5671090cbde1c3159032c90aa3f3ad2fdc88a))
+
+## 3.38.1 (2025-12-18)
+
+### Fixed
+
+* Build CLI in npm publish ([#1262](https://github.com/fastly/js-compute-runtime/issues/1262)) ([2fe6e2d](https://github.com/fastly/js-compute-runtime/commit/2fe6e2d5b38c74c4a3f7c4a4941d116ec75b1d88))
+
+## 3.38.0 (2025-12-18)
+
+### Added
+
+* **config:** add support for config store buffers longer than 8k ([#1181](https://github.com/fastly/js-compute-runtime/issues/1181)) ([da4c169](https://github.com/fastly/js-compute-runtime/commit/da4c169f7a302c2e6c2a1796c791b9463c4dc2a8))
+* **inspect:** add support for NGWAF inspect api ([#1212](https://github.com/fastly/js-compute-runtime/issues/1212)) ([98f45e4](https://github.com/fastly/js-compute-runtime/commit/98f45e4d678e294301c21be2ddf16c4482683ef7))
+
+### Fixed
+
+* Correct behaviour of chained body proxy streams in some circumstances ([#1259](https://github.com/fastly/js-compute-runtime/issues/1259)) ([11f9a4b](https://github.com/fastly/js-compute-runtime/commit/11f9a4b5b5fc90f9f2eb9f6a6958e971fbd52e19))
+* make shielding.d.ts ambient ([#1256](https://github.com/fastly/js-compute-runtime/issues/1256)) ([7a0e987](https://github.com/fastly/js-compute-runtime/commit/7a0e9876d0e001ad6c1b87b3701ecfffddc7b5ad))
+
+## 3.37.0 (2025-12-11)
+
+### Added
+
+* Add client fingerprint properties (tlsJA4, h2Fingerprint, ohFingerprint) ([#1248](https://github.com/fastly/js-compute-runtime/issues/1248)) ([9390e8c](https://github.com/fastly/js-compute-runtime/commit/9390e8cdf37206a570512cf8d36335c70bc5ccde))
+* Shielding support ([#1241](https://github.com/fastly/js-compute-runtime/issues/1241)) ([985c55e](https://github.com/fastly/js-compute-runtime/commit/985c55e634227b8dac66aea9b7ba4ca982b41b9c))
+
+## 3.36.0 (2025-11-18)
+
+### Added
+
+* Image Optimizer support ([#1224](https://github.com/fastly/js-compute-runtime/issues/1224)) ([c3dd3de](https://github.com/fastly/js-compute-runtime/commit/c3dd3de7436f999055eb0b3d83a1f59c1c26b5d1))
+* Implement 103 Early Hints ([#1217](https://github.com/fastly/js-compute-runtime/issues/1217)) ([fda6ad3](https://github.com/fastly/js-compute-runtime/commit/fda6ad31d6f8ceee16cd950217be770a4f794bb3))
+
+### Fixed
+
+* **fanout:** commit request headers before fanout handoff ([#1222](https://github.com/fastly/js-compute-runtime/issues/1222)) ([8dfefad](https://github.com/fastly/js-compute-runtime/commit/8dfefadec46a2714be010c4a8c7e59cd43537fec))
+* Fix broken KVStore test ([#1223](https://github.com/fastly/js-compute-runtime/issues/1223)) ([6055d88](https://github.com/fastly/js-compute-runtime/commit/6055d884f617336d8d6326bf26dcfb49265f5ae2))
+
+## 3.35.2 (2025-11-07)
+
+### Fixed
+
+* **compute-file-server:** bump MSRV to fix ICU build issues ([#1221](https://github.com/fastly/js-compute-runtime/issues/1221)) ([379e511](https://github.com/fastly/js-compute-runtime/commit/379e51153e07962972b8a69e645e0f55912122d0))
+* surrogateKeys not being added when using CoreCache ([#1219](https://github.com/fastly/js-compute-runtime/issues/1219)) ([b0efe20](https://github.com/fastly/js-compute-runtime/commit/b0efe20c2f6f96755bb450d139e002797b376802))
+* **ws:** commit ws request headers before upgrading ([#1216](https://github.com/fastly/js-compute-runtime/issues/1216)) ([a15fa61](https://github.com/fastly/js-compute-runtime/commit/a15fa6148427801bbaf4d862b9a21884f21758f9))
+
 ## 3.35.1 (2025-09-29)
 
 ### Fixed

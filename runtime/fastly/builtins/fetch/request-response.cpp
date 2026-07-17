@@ -21,6 +21,7 @@
 #include "../cache-simple.h"
 #include "../fastly.h"
 #include "../fetch-event.h"
+#include "../image-optimizer.h"
 #include "../kv-store.h"
 #include "extension-api.h"
 #include "fetch.h"
@@ -107,14 +108,144 @@ bool error_stream_controller_with_pending_exception(JSContext *cx, JS::HandleObj
 
 constexpr size_t HANDLE_READ_CHUNK_SIZE = 8192;
 
+void set_up_shortcutting(JSContext *cx, JS::HandleObject stream, JS::HandleObject to) {
+  // This function is part of a web of code that allows requests and responses
+  // to "shortcut" pipelines down to simple host-side operations, without having
+  // to actually pipe data through to javascript. This covers one of the various
+  // scenarios. Another place to look is `maybe_shortcut_transform_stream_read`.
+  // Part of the reason for having this complexity on our end is so we don't
+  // have to patch StarlingMonkey to get all this working, since it's a Fastly
+  // optimization.
+  JS::RootedObject stream_source(cx, NativeStreamSource::get_stream_source(cx, stream));
+  JS::RootedObject source_owner(cx, NativeStreamSource::owner(stream_source));
+
+  auto body = RequestOrResponse::body_handle(source_owner);
+  JS::SetReservedSlot(to, static_cast<uint32_t>(RequestOrResponse::Slots::Body),
+                      JS::Int32Value(body.handle));
+  JS::SetReservedSlot(to, static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest),
+                      JS::ObjectValue(*source_owner));
+  // Ensure that we take the right steps for shortcutting operations on
+  // TransformStreams later on.
+  if (TransformStream::is_ts_readable(cx, stream)) {
+    // But only if the TransformStream isn't used as a mixin by other
+    // builtins.
+    if (!TransformStream::used_as_mixin(TransformStream::ts_from_readable(cx, stream))) {
+      TransformStream::set_readable_used_as_body(cx, stream, to);
+    }
+  }
+}
+
+bool maybe_shortcut_transform_stream_read(JSContext *cx, JS::HandleObject streamSource,
+                                          JS::HandleObject body_owner, bool *shortcutted) {
+  // If the stream has been piped to a TransformStream whose readable end was
+  // then passed to a Request or Response as the body, we can just append the
+  // entire source body to the destination using a single native hostcall, and
+  // then close the source stream, instead of reading and writing it in
+  // individual chunks. Note that even in situations where multiple streams are
+  // piped to the same destination this is guaranteed to happen in the right
+  // order: ReadableStream#pipeTo locks the destination WritableStream until the
+  // source ReadableStream is closed/canceled, so only one stream can ever be
+  // piped in at the same time. There may be a chain of TransformStreams in
+  // between the source and destination, so we walk the piping chain to find the
+  // final destination.
+  JS::RootedObject pipe_dest(cx, NativeStreamSource::piped_to_transform_stream(streamSource));
+  if (pipe_dest) {
+    *shortcutted = true;
+    // Walk the chain of TransformStreams to find the final destination
+    JS::RootedObject current_dest(cx, pipe_dest);
+    JS::RootedObject next_dest(cx);
+
+    while (current_dest) {
+      // Try to find the next TransformStream in the chain
+      JS::RootedObject readable(cx, TransformStream::readable(current_dest));
+      JS::RootedObject next_source(cx, NativeStreamSource::get_stream_source(cx, readable));
+      if (next_source) {
+        next_dest.set(NativeStreamSource::piped_to_transform_stream(next_source));
+      } else {
+        next_dest.set(nullptr);
+      }
+
+      // If there's no next destination, we've found the last one in the chain
+      if (!next_dest) {
+        // If this is used as a body, we can append directly and close
+        if (TransformStream::readable_used_as_body(current_dest)) {
+          JS::RootedObject dest_owner(cx, TransformStream::owner(current_dest));
+          if (!RequestOrResponse::append_body(cx, dest_owner, body_owner)) {
+            return false;
+          }
+
+          JS::RootedObject stream(cx, NativeStreamSource::stream(streamSource));
+          bool success = JS::ReadableStreamClose(cx, stream);
+          MOZ_RELEASE_ASSERT(success);
+
+          return true;
+        }
+        // If the last one isn't used as a body it must be doing something else with
+        // the data, so we fall back to reading and writing chunks as normal
+        *shortcutted = false;
+        break;
+      }
+
+      current_dest.set(next_dest);
+    }
+  }
+
+  // Fallback: check stored source reference when pipe chain is broken by async operations
+  if (!*shortcutted && RequestOrResponse::is_instance(body_owner)) {
+    JS::Value source_request_val = JS::GetReservedSlot(
+        body_owner, static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest));
+
+    if (source_request_val.isObject()) {
+      JS::RootedObject source_request(cx, &source_request_val.toObject());
+
+      while (source_request) {
+        JS::RootedObject source_stream(cx, RequestOrResponse::body_stream(source_request));
+
+        if (source_stream && NativeStreamSource::stream_is_body(cx, source_stream)) {
+          if (!RequestOrResponse::append_body(cx, body_owner, source_request)) {
+            return false;
+          }
+
+          bool success = JS::ReadableStreamClose(cx, source_stream);
+          MOZ_RELEASE_ASSERT(success);
+
+          *shortcutted = true;
+          return true;
+        }
+
+        // Follow chained Request sources
+        JS::Value next_source_val = JS::GetReservedSlot(
+            source_request, static_cast<uint32_t>(RequestOrResponse::Slots::SourceRequest));
+
+        if (next_source_val.isObject()) {
+          source_request = &next_source_val.toObject();
+        } else {
+          break;
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
 bool process_body_read(JSContext *cx, host_api::HttpBody::Handle handle, JS::HandleObject context,
-                       JS::HandleValue promise) {
+                       JS::HandleValue body_owner) {
   MOZ_ASSERT(context);
   JS::RootedObject streamSource(cx, context);
   MOZ_ASSERT(NativeStreamSource::is_instance(streamSource));
   host_api::HttpBody body(handle);
   JS::RootedObject owner(cx, NativeStreamSource::owner(streamSource));
   JS::RootedObject stream(cx, NativeStreamSource::stream(streamSource));
+
+  bool shortcutted = false;
+  JS::RootedObject body_owner_obj(cx, &body_owner.toObject());
+  if (!maybe_shortcut_transform_stream_read(cx, streamSource, body_owner_obj, &shortcutted)) {
+    return false;
+  }
+  if (shortcutted) {
+    return true;
+  }
 
   auto read_res = body.read(HANDLE_READ_CHUNK_SIZE);
   if (auto *err = read_res.to_err()) {
@@ -258,7 +389,8 @@ bool Response::add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
       }
       uint64_t hits = hits_res.unwrap();
 
-      JS::RootedValue hit_str_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, "HIT")));
+      JS::RootedString hit_str(cx, JS_NewStringCopyZ(cx, "HIT"));
+      JS::RootedValue hit_str_val(cx, JS::StringValue(hit_str));
       JS::RootedValueArray<2> args(cx);
       args[0].setString(JS_NewStringCopyZ(cx, "x-cache"));
       args[1].set(hit_str_val);
@@ -322,14 +454,16 @@ bool Response::add_fastly_cache_headers(JSContext *cx, JS::HandleObject self,
       return false;
     }
     {
-      JS::RootedValue key_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, "Surrogate-Key")));
+      JS::RootedString key_str(cx, JS_NewStringCopyZ(cx, "Surrogate-Key"));
+      JS::RootedValue key_val(cx, JS::StringValue(key_str));
       JS::RootedValue rval(cx);
       if (!JS::Call(cx, headers_val, delete_func, JS::HandleValueArray(key_val), &rval)) {
         return false;
       }
     }
     {
-      JS::RootedValue key_val(cx, JS::StringValue(JS_NewStringCopyZ(cx, "Surrogate-Control")));
+      JS::RootedString key_str(cx, JS_NewStringCopyZ(cx, "Surrogate-Control"));
+      JS::RootedValue key_val(cx, JS::StringValue(key_str));
       JS::RootedValue rval(cx);
       if (!JS::Call(cx, headers_val, delete_func, JS::HandleValueArray(key_val), &rval)) {
         return false;
@@ -434,6 +568,9 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue p
     cache_write_options->stale_while_revalidate_ns =
         suggested_cache_write_options->stale_while_revalidate_ns;
   }
+  if (!cache_write_options->stale_if_error_ns.has_value()) {
+    cache_write_options->stale_if_error_ns = suggested_cache_write_options->stale_if_error_ns;
+  }
   if (!cache_write_options->surrogate_keys.has_value()) {
     cache_write_options->surrogate_keys = std::move(suggested_cache_write_options->surrogate_keys);
   }
@@ -465,6 +602,14 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue p
 bool after_send_catch(JSContext *cx, JS::HandleObject response, JS::HandleValue promise,
                       JS::CallArgs args) {
   JS::RootedObject promise_obj(cx, &promise.toObject());
+
+  auto maybe_stale = try_serve_stale_if_error(cx, response, args.get(0));
+  if (maybe_stale.has_value()) {
+    JS::RootedValue response_val(cx, JS::ObjectValue(*maybe_stale.value()));
+    return JS::ResolvePromise(cx, promise_obj, response_val);
+  }
+
+  // No stale-if-error available, close cache and reject
   if (!RequestOrResponse::close_if_cache_entry(cx, response)) {
     return false;
   }
@@ -530,7 +675,8 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
   JS::RootedObject headers(cx, Response::headers(cx, response));
   MOZ_ASSERT(headers);
   JS::RootedValueArray<1> args(cx);
-  args[0].setString(JS_NewStringCopyZ(cx, "set-cookie"));
+  JS::RootedString set_cookie_str(cx, JS_NewStringCopyZ(cx, "set-cookie"));
+  args[0].setString(set_cookie_str);
   if (!JS::Call(cx, headers, "has", args, &result)) {
     return false;
   }
@@ -539,7 +685,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
     suggested_storage_action = host_api::HttpStorageAction::RecordUncacheable;
   }
 
-  host_api::HttpCacheWriteOptions *override_cache_options = new host_api::HttpCacheWriteOptions();
+  auto override_cache_options = std::make_unique<host_api::HttpCacheWriteOptions>();
 
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::StorageAction),
                       JS::Int32Value(static_cast<uint32_t>(suggested_storage_action)));
@@ -574,10 +720,16 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
       override_cache_options->max_age_ns = ttl_ns + initial_age_ns;
     }
 
-    RootedValue override_swr(cx, CacheOverride::swr(cache_override));
+    RootedValue override_swr(cx, CacheOverride::staleWhileRevalidate(cache_override));
     if (!override_swr.isUndefined()) {
       override_cache_options->stale_while_revalidate_ns =
           static_cast<uint64_t>(override_swr.toInt32() * 1e9);
+    }
+
+    RootedValue override_sie(cx, CacheOverride::staleIfError(cache_override));
+    if (!override_sie.isUndefined()) {
+      override_cache_options->stale_if_error_ns =
+          static_cast<uint64_t>(override_sie.toInt32() * 1e9);
     }
 
     // overriding surrogate keys composes suggested surrogate keys with the original cache override
@@ -635,7 +787,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
   }
 
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::OverrideCacheWriteOptions),
-                      JS::PrivateValue(override_cache_options));
+                      JS::PrivateValue(override_cache_options.release()));
 
   JS::RootedObject after_send_promise(cx);
   if (after_send) {
@@ -835,6 +987,10 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
     }
 
     auto boundary = MultipartFormData::boundary(encoder);
+    // We ensure the boundary is quoted as per RFC 2046, section 5.1.1, to avoid issues with special
+    // characters in the boundary string. Currently, StarlingMonkey does not quote the boundary, but
+    // in case this changes in the future, we check if the string is already quoted before quoting
+    // it ourselves.
     std::string content_type_str = "multipart/form-data; boundary=" + boundary;
     host_type_str = host_api::HostString(content_type_str.c_str());
 
@@ -856,17 +1012,12 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
       return false;
     }
 
-    JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyStream), body_val);
-
-    // Ensure that we take the right steps for shortcutting operations on
-    // TransformStreams later on.
-    if (TransformStream::is_ts_readable(cx, body_obj)) {
-      // But only if the TransformStream isn't used as a mixin by other
-      // builtins.
-      if (!TransformStream::used_as_mixin(TransformStream::ts_from_readable(cx, body_obj))) {
-        TransformStream::set_readable_used_as_body(cx, body_obj, self);
-      }
+    // Move native body handle to new Request and store source for async-safe shortcutting
+    if (NativeStreamSource::stream_is_body(cx, body_obj)) {
+      set_up_shortcutting(cx, body_obj, self);
     }
+
+    JS_SetReservedSlot(self, static_cast<uint32_t>(RequestOrResponse::Slots::BodyStream), body_val);
   } else {
     mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
     JS::UniqueChars text;
@@ -947,13 +1098,14 @@ bool RequestOrResponse::append_body(JSContext *cx, JS::HandleObject self, JS::Ha
 }
 
 JSObject *Request::headers(JSContext *cx, JS::HandleObject obj) {
-  JSObject *headers = RequestOrResponse::maybe_headers(obj);
+  JS::RootedObject headers(cx, RequestOrResponse::maybe_headers(obj));
   if (!headers) {
     MOZ_ASSERT(is_instance(obj));
     if (is_downstream(obj)) {
-      headers = Headers::create(cx, request_handle(obj).headers(), Headers::HeadersGuard::Request);
+      headers.set(
+          Headers::create(cx, request_handle(obj).headers(), Headers::HeadersGuard::Request));
     } else {
-      headers = Headers::create(cx, Headers::HeadersGuard::Request);
+      headers.set(Headers::create(cx, Headers::HeadersGuard::Request));
     }
     if (!headers) {
       return nullptr;
@@ -966,14 +1118,14 @@ JSObject *Request::headers(JSContext *cx, JS::HandleObject obj) {
 }
 
 JSObject *Response::headers(JSContext *cx, JS::HandleObject obj) {
-  JSObject *headers = RequestOrResponse::maybe_headers(obj);
+  JS::RootedObject headers(cx, RequestOrResponse::maybe_headers(obj));
   if (!headers) {
     MOZ_ASSERT(is_instance(obj));
     if (is_upstream(obj)) {
-      headers =
-          Headers::create(cx, response_handle(obj).headers(), Headers::HeadersGuard::Response);
+      headers.set(
+          Headers::create(cx, response_handle(obj).headers(), Headers::HeadersGuard::Response));
     } else {
-      headers = Headers::create(cx, Headers::HeadersGuard::Response);
+      headers.set(Headers::create(cx, Headers::HeadersGuard::Response));
     }
     if (!headers) {
       return nullptr;
@@ -1541,6 +1693,9 @@ bool RequestOrResponse::bodyAll(JSContext *cx, JS::CallArgs args, JS::HandleObje
   // readables.
   // https://github.com/fastly/js-compute-runtime/issues/218
   JS::RootedObject stream(cx, body_stream(self));
+  // Note: Shortcutting is now handled by maybe_shortcut_transform_stream_read()
+  // which is called from body_source_pull_algorithm() when the stream is first read.
+
   if (stream && !NativeStreamSource::stream_is_body(cx, stream)) {
 
     if (!JS_SetElement(cx, stream, 1, body_parser)) {
@@ -1571,33 +1726,6 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
   if (JS::GetReservedSlot(source, static_cast<uint32_t>(Slots::Body)).isInt32()) {
     auto handle = std::to_string(RequestOrResponse::body_handle(source).handle);
   }
-  // If the stream has been piped to a TransformStream whose readable end was
-  // then passed to a Request or Response as the body, we can just append the
-  // entire source body to the destination using a single native hostcall, and
-  // then close the source stream, instead of reading and writing it in
-  // individual chunks. Note that even in situations where multiple streams are
-  // piped to the same destination this is guaranteed to happen in the right
-  // order: ReadableStream#pipeTo locks the destination WritableStream until the
-  // source ReadableStream is closed/canceled, so only one stream can ever be
-  // piped in at the same time.
-  JS::RootedObject pipe_dest(cx, NativeStreamSource::piped_to_transform_stream(source));
-  if (pipe_dest) {
-
-    if (TransformStream::readable_used_as_body(pipe_dest)) {
-
-      JS::RootedObject dest_owner(cx, TransformStream::owner(pipe_dest));
-      if (!RequestOrResponse::append_body(cx, dest_owner, body_owner)) {
-        return false;
-      }
-
-      JS::RootedObject stream(cx, NativeStreamSource::stream(source));
-      bool success = JS::ReadableStreamClose(cx, stream);
-      MOZ_RELEASE_ASSERT(success);
-
-      args.rval().setUndefined();
-      return true;
-    }
-  }
 
   // The actual read from the body needs to be delayed, because it'd otherwise
   // be a blocking operation in case the backend didn't yet send any data.
@@ -1612,9 +1740,9 @@ bool RequestOrResponse::body_source_pull_algorithm(JSContext *cx, JS::CallArgs a
   JS::RootedObject self(cx, &args.thisv().toObject());
   JS::RootedObject owner(cx, NativeStreamSource::owner(self));
 
+  JS::RootedValue body_owner_value(cx, JS::ObjectValue(*body_owner));
   ENGINE->queue_async_task(new FastlyAsyncTask(RequestOrResponse::body_handle(owner).async_handle(),
-                                               source, JS::UndefinedHandleValue,
-                                               process_body_read));
+                                               source, body_owner_value, process_body_read));
 
   args.rval().setUndefined();
   return true;
@@ -1646,13 +1774,20 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
     return false;
 
   if (done_val.toBoolean()) {
-    // The only response we ever send is the one passed to
+    // The only response with a body we ever send is the one passed to
     // `FetchEvent#respondWith` to send to the client. As such, we can be
     // certain that if we have a response here, we can advance the FetchState to
     // `responseDone`.
     if (Response::is_instance(body_owner)) {
       ENGINE->decr_event_loop_interest();
-      FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
+      JS::RootedValue fetch_event_val(
+          cx, JS::GetReservedSlot(body_owner, static_cast<uint32_t>(Response::Slots::FetchEvent)));
+      if (!fetch_event_val.isObject()) {
+        JS_ReportErrorASCII(cx, "Response does not have an associated FetchEvent");
+        return false;
+      }
+      JS::RootedObject fetch_event(cx, &fetch_event_val.toObject());
+      FetchEvent::set_state(fetch_event, FetchEvent::State::responseDone);
     }
 
     auto res = body.close();
@@ -1734,7 +1869,7 @@ bool RequestOrResponse::body_reader_catch_handler(JSContext *cx, JS::HandleObjec
   fprintf(stderr, "Warning: body ReadableStream closed during body streaming. Exception: ");
   ENGINE->dump_value(args.get(0), stderr);
 
-  // The only response we ever send is the one passed to
+  // The only response with a body we ever send is the one passed to
   // `FetchEvent#respondWith` to send to the client. As such, we can be certain
   // that if we have a response here, we can advance the FetchState to
   // `responseDone`. (Note that even though we encountered an error,
@@ -1742,7 +1877,14 @@ bool RequestOrResponse::body_reader_catch_handler(JSContext *cx, JS::HandleObjec
   // a response at all failed.)
   if (Response::is_instance(body_owner)) {
     ENGINE->decr_event_loop_interest();
-    FetchEvent::set_state(FetchEvent::instance(), FetchEvent::State::responseDone);
+    JS::RootedValue fetch_event_val(
+        cx, JS::GetReservedSlot(body_owner, static_cast<uint32_t>(Response::Slots::FetchEvent)));
+    if (!fetch_event_val.isObject()) {
+      JS_ReportErrorASCII(cx, "Response does not have an associated FetchEvent");
+      return false;
+    }
+    JS::RootedObject fetch_event(cx, &fetch_event_val.toObject());
+    FetchEvent::set_state(fetch_event, FetchEvent::State::responseDone);
   }
   return true;
 }
@@ -1774,6 +1916,18 @@ bool RequestOrResponse::maybe_stream_body(JSContext *cx, JS::HandleObject body_o
     // won't append to this body handle, because we don't expose any means to do
     // so, so it's ok for it to be closed immediately.
     return true;
+  }
+
+  // Try shortcutting TransformStream by piping native body handle directly
+  bool shortcutted = false;
+  JS::RootedObject stream_source(cx, NativeStreamSource::get_stream_source(cx, stream));
+  if (stream_source && NativeStreamSource::is_instance(stream_source)) {
+    if (!maybe_shortcut_transform_stream_read(cx, stream_source, body_owner, &shortcutted)) {
+      return false;
+    }
+    if (shortcutted) {
+      return true;
+    }
   }
 
   JS::RootedObject reader(
@@ -1853,21 +2007,20 @@ bool RequestOrResponse::backend_get(JSContext *cx, JS::CallArgs args, JS::Handle
   return true;
 }
 
-bool RequestOrResponse::body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self,
-                                 bool create_if_undefined) {
+bool RequestOrResponse::body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self) {
   if (!has_body(self)) {
     args.rval().setNull();
     return true;
   }
 
   JS::RootedObject body_stream(cx, RequestOrResponse::body_stream(self));
-  if (!body_stream && create_if_undefined) {
+  if (!body_stream) {
     body_stream = create_body_stream(cx, self);
     if (!body_stream)
       return false;
   }
 
-  args.rval().setObjectOrNull(body_stream);
+  args.rval().setObject(*body_stream);
   return true;
 }
 
@@ -1973,14 +2126,14 @@ bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValu
   std::transform(hex_str.begin(), hex_str.end(), hex_str.begin(),
                  [](unsigned char c) { return std::toupper(c); });
 
-  JSObject *headers = Request::headers(cx, self);
+  JS::RootedObject headers(cx, Request::headers(cx, self));
   if (!headers) {
     return false;
   }
-  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::OverrideCacheKey), cache_key_str_val);
   JS::RootedObject headers_val(cx, headers);
-  JS::RootedValue value_val(
-      cx, JS::StringValue(JS_NewStringCopyN(cx, hex_str.c_str(), hex_str.length())));
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::OverrideCacheKey), cache_key_str_val);
+  JS::RootedString hex_str_js(cx, JS_NewStringCopyN(cx, hex_str.c_str(), hex_str.length()));
+  JS::RootedValue value_val(cx, JS::StringValue(hex_str_js));
   if (!Headers::append_valid_header(cx, headers_val, "fastly-xqd-cache-key", value_val,
                                     "Request.prototype.setCacheKey")) {
     return false;
@@ -1989,11 +2142,24 @@ bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValu
   return true;
 }
 
+bool Request::set_image_optimizer_options(JSContext *cx, JS::HandleObject self,
+                                          JS::HandleValue opts_val) {
+  MOZ_ASSERT(is_instance(self));
+
+  auto opts = image_optimizer::ImageOptimizerOptions::create(cx, opts_val);
+  if (!opts) {
+    return false;
+  }
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Request::Slots::ImageOptimizerOptions),
+                      JS::PrivateValue(opts.release()));
+  return true;
+}
+
 bool Request::set_cache_override(JSContext *cx, JS::HandleObject self,
                                  JS::HandleValue cache_override) {
   MOZ_ASSERT(is_instance(self));
 
-  JSObject *override;
+  JS::RootedObject override(cx);
   if (CacheOverride::is_instance(cache_override)) {
     JS::RootedObject input(cx, &cache_override.toObject());
     override = CacheOverride::clone(cx, input);
@@ -2057,7 +2223,7 @@ bool Request::apply_cache_override(JSContext *cx, JS::HandleObject self) {
   }
 
   std::optional<uint32_t> stale_while_revalidate;
-  val = CacheOverride::swr(override);
+  val = CacheOverride::staleWhileRevalidate(override);
   if (!val.isUndefined()) {
     stale_while_revalidate = val.toInt32();
   }
@@ -2140,7 +2306,7 @@ bool Request::backend_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Request::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
-  return RequestOrResponse::body_get(cx, args, self, is_downstream(self));
+  return RequestOrResponse::body_get(cx, args, self);
 }
 
 bool Request::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -2306,14 +2472,10 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (!headers) {
-    return false;
-  }
-
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Headers),
                       JS::ObjectValue(*headers));
 
-  JSString *method = Request::method(cx, self);
+  JS::RootedString method(cx, Request::method(cx, self));
   if (!method) {
     return false;
   }
@@ -2329,6 +2491,22 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
   } else {
     JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::CacheOverride),
                         cache_override);
+  }
+
+  JS::RootedValue override_cache_key(
+      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::OverrideCacheKey)));
+  JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::OverrideCacheKey),
+                      override_cache_key);
+
+  JS::RootedValue image_optimizer_options(
+      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ImageOptimizerOptions)));
+  if (!image_optimizer_options.isNullOrUndefined()) {
+    if (!set_image_optimizer_options(cx, requestInstance, image_optimizer_options)) {
+      return false;
+    }
+  } else {
+    JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::ImageOptimizerOptions),
+                        image_optimizer_options);
   }
 
   args.rval().setObject(*requestInstance);
@@ -2398,6 +2576,8 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance,
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::OverrideCacheKey),
                       JS::NullValue());
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::CacheOverride),
+                      JS::NullValue());
+  JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::ImageOptimizerOptions),
                       JS::NullValue());
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::IsDownstream),
                       JS::BooleanValue(is_downstream));
@@ -2483,7 +2663,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
 
     // header list: A copy of `request`’s header list.
     // Note: copying the headers is postponed, see step 32 below.
-    JSObject *headers_obj = Request::headers(cx, input_request);
+    JS::RootedObject headers_obj(cx, Request::headers(cx, input_request));
     if (!headers_obj) {
       return nullptr;
     }
@@ -2568,6 +2748,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   JS::RootedValue cache_override(cx);
   JS::RootedValue cache_key(cx);
   JS::RootedValue fastly_val(cx);
+  JS::RootedValue image_optimizer_options(cx);
   bool hasManualFramingHeaders = false;
   bool setManualFramingHeaders = false;
   if (init_val.isObject()) {
@@ -2581,7 +2762,8 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
         !JS_GetProperty(cx, init, "cacheKey", &cache_key) ||
         !JS_GetProperty(cx, init, "fastly", &fastly_val) ||
         !JS_HasOwnProperty(cx, init, "manualFramingHeaders", &hasManualFramingHeaders) ||
-        !JS_GetProperty(cx, init, "manualFramingHeaders", &manualFramingHeaders)) {
+        !JS_GetProperty(cx, init, "manualFramingHeaders", &manualFramingHeaders) ||
+        !JS_GetProperty(cx, init, "imageOptimizerOptions", &image_optimizer_options)) {
       return nullptr;
     }
     setManualFramingHeaders = manualFramingHeaders.isBoolean() && manualFramingHeaders.toBoolean();
@@ -2824,12 +3006,22 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
       RequestOrResponse::append_body(cx, request, input_request);
       RequestOrResponse::mark_body_used(cx, input_request);
     } else {
-      inputBody = TransformStream::create_rs_proxy(cx, inputBody);
-      if (!inputBody) {
-        return nullptr;
-      }
+      // Track source Request with native body before creating proxy
+      bool has_native_body = NativeStreamSource::stream_is_body(cx, inputBody);
 
-      TransformStream::set_readable_used_as_body(cx, inputBody, request);
+      if (has_native_body) {
+        // Technically speaking, the spec says we must create a proxy,
+        // but this has caused us so many problems that we're going to cheat and just
+        // re-use the existing stream.
+        set_up_shortcutting(cx, inputBody, request);
+      } else {
+        inputBody = TransformStream::create_rs_proxy(cx, inputBody);
+        if (!inputBody) {
+          return nullptr;
+        }
+
+        TransformStream::set_readable_used_as_body(cx, inputBody, request);
+      }
       JS::SetReservedSlot(request, static_cast<uint32_t>(Slots::BodyStream),
                           JS::ObjectValue(*inputBody));
     }
@@ -2864,9 +3056,22 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
   }
 
   // Apply the Fastly Compute-proprietary `cacheKey` property.
-  // (in the input_request case, the header will be copied across normally)
   if (!cache_key.isUndefined()) {
     if (!set_cache_key(cx, request, cache_key)) {
+      return nullptr;
+    }
+  } else if (input_request) {
+    // The fastly-xqd-cache-key header will be copied as part of the header copying logic,
+    // but we need to copy the slot as well to preserve the invariant that the slot and header are
+    // in sync.
+    JS::SetReservedSlot(
+        request, static_cast<uint32_t>(Slots::OverrideCacheKey),
+        JS::GetReservedSlot(input_request, static_cast<uint32_t>(Slots::OverrideCacheKey)));
+  }
+
+  // Apply the Fastly Compute-proprietary `imageOptimizerOptions` property.
+  if (!image_optimizer_options.isUndefined()) {
+    if (!set_image_optimizer_options(cx, request, image_optimizer_options)) {
       return nullptr;
     }
   }
@@ -2962,9 +3167,11 @@ std::optional<host_api::HttpReq> Response::websocket_upgrade_request(JSObject *o
   MOZ_ASSERT(is_instance(obj));
   auto websocket_upgrade_request =
       JS::GetReservedSlot(obj, static_cast<uint32_t>(Slots::WebsocketUpgradeRequest));
+
   if (websocket_upgrade_request.isUndefined()) {
     return std::nullopt;
   }
+
   return host_api::HttpReq(websocket_upgrade_request.toInt32());
 }
 
@@ -3175,8 +3382,8 @@ void Response::set_status_message_from_code(JSContext *cx, JSObject *obj, uint16
     phrase = "";
     break;
   }
-  JS::SetReservedSlot(obj, static_cast<uint32_t>(Slots::StatusMessage),
-                      JS::StringValue(JS_NewStringCopyN(cx, phrase, strlen(phrase))));
+  JS::RootedString phrase_js(cx, JS_NewStringCopyZ(cx, phrase));
+  JS::SetReservedSlot(obj, static_cast<uint32_t>(Slots::StatusMessage), JS::StringValue(phrase_js));
 }
 
 bool Response::ok_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -3205,11 +3412,13 @@ bool Response::status_set(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // If it _is_ a CandidateResponse, then support the status set, with validation
   bool valid_status = true;
-  uint16_t status;
+  uint16_t status = 0;
   if (!args[0].isNumber() || !JS::ToUint16(cx, args[0], &status)) {
     valid_status = false;
   }
-  if (!valid_status || status < 200 || status > 599) {
+  // Allow 103: Early Hints
+  bool status_in_range = status == 103 || (status >= 200 && status < 600);
+  if (!valid_status || !status_in_range) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                               JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS, status);
     return false;
@@ -3293,7 +3502,7 @@ bool Response::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Response::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  return RequestOrResponse::body_get(cx, args, self, true);
+  return RequestOrResponse::body_get(cx, args, self);
 }
 
 bool Response::backend_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -3449,8 +3658,9 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
   status = get_res.unwrap();
 
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Status), JS::Int32Value(status));
+  JS::RootedString statusText(cx, JS_GetEmptyString(cx));
   JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::StatusMessage),
-                      JS::StringValue(JS_GetEmptyString(cx)));
+                      JS::StringValue(statusText));
   // 6. Let value be parsedURL, serialized and isomorphic encoded.
   // 7. Append (`Location`, value) to responseObject’s response’s header list.
   JS::RootedObject headers(cx, Headers::create(cx, Headers::HeadersGuard::Response));
@@ -3523,7 +3733,7 @@ bool Response::json(JSContext *cx, unsigned argc, JS::Value *vp) {
       return false;
     }
 
-    if (status == 204 || status == 205 || status == 304) {
+    if (status == 103 || status == 204 || status == 205 || status == 304) {
       JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                                 JSMSG_RESPONSE_NULL_BODY_STATUS_WITH_BODY);
       return false;
@@ -3658,6 +3868,7 @@ const JSFunctionSpec Response::methods[] = {
     JS_FN("json", bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setManualFramingHeaders", Response::setManualFramingHeaders, 1, JSPROP_ENUMERATE),
+    JS_FN("staleIfErrorAvailable", staleIfErrorAvailable, 0, JSPROP_ENUMERATE),
     JS_FS_END,
 };
 
@@ -3679,10 +3890,14 @@ const JSPropertySpec Response::properties[] = {
     JS_PSG("stale", stale_get, JSPROP_ENUMERATE),
     JS_PSGS("ttl", ttl_get, ttl_set, JSPROP_ENUMERATE),
     JS_PSG("age", age_get, JSPROP_ENUMERATE),
-    JS_PSGS("swr", swr_get, swr_set, JSPROP_ENUMERATE),
+    JS_PSGS("swr", staleWhileRevalidate_get, staleWhileRevalidate_set, JSPROP_ENUMERATE),
+    JS_PSGS("staleWhileRevalidate", staleWhileRevalidate_get, staleWhileRevalidate_set,
+            JSPROP_ENUMERATE),
+    JS_PSGS("staleIfError", staleIfError_get, staleIfError_set, JSPROP_ENUMERATE),
     JS_PSGS("vary", vary_get, vary_set, JSPROP_ENUMERATE),
     JS_PSGS("surrogateKeys", surrogateKeys_get, surrogateKeys_set, JSPROP_ENUMERATE),
     JS_PSGS("pci", pci_get, pci_set, JSPROP_ENUMERATE),
+    JS_PSG("maskedError", maskedError_get, JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "Response", JSPROP_READONLY),
     JS_PS_END,
 };
@@ -3818,7 +4033,7 @@ bool Response::age_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool Response::swr_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool Response::staleWhileRevalidate_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto entry = RequestOrResponse::cache_entry(self);
@@ -3844,6 +4059,35 @@ bool Response::swr_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   args.rval().setNumber(static_cast<double>(swr_ns) / 1e9);
+  return true;
+}
+
+bool Response::staleIfError_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto entry = RequestOrResponse::cache_entry(self);
+
+  // all caching paths should set the override options as the final options
+  // so if they aren't set we are in the undefined cases of no caching API use / no hostcall support
+  auto override_opts = override_cache_options(self);
+  if (!override_opts) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  uint64_t sie_ns;
+  // a promoted candidate response must define all cache options
+  if (!entry.has_value() || override_opts->stale_if_error_ns.has_value()) {
+    sie_ns = override_opts->stale_if_error_ns.value();
+  } else {
+    auto suggested_opts = suggested_cache_options(cx, self);
+    if (!suggested_opts) {
+      return false;
+    }
+    sie_ns = suggested_opts->stale_if_error_ns.value();
+  }
+
+  args.rval().setNumber(static_cast<double>(sie_ns) / 1e9);
   return true;
 }
 
@@ -4010,6 +4254,12 @@ bool Response::pci_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool Response::maskedError_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+  args.rval().set(JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::MaskedError)));
+  return true;
+}
+
 // Setters for mutable properties
 
 bool Response::ttl_set(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -4034,9 +4284,9 @@ bool Response::ttl_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (std::isnan(seconds) || seconds <= 0) {
+  if (std::isnan(seconds) || seconds < 0) {
     api::throw_error(cx, api::Errors::TypeError, "Response set", "ttl",
-                     "be a number greater than zero");
+                     "be a number greater than or equal to zero");
     return false;
   }
 
@@ -4048,12 +4298,12 @@ bool Response::ttl_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool Response::swr_set(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool Response::staleWhileRevalidate_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   auto override_opts = override_cache_options(self);
   if (!RequestOrResponse::cache_entry(self).has_value()) {
-    api::throw_error(cx, api::Errors::TypeError, "Response set", "swr",
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "staleWhileRevalidate",
                      "be set only on unsent cache transaction responses");
     return false;
   }
@@ -4064,13 +4314,41 @@ bool Response::swr_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (std::isnan(seconds) || seconds <= 0) {
-    api::throw_error(cx, api::Errors::TypeError, "Response set", "swr",
-                     "be a number greater than zero");
+  if (std::isnan(seconds) || seconds < 0) {
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "staleWhileRevalidate",
+                     "be a number greater than or equal to zero");
     return false;
   }
 
   override_opts->stale_while_revalidate_ns = static_cast<uint64_t>(seconds * 1e9);
+
+  args.rval().setUndefined();
+  return true;
+}
+
+bool Response::staleIfError_set(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(1)
+
+  auto override_opts = override_cache_options(self);
+  if (!RequestOrResponse::cache_entry(self).has_value()) {
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "staleIfError",
+                     "be set only on unsent cache transaction responses");
+    return false;
+  }
+  MOZ_ASSERT(override_opts);
+
+  double seconds;
+  if (!JS::ToNumber(cx, args[0], &seconds)) {
+    return false;
+  }
+
+  if (std::isnan(seconds) || seconds < 0) {
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "staleIfError",
+                     "be a number greater than or equal to zero");
+    return false;
+  }
+
+  override_opts->stale_if_error_ns = static_cast<uint64_t>(seconds * 1e9);
 
   args.rval().setUndefined();
   return true;
@@ -4235,6 +4513,27 @@ bool Response::pci_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool Response::staleIfErrorAvailable(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  // This method is only valid on candidate responses (inside afterSend callback)
+  auto cache_entry = RequestOrResponse::cache_entry(self);
+  if (!cache_entry) {
+    // Cache entry has been taken - this is not a candidate response
+    api::throw_error(cx, api::Errors::TypeError, "Response", "staleIfErrorAvailable()",
+                     "can only be called on candidate responses inside afterSend callback");
+    return false;
+  }
+
+  auto res = cache_entry->get_state();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  args.rval().setBoolean(res.unwrap().is_usable_if_error());
+  return true;
+}
 /**
  * The `Response` constructor https://fetch.spec.whatwg.org/#dom-response
  */
@@ -4311,8 +4610,8 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   // 1.  If `init`["status"] is not in the range 200 to 599, inclusive, then
-  // `throw` a ``RangeError``.
-  if (status < 200 || status > 599) {
+  // `throw` a ``RangeError``. (We allow 103 Early Hints as an extension)
+  if (status != 103 && !(status >= 200 && status < 600)) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
                               JSMSG_RESPONSE_CONSTRUCTOR_INVALID_STATUS, status);
     return false;
@@ -4416,7 +4715,7 @@ bool Response::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if ((!body_val.isNullOrUndefined())) {
     //     1.  If `init`["status"] is a `null body status`, then `throw` a
     //     ``TypeError``.
-    if (status == 204 || status == 205 || status == 304) {
+    if (status == 103 || status == 204 || status == 205 || status == 304) {
       JS_ReportErrorNumberLatin1(cx, FastlyGetErrorMessage, nullptr,
                                  JSMSG_RESPONSE_CONSTRUCTOR_BODY_WITH_NULL_BODY_STATUS);
       return false;
@@ -4539,12 +4838,20 @@ void Response::finalize(JS::GCContext *gcx, JSObject *self) {
             suggested_cache_write_options_val.toPrivate());
     delete cache_write_options;
   }
-  auto override_cache_write_options = reinterpret_cast<host_api::HttpCacheWriteOptions *>(
-      JS::GetReservedSlot(self, static_cast<size_t>(Response::Slots::OverrideCacheWriteOptions))
-          .toPrivate());
-  if (override_cache_write_options) {
-    delete override_cache_write_options;
+  auto override_cache_write_options_val =
+      JS::GetReservedSlot(self, static_cast<size_t>(Response::Slots::OverrideCacheWriteOptions));
+  if (!override_cache_write_options_val.isUndefined()) {
+    auto override_cache_write_options = reinterpret_cast<host_api::HttpCacheWriteOptions *>(
+        override_cache_write_options_val.toPrivate());
+    if (override_cache_write_options) {
+      delete override_cache_write_options;
+    }
   }
+}
+
+bool Response::has_bodyless_status(JSObject *obj) {
+  auto status(Response::status(obj));
+  return status == 103 || status == 204 || status == 205 || status == 304;
 }
 
 JSObject *Response::create(JSContext *cx, JS::HandleObject response,
@@ -4595,7 +4902,7 @@ JSObject *Response::create(JSContext *cx, JS::HandleObject response,
     JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::Status), JS::Int32Value(status));
     set_status_message_from_code(cx, response, status);
 
-    if (!(status == 204 || status == 205 || status == 304)) {
+    if (!Response::has_bodyless_status(response)) {
       JS::SetReservedSlot(response, static_cast<uint32_t>(Slots::HasBody), JS::TrueValue());
     }
   }

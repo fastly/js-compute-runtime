@@ -4,13 +4,14 @@ hide_table_of_contents: false
 pagination_next: null
 pagination_prev: null
 ---
-import {Fiddle} from '@site/src/components/fiddle';
+
+import { Fiddle } from '@site/src/components/fiddle';
 
 # `Dictionary()`
 
 :::info
 
-This Class is deprecated, it has been renamed to [`ConfigStore`](../../fastly:config-store/ConfigStore/ConfigStore.mdx) and can be imported via `import { ConfigStore } from 'fastly:config-store'`
+This Class is deprecated, it has been renamed to [`ConfigStore`](pathname://../../fastly:config-store/ConfigStore/ConfigStore.mdx) and can be imported via `import { ConfigStore } from 'fastly:config-store'`
 
 :::
 
@@ -41,7 +42,7 @@ A new `Dictionary` object.
   - Thrown if no Dictionary exists with the provided name
   - Thrown if the provided name is longer than 255 in length
   - Thrown if the provided name is an empty string
-  - Thrown if the provided name does not start with an ascii alphabetical character 
+  - Thrown if the provided name does not start with an ascii alphabetical character
   - Thrown if the provided name does not contain only ascii alphanumeric, underscore, and whitespace characters
 
 ## Examples
@@ -52,7 +53,7 @@ In this example we have an Edge Dictionary named "animals" and we return the "ca
   "type": "javascript",
   "title": "Dictionary Example",
   "origins": [
-    "https://http-me.glitch.me"
+    "https://http-me.fastly.dev"
   ],
   "src": {
     "deps": "{\n  \"@fastly/js-compute\": \"^1.0.1\"\n}",
@@ -91,12 +92,12 @@ addEventListener("fetch", event => event.respondWith(app(event)));
 
 ```js
 /// <reference types="@fastly/js-compute" />
-import { Dictionary } from "fastly:dictionary";
-async function app (event) {
+import { Dictionary } from 'fastly:dictionary';
+async function app(event) {
   const config = new Dictionary('animals');
   return new Response(config.get('cat'));
 }
-addEventListener("fetch", event => event.respondWith(app(event)));
+addEventListener('fetch', (event) => event.respondWith(app(event)));
 ```
 
 </Fiddle>

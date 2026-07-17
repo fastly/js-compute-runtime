@@ -152,6 +152,17 @@ JSObject *deviceToJSON(JSContext *cx, JS::HandleObject self) {
     return nullptr;
   }
 
+  if (!JS_GetProperty(cx, device_info_obj, "is_bot", &value)) {
+    return nullptr;
+  }
+  MOZ_ASSERT(value.isBoolean() || value.isNullOrUndefined());
+  if (value.isUndefined()) {
+    value.setNull();
+  }
+  if (!JS_SetProperty(cx, result, "isBot", value)) {
+    return nullptr;
+  }
+
   return result;
 }
 
@@ -465,6 +476,31 @@ bool Device::is_touchscreen_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+// get isBot(): boolean | null;
+bool Device::is_bot_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  JS::RootedValue device_info(cx,
+                              JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::DeviceInfo)));
+  if (!device_info.isObject()) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+  JS::RootedObject device_info_obj(cx, device_info.toObjectOrNull());
+
+  JS::RootedValue device_is_bot(cx);
+  if (!JS_GetProperty(cx, device_info_obj, "is_bot", &device_is_bot)) {
+    return false;
+  }
+  MOZ_ASSERT(device_is_bot.isBoolean() || device_is_bot.isNullOrUndefined());
+  if (device_is_bot.isUndefined()) {
+    args.rval().setNull();
+  } else {
+    args.rval().set(device_is_bot);
+  }
+  return true;
+}
+
 // static lookup(useragent: string): Device;
 bool Device::lookup(JSContext *cx, unsigned argc, JS::Value *vp) {
   REQUEST_HANDLER_ONLY("The Device builtin");
@@ -538,6 +574,7 @@ const JSPropertySpec Device::properties[] = {
     JS_PSG("isSmartTV", Device::is_smarttv_get, JSPROP_ENUMERATE),
     JS_PSG("isTablet", Device::is_tablet_get, JSPROP_ENUMERATE),
     JS_PSG("isTouchscreen", Device::is_touchscreen_get, JSPROP_ENUMERATE),
+    JS_PSG("isBot", Device::is_bot_get, JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "Device", JSPROP_READONLY),
     JS_PS_END};
 

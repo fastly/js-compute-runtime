@@ -2,6 +2,12 @@ on:
   push:
     branches:
       - main
+permissions:
+  id-token: write
+  contents: write
+  issues: write
+  pull-requests: write
+  packages: write
 env:
   wasm-tools_version: 1.216.0
 name: release-please
@@ -39,7 +45,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
           node-version: 'lts/*'
 
@@ -89,16 +95,23 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: true
-    - name: Install Rust 1.77.1
+    - name: Set up Node LTS
+      uses: actions/setup-node@v6
+      with:
+        node-version: 'lts/*'
+    - run: npm ci
+    - name: Install Rust 1.88.0
       run: |
-        rustup toolchain install 1.77.1
-        rustup target add wasm32-wasi --toolchain 1.77.1
+        rustup toolchain install 1.88.0
+        rustup target add wasm32-wasip1 --toolchain 1.88.0
     - name: Restore wasm-tools from cache
       uses: actions/cache@v3
       id: wasm-tools
       with:
         path: "/home/runner/.cargo/bin/wasm-tools"
         key: crate-cache-wasm-tools-${{ env.wasm-tools_version }}
+    - name: Build CLI
+      run: npm run build:cli
     - name: Build
       if: ${{ matrix.profile == 'release' }}
       run: npm run build:release
@@ -129,11 +142,11 @@ jobs:
           submodules: true
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
           node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
-      
+
       - name: Restore wasm-tools from cache
         uses: actions/cache@v3
         id: wasm-tools
@@ -173,9 +186,11 @@ jobs:
         with:
           name: fastly-weval-ic-cache
 
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+      - name: Build CLI
+        run: npm run build:cli
+
+      - name: npmjs publish
+        run: npm publish
 
       - name: github package registry publish
         run: |
@@ -200,7 +215,7 @@ jobs:
         uses: fastly/compute-actions/setup@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          cli_version: '7.0.1'
+          cli_version: '14.2.0'
 
       - run: npm run deploy
         timeout-minutes: 120

@@ -26,7 +26,10 @@ const subsystems = [
   'logger',
   'object-store',
   'secret-store',
-  'html-rewriter'
+  'html-rewriter',
+  'image-optimizer',
+  'security',
+  'shielding'
 ];
 
 const files = readdirSync('docs');

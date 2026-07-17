@@ -41,10 +41,10 @@ api::Engine *ENGINE;
 
 std::string_view bad_chars{"#;?^|\n\r"};
 
-std::optional<char> find_invalid_character_for_kv_store_key(const char *str) {
+std::optional<char> find_invalid_character_for_kv_store_key(const char *str, size_t len) {
   std::optional<char> res;
 
-  std::string_view view{str, strlen(str)};
+  std::string_view view{str, len};
 
   auto it = std::find_if(view.begin(), view.end(),
                          [](auto c) { return bad_chars.find(c) != std::string_view::npos; });
@@ -69,7 +69,7 @@ bool KVStoreEntry::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::HasBody)).isBoolean()) {
     JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::HasBody), JS::BooleanValue(false));
   }
-  return RequestOrResponse::body_get(cx, args, self, true);
+  return RequestOrResponse::body_get(cx, args, self);
 }
 
 bool KVStoreEntry::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -195,7 +195,7 @@ bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
   }
 
   auto key_chars = key;
-  auto res = find_invalid_character_for_kv_store_key(key_chars);
+  auto res = find_invalid_character_for_kv_store_key(key_chars, len);
   if (res.has_value()) {
     std::string character;
     switch (res.value()) {
@@ -231,7 +231,8 @@ bool parse_and_validate_key(JSContext *cx, const char *key, size_t len) {
     return false;
   }
 
-  if (strcmp(key_chars, ".") == 0 || strcmp(key_chars, "..") == 0) {
+  if ((len == 1 && key_chars[0] == '.') ||
+      (len == 2 && key_chars[0] == '.' && key_chars[1] == '.')) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_KV_STORE_KEY_RELATIVE);
     return false;
   }
@@ -549,6 +550,8 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       JS::RootedObject source_owner(cx, NativeStreamSource::owner(stream_source));
       auto body = RequestOrResponse::body_handle(source_owner);
 
+      std::optional<std::tuple<const uint8_t *, size_t, std::optional<JS::AutoCheckCannotGC>>>
+          metadata_buf;
       // metadata object is read last because no JS can run after getting byte reference
       if (!metadata_val.isUndefined()) {
         if (metadata_val.isString()) {
@@ -556,15 +559,20 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
           metadata = std::make_tuple(reinterpret_cast<const uint8_t *>(metadata_str.ptr.get()),
                                      metadata_str.len);
         } else {
-          auto maybe_byte_data = validate_bytes(cx, metadata_val, "KVStore.put metadata");
-          if (!maybe_byte_data) {
+          auto maybe_buf = validate_bytes(cx, metadata_val, "KVStore.put metadata");
+          if (!maybe_buf) {
             return ReturnPromiseRejectedWithPendingError(cx, args);
           }
-          metadata = maybe_byte_data;
+          metadata_buf.emplace(std::move(*maybe_buf));
+          auto &[data, len, noGC] = *metadata_buf;
+          metadata = std::make_tuple(data, len);
         }
       }
 
       auto res = kv_store(self).insert(key_chars, body, mode, std::nullopt, metadata, ttl);
+      if (metadata_buf) {
+        std::get<2>(*metadata_buf).reset(); // allow GC after hostcall
+      }
       if (auto *err = res.to_err()) {
         HANDLE_ERROR(cx, *err);
         return ReturnPromiseRejectedWithPendingError(cx, args);
@@ -615,6 +623,8 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
+    std::optional<std::tuple<const uint8_t *, size_t, std::optional<JS::AutoCheckCannotGC>>>
+        metadata_buf;
     // metadata object is read last because no JS can run after getting byte reference
     if (!metadata_val.isUndefined()) {
       if (metadata_val.isString()) {
@@ -622,15 +632,20 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
         metadata = std::make_tuple(reinterpret_cast<const uint8_t *>(metadata_str.ptr.get()),
                                    metadata_str.len);
       } else {
-        auto maybe_byte_data = validate_bytes(cx, metadata_val, "KVStore.put metadata");
-        if (!maybe_byte_data) {
+        auto maybe_buf = validate_bytes(cx, metadata_val, "KVStore.put metadata");
+        if (!maybe_buf) {
           return ReturnPromiseRejectedWithPendingError(cx, args);
         }
-        metadata = maybe_byte_data;
+        metadata_buf.emplace(std::move(*maybe_buf));
+        auto &[data, len, noGC] = *metadata_buf;
+        metadata = std::make_tuple(data, len);
       }
     }
 
     auto insert_res = kv_store(self).insert(key_chars, body, mode, if_gen, metadata, ttl);
+    if (metadata_buf) {
+      std::get<2>(*metadata_buf).reset(); // allow GC after hostcall
+    }
     if (auto *err = insert_res.to_err()) {
       // Ensure that we throw an exception for all unexpected host errors.
       HANDLE_ERROR(cx, *err);

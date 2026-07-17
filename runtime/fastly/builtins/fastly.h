@@ -29,6 +29,57 @@ public:
   static JSObject *create(JSContext *cx);
 };
 
+class ReusableSandboxOptions {
+public:
+  ReusableSandboxOptions() = default;
+  ReusableSandboxOptions(const ReusableSandboxOptions &) = delete;
+  ReusableSandboxOptions &operator=(const ReusableSandboxOptions &) = delete;
+
+  std::optional<uint32_t> max_requests() const { return max_requests_; }
+  bool set_max_requests(uint32_t max_requests) {
+    if (frozen_) {
+      return false;
+    }
+    max_requests_ = max_requests;
+    return true;
+  }
+  std::optional<std::chrono::milliseconds> between_request_timeout() const {
+    return between_request_timeout_;
+  }
+  bool set_between_request_timeout(std::chrono::milliseconds timeout) {
+    if (frozen_) {
+      return false;
+    }
+    between_request_timeout_ = timeout;
+    return true;
+  }
+  std::optional<uint32_t> max_memory_mib() const { return max_memory_mib_; }
+  bool set_max_memory_mib(uint32_t max_memory_mib) {
+    if (frozen_) {
+      return false;
+    }
+    max_memory_mib_ = max_memory_mib;
+    return true;
+  }
+  std::optional<std::chrono::milliseconds> sandbox_timeout() const { return sandbox_timeout_; }
+  bool set_sandbox_timeout(std::chrono::milliseconds timeout) {
+    if (frozen_) {
+      return false;
+    }
+    sandbox_timeout_ = timeout;
+    return true;
+  }
+  bool frozen() const { return frozen_; }
+  void freeze() { frozen_ = true; }
+
+private:
+  bool frozen_ = false;
+  std::optional<uint32_t> max_requests_;
+  std::optional<std::chrono::milliseconds> between_request_timeout_;
+  std::optional<uint32_t> max_memory_mib_;
+  std::optional<std::chrono::milliseconds> sandbox_timeout_;
+};
+
 class Fastly : public builtins::BuiltinNoConstructor<Fastly> {
 private:
   static bool log(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -41,6 +92,7 @@ public:
   static JS::PersistentRooted<JSString *> defaultBackend;
   static bool allowDynamicBackends;
   static host_api::BackendConfig defaultDynamicBackendConfig;
+  static ReusableSandboxOptions reusableSandboxOptions;
 
   static const JSPropertySpec properties[];
 
@@ -60,10 +112,33 @@ public:
   static bool defaultBackend_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool allowDynamicBackends_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool allowDynamicBackends_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool inspect(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool setReusableSandboxOptions(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool restore_builtin_state(JSContext *cx);
 };
 
 JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
                                                                 JS::HandleValue bodyInit);
+
+inline bool get_fastly_object(api::Engine *engine, JS::MutableHandleObject out) {
+  JS::RootedValue fastly_val(engine->cx());
+  if (!JS_GetProperty(engine->cx(), engine->global(), "fastly", &fastly_val)) {
+    return false;
+  }
+  if (fastly_val.isObject()) {
+    out.set(&fastly_val.toObject());
+    return true;
+  }
+  JS::RootedObject fastly_obj(engine->cx(), JS_NewPlainObject(engine->cx()));
+  if (!fastly_obj) {
+    return false;
+  }
+  if (!JS_DefineProperty(engine->cx(), engine->global(), "fastly", fastly_obj, 0)) {
+    return false;
+  }
+  out.set(fastly_obj);
+  return true;
+}
 
 /**
  * Debug only logging system, adding messages to `fastly.debugMessages`

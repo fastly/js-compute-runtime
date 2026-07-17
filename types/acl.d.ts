@@ -1,6 +1,9 @@
 /// <reference path="../types/globals.d.ts" />
 
 declare module 'fastly:acl' {
+  /**
+   * @version 3.32.0
+   */
   class Acl {
     /**
      * Opens the given ACL store by name
@@ -19,6 +22,7 @@ declare module 'fastly:acl' {
      * });
      *
      * @param ipAddress Ipv6 or IPv4 IP address string
+     * @returns An object containing the ACL action and IP prefix if the given IP address matches an ACL entry, or null if there is no match.
      */
     lookup(ipAddress: string): Promise<{
       action: 'ALLOW' | 'BLOCK';

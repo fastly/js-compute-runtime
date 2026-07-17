@@ -9,6 +9,6 @@
     "status": "PASS"
   },
   "URL.searchParams and URL.search setters, update propagation": {
-    "status": "FAIL"
+    "status": "PASS"
   }
 }

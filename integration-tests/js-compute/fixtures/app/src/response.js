@@ -1,7 +1,7 @@
 /* eslint-env serviceworker */
 
 import { routes } from './routes.js';
-import { assert } from './assertions.js';
+import { assert, streamToString } from './assertions.js';
 import { allowDynamicBackends } from 'fastly:experimental';
 
 routes.set('/response/stall', async (event) => {
@@ -58,21 +58,15 @@ routes.set('/response/ip-port-undefined', async () => {
 
 routes.set('/response/request-body-init', async () => {
   allowDynamicBackends(true);
-  // fetch an image
-  const downloadResp = await fetch('https://httpbin.org/image', {
-    headers: {
-      accept: 'image/webp',
-    },
-  });
-  // stream it through an echo proxy
+  const downloadResp = await fetch('https://http-me.fastly.dev/json');
   const postResp = await fetch(
-    new Request('https://httpbin.org/anything', {
+    new Request('https://http-me.fastly.dev/anything', {
       method: 'POST',
       body: downloadResp.body,
     }),
   );
-  // finally stream back to user
-  return postResp;
+  let body = await postResp.json();
+  assert(JSON.parse(body['body'])['data']['name'] === 'Test Product', true);
 });
 
 routes.set('/response/blob', async () => {

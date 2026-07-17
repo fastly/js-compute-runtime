@@ -5,5 +5,5 @@ import { expectType } from 'tsd';
 // Compute
 {
   expectType<number>(vCpuTime());
-  expectType<boolean>(purgeSurrogateKey('boo'));
+  expectType<void>(purgeSurrogateKey('boo'));
 }

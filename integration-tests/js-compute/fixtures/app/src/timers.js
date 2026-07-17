@@ -315,7 +315,8 @@ import { CacheOverride } from 'fastly:cache-override';
     });
   });
   routes.set('/setTimeout/200-ms', async () => {
-    let controller, start;
+    let controller;
+    const start = Date.now();
     setTimeout(() => {
       const end = Date.now();
       controller.enqueue(new TextEncoder().encode(`END\n`));
@@ -332,7 +333,6 @@ import { CacheOverride } from 'fastly:cache-override';
       new ReadableStream({
         start(_controller) {
           controller = _controller;
-          start = Date.now();
           controller.enqueue(new TextEncoder().encode(`START\n`));
         },
       }),
@@ -340,13 +340,13 @@ import { CacheOverride } from 'fastly:cache-override';
   });
   routes.set('/setTimeout/fetch-timeout', async () => {
     let timedOut = false;
-    const first = fetch('https://httpbin.org/delay/2', {
-      backend: 'httpbin',
+    const first = fetch('https://http-me.fastly.dev/wait=200', {
+      backend: 'httpme',
       cacheOverride: new CacheOverride('pass'),
     });
     const second = Promise.race([
-      fetch('https://httpbin.org/delay/2', {
-        backend: 'httpbin',
+      fetch('https://http-me.fastly.dev/wait=200', {
+        backend: 'httpme',
         cacheOverride: new CacheOverride('pass'),
       }),
       new Promise((resolve) => setTimeout(resolve, 5)).then(() => {

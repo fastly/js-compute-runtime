@@ -1,0 +1,186 @@
+#include "shielding.h"
+#include "../../../StarlingMonkey/runtime/encode.h"
+#include "../common/validations.h"
+#include "../host-api/host_api_fastly.h"
+#include "backend.h"
+#include "fastly.h"
+
+namespace fastly::shielding {
+const uint64_t MAX_BACKEND_TIMEOUT = 0x100000000;
+
+const JSFunctionSpec Shield::static_methods[] = {
+    JS_FS_END,
+};
+
+const JSPropertySpec Shield::static_properties[] = {
+    JS_PS_END,
+};
+
+const JSFunctionSpec Shield::methods[] = {
+    JS_FN("runningOn", runningOn, 0, JSPROP_ENUMERATE),
+    JS_FN("unencryptedBackend", unencryptedBackend, 0, JSPROP_ENUMERATE),
+    JS_FN("encryptedBackend", encryptedBackend, 0, JSPROP_ENUMERATE), JS_FS_END};
+
+const JSPropertySpec Shield::properties[] = {JS_PS_END};
+
+bool Shield::runningOn(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+  bool is_me = JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::IsMe)).toBoolean();
+  args.rval().setBoolean(is_me);
+  return true;
+}
+bool Shield::unencryptedBackend(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+  JS::RootedString target(
+      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::PlainTarget)).toString());
+  return backend_for_shield(cx, target, args.rval(), args.get(0));
+}
+bool Shield::encryptedBackend(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+  JS::RootedString target(
+      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::SSLTarget)).toString());
+  return backend_for_shield(cx, target, args.rval(), args.get(0));
+}
+bool Shield::backend_for_shield(JSContext *cx, JS::HandleString target, JS::MutableHandleValue rval,
+                                JS::HandleValue config) {
+  auto name = core::encode(cx, target);
+  fastly_shielding_shield_backend_config host_config{nullptr, 0, 0};
+
+  if (config.isObject()) {
+    JS::RootedObject configObj(cx, &config.toObject());
+    // Timeouts for backends must be less than 2^32 milliseconds, or
+    // about a month and a half.
+    JS::RootedValue first_byte_timeout_val(cx);
+    bool found;
+    if (!JS_HasProperty(cx, configObj, "firstByteTimeout", &found)) {
+      return false;
+    }
+    if (found) {
+      if (!JS_GetProperty(cx, configObj, "firstByteTimeout", &first_byte_timeout_val)) {
+        return false;
+      }
+      auto parsed =
+          common::parse_and_validate_timeout(cx, first_byte_timeout_val, "Backend for shield",
+                                             "firstByteTimeout", MAX_BACKEND_TIMEOUT);
+      if (!parsed) {
+        return false;
+      }
+      host_config.first_byte_timeout_ms = parsed.value();
+    }
+  }
+
+  auto options_mask = 0;
+  std::uint32_t backend_name_size_out = 0;
+  constexpr std::size_t max_backend_name_size = 1024;
+  std::string backend_name_out(max_backend_name_size, 0);
+  auto status = fastly_shielding_backend_for_shield(name.ptr.get(), name.len, options_mask,
+                                                    &host_config, backend_name_out.data(),
+                                                    max_backend_name_size, &backend_name_size_out);
+  if (status != 0) {
+    HANDLE_ERROR(cx, status);
+    return false;
+  }
+  backend_name_out.resize(backend_name_size_out);
+  host_api::HostString backend_name(backend_name_out);
+  return backend::Backend::get_from_valid_name(cx, std::move(backend_name), rval);
+}
+
+bool Shield::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
+  REQUEST_HANDLER_ONLY("The Shield builtin");
+  CTOR_HEADER("Shield", 1);
+
+  JS::HandleValue name_arg = args.get(0);
+  auto name = core::encode(cx, name_arg);
+  if (!name) {
+    return false;
+  }
+
+  // Keep calling fastly_shielding_shield_info with an increasingly large buffer until it returns OK
+  std::uint32_t buf_size = 1024;
+  std::vector<char> out_buf(buf_size);
+  while (true) {
+    std::uint32_t used_amount = 0;
+    auto status = fastly_shielding_shield_info(name.ptr.get(), name.len, out_buf.data(), buf_size,
+                                               &used_amount);
+    if (status == 0) {
+      out_buf.resize(used_amount);
+      break;
+    } else if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+      buf_size *= 2;
+      out_buf = std::vector<char>(buf_size);
+    } else {
+      HANDLE_ERROR(cx, status);
+      return false;
+    }
+  }
+
+  if (out_buf.size() < 3) {
+    JS_ReportErrorASCII(cx, "Shield: invalid response from host");
+    return false;
+  }
+
+  JS::RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+  if (!self) {
+    return false;
+  }
+
+  bool is_me = out_buf[0] != 0;
+  JS_SetReservedSlot(self, static_cast<uint32_t>(Slots::IsMe), JS::BooleanValue(is_me));
+
+  auto plain_end = std::find(begin(out_buf) + 1, end(out_buf), '\0');
+  if (plain_end == end(out_buf)) {
+    JS_ReportErrorASCII(cx, "Shield: invalid response from host");
+    return false;
+  }
+  JS::RootedString plain_target(
+      cx, JS_NewStringCopyN(cx, out_buf.data() + 1, plain_end - (begin(out_buf) + 1)));
+  if (!plain_target) {
+    return false;
+  }
+  JS_SetReservedSlot(self, static_cast<uint32_t>(Slots::PlainTarget),
+                     JS::StringValue(plain_target));
+
+  auto ssl_begin = plain_end + 1;
+  auto ssl_end = std::find(ssl_begin, end(out_buf), '\0');
+  if (ssl_end == end(out_buf)) {
+    JS_ReportErrorASCII(cx, "Shield: invalid response from host");
+    return false;
+  }
+  JS::RootedString ssl_target(cx, JS_NewStringCopyN(cx, &*ssl_begin, ssl_end - ssl_begin));
+  if (!ssl_target) {
+    return false;
+  }
+  JS_SetReservedSlot(self, static_cast<uint32_t>(Slots::SSLTarget), JS::StringValue(ssl_target));
+
+  args.rval().setObject(*self);
+  return true;
+}
+
+bool install(api::Engine *engine) {
+  RootedObject shielding_ns(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  if (!Shield::init_class_impl(engine->cx(), shielding_ns)) {
+    return false;
+  }
+  RootedObject shield_obj(engine->cx(), JS_GetConstructor(engine->cx(), Shield::proto_obj));
+  RootedValue shield_val(engine->cx(), ObjectValue(*shield_obj));
+  if (!JS_SetProperty(engine->cx(), shielding_ns, "Shield", shield_val)) {
+    return false;
+  }
+
+  RootedValue shielding_ns_val(engine->cx(), JS::ObjectValue(*shielding_ns));
+  if (!engine->define_builtin_module("fastly:shielding", shielding_ns_val)) {
+    return false;
+  }
+
+  RootedObject fastly(engine->cx());
+  if (!fastly::get_fastly_object(engine, &fastly)) {
+    return false;
+  }
+  if (!JS_SetProperty(engine->cx(), fastly, "shielding", shielding_ns_val)) {
+    return false;
+  }
+
+  return true;
+}
+
+} // namespace fastly::shielding

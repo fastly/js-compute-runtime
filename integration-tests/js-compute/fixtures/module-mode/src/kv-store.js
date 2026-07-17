@@ -43,6 +43,7 @@ const debug = sdkVersion.endsWith('-debug');
 
     for (let i = 0; i < 100; i++) {
       await store.put('c' + i, 'd', {
+        mode: 'overwrite',
         metadata: i % 2 === 0 ? '42' : new Uint8Array([42]),
       });
     }
@@ -61,15 +62,10 @@ const debug = sdkVersion.endsWith('-debug');
 
     await store.put('c5', 'cba', {
       mode: 'prepend',
-      metadata: new Uint8Array([0xf0, 0xf0]),
+      metadata: 'cbad',
     });
     const c5Entry = await store.get('c5');
-    if (isRunningLocally()) {
-      strictEqual(await c5Entry.text(), 'cbad');
-    } else {
-      // for some reason, compute doesn't support prepend?
-      strictEqual(await c5Entry.text(), 'd');
-    }
+    strictEqual(await c5Entry.text(), 'cbad');
     assertRejects(async () => await c5Entry.metadataText(), TypeError);
 
     // TTL only supported on compute not viceroy
@@ -508,6 +504,16 @@ const debug = sdkVersion.endsWith('-debug');
         }
       },
     );
+    routes.set('/kv-store/put/key-parameter-containing-nul-byte', async () => {
+      await assertRejects(
+        async () => {
+          let store = new KVStore(KV_STORE_NAME);
+          await store.put('a\x00;b', '');
+        },
+        TypeError,
+        `KVStore key can not contain ; character`,
+      );
+    });
     routes.set('/kv-store/put/value-parameter-as-undefined', async () => {
       const store = new KVStore(KV_STORE_NAME);
       let result = store.put('undefined', undefined);
@@ -1988,6 +1994,24 @@ async function kvStoreInterfaceTests() {
     `Reflect.getOwnPropertyDescriptor(KVStore.prototype.put, 'name')`,
   );
 }
+
+// Test that HttpBody::read_all() correctly handles large list responses
+// (i.e. that it uses a growable buffer and doesn't overflow).
+// We populate the store with enough 1024-char keys that the list response JSON
+// would have exceeded the old 500000-byte fixed buffer.
+routes.set('/kv-store/list/large-response', async () => {
+  const store = new KVStore(KV_STORE_NAME);
+  // 490 keys × ~1024-char names ≈ 507 KB of JSON
+  const prefix = 'large-list-' + 'a'.repeat(1009);
+  await Promise.all(
+    Array.from({ length: 490 }, (_, i) =>
+      store.put(prefix + String(i).padStart(4, '0'), 'x'),
+    ),
+  );
+  const result = await store.list({});
+  strictEqual(typeof result, 'object', 'list result is an object');
+  return new Response('ok');
+});
 
 function iteratableToStream(iterable) {
   return new ReadableStream({

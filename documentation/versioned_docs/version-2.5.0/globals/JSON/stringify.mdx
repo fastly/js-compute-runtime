@@ -54,9 +54,9 @@ A JSON string representing the given value, or undefined.
 - Arrays are serialized as arrays (enclosed by square brackets). Only array indices between 0 and `length - 1` (inclusive) are serialized; other properties are ignored.
 - For other objects:
 
-  - All `Symbol`-keyed properties will be completely ignored, even when using the [`replacer`](#the_replacer_parameter) parameter.
+  - All `Symbol`-keyed properties will be completely ignored, even when using the [`replacer`](#the-replacer-parameter) parameter.
 
-  - If the value has a `toJSON()` method, it's responsible to define what data will be serialized. Instead of the object being serialized, the value returned by the `toJSON()` method when called will be serialized. `JSON.stringify()` calls `toJSON` with one parameter, the `key`, which has the same semantic as the `key` parameter of the [`replacer`](#the_replacer_parameter) function:
+  - If the value has a `toJSON()` method, it's responsible to define what data will be serialized. Instead of the object being serialized, the value returned by the `toJSON()` method when called will be serialized. `JSON.stringify()` calls `toJSON` with one parameter, the `key`, which has the same semantic as the `key` parameter of the [`replacer`](#the-replacer-parameter) function:
 
     - if this object is a property value, the property name
     - if it is in an array, the index in the array, as a string
@@ -64,7 +64,7 @@ A JSON string representing the given value, or undefined.
 
     `Date` objects implement the [`toJSON()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date/toJSON) method which returns a string (the same as [`date.toISOString()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)). Thus, they will be stringified as strings.
 
-  - Only [enumerable own properties](https://developer.mozilla.org/docs/Web/JavaScript/Enumerability_and_ownership_of_properties) are visited. This means [Map](../../globals/Map/Map.mdx), [Set](../../globals/Set/Set.mdx), etc. will become `"{}"`. You can use the [`replacer`](#the_replacer_parameter) parameter to serialize them to something more useful.
+  - Only [enumerable own properties](https://developer.mozilla.org/docs/Web/JavaScript/Enumerability_and_ownership_of_properties) are visited. This means [Map](../../globals/Map/Map.mdx), [Set](../../globals/Set/Set.mdx), etc. will become `"{}"`. You can use the [`replacer`](#the-replacer-parameter) parameter to serialize them to something more useful.
 
     Properties are visited using the same algorithm as [`Object.keys()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/keys), which has a well-defined order and is stable across implementations. For example, `JSON.stringify` on the same object will always produce the same string, and `JSON.parse(JSON.stringify(obj))` would produce an object with the same key ordering as the original (assuming the object is completely JSON-serializable).
 

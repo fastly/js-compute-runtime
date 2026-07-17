@@ -44,6 +44,7 @@ public:
   static bool is_tablet_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool is_desktop_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool is_touchscreen_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool is_bot_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static bool toJSON(JSContext *cx, unsigned argc, JS::Value *vp);
 

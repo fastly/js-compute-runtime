@@ -1,0 +1,49 @@
+import test from 'brittle';
+import { getBinPath } from 'get-bin-path';
+import { prepareEnvironment } from '@jakechampion/cli-testing-library';
+import { chmodSync } from 'node:fs';
+
+const cli = await getBinPath({ name: 'js-compute' });
+const isWindows = process.platform === 'win32';
+
+test('should use --weval-bin when set and AOT is enabled', async function (t) {
+  const { execute, cleanup, writeFile, exists, path } =
+    await prepareEnvironment();
+  t.teardown(async function () {
+    await cleanup();
+  });
+
+  await writeFile('./index.js', `addEventListener('fetch', function(){})`);
+  await writeFile('./dummy.wasm', '');
+
+  const markerPath = `${path}/weval-bin-invoked`;
+  const wrapperFileName = isWindows ? 'weval-wrapper.bat' : 'weval-wrapper.sh';
+  const wrapperPath = `${path}/${wrapperFileName}`;
+
+  if (isWindows) {
+    await writeFile(
+      `./${wrapperFileName}`,
+      `@echo off
+echo invoked > "${markerPath}"
+exit /b 1
+`,
+    );
+  } else {
+    await writeFile(
+      `./${wrapperFileName}`,
+      `#!/bin/sh
+echo "invoked" > "${markerPath}"
+exit 1
+`,
+    );
+    chmodSync(wrapperPath, 0o755);
+  }
+
+  const { code } = await execute(
+    process.execPath,
+    `${cli} ${path}/index.js ${path}/out.wasm --enable-aot --engine-wasm=${path}/dummy.wasm --weval-bin=${wrapperPath}`,
+  );
+
+  t.is(await exists('./weval-bin-invoked'), true);
+  t.is(code, 1);
+});

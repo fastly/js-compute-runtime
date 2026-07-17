@@ -32,6 +32,7 @@
   "GET /backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-supported-by-fastly": {},
   "GET /backend/constructor/parameter-ciphers-property-valid-cipherlist-strings-but-not-supported-by-fastly": {},
   "GET /backend/constructor/parameter-ciphers-property-calls-7.1.17-ToString": {},
+  "GET /backend/constructor/parameter-ciphers-property-and-operator": {},
   "GET /backend/constructor/parameter-hostOverride-property-empty-string": {},
   "GET /backend/constructor/parameter-hostOverride-property-calls-7.1.17-ToString": {},
   "GET /backend/constructor/parameter-hostOverride-property-valid-string": {},
@@ -191,12 +192,10 @@
     "features": ["http-cache"],
     "downstream_response": {
       "headers": {
-        "connection": true,
         "content-length": true,
         "date": true,
         "content-type": true,
         "fastly_service_version": true,
-        "server": true,
         "custom": "custom-header",
         "x-cache": true,
         "x-cache-hits": true,
@@ -294,7 +293,11 @@
     "environments": ["compute"],
     "features": ["http-cache"]
   },
-  "GET /kv-store-e2e/list": { "flake": true },
+  "GET /http-cache/cache-key-on-request": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /kv-store-e2e/list": {},
   "GET /kv-store/exposed-as-global": {},
   "GET /kv-store/interface": { "flake": true },
   "GET /kv-store/constructor/called-as-regular-function": {},
@@ -322,6 +325,7 @@
   "GET /kv-store/put/key-parameter-containing-special-characters": {
     "flake": true
   },
+  "GET /kv-store/put/key-parameter-containing-nul-byte": { "flake": true },
   "GET /kv-store/put/value-parameter-as-undefined": { "flake": true },
   "GET /kv-store/put/value-parameter-not-supplied": { "flake": true },
   "GET /kv-store/put/value-parameter-readablestream-empty": { "flake": true },
@@ -410,6 +414,7 @@
   "GET /kv-store-options/gen-invalid": { "flake": true },
   "GET /kv-store-entry/body": { "flake": true },
   "GET /kv-store-entry/bodyUsed": { "flake": true },
+  "GET /kv-store/list/large-response": { "flake": true },
   "GET /transform-stream/identity": {
     "downstream_response": { "body": "hello" }
   },

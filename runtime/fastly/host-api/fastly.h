@@ -1,13 +1,12 @@
 #ifndef fastly_H
 #define fastly_H
 #ifdef __cplusplus
-extern "C" {
-namespace fastly {
-#endif
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+extern "C" {
+namespace fastly {
+#endif
 
 typedef struct fastly_world_string {
   uint8_t *ptr;
@@ -39,6 +38,15 @@ typedef struct fastly_host_http_response {
   uint32_t f1;
 } fastly_host_http_response;
 
+typedef struct fastly_host_http_inspect_options {
+  const char *corp;
+  uint32_t corp_len;
+  const char *workspace;
+  uint32_t workspace_len;
+  const char *override_client_ip_ptr;
+  uint32_t override_client_ip_len;
+} fastly_host_http_inspect_options;
+
 typedef fastly_host_http_response fastly_world_tuple2_handle_handle;
 
 #define WASM_IMPORT(module, name) __attribute__((import_module(module), import_name(name)))
@@ -47,8 +55,8 @@ typedef fastly_host_http_response fastly_world_tuple2_handle_handle;
 #define HEADER_MAX_LEN 69000
 #define METHOD_MAX_LEN 1024
 #define URI_MAX_LEN 8192
-#define CONFIG_STORE_ENTRY_MAX_LEN 8000
-#define DICTIONARY_ENTRY_MAX_LEN CONFIG_STORE_ENTRY_MAX_LEN
+#define CONFIG_STORE_INITIAL_BUF_LEN 512
+#define DICTIONARY_ENTRY_MAX_LEN 8000
 
 // Ensure that all the things we want to use the hostcall buffer for actually
 // fit into the buffer.
@@ -265,6 +273,13 @@ typedef enum BodyWriteEnd {
 #define CACHE_OVERRIDE_STALE_WHILE_REVALIDATE (1u << 2)
 #define CACHE_OVERRIDE_PCI (1u << 3)
 
+typedef uint32_t req_inspect_config_options_mask;
+
+#define FASTLY_HOST_HTTP_REQ_INSPECT_CONFIG_OPTIONS_MASK_RESERVED (1 << 0);
+#define FASTLY_HOST_HTTP_REQ_INSPECT_CONFIG_OPTIONS_MASK_CORP (1 << 1);
+#define FASTLY_HOST_HTTP_REQ_INSPECT_CONFIG_OPTIONS_MASK_WORKSPACE (1 << 2);
+#define FASTLY_HOST_HTTP_REQ_INSPECT_CONFIG_OPTIONS_MASK_OVERRIDE_CLIENT_IP (1 << 3);
+
 WASM_IMPORT("fastly_abi", "init")
 int init(uint64_t abi_version);
 
@@ -343,6 +358,7 @@ typedef struct __attribute__((aligned(8))) fastly_http_cache_write_options {
   const char *surrogate_keys;
   size_t surrogate_keys_len;
   uint64_t length;
+  uint64_t stale_if_error_ns;
 } fastly_http_cache_write_options;
 
 // HTTP Cache write options mask
@@ -353,6 +369,7 @@ typedef struct __attribute__((aligned(8))) fastly_http_cache_write_options {
 #define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS (1 << 4)
 #define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_LENGTH (1 << 5)
 #define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA (1 << 6)
+#define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_IF_ERROR_NS (1 << 7)
 
 // HTTP Cache host calls
 WASM_IMPORT("fastly_http_cache", "is_request_cacheable")
@@ -361,10 +378,6 @@ int http_cache_is_request_cacheable(uint32_t req_handle, uint32_t *is_cacheable_
 WASM_IMPORT("fastly_http_cache", "get_suggested_cache_key")
 int http_cache_get_suggested_cache_key(uint32_t req_handle, char *key_out, size_t key_out_len,
                                        size_t *nwritten_out);
-
-WASM_IMPORT("fastly_http_cache", "lookup")
-int http_cache_lookup(uint32_t req_handle, uint32_t options_mask,
-                      fastly_http_cache_lookup_options *options, uint32_t *handle_out);
 
 WASM_IMPORT("fastly_http_cache", "transaction_lookup")
 int http_cache_transaction_lookup(uint32_t req_handle, uint32_t options_mask,
@@ -391,6 +404,9 @@ int http_cache_transaction_update_and_return_fresh(uint32_t handle, uint32_t res
                                                    uint32_t options_mask,
                                                    fastly_http_cache_write_options *options,
                                                    uint32_t *fresh_handle_out);
+
+WASM_IMPORT("fastly_http_cache", "transaction_choose_stale")
+int http_cache_transaction_choose_stale(uint32_t handle);
 
 WASM_IMPORT("fastly_http_cache", "transaction_record_not_cacheable")
 int http_cache_transaction_record_not_cacheable(uint32_t handle, uint32_t options_mask,
@@ -433,6 +449,9 @@ int http_cache_get_max_age_ns(uint32_t handle, uint64_t *max_age_ns_out);
 WASM_IMPORT("fastly_http_cache", "get_stale_while_revalidate_ns")
 int http_cache_get_stale_while_revalidate_ns(uint32_t handle, uint64_t *swr_ns_out);
 
+WASM_IMPORT("fastly_http_cache", "get_stale_if_error_ns")
+int http_cache_get_stale_if_error_ns(uint32_t handle, uint64_t *sie_ns_out);
+
 WASM_IMPORT("fastly_http_cache", "get_age_ns")
 int http_cache_get_age_ns(uint32_t handle, uint64_t *age_ns_out);
 
@@ -456,6 +475,27 @@ int log_endpoint_get(const char *name, size_t name_len, uint32_t *endpoint_handl
 
 WASM_IMPORT("fastly_log", "write")
 int log_write(uint32_t endpoint_handle, const char *msg, size_t msg_len, size_t *nwritten);
+
+// Module fastly_http_downstream
+
+typedef struct fastly_http_downstream_next_request_options {
+  uint64_t timeout_ms;
+} fastly_http_downstream_next_request_options;
+
+#define FASTLY_HTTP_DOWNSTREAM_NEXT_REQUEST_OPTIONS_MASK_RESERVED (1 << 0)
+#define FASTLY_HTTP_DOWNSTREAM_NEXT_REQUEST_OPTIONS_MASK_TIMEOUT (1 << 1)
+
+WASM_IMPORT("fastly_http_downstream", "next_request")
+int downstream_next_request(uint32_t options_mask,
+                            fastly_http_downstream_next_request_options *options,
+                            uint32_t *req_promise_handle_out);
+
+WASM_IMPORT("fastly_http_downstream", "next_request_wait")
+int downstream_next_request_wait(uint32_t req_promise_handle, uint32_t *req_handle_out,
+                                 uint32_t *body_handle_out);
+
+WASM_IMPORT("fastly_http_downstream", "next_request_abandon")
+int downstream_next_request_abandon(uint32_t req_promise_handle);
 
 // Module fastly_http_req
 WASM_IMPORT("fastly_http_req", "register_dynamic_backend")
@@ -505,32 +545,50 @@ int req_cache_override_v2_set(uint32_t req_handle, int tag, uint32_t ttl,
 WASM_IMPORT("fastly_http_req", "auto_decompress_response_set")
 int req_auto_decompress_response_set(uint32_t req_handle, int tag);
 
+WASM_IMPORT("fastly_http_downstream", "downstream_client_request_id")
+int http_downstream_client_request_id(uint32_t req_handle, uint8_t *ret, size_t ret_len,
+                                      size_t *nwritten);
+
 /**
  * `octets` must be a 16-byte array.
  * If, after a successful call, `nwritten` == 4, the value in `octets` is an IPv4 address.
  * Otherwise, if `nwritten` will is `16`, the value in `octets` is an IPv6 address.
  * Otherwise, `nwritten` will be `0`, and no address is available.
  */
-WASM_IMPORT("fastly_http_req", "downstream_client_ip_addr")
-int req_downstream_client_ip_addr_get(uint8_t *octets, size_t *nwritten);
+WASM_IMPORT("fastly_http_downstream", "downstream_client_ip_addr")
+int http_downstream_client_ip_addr_get(uint32_t req_handle, uint8_t *octets, size_t *nwritten);
 
-WASM_IMPORT("fastly_http_req", "downstream_server_ip_addr")
-int req_downstream_server_ip_addr_get(uint8_t *octets, size_t *nwritten);
+WASM_IMPORT("fastly_http_downstream", "downstream_server_ip_addr")
+int http_downstream_server_ip_addr_get(uint32_t req_handle, uint8_t *octets, size_t *nwritten);
 
-WASM_IMPORT("fastly_http_req", "downstream_tls_cipher_openssl_name")
-int req_downstream_tls_cipher_openssl_name(char *ret, size_t ret_len, size_t *nwritten);
+WASM_IMPORT("fastly_http_downstream", "downstream_tls_cipher_openssl_name")
+int http_downstream_tls_cipher_openssl_name(uint32_t req_handle, char *ret, size_t ret_len,
+                                            size_t *nwritten);
 
-WASM_IMPORT("fastly_http_req", "downstream_tls_protocol")
-int req_downstream_tls_protocol(char *ret, size_t ret_len, size_t *nwritten);
+WASM_IMPORT("fastly_http_downstream", "downstream_tls_protocol")
+int http_downstream_tls_protocol(uint32_t req_handle, char *ret, size_t ret_len, size_t *nwritten);
 
-WASM_IMPORT("fastly_http_req", "downstream_tls_client_hello")
-int req_downstream_tls_client_hello(uint8_t *ret, size_t ret_len, size_t *nwritten);
+WASM_IMPORT("fastly_http_downstream", "downstream_tls_client_hello")
+int http_downstream_tls_client_hello(uint32_t req_handle, uint8_t *ret, size_t ret_len,
+                                     size_t *nwritten);
 
-WASM_IMPORT("fastly_http_req", "downstream_tls_raw_client_certificate")
-int req_downstream_tls_raw_client_certificate(uint8_t *ret, size_t ret_len, size_t *nwritten);
+WASM_IMPORT("fastly_http_downstream", "downstream_tls_raw_client_certificate")
+int http_downstream_tls_raw_client_certificate(uint32_t req_handle, uint8_t *ret, size_t ret_len,
+                                               size_t *nwritten);
 
-WASM_IMPORT("fastly_http_req", "downstream_tls_ja3_md5")
-int req_downstream_tls_ja3_md5(uint8_t *ret, size_t *nwritten);
+WASM_IMPORT("fastly_http_downstream", "downstream_tls_ja3_md5")
+int http_downstream_tls_ja3_md5(uint32_t req_handle, uint8_t *ret, size_t *nwritten);
+
+WASM_IMPORT("fastly_http_downstream", "downstream_tls_ja4")
+int http_downstream_tls_ja4(uint32_t req_handle, uint8_t *ret, size_t ret_len, size_t *nwritten);
+
+WASM_IMPORT("fastly_http_downstream", "downstream_client_h2_fingerprint")
+int http_downstream_client_h2_fingerprint(uint32_t req_handle, uint8_t *ret, size_t ret_len,
+                                          size_t *nwritten);
+
+WASM_IMPORT("fastly_http_downstream", "downstream_client_oh_fingerprint")
+int http_downstream_client_oh_fingerprint(uint32_t req_handle, uint8_t *ret, size_t ret_len,
+                                          size_t *nwritten);
 
 WASM_IMPORT("fastly_http_req", "new")
 int req_new(uint32_t *req_handle_out);
@@ -619,6 +677,12 @@ WASM_IMPORT("fastly_http_req", "pending_req_wait_v2")
 int req_pending_req_wait_v2(uint32_t req_handle,
                             fastly_host_http_send_error_detail *send_error_detail,
                             uint32_t *resp_handle_out, uint32_t *resp_body_handle_out);
+
+WASM_IMPORT("fastly_http_req", "inspect")
+int req_inspect(uint32_t req_handle, uint32_t body_handle,
+                req_inspect_config_options_mask config_options_mask,
+                fastly_host_http_inspect_options *config, uint8_t *inspect_res_buf,
+                uint32_t inspect_res_buf_len, size_t *nwritten_out);
 
 // Module fastly_http_resp
 WASM_IMPORT("fastly_http_resp", "new")
@@ -904,6 +968,7 @@ typedef struct fastly_host_cache_write_options {
   uint64_t length;
   fastly_world_list_u8 user_metadata;
   bool sensitive_data;
+  uint64_t stale_if_error_ns;
 } fastly_host_cache_write_options;
 
 // a cached object was found
@@ -914,6 +979,8 @@ typedef struct fastly_host_cache_write_options {
 #define FASTLY_HOST_CACHE_LOOKUP_STATE_STALE (1 << 2)
 // this client is requested to insert or revalidate an object
 #define FASTLY_HOST_CACHE_LOOKUP_STATE_MUST_INSERT_OR_UPDATE (1 << 3)
+// a cached object was found and it is only usable if synchronous revalidation fails
+#define FASTLY_HOST_CACHE_LOOKUP_STATE_USABLE_IF_ERROR (1 << 4)
 
 WASM_IMPORT("fastly_cache", "lookup")
 int cache_lookup(char *cache_key, size_t cache_key_len, uint32_t options_mask,
@@ -1084,6 +1151,9 @@ int device_detection_lookup(const char *user_agent, size_t user_agent_len, const
 WASM_IMPORT("fastly_compute_runtime", "get_vcpu_ms")
 int compute_get_vcpu_ms(uint64_t *vcpu_ms);
 
+WASM_IMPORT("fastly_compute_runtime", "get_heap_mib")
+int compute_get_heap_mib(uint32_t *heap_mib);
+
 // ACL handle type
 typedef uint32_t fastly_acl_handle;
 
@@ -1102,6 +1172,52 @@ int acl_open(const char *name, size_t name_len, uint32_t *acl_handle_out);
 WASM_IMPORT("fastly_acl", "lookup")
 int acl_lookup(uint32_t acl_handle, const uint8_t *ip_octets, size_t ip_len,
                uint32_t *body_handle_out, fastly_acl_error *acl_error_out);
+
+typedef struct __attribute__((aligned(8))) fastly_image_optimizer_transform_config {
+  const char *sdk_claims_opts;
+  size_t sdk_claims_opts_len;
+} fastly_image_optimizer_transform_config;
+
+#define FASTLY_IMAGE_OPTIMIZER_RESERVED (1u << 0)
+#define FASTLY_IMAGE_OPTIMIZER_SDK_CLAIMS_OPTS (1u << 1)
+
+#define FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_UNINITIALIZED 0
+#define FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_OK 1
+#define FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_ERROR 2
+#define FASTLY_IMAGE_OPTIMIZER_ERROR_TAG_WARNING 3
+
+typedef struct __attribute__((aligned(8))) fastly_image_optimizer_error_detail {
+  uint32_t tag;
+  const char *message;
+  size_t message_len;
+} fastly_image_optimizer_error_detail;
+
+WASM_IMPORT("fastly_image_optimizer", "transform_image_optimizer_request")
+int image_optimizer_transform_image_optimizer_request(
+    uint32_t req_handle, uint32_t body_handle, const char *backend, size_t backend_len,
+    int io_transform_config_mask, fastly_image_optimizer_transform_config *io_transform_config,
+    fastly_image_optimizer_error_detail *io_error_detail, uint32_t *resp_handle_out,
+    uint32_t *resp_body_handle_out);
+
+#define FASTLY_SHIELDING_SHIELD_BACKEND_OPTIONS_RESERVED (1 << 0)
+#define FASTLY_SHIELDING_SHIELD_BACKEND_OPTIONS_CACHE_KEY (1 << 1)
+#define FASTLY_SHIELDING_SHIELD_BACKEND_OPTIONS_FIRST_BYTE_TIMEOUT (1 << 2)
+
+struct fastly_shielding_shield_backend_config {
+  const char *cache_key;
+  uint32_t cache_key_len;
+  uint32_t first_byte_timeout_ms;
+};
+
+WASM_IMPORT("fastly_shielding", "shield_info")
+int fastly_shielding_shield_info(const char *name, size_t name_len, char *info_block,
+                                 size_t info_block_len, uint32_t *nwritten_out);
+
+WASM_IMPORT("fastly_shielding", "backend_for_shield")
+int fastly_shielding_backend_for_shield(
+    const char *name, size_t name_len, uint32_t options_mask,
+    const fastly_shielding_shield_backend_config *backend_config, char *backend_name,
+    size_t backend_name_len, uint32_t *nwritten_out);
 
 #ifdef __cplusplus
 } // namespace fastly

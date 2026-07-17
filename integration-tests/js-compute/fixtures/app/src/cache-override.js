@@ -43,6 +43,24 @@ import { isRunningLocally, routes } from './routes.js';
       `CacheOverride constructor: 'mode' has to be "none", "pass", or "override", but got "be nice to the cache"`,
     );
   });
+  routes.set('/cache-override/constructor/negative-ttl', async () => {
+    assertThrows(
+      () => {
+        new CacheOverride('override', { ttl: -1 });
+      },
+      TypeError,
+      `CacheOverride: ttl must be a non-negative integer`,
+    );
+  });
+  routes.set('/cache-override/constructor/negative-swr', async () => {
+    assertThrows(
+      () => {
+        new CacheOverride('override', { swr: -1 });
+      },
+      TypeError,
+      `CacheOverride: swr must be a non-negative integer`,
+    );
+  });
   routes.set('/cache-override/constructor/valid-mode', async () => {
     assertDoesNotThrow(() => {
       new CacheOverride('none');
@@ -57,16 +75,45 @@ import { isRunningLocally, routes } from './routes.js';
       new CacheOverride({});
     });
   });
+  routes.set('/cache-override/beforeSend/get', async () => {
+    const fn = () => {};
+    const co = new CacheOverride('override', { beforeSend: fn });
+    assert(co.beforeSend, fn, 'co.beforeSend === fn');
+    assert(
+      co.beforeSend instanceof CacheOverride,
+      false,
+      'co.beforeSend is not a CacheOverride',
+    );
+
+    const co2 = new CacheOverride('override', {});
+    assert(co2.beforeSend, undefined, 'co2.beforeSend === undefined');
+  });
+  routes.set('/cache-override/afterSend/get', async () => {
+    const fn = () => {};
+    const co = new CacheOverride('override', { afterSend: fn });
+    assert(co.afterSend, fn, 'co.afterSend === fn');
+    assert(
+      co.afterSend instanceof CacheOverride,
+      false,
+      'co.afterSend is not a CacheOverride',
+    );
+
+    const co2 = new CacheOverride('override', {});
+    assert(co2.afterSend, undefined, 'co2.afterSend === undefined');
+  });
 }
 // Using CacheOverride
 {
   routes.set('/cache-override/fetch/mode-none', async () => {
     if (isRunningLocally()) return;
     {
-      const response = await fetch('https://http-me.glitch.me/now?status=200', {
-        backend: 'httpme',
-        cacheOverride: new CacheOverride('none'),
-      });
+      const response = await fetch(
+        'https://http-me.fastly.dev/now?status=200',
+        {
+          backend: 'httpme',
+          cacheOverride: new CacheOverride('none'),
+        },
+      );
       assert(
         response.headers.has('x-cache'),
         true,
@@ -75,10 +122,13 @@ import { isRunningLocally, routes } from './routes.js';
     }
 
     {
-      const response = await fetch('https://http-me.glitch.me/now?status=200', {
-        backend: 'httpme',
-        cacheOverride: 'none',
-      });
+      const response = await fetch(
+        'https://http-me.fastly.dev/now?status=200',
+        {
+          backend: 'httpme',
+          cacheOverride: 'none',
+        },
+      );
       assert(
         response.headers.has('x-cache'),
         true,
@@ -90,10 +140,13 @@ import { isRunningLocally, routes } from './routes.js';
     if (isRunningLocally()) return;
 
     {
-      const response = await fetch('https://http-me.glitch.me/now?status=200', {
-        backend: 'httpme',
-        cacheOverride: new CacheOverride('pass'),
-      });
+      const response = await fetch(
+        'https://http-me.fastly.dev/now?status=200',
+        {
+          backend: 'httpme',
+          cacheOverride: new CacheOverride('pass'),
+        },
+      );
       assert(
         response.headers.has('x-cache'),
         false,
@@ -102,15 +155,36 @@ import { isRunningLocally, routes } from './routes.js';
     }
 
     {
-      const response = await fetch('https://http-me.glitch.me/now?status=200', {
-        backend: 'httpme',
-        cacheOverride: 'pass',
-      });
+      const response = await fetch(
+        'https://http-me.fastly.dev/now?status=200',
+        {
+          backend: 'httpme',
+          cacheOverride: 'pass',
+        },
+      );
       assert(
         response.headers.has('x-cache'),
         false,
         `CacheOveride('pass'); response.headers.has('x-cache') === false`,
       );
     }
+  });
+  routes.set('/cache-override/fetch/null-304-body', async (event) => {
+    const resp = await fetch(
+      new Request('https://http-me.fastly.dev/body=foo?status=304', {
+        method: 'POST',
+        backend: 'httpme',
+        cacheOverride: new CacheOverride({
+          async afterSend(resp) {
+            resp.ttl = 1000000000;
+          },
+        }),
+      }),
+    );
+    assert(
+      resp.body,
+      null,
+      '304s should never have bodies even when processed through the caching code',
+    );
   });
 }

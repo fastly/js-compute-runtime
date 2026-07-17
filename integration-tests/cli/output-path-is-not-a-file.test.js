@@ -18,7 +18,7 @@ test('should return non-zero exit code', async function (t) {
   ok(
     stderr
       .toString()
-      .startsWith('Error: The `output` path does not point to a file:'),
+      .startsWith('Error: The `output` path points to a directory:'),
   );
   ok(stderr.toString().endsWith('main.wasm'));
   t.is(code, 1);

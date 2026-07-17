@@ -256,6 +256,8 @@ public:
     internal_error,
     /// Rate limiting
     too_many_requests,
+    /// Store handle not recognized
+    invalid_store_handle,
     /// Host error
     host_error,
   };
@@ -374,7 +376,7 @@ struct TlsVersion {
   uint8_t value = 0;
 
   explicit TlsVersion(uint8_t raw);
-  explicit TlsVersion(){};
+  explicit TlsVersion() {};
 
   uint8_t get_version() const;
   double get_version_number() const;
@@ -515,6 +517,41 @@ enum class FramingHeadersMode : uint8_t {
   ManuallyFromHeaders,
 };
 
+class FastlyImageOptimizerError final {
+public:
+  enum detail { uninitialized, ok, error, warning };
+
+  FastlyImageOptimizerError(detail err, std::string msg)
+      : err(err), is_host_error(false), msg(std::move(msg)) {}
+  FastlyImageOptimizerError(APIError host_err) : host_err(host_err), is_host_error(true) {}
+
+  union {
+    APIError host_err;
+    detail err;
+  };
+  bool is_host_error;
+
+  const std::optional<std::string> message() const;
+
+private:
+  std::string msg;
+};
+
+class InspectOptions final {
+public:
+  const char *corp = nullptr;
+  uint32_t corp_len = 0;
+  const char *workspace = nullptr;
+  uint32_t workspace_len = 0;
+  const char *override_client_ip_ptr = nullptr;
+  uint32_t override_client_ip_len = 0;
+  uint32_t req_handle;
+  uint32_t body_handle;
+
+  InspectOptions() = default;
+  explicit InspectOptions(uint32_t req, uint32_t body) : req_handle{req}, body_handle{body} {}
+};
+
 class HttpReq final : public HttpBase {
 public:
   using Handle = uint32_t;
@@ -535,23 +572,28 @@ public:
   static Result<Void> register_dynamic_backend(std::string_view name, std::string_view target,
                                                const BackendConfig &config);
 
-  /// Fetch the downstream request/body pair
-  static Result<Request> downstream_get();
+  Result<std::optional<HostString>> http_req_downstream_client_request_id();
 
   /// Get the downstream ip address.
-  static Result<HostBytes> downstream_client_ip_addr();
+  Result<HostBytes> downstream_client_ip_addr();
 
-  static Result<HostBytes> downstream_server_ip_addr();
+  Result<HostBytes> downstream_server_ip_addr();
 
-  static Result<std::optional<HostString>> http_req_downstream_tls_cipher_openssl_name();
+  Result<std::optional<HostString>> http_req_downstream_tls_cipher_openssl_name();
 
-  static Result<std::optional<HostString>> http_req_downstream_tls_protocol();
+  Result<std::optional<HostString>> http_req_downstream_tls_protocol();
 
-  static Result<std::optional<HostBytes>> http_req_downstream_tls_client_hello();
+  Result<std::optional<HostBytes>> http_req_downstream_tls_client_hello();
 
-  static Result<std::optional<HostBytes>> http_req_downstream_tls_raw_client_certificate();
+  Result<std::optional<HostBytes>> http_req_downstream_tls_raw_client_certificate();
 
-  static Result<std::optional<HostBytes>> http_req_downstream_tls_ja3_md5();
+  Result<std::optional<HostBytes>> http_req_downstream_tls_ja3_md5();
+
+  Result<std::optional<HostString>> http_req_downstream_tls_ja4();
+
+  Result<std::optional<HostString>> http_req_downstream_client_h2_fingerprint();
+
+  Result<std::optional<HostString>> http_req_downstream_client_oh_fingerprint();
 
   Result<Void> auto_decompress_gzip();
 
@@ -567,6 +609,10 @@ public:
   /// Send this request asynchronously without any caching.
   Result<HttpPendingReq> send_async_without_caching(HttpBody body, std::string_view backend,
                                                     bool streaming = false);
+
+  /// Send this request synchronously to the Image Optimizer and wait for the response.
+  api::FastlyResult<Response, FastlyImageOptimizerError>
+  send_image_optimizer(HttpBody body, std::string_view backend, std::string_view config_str);
 
   /// Get the http version used for this request.
 
@@ -658,6 +704,29 @@ struct Request {
 
   Request() = default;
   Request(HttpReq req, HttpBody body) : req{req}, body{body} {}
+
+  /// Fetch the downstream request/body pair
+  static Result<Request> downstream_get();
+  Result<HostString> inspect(const InspectOptions *config);
+};
+
+class HttpReqPromise final {
+public:
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
+
+  HttpReqPromise() = default;
+  explicit HttpReqPromise(Handle handle) : handle{handle} {}
+
+  struct DownstreamNextOptions final {
+    std::optional<uint32_t> timeout_ms;
+  };
+  static Result<HttpReqPromise> downstream_next(DownstreamNextOptions options);
+  Result<Request> wait();
+  Result<Void> abandon();
 };
 
 class GeoIp final {
@@ -695,6 +764,9 @@ struct HttpCacheWriteOptions final {
 
   // Optional flag indicating if this contains sensitive data
   std::optional<bool> sensitive_data;
+
+  // Optional stale-if-error duration in nanoseconds
+  std::optional<uint64_t> stale_if_error_ns;
 };
 
 struct CacheState final {
@@ -707,6 +779,7 @@ struct CacheState final {
   bool is_usable() const;
   bool is_stale() const;
   bool must_insert_or_update() const;
+  bool is_usable_if_error() const;
 };
 
 enum class HttpStorageAction : uint8_t {
@@ -727,9 +800,6 @@ public:
   explicit HttpCacheEntry(Handle handle) : handle{handle} {}
 
   bool is_valid() const { return handle != invalid; }
-
-  /// Lookup a cached object without participating in request collapsing
-  static Result<HttpCacheEntry> lookup(const HttpReq &req, std::span<uint8_t> override_key = {});
 
   /// Lookup a cached object, participating in request collapsing
   static Result<HttpCacheEntry> transaction_lookup(const HttpReq &req,
@@ -753,6 +823,9 @@ public:
   Result<Void>
   transaction_record_not_cacheable(uint64_t max_age_ns,
                                    std::optional<std::string_view> vary_rule = std::nullopt);
+
+  /// Substitute stale-if-error response
+  Result<Void> transaction_choose_stale();
 
   /// Abandon the transaction
   Result<Void> transaction_abandon();
@@ -783,6 +856,9 @@ public:
 
   /// Get stale while revalidate time in nanoseconds
   Result<uint64_t> get_stale_while_revalidate_ns() const;
+
+  /// Get stale if error time in nanoseconds
+  Result<uint64_t> get_stale_if_error_ns() const;
 
   /// Get age in nanoseconds
   Result<uint64_t> get_age_ns() const;
@@ -846,6 +922,7 @@ public:
   static Result<ConfigStore> open(std::string_view name);
 
   Result<std::optional<HostString>> get(std::string_view name);
+  Result<std::optional<HostString>> get(std::string_view name, uint32_t initial_buf_len);
 };
 
 class ObjectStorePendingLookup final {
@@ -918,6 +995,7 @@ public:
   explicit Secret(Handle handle) : handle{handle} {}
 
   Result<std::optional<HostBytes>> plaintext() const;
+  Result<std::optional<HostBytes>> plaintext(uint32_t initial_buf_len) const;
 };
 
 class SecretStore final {
@@ -1233,6 +1311,8 @@ public:
 void handle_api_error(JSContext *cx, uint8_t err, int line, const char *func);
 void handle_kv_error(JSContext *cx, host_api::FastlyKVError err, const unsigned int err_type,
                      int line, const char *func);
+void handle_image_optimizer_error(JSContext *cx, const host_api::FastlyImageOptimizerError &err,
+                                  int line, const char *func);
 
 bool error_is_generic(APIError e);
 bool error_is_invalid_argument(APIError e);

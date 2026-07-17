@@ -1,6 +1,18 @@
 import { strictEqual } from './assertions.js';
 import { routes, isRunningLocally } from './routes.js';
 
+routes.set('/client/requestId', (event) => {
+  strictEqual(
+    typeof event.client.requestId,
+    'string',
+    'typeof event.client.requestId',
+  );
+  strictEqual(
+    event.client.requestId.length,
+    32,
+    'event.client.requestId.length',
+  );
+});
 routes.set('/client/tlsJA3MD5', (event) => {
   if (isRunningLocally()) {
     strictEqual(event.client.tlsJA3MD5, null);
@@ -71,6 +83,44 @@ routes.set('/client/tlsProtocol', (event) => {
       typeof event.client.tlsProtocol,
       'string',
       'typeof event.client.tlsProtocol',
+    );
+  }
+});
+
+routes.set('/client/tlsJA4', (event) => {
+  if (isRunningLocally()) {
+    strictEqual(event.client.tlsJA4, null);
+  } else {
+    strictEqual(
+      typeof event.client.tlsJA4,
+      'string',
+      'typeof event.client.tlsJA4',
+    );
+  }
+});
+
+routes.set('/client/h2Fingerprint', (event) => {
+  if (isRunningLocally()) {
+    strictEqual(event.client.h2Fingerprint, null);
+  } else {
+    // h2Fingerprint may be null for HTTP/1.1 connections
+    const fp = event.client.h2Fingerprint;
+    strictEqual(
+      fp === null || typeof fp === 'string',
+      true,
+      'event.client.h2Fingerprint is null or string',
+    );
+  }
+});
+
+routes.set('/client/ohFingerprint', (event) => {
+  if (isRunningLocally()) {
+    strictEqual(event.client.ohFingerprint, null);
+  } else {
+    strictEqual(
+      typeof event.client.ohFingerprint,
+      'string',
+      'typeof event.client.ohFingerprint',
     );
   }
 });

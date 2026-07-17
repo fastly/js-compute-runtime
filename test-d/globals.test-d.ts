@@ -259,6 +259,7 @@ import { expectError, expectType } from 'tsd';
 // ClientInfo
 {
   const client = {} as ClientInfo;
+  expectType<string>(client.requestId);
   expectType<string>(client.address);
   expectType<Geolocation | null>(client.geo);
   expectType<string | null>(client.tlsJA3MD5);
@@ -267,6 +268,7 @@ import { expectError, expectType } from 'tsd';
   expectType<ArrayBuffer | null>(client.tlsClientCertificate);
   expectType<ArrayBuffer | null>(client.tlsClientHello);
   // They are readonly properties
+  expectError((client.requestId = ''));
   expectError((client.address = ''));
   expectError((client.geo = {} as Geolocation));
   expectError((client.tlsJA3MD5 = ''));

@@ -1,5 +1,26 @@
 cmake_minimum_required(VERSION 3.27)
 
+# Apply any local patches to StarlingMonkey before it is included as a subproject
+file(GLOB SM_PATCHES "${CMAKE_CURRENT_SOURCE_DIR}/patches/starlingmonkey-*.patch")
+foreach(patch IN LISTS SM_PATCHES)
+  execute_process(
+    COMMAND git apply --check "${patch}"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../StarlingMonkey"
+    RESULT_VARIABLE patch_check_result
+    OUTPUT_QUIET ERROR_QUIET
+  )
+  if(patch_check_result EQUAL 0)
+    execute_process(
+      COMMAND git apply "${patch}"
+      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../StarlingMonkey"
+      RESULT_VARIABLE patch_result
+    )
+    if(NOT patch_result EQUAL 0)
+      message(FATAL_ERROR "Failed to apply StarlingMonkey patch: ${patch}")
+    endif()
+  endif()
+endforeach()
+
 include("../StarlingMonkey/cmake/add_as_subproject.cmake")
 
 add_builtin(
@@ -28,6 +49,8 @@ add_builtin(fastly::dictionary SRC builtins/dictionary.cpp)
 add_builtin(fastly::edge_rate_limiter SRC builtins/edge-rate-limiter.cpp)
 add_builtin(fastly::config_store SRC builtins/config-store.cpp)
 add_builtin(fastly::secret_store SRC builtins/secret-store.cpp)
+add_builtin(fastly::image_optimizer SRC builtins/image-optimizer.cpp)
+add_builtin(fastly::shielding SRC builtins/shielding.cpp)
 
 add_builtin(fastly::fetch
   SRC
@@ -35,9 +58,7 @@ add_builtin(fastly::fetch
     builtins/fetch/request-response.cpp
     builtins/fetch/request-response.cpp
     ../StarlingMonkey/builtins/web/fetch/headers.cpp
-    ../StarlingMonkey/builtins/web/fetch/fetch-utils.cpp
-  DEPENDENCIES
-    fmt)
+    ../StarlingMonkey/builtins/web/fetch/fetch-utils.cpp)
 
 add_builtin(fastly::cache_override SRC builtins/cache-override.cpp)
 
@@ -56,6 +77,13 @@ add_builtin(fastly::html_rewriter
     ${CMAKE_CURRENT_SOURCE_DIR}/crates/rust-lol-html/include
 )
 
+# Stub implementation of parts of `AbortSignal` depended on by the `event` StarlingMonkey builtin
+add_builtin(fastly::abort SRC builtins/abort.cpp)
+
 add_compile_definitions(PUBLIC RUNTIME_VERSION=${RUNTIME_VERSION})
+
+if(DEFINED FASTLY_GC_FREQUENCY)
+  add_compile_definitions(PUBLIC FASTLY_GC_FREQUENCY=${FASTLY_GC_FREQUENCY})
+endif()
 
 project(FastlyJS)

@@ -7,10 +7,12 @@
 #include "../cache-override.h"
 #include "../fastly.h"
 #include "../fetch-event.h"
+#include "../image-optimizer.h"
 #include "./request-response.h"
 #include "builtin.h"
 #include "encode.h"
 #include "extension-api.h"
+#include "picosha2.h"
 
 using builtins::web::streams::NativeStreamSink;
 using builtins::web::streams::NativeStreamSource;
@@ -119,8 +121,46 @@ bool must_use_guest_caching(JSContext *cx, HandleObject request) {
 }
 
 bool http_caching_unsupported = false;
-bool should_use_guest_caching(JSContext *cx, HandleObject request, bool *should_use_cache) {
-  *should_use_cache = true;
+enum CachingMode { Guest, Host, ImageOptimizer };
+bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_mode) {
+  *caching_mode = CachingMode::Guest;
+
+  // Check for pass cache override
+  MOZ_ASSERT(Request::is_instance(request));
+  JS::RootedObject cache_override(
+      cx, JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::CacheOverride))
+              .toObjectOrNull());
+  if (cache_override) {
+    if (CacheOverride::mode(cache_override) == CacheOverride::CacheOverrideMode::Pass) {
+      // Pass requests have to go through the host for now
+      *caching_mode = CachingMode::Host;
+      return true;
+    }
+  }
+
+  // Check for PURGE method
+  RootedString method_str(cx, Request::method(cx, request));
+  bool is_purge = false;
+  if (method_str && !JS_StringEqualsLiteral(cx, method_str, "PURGE", &is_purge)) {
+    return false;
+  }
+  if (is_purge) {
+    // We don't yet implement guest-side URL purges
+    *caching_mode = CachingMode::Host;
+    return true;
+  }
+
+  // Requests meant for Image Optimizer should not be cached at this point,
+  // as the caching behavior is determined by the origin image, which is
+  // fetched after the request reaches the Image Optimizer WASM service.
+  // The WASM service uses cache_on_behalf to insert the result into
+  // the service's cache.
+  auto image_optimizer_opts =
+      JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ImageOptimizerOptions));
+  if (!image_optimizer_opts.isNullOrUndefined()) {
+    *caching_mode = CachingMode::ImageOptimizer;
+    return true;
+  }
 
   // If we previously found guest caching unsupported then remember that
   if (http_caching_unsupported || !fastly::fastly::ENABLE_EXPERIMENTAL_HTTP_CACHE) {
@@ -136,32 +176,7 @@ bool should_use_guest_caching(JSContext *cx, HandleObject request, bool *should_
       }
       return false;
     }
-    *should_use_cache = false;
-    return true;
-  }
-
-  // Check for pass cache override
-  MOZ_ASSERT(Request::is_instance(request));
-  JS::RootedObject cache_override(
-      cx, JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::CacheOverride))
-              .toObjectOrNull());
-  if (cache_override) {
-    if (CacheOverride::mode(cache_override) == CacheOverride::CacheOverrideMode::Pass) {
-      // Pass requests have to go through the host for now
-      *should_use_cache = false;
-      return true;
-    }
-  }
-
-  // Check for PURGE method
-  RootedString method_str(cx, Request::method(cx, request));
-  bool is_purge = false;
-  if (method_str && !JS_StringEqualsLiteral(cx, method_str, "PURGE", &is_purge)) {
-    return false;
-  }
-  if (is_purge) {
-    // We don't yet implement guest-side URL purges
-    *should_use_cache = false;
+    *caching_mode = CachingMode::Host;
     return true;
   }
 
@@ -177,7 +192,7 @@ bool should_use_guest_caching(JSContext *cx, HandleObject request, bool *should_
         JS_ReportErrorASCII(cx, "HTTP caching API is not enabled; please contact support for help");
         return false;
       }
-      *should_use_cache = false;
+      *caching_mode = CachingMode::Host;
       return true;
     }
     HANDLE_ERROR(cx, *err);
@@ -188,8 +203,7 @@ bool should_use_guest_caching(JSContext *cx, HandleObject request, bool *should_
 }
 
 // Sends the request body, resolving the response promise with the response
-// The without_caching case is effectively pass semantics without cache hooks
-template <bool without_caching>
+template <CachingMode caching_mode>
 bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue ret) {
   RootedString backend(cx, get_backend(cx, request));
   if (!backend) {
@@ -216,7 +230,7 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
   }
 
   // cache override only applies to requests with caching
-  if (!without_caching) {
+  if (caching_mode == CachingMode::Host) {
     if (!Request::apply_cache_override(cx, request)) {
       return false;
     }
@@ -236,8 +250,10 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
     return false;
   }
 
+  // The image optimizer does not support streaming, so never stream in this case
   bool streaming = false;
-  if (!RequestOrResponse::maybe_stream_body(cx, request, &streaming)) {
+  if (caching_mode != CachingMode::ImageOptimizer &&
+      !RequestOrResponse::maybe_stream_body(cx, request, &streaming)) {
     return false;
   }
 
@@ -245,10 +261,40 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
   {
     auto request_handle = Request::request_handle(request);
     auto body = RequestOrResponse::body_handle(request);
-    auto res = !without_caching
-                   ? streaming ? request_handle.send_async_streaming(body, backend_chars)
-                               : request_handle.send_async(body, backend_chars)
-                   : request_handle.send_async_without_caching(body, backend_chars, streaming);
+    host_api::Result<host_api::HttpPendingReq> res;
+    switch (caching_mode) {
+    case CachingMode::Host: {
+      if (streaming) {
+        res = request_handle.send_async_streaming(body, backend_chars);
+      } else {
+        res = request_handle.send_async(body, backend_chars);
+      }
+      break;
+    }
+    case CachingMode::Guest:
+      res = request_handle.send_async_without_caching(body, backend_chars, streaming);
+      break;
+    case CachingMode::ImageOptimizer: {
+      auto config = reinterpret_cast<fastly::image_optimizer::ImageOptimizerOptions *>(
+          JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ImageOptimizerOptions))
+              .toPrivate());
+      auto config_str = config->to_string();
+      auto res = request_handle.send_image_optimizer(body, backend_chars, config_str);
+      if (auto *err = res.to_err()) {
+        HANDLE_IMAGE_OPTIMIZER_ERROR(cx, *err);
+        ret.setObject(*PromiseRejectedWithPendingError(cx));
+        return true;
+      }
+
+      JS::RootedObject response(cx, Response::create(cx, request, res.unwrap()));
+      JS::RootedValue response_val(cx, JS::ObjectValue(*response));
+      if (!JS::ResolvePromise(cx, response_promise, response_val)) {
+        return false;
+      }
+      ret.setObject(*response_promise);
+      return true;
+    }
+    }
 
     if (auto *err = res.to_err()) {
       if (host_api::error_is_generic(*err) || host_api::error_is_invalid_argument(*err)) {
@@ -348,10 +394,18 @@ bool fetch_process_cache_hooks_origin_request(JSContext *cx, JS::HandleObject re
 
 bool fetch_process_cache_hooks_before_send_reject(JSContext *cx, JS::HandleObject request,
                                                   JS::HandleValue ret_promise, JS::CallArgs args) {
+  JS::RootedObject ret_promise_obj(cx, &ret_promise.toObject());
+
+  auto maybe_stale = fastly::fetch::try_serve_stale_if_error(cx, request, args.get(0));
+  if (maybe_stale.has_value()) {
+    JS::RootedValue response_val(cx, JS::ObjectValue(*maybe_stale.value()));
+    return JS::ResolvePromise(cx, ret_promise_obj, response_val);
+  }
+
+  // No stale-if-error available, close cache and reject
   if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
     return false;
   }
-  JS::RootedObject ret_promise_obj(cx, &ret_promise.toObject());
   JS::RejectPromise(cx, ret_promise_obj, args.get(0));
   return true;
 }
@@ -798,49 +852,57 @@ std::optional<JSObject *> get_found_response(JSContext *cx, host_api::HttpCacheE
     // Perhaps we can consider making these hostcalls lazy, requires a Response state enum to know
     // we are in a state we can do this and then keeping the cache handle around, where it is not
     // yet clear if holding handles for longer periods on responses is okay.
-    override_cache_options = new host_api::HttpCacheWriteOptions();
+    auto cache_options = std::make_unique<host_api::HttpCacheWriteOptions>();
     auto age_res = cache_entry.get_age_ns();
     if (auto *err = age_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->initial_age_ns = age_res.unwrap();
+    cache_options->initial_age_ns = age_res.unwrap();
     auto max_age_ns = cache_entry.get_max_age_ns();
     if (auto *err = max_age_ns.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->max_age_ns = max_age_ns.unwrap();
+    cache_options->max_age_ns = max_age_ns.unwrap();
     auto swr_res = cache_entry.get_stale_while_revalidate_ns();
     if (auto *err = swr_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->stale_while_revalidate_ns = swr_res.unwrap();
+    cache_options->stale_while_revalidate_ns = swr_res.unwrap();
+    auto sie_res = cache_entry.get_stale_if_error_ns();
+    if (auto *err = sie_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return nullptr;
+    }
+    cache_options->stale_if_error_ns = sie_res.unwrap();
+
     auto length_res = cache_entry.get_length();
     if (auto *err = length_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->length = length_res.unwrap();
+    cache_options->length = length_res.unwrap();
     auto sensitive_res = cache_entry.get_sensitive_data();
     if (auto *err = sensitive_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->sensitive_data = sensitive_res.unwrap();
+    cache_options->sensitive_data = sensitive_res.unwrap();
     auto vary_res = cache_entry.get_vary_rule();
     if (auto *err = vary_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->vary_rule = std::move(vary_res.unwrap());
+    cache_options->vary_rule = std::move(vary_res.unwrap());
     auto surrogate_keys_res = cache_entry.get_surrogate_keys();
     if (auto *err = surrogate_keys_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->surrogate_keys = std::move(surrogate_keys_res.unwrap());
+    cache_options->surrogate_keys = std::move(surrogate_keys_res.unwrap());
+    override_cache_options = cache_options.release();
   }
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::OverrideCacheWriteOptions),
                       JS::PrivateValue(reinterpret_cast<uint32_t>(override_cache_options)));
@@ -864,6 +926,7 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
   // response process.
   auto cache_write_options = Response::override_cache_options(response_obj);
   MOZ_ASSERT(cache_write_options);
+
   switch (storage_action) {
   case host_api::HttpStorageAction::Insert: {
     auto insert_res = cache_entry.transaction_insert_and_stream_back(
@@ -925,8 +988,10 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
 
     // Body transfom
     // in order to stream from the response object we must unlock it
-    JS::SetReservedSlot(response_obj, static_cast<size_t>(Response::Slots::HasBody),
-                        JS::TrueValue());
+    if (!Response::has_bodyless_status(response_obj)) {
+      JS::SetReservedSlot(response_obj, static_cast<size_t>(Response::Slots::HasBody),
+                          JS::TrueValue());
+    }
 
     JS::RootedObject ret_promise(cx);
     if (!apply_body_transform(cx, response, body, &ret_promise)) {
@@ -993,8 +1058,10 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
   }
   case host_api::HttpStorageAction::DoNotStore: {
     // promote the CandidateResponse -> body is now readable
-    JS::SetReservedSlot(response_obj, static_cast<size_t>(Response::Slots::HasBody),
-                        JS::TrueValue());
+    if (!Response::has_bodyless_status(response_obj)) {
+      JS::SetReservedSlot(response_obj, static_cast<size_t>(Response::Slots::HasBody),
+                          JS::TrueValue());
+    }
     auto res = cache_entry.transaction_abandon();
     if (auto *err = res.to_err()) {
       HANDLE_ERROR(cx, *err);
@@ -1005,8 +1072,10 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
   }
   case host_api::HttpStorageAction::RecordUncacheable: {
     // promote the CandidateResponse -> body is now readable
-    JS::SetReservedSlot(response_obj, static_cast<size_t>(Response::Slots::HasBody),
-                        JS::TrueValue());
+    if (!Response::has_bodyless_status(response_obj)) {
+      JS::SetReservedSlot(response_obj, static_cast<size_t>(Response::Slots::HasBody),
+                          JS::TrueValue());
+    }
     auto res = cache_entry.transaction_record_not_cacheable(cache_write_options->max_age_ns.value(),
                                                             cache_write_options->vary_rule);
     if (auto *err = res.to_err()) {
@@ -1034,6 +1103,13 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
 
 bool stream_back_catch_handler(JSContext *cx, JS::HandleObject request, JS::HandleValue promise_val,
                                JS::CallArgs args) {
+  auto maybe_stale = fastly::fetch::try_serve_stale_if_error(cx, request, args.get(0));
+  if (maybe_stale.has_value()) {
+    args.rval().setObject(*maybe_stale.value());
+    return true;
+  }
+
+  // No stale-if-error available, close cache and fail
   // we follow the Rust implementation calling "close" instead of "transaction_abandon" here
   // this could be reconsidered in future if alternative semantics are required
   if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
@@ -1049,6 +1125,65 @@ bool stream_back_catch_handler(JSContext *cx, JS::HandleObject request, JS::Hand
 namespace fastly::fetch {
 
 api::Engine *ENGINE;
+
+// Helper function to check for and serve stale-if-error responses when errors occur
+// Returns the stale response if available, or std::nullopt if not
+std::optional<JSObject *> try_serve_stale_if_error(JSContext *cx,
+                                                   JS::HandleObject request_or_response,
+                                                   JS::HandleValue error_val) {
+  auto maybe_cache_entry = RequestOrResponse::cache_entry(request_or_response);
+  if (!maybe_cache_entry.has_value()) {
+    return std::nullopt;
+  }
+
+  auto cache_entry = maybe_cache_entry.value();
+  auto state_res = cache_entry.get_state();
+  if (state_res.is_err()) {
+    return std::nullopt;
+  }
+
+  auto cache_state = state_res.unwrap();
+  if (!cache_state.is_usable_if_error()) {
+    return std::nullopt;
+  }
+
+  // We have a usable stale-if-error response
+  auto chose_stale_res = cache_entry.transaction_choose_stale();
+  if (auto *err = chose_stale_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return std::nullopt;
+  }
+
+  // Determine the request object for get_found_response
+  JS::RootedObject request(cx);
+  if (Request::is_instance(request_or_response)) {
+    request.set(request_or_response);
+  }
+  // If it's a response, we don't have the request handy, but get_found_response can work without it
+
+  JS::RootedValue no_candidate(cx);
+  auto maybe_response = get_found_response(cx, cache_entry, request, no_candidate, false);
+  if (!maybe_response.has_value() || !maybe_response.value()) {
+    return std::nullopt;
+  }
+
+  JS::RootedObject stale_response(cx, maybe_response.value());
+
+  // Store the error as masked error
+  JS_SetReservedSlot(stale_response, static_cast<uint32_t>(Response::Slots::MaskedError),
+                     error_val);
+
+  RequestOrResponse::take_cache_entry(stale_response, true);
+
+  if (request) {
+    if (!Response::add_fastly_cache_headers(cx, stale_response, request, cache_entry,
+                                            "cached response")) {
+      return std::nullopt;
+    }
+  }
+
+  return stale_response;
+}
 
 /**
  * The `fetch` global function
@@ -1075,13 +1210,15 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   }
 
   // Determine if we should use guest-side caching
-  bool should_use_guest_caching_out;
-  if (!should_use_guest_caching(cx, request, &should_use_guest_caching_out)) {
+  CachingMode caching_mode;
+  if (!get_caching_mode(cx, request, &caching_mode)) {
     return false;
   }
-  if (!should_use_guest_caching_out) {
+  if (caching_mode == CachingMode::Host) {
     DEBUG_LOG("HTTP Cache: Using traditional fetch without cache API")
-    return fetch_send_body<false>(cx, request, args.rval());
+    return fetch_send_body<CachingMode::Host>(cx, request, args.rval());
+  } else if (caching_mode == CachingMode::ImageOptimizer) {
+    return fetch_send_body<CachingMode::ImageOptimizer>(cx, request, args.rval());
   }
 
   // Check if request is actually cacheable
@@ -1104,25 +1241,27 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   // If not cacheable, fallback to non-caching path
   if (!is_cacheable) {
     DEBUG_LOG("HTTP Cache: Request not cacheable, using non-caching fetch")
-    return fetch_send_body<true>(cx, request, args.rval());
+    return fetch_send_body<CachingMode::Guest>(cx, request, args.rval());
   }
 
   // Lookup in cache
   auto request_handle = Request::request_handle(request);
 
-  // Convert override cache key to span if present
-  host_api::HostString override_key_str;
-  std::span<uint8_t> override_key_span = {};
+  // Convert override cache key to hash if present
+  std::vector<uint8_t> override_key_hash;
   JS::RootedValue override_cache_key(
       cx, JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::OverrideCacheKey)));
   if (override_cache_key.isString()) {
-    override_key_str = core::encode(cx, override_cache_key);
-    override_key_span = std::span<uint8_t>(reinterpret_cast<uint8_t *>(override_key_str.ptr.get()),
-                                           override_key_str.size());
+    auto override_key_str = core::encode(cx, override_cache_key);
+    override_key_hash.resize(32); // SHA256 produces 32 bytes
+    picosha2::hash256(override_key_str.ptr.get(),
+                      override_key_str.ptr.get() + override_key_str.size(),
+                      override_key_hash.begin(), override_key_hash.end());
   }
 
-  auto transaction_res =
-      host_api::HttpCacheEntry::transaction_lookup(request_handle, override_key_span);
+  host_api::Result<host_api::HttpCacheEntry> transaction_res =
+      host_api::HttpCacheEntry::transaction_lookup(request_handle, override_key_hash);
+
   if (auto *err = transaction_res.to_err()) {
     DEBUG_LOG("HTTP Cache: Transaction lookup error")
     if (host_api::error_is_limit_exceeded(*err)) {
@@ -1201,6 +1340,19 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
       }
     }
 
+    if (cache_state.is_usable_if_error()) {
+      // The cached response is a usable stale-if-error response, which implies
+      // that the request collapse leader errored.
+      JS_ReportErrorASCII(cx, "error in request collapse leader");
+      JS::RootedValue exception(cx);
+      if (!JS_GetPendingException(cx, &exception)) {
+        return false;
+      }
+      JS_ClearPendingException(cx);
+      JS_SetReservedSlot(cached_response, static_cast<uint32_t>(Response::Slots::MaskedError),
+                         exception);
+    }
+
     // mark the response cache entry as cached for the cached getter
     RequestOrResponse::take_cache_entry(cached_response, true);
 
@@ -1217,17 +1369,22 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   }
 
   // No valid cached response, need to make backend request
-  if (!cache_state.must_insert_or_update()) {
-    // transaction entry is done
-    if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
-      return false;
-    }
-    // request collapsing has been disabled: pass the original request to the origin without
-    // updating the cache and without caching
-    return fetch_send_body<true>(cx, request, args.rval());
-  } else {
+  if (cache_state.must_insert_or_update()) {
+    // We are responsible for fetching/revalidating
     JS::RootedValue stream_back_promise(cx, JS::ObjectValue(*JS::NewPromiseObject(cx, nullptr)));
     if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry, &stream_back_promise)) {
+      JS::RootedValue exception(cx);
+      if (JS_GetPendingException(cx, &exception)) {
+        JS_ClearPendingException(cx);
+      }
+      auto maybe_stale = try_serve_stale_if_error(cx, request, exception);
+      if (maybe_stale.has_value()) {
+        JS::RootedObject cached_response(cx, maybe_stale.value());
+        RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
+        JS::RootedValue response_val(cx, JS::ObjectValue(*cached_response));
+        args.rval().setObject(*response_promise);
+        return JS::ResolvePromise(cx, response_promise, response_val);
+      }
       RequestOrResponse::close_if_cache_entry(cx, request);
       return false;
     }
@@ -1242,6 +1399,16 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ResponsePromise),
                         JS::ObjectValue(*ret_promise));
     args.rval().setObject(*ret_promise);
+  } else {
+    // Request collapsing has been disabled: pass the original request to the origin without
+    // updating the cache and without caching
+
+    // transaction entry is done
+    if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
+      return false;
+    }
+
+    return fetch_send_body<CachingMode::Guest>(cx, request, args.rval());
   }
 
   return true;

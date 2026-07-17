@@ -4,20 +4,19 @@ hide_table_of_contents: false
 pagination_next: null
 pagination_prev: null
 ---
-import {Fiddle} from '@site/src/components/fiddle';
 
 # `Backend()`
 
 The **`Backend` constructor** lets you dynamically create new [Fastly Backends](https://developer.fastly.com/reference/api/services/backend/) for your Fastly Compute service.
 
->**Note**: Dynamic backends are by default disabled at the Fastly service level. Contact [Fastly Support](https://support.fastly.com/hc/en-us/requests/new?ticket_form_id=360000269711) to request dynamic backends on Fastly Services.
+> **Note**: Dynamic backends are by default disabled at the Fastly service level. Contact [Fastly Support](https://support.fastly.com/hc/en-us/requests/new?ticket_form_id=360000269711) to request dynamic backends on Fastly Services.
 
 To disable the usage of dynamic backends, see [enforceExplicitBackends](../enforceExplicitBackends.mdx).
 
 ## Syntax
 
 ```js
-new Backend(backendConfiguration)
+new Backend(backendConfiguration);
 ```
 
 > **Note:** `Backend()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.mdx).
@@ -87,7 +86,7 @@ new Backend(backendConfiguration)
       - `certificate` _: string_
         - The PEM certificate string.
       - `key` _: SecretStoreEntry_
-        - The `SecretStoreEntry` to use for the key, created via [`SecretStore.prototype.get`](../../fastly:secret-store/SecretStore/prototype/get.mdx) or alteratively via [`SecretStore.fromBytes`](../../fastly:secret-store/SecretStore/fromBytes.mdx).
+        - The `SecretStoreEntry` to use for the key, created via [`SecretStore.prototype.get`](pathname://../../fastly:secret-store/SecretStore/prototype/get.mdx) or alteratively via [`SecretStore.fromBytes`](pathname://../../fastly:secret-store/SecretStore/fromBytes.mdx).
     - `httpKeepalive` _: number_ _**optional**_
       - Enable HTTP keepalive, setting the timout in milliseconds.
     - `tcpKeepalive` _: boolean | object_ _**optional**_
@@ -100,7 +99,7 @@ new Backend(backendConfiguration)
         - Number of probes to send to the backend before it is considered dead.
     - `grpc` _: boolean_ _**optional**_
       - **_Experimental feature_**
-      - When enabled, sets that this backend is to be used for gRPC traffic. 
+      - When enabled, sets that this backend is to be used for gRPC traffic.
       - _Warning: When using this experimental feature, no guarantees are provided for behaviours for backends that do not provide gRPC traffic._
 
 All optional generic options can have their defaults set via [`setDefaultDynamicBackendConfig()`](../setDefaultDynamicBackendConfig.mdx).
@@ -131,7 +130,7 @@ In this example an explicit Dynamic Backend is created and supplied to the fetch
   "type": "javascript",
   "title": "Explicit Dynamic Backend Example",
   "origins": [
-    "https://http-me.glitch.me"
+    "https://http-me.fastly.dev"
   ],
   "src": {
     "deps": "{\n  \"@fastly/js-compute\": \"^1.0.1\"\n}",
@@ -176,13 +175,13 @@ addEventListener("fetch", event => event.respondWith(app(event)));
 
 ```js
 /// <reference types="@fastly/js-compute" />
-import { Backend } from "fastly:backend";
+import { Backend } from 'fastly:backend';
 async function app() {
   // For any request, return the fastly homepage -- without defining a backend!
   const backend = new Backend({
     name: 'fastly',
     target: 'fastly.com',
-    hostOverride: "www.fastly.com",
+    hostOverride: 'www.fastly.com',
     connectTimeout: 1000,
     firstByteTimeout: 15000,
     betweenBytesTimeout: 10000,
@@ -191,10 +190,10 @@ async function app() {
     tlsMaxVersion: 1.3,
   });
   return fetch('https://www.fastly.com/', {
-    backend // Here we are configuring this request to use the backend from above.
+    backend, // Here we are configuring this request to use the backend from above.
   });
 }
-addEventListener("fetch", event => event.respondWith(app(event)));
+addEventListener('fetch', (event) => event.respondWith(app(event)));
 ```
 
 </Fiddle>

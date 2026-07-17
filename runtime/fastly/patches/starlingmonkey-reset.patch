@@ -1,0 +1,61 @@
+diff --git a/include/extension-api.h b/include/extension-api.h
+index 55af98e..68da8ab 100644
+--- a/include/extension-api.h
++++ b/include/extension-api.h
+@@ -172,6 +172,7 @@ public:
+   void report_unhandled_promise_rejections();
+   static void clear_unhandled_promise_rejections();
+
++  void reset();
+   void abort(const char *reason);
+
+   static bool debug_logging_enabled();
+diff --git a/runtime/engine.cpp b/runtime/engine.cpp
+index e9da55d..5d4a2a3 100644
+--- a/runtime/engine.cpp
++++ b/runtime/engine.cpp
+@@ -708,3 +708,9 @@ void Engine::report_unhandled_promise_rejections() {
+ void Engine::clear_unhandled_promise_rejections() {
+   JS::SetClear(CONTEXT, unhandledRejectedPromises);
+ }
++void Engine::reset() {
++  clear_unhandled_promise_rejections();
++  core::EventLoop::reset(this);
++  JS::PrepareForFullGC(cx());
++  JS::NonIncrementalGC(cx(), JS::GCOptions::Normal, JS::GCReason::API);
++}
+diff --git a/runtime/event_loop.cpp b/runtime/event_loop.cpp
+index cdcdaab..612bb31 100644
+--- a/runtime/event_loop.cpp
++++ b/runtime/event_loop.cpp
+@@ -99,4 +99,13 @@ bool EventLoop::run_event_loop(api::Engine *engine, double total_compute) {
+
+ void EventLoop::init(JSContext *cx) { queue.init(cx); }
+
++void EventLoop::reset(api::Engine *engine) {
++  auto &q = queue.get();
++  for (auto task : q.tasks) {
++    task->cancel(engine);
++  }
++  q.tasks.clear();
++  q.interest_cnt = 0;
++}
++
+ } // namespace core
+diff --git a/runtime/event_loop.h b/runtime/event_loop.h
+index acca516..27838bf 100644
+--- a/runtime/event_loop.h
++++ b/runtime/event_loop.h
+@@ -41,6 +41,12 @@ public:
+    * Remove a queued async task.
+    */
+   static bool cancel_async_task(api::Engine *engine, const RefPtr<api::AsyncTask>& task);
++
++  /**
++   * Reset the event loop state, cancelling all pending tasks and clearing interest count.
++   * Used between requests in reusable sandboxes.
++   */
++  static void reset(api::Engine *engine);
+ };
+
+ } // namespace core

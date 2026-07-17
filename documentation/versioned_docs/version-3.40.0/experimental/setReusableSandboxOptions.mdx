@@ -1,0 +1,28 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# setReusableSandboxOptions
+
+The **`setReusableSandboxOptions()`** function configures the reuse of the same underlying sandbox for multiple requests, which can improve performance by avoiding the overhead of initializing a new sandbox for each request.
+
+## Syntax
+
+```js
+setReusableSandboxOptions(options)
+```
+
+### Parameters
+
+- `options` _: Object_
+  - The configuration options for the reusable sandbox.
+    - `maxRequests` _: number_ (default: `1`, `0` means unlimited)
+      - The maximum number of requests that can be handled by a single sandbox before it is recycled.
+    - `betweenRequestTimeoutMs` _: number_ (default: not specified)
+      - The amount of time in milliseconds to wait between requests before recycling the sandbox.
+    - `maxMemoryMiB` _: number_ (default: no limit)
+      - The maximum amount of memory in MiB that the sandbox can use before it is recycled.
+    - `sandboxTimeoutMs` _: number_ (default: no timeout)
+      - The maximum amount of time in milliseconds that a sandbox can be active before it is recycled.

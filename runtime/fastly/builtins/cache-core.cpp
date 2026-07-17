@@ -24,7 +24,6 @@ namespace fastly::cache_core {
 namespace {
 
 api::Engine *ENGINE;
-
 // The JavaScript LookupOptions parameter we are parsing should have the below interface:
 // interface LookupOptions {
 //   headers?: HeadersInit;
@@ -74,7 +73,7 @@ JS::Result<host_api::CacheLookupOptions> parseLookupOptions(JSContext *cx,
       Headers::HeadersList *headers_list = Headers::get_list(cx, headers);
       MOZ_ASSERT(headers_list);
       auto res = host_api::write_headers(request_handle.headers_writable(), *headers_list);
-      if (auto *err = res.to_err()) {
+      if (res.is_err()) {
         return JS::Result<host_api::CacheLookupOptions>(JS::Error());
       }
       options.request_headers = host_api::HttpReq(request_handle);
@@ -121,12 +120,13 @@ JS::Result<host_api::CacheWriteOptions> parseTransactionUpdateOptions(JSContext 
     return JS::Result<host_api::CacheWriteOptions>(JS::Error());
   }
   // turn millisecond representation into nanosecond representation
-  options.max_age_ns = JS::ToUint64(maxAge) * 1'000'000;
-
-  if (options.max_age_ns > pow(2, 63)) {
+  constexpr double max_time_ms =
+      static_cast<double>(std::numeric_limits<uint64_t>::max()) / 1'000'000;
+  if (maxAge > max_time_ms) {
     JS_ReportErrorASCII(cx, "maxAge can not be greater than 2^63.");
     return JS::Result<host_api::CacheWriteOptions>(JS::Error());
   }
+  options.max_age_ns = JS::ToUint64(maxAge) * 1'000'000;
 
   JS::RootedValue initialAge_val(cx);
   if (!JS_GetProperty(cx, options_obj, "initialAge", &initialAge_val)) {
@@ -145,12 +145,11 @@ JS::Result<host_api::CacheWriteOptions> parseTransactionUpdateOptions(JSContext 
       return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
     // turn millisecond representation into nanosecond representation
-    options.initial_age_ns = JS::ToUint64(initialAge) * 1'000'000;
-
-    if (options.initial_age_ns > pow(2, 63)) {
+    if (initialAge > max_time_ms) {
       JS_ReportErrorASCII(cx, "initialAge can not be greater than 2^63.");
       return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
+    options.initial_age_ns = JS::ToUint64(initialAge) * 1'000'000;
   }
 
   JS::RootedValue staleWhileRevalidate_val(cx);
@@ -171,12 +170,11 @@ JS::Result<host_api::CacheWriteOptions> parseTransactionUpdateOptions(JSContext 
       return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
     // turn millisecond representation into nanosecond representation
-    options.stale_while_revalidate_ns = JS::ToUint64(staleWhileRevalidate) * 1'000'000;
-
-    if (options.initial_age_ns > pow(2, 63)) {
+    if (staleWhileRevalidate > max_time_ms) {
       JS_ReportErrorASCII(cx, "staleWhileRevalidate can not be greater than 2^63.");
       return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
+    options.stale_while_revalidate_ns = JS::ToUint64(staleWhileRevalidate) * 1'000'000;
   }
 
   JS::RootedValue length_val(cx);
@@ -242,7 +240,7 @@ JS::Result<host_api::CacheWriteOptions> parseTransactionUpdateOptions(JSContext 
   }
   if (!surrogateKeys_val.isUndefined()) {
     JS::ForOfIterator it(cx);
-    if (!it.init(vary_val)) {
+    if (!it.init(surrogateKeys_val)) {
       return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
 
@@ -364,7 +362,7 @@ JS::Result<host_api::CacheWriteOptions> parseInsertOptions(JSContext *cx,
     Headers::HeadersList *headers_list = Headers::get_list(cx, headers);
     MOZ_ASSERT(headers_list);
     auto res = host_api::write_headers(request_handle.headers_writable(), *headers_list);
-    if (auto *err = res.to_err()) {
+    if (res.is_err()) {
       return JS::Result<host_api::CacheWriteOptions>(JS::Error());
     }
     options.request_headers = host_api::HttpReq(request_handle);
@@ -611,6 +609,14 @@ bool CacheEntry::body(JSContext *cx, unsigned argc, JS::Value *vp) {
         return false;
       }
       options.end = JS::ToUint64(end);
+    }
+
+    // Reject cases where the end is before the start.
+    // Ideally this would be a host-side check... but we didn't do it there to begin with,
+    // so we couple it to an SDK/runtime upgrade.
+    if (!start_val.isUndefined() && !end_val.isUndefined() && options.end < options.start) {
+      JS_ReportErrorASCII(cx, "end field is before the start field");
+      return false;
     }
   }
 

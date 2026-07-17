@@ -4,11 +4,11 @@ import { routes } from './routes.js';
 
 // Request.fastly.decompressGzip option -- automatic gzip decompression of responses
 routes.set('/request/constructor/fastly/decompressGzip/true', async () => {
-  const request = new Request('https://httpbin.org/gzip', {
+  const request = new Request('https://http-me.fastly.dev/gzip', {
     headers: {
       accept: 'application/json',
     },
-    backend: 'httpbin',
+    backend: 'httpme',
     fastly: {
       decompressGzip: true,
     },
@@ -20,11 +20,11 @@ routes.set('/request/constructor/fastly/decompressGzip/true', async () => {
 });
 
 routes.set('/request/constructor/fastly/decompressGzip/false', async () => {
-  const request = new Request('https://httpbin.org/gzip', {
+  const request = new Request('https://http-me.fastly.dev/gzip', {
     headers: {
       accept: 'application/json',
     },
-    backend: 'httpbin',
+    backend: 'httpme',
     cacheOverride: 'pass',
     fastly: {
       decompressGzip: false,
@@ -38,11 +38,11 @@ routes.set('/request/constructor/fastly/decompressGzip/false', async () => {
 });
 
 routes.set('/fetch/requestinit/fastly/decompressGzip/true', async () => {
-  const response = await fetch('https://httpbin.org/gzip', {
+  const response = await fetch('https://http-me.fastly.dev/gzip', {
     headers: {
       accept: 'application/json',
     },
-    backend: 'httpbin',
+    backend: 'httpme',
     fastly: {
       decompressGzip: true,
     },
@@ -53,11 +53,11 @@ routes.set('/fetch/requestinit/fastly/decompressGzip/true', async () => {
 });
 
 routes.set('/fetch/requestinit/fastly/decompressGzip/false', async () => {
-  const response = await fetch('https://httpbin.org/gzip', {
+  const response = await fetch('https://http-me.fastly.dev/gzip', {
     headers: {
       accept: 'application/json',
     },
-    backend: 'httpbin',
+    backend: 'httpme',
     cacheOverride: 'pass',
     fastly: {
       decompressGzip: false,

@@ -20,8 +20,8 @@ replace(pattern, replacement)
   - : Can be a string or an object with a [`Symbol.replace`](../../../globals/Symbol/replace.mdx) method — the typical example being a [regular expression](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp). Any value that doesn't have the `Symbol.replace` method will be coerced to a string.
 - `replacement`
   - : Can be a string or a function.
-    - If it's a string, it will replace the substring matched by `pattern`. A number of special replacement patterns are supported; see the [Specifying a string as the replacement](#specifying_a_string_as_the_replacement) section below.
-    - If it's a function, it will be invoked for every match and its return value is used as the replacement text. The arguments supplied to this function are described in the [Specifying a function as the replacement](#specifying_a_function_as_the_replacement) section below.
+    - If it's a string, it will replace the substring matched by `pattern`. A number of special replacement patterns are supported; see the [Specifying a string as the replacement](#specifying-a-string-as-the-replacement) section below.
+    - If it's a function, it will be invoked for every match and its return value is used as the replacement text. The arguments supplied to this function are described in the [Specifying a function as the replacement](#specifying-a-function-as-the-replacement) section below.
 
 ### Return value
 
