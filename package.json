@@ -107,5 +107,8 @@
       "name": "npm"
     }
   },
-  "allowScripts": {}
+  "allowScripts": {},
+  "bundleDependencies": [
+    "@fastly/wasmtime"
+  ]
 }
