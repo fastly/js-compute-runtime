@@ -179,18 +179,18 @@ var React = {};
         h += R(k, b, e, f, c);
       }
     else if (((f = A(a)), 'function' === typeof f))
-      for (a = f.call(a), g = 0; !(k = a.next()).done; )
-        (k = k.value), (f = d + Q(k, g++)), (h += R(k, b, e, f, c));
+      for (a = f.call(a), g = 0; !(k = a.next()).done;)
+        ((k = k.value), (f = d + Q(k, g++)), (h += R(k, b, e, f, c)));
     else if ('object' === k)
       throw (
-        ((b = String(a)),
+        (b = String(a)),
         Error(
           'Objects are not valid as a React child (found: ' +
             ('[object Object]' === b
               ? 'object with keys {' + Object.keys(a).join(', ') + '}'
               : b) +
             '). If you meant to render a collection of children, use an array instead.',
-        ))
+        )
       );
     return h;
   }
@@ -210,11 +210,11 @@ var React = {};
       b.then(
         function (b) {
           if (0 === a._status || -1 === a._status)
-            (a._status = 1), (a._result = b);
+            ((a._status = 1), (a._result = b));
         },
         function (b) {
           if (0 === a._status || -1 === a._status)
-            (a._status = 2), (a._result = b);
+            ((a._status = 2), (a._result = b));
         },
       );
       -1 === a._status && ((a._status = 0), (a._result = b));
@@ -464,11 +464,11 @@ let renderToReadableStream;
   function p(a, b) {
     if (0 !== b.length)
       if (512 < b.length)
-        0 < n &&
+        (0 < n &&
           (a.enqueue(new Uint8Array(l.buffer, 0, n)),
           (l = new Uint8Array(512)),
           (n = 0)),
-          a.enqueue(b);
+          a.enqueue(b));
       else {
         var c = l.length - n;
         c < b.length &&
@@ -846,7 +846,7 @@ let renderToReadableStream;
             !isNaN(d) && 1 <= d && a.push(H, c, I, u(C(d)), E);
             break;
           default:
-            b.sanitizeURL && (d = '' + d), a.push(H, c, I, u(C(d)), E);
+            (b.sanitizeURL && (d = '' + d), a.push(H, c, I, u(C(d)), E));
         }
       } else if (ia(c)) {
         switch (typeof d) {
@@ -1137,7 +1137,7 @@ let renderToReadableStream;
       case 'missing-glyph':
         return Na(a, c, b, d);
       case 'html':
-        return 0 === f.insertionMode && a.push(Ra), Na(a, c, b, d);
+        return (0 === f.insertionMode && a.push(Ra), Na(a, c, b, d));
       default:
         if (-1 === b.indexOf('-') && 'string' !== typeof c.is)
           return Na(a, c, b, d);
@@ -1216,31 +1216,52 @@ let renderToReadableStream;
       case 0:
       case 1:
         return (
-          p(a, gb), p(a, b.segmentPrefix), p(a, u(d.toString(16))), t(a, hb)
+          p(a, gb),
+          p(a, b.segmentPrefix),
+          p(a, u(d.toString(16))),
+          t(a, hb)
         );
       case 2:
         return (
-          p(a, jb), p(a, b.segmentPrefix), p(a, u(d.toString(16))), t(a, kb)
+          p(a, jb),
+          p(a, b.segmentPrefix),
+          p(a, u(d.toString(16))),
+          t(a, kb)
         );
       case 3:
         return (
-          p(a, mb), p(a, b.segmentPrefix), p(a, u(d.toString(16))), t(a, nb)
+          p(a, mb),
+          p(a, b.segmentPrefix),
+          p(a, u(d.toString(16))),
+          t(a, nb)
         );
       case 4:
         return (
-          p(a, pb), p(a, b.segmentPrefix), p(a, u(d.toString(16))), t(a, qb)
+          p(a, pb),
+          p(a, b.segmentPrefix),
+          p(a, u(d.toString(16))),
+          t(a, qb)
         );
       case 5:
         return (
-          p(a, sb), p(a, b.segmentPrefix), p(a, u(d.toString(16))), t(a, tb)
+          p(a, sb),
+          p(a, b.segmentPrefix),
+          p(a, u(d.toString(16))),
+          t(a, tb)
         );
       case 6:
         return (
-          p(a, vb), p(a, b.segmentPrefix), p(a, u(d.toString(16))), t(a, wb)
+          p(a, vb),
+          p(a, b.segmentPrefix),
+          p(a, u(d.toString(16))),
+          t(a, wb)
         );
       case 7:
         return (
-          p(a, yb), p(a, b.segmentPrefix), p(a, u(d.toString(16))), t(a, zb)
+          p(a, yb),
+          p(a, b.segmentPrefix),
+          p(a, u(d.toString(16))),
+          t(a, zb)
         );
       default:
         throw Error(k(397));
@@ -1354,7 +1375,8 @@ let renderToReadableStream;
           return a;
         case cc:
           return (
-            (b = a.displayName || null), null !== b ? b : jc(a.type) || 'Memo'
+            (b = a.displayName || null),
+            null !== b ? b : jc(a.type) || 'Memo'
           );
         case dc:
           b = a._payload;
@@ -1562,7 +1584,7 @@ let renderToReadableStream;
       if (null !== V && ((c = V.get(d)), void 0 !== c)) {
         V.delete(d);
         d = S.memoizedState;
-        do (d = a(d, c.action)), (c = c.next);
+        do ((d = a(d, c.action)), (c = c.next));
         while (null !== c);
         S.memoizedState = d;
         return [d, b];
@@ -1612,7 +1634,7 @@ let renderToReadableStream;
       )
         V.set(b, a);
       else {
-        for (b = c; null !== b.next; ) b = b.next;
+        for (b = c; null !== b.next;) b = b.next;
         b.next = a;
       }
   }
@@ -1774,8 +1796,8 @@ let renderToReadableStream;
     R = {};
     Ac = b;
     U = 0;
-    for (a = c(d, f); Cc; )
-      (Cc = !1), (U = 0), (Dc += 1), (S = null), (a = c(d, f));
+    for (a = c(d, f); Cc;)
+      ((Cc = !1), (U = 0), (Dc += 1), (S = null), (a = c(d, f)));
     Gc();
     return a;
   }
@@ -1823,7 +1845,7 @@ let renderToReadableStream;
           'function' === typeof f.render &&
           void 0 === f.$$typeof
         )
-          rc(f, c, d, e), Xc(a, b, f, c);
+          (rc(f, c, d, e), Xc(a, b, f, c));
         else if (g) {
           d = b.treeContext;
           b.treeContext = tc(d, 1, 0);
@@ -1912,11 +1934,11 @@ let renderToReadableStream;
               )
                 break a;
             } catch (r) {
-              (q.status = 4),
+              ((q.status = 4),
                 (h.forceClientRender = !0),
-                (h.errorDigest = Y(a, r));
+                (h.errorDigest = Y(a, r)));
             } finally {
-              (b.blockedBoundary = c), (b.blockedSegment = f);
+              ((b.blockedBoundary = c), (b.blockedSegment = f));
             }
             b = Tc(a, e, c, m, g, b.legacyContext, b.context, b.treeContext);
             a.pingedTasks.push(b);
@@ -2007,7 +2029,7 @@ let renderToReadableStream;
         c = d.next();
         if (!c.done) {
           var f = [];
-          do f.push(c.value), (c = d.next());
+          do (f.push(c.value), (c = d.next()));
           while (!c.done);
           bd(a, b, f);
         }
@@ -2091,11 +2113,11 @@ let renderToReadableStream;
         Q(e);
       } else
         throw (
-          ((b.blockedSegment.formatContext = d),
+          (b.blockedSegment.formatContext = d),
           (b.legacyContext = f),
           (b.context = e),
           Q(e),
-          m)
+          m
         );
     }
   }
@@ -2147,7 +2169,7 @@ let renderToReadableStream;
       0 === a.pendingRootTasks &&
         ((a.onShellError = X), (b = a.onShellReady), b());
     } else
-      b.pendingTasks--,
+      (b.pendingTasks--,
         b.forceClientRender ||
           (0 === b.pendingTasks
             ? (c.parentFlushed && 1 === c.status && ad(b, c),
@@ -2159,7 +2181,7 @@ let renderToReadableStream;
               (ad(b, c),
               1 === b.completedSegments.length &&
                 b.parentFlushed &&
-                a.partialBoundaries.push(b)));
+                a.partialBoundaries.push(b))));
     a.allPendingTasks--;
     0 === a.allPendingTasks && ((a = a.onAllReady), a());
   }
@@ -2180,11 +2202,11 @@ let renderToReadableStream;
           if (0 === m.status) {
             Q(g.context);
             try {
-              Z(h, g, g.node),
+              (Z(h, g, g.node),
                 m.lastPushedText && m.textEmbedded && m.chunks.push(Ca),
                 g.abortSet.delete(g),
                 (m.status = 1),
-                dd(h, g.blockedBoundary, m);
+                dd(h, g.blockedBoundary, m));
             } catch (G) {
               if (
                 (Gc(),
@@ -2220,9 +2242,9 @@ let renderToReadableStream;
         f.splice(0, e);
         null !== a.destination && fd(a, a.destination);
       } catch (G) {
-        Y(a, G), Vc(a, G);
+        (Y(a, G), Vc(a, G));
       } finally {
-        (Nc = d), (Pc.current = c), c === Oc && Q(b);
+        ((Nc = d), (Pc.current = c), c === Oc && Q(b));
       }
     }
   }
@@ -2261,12 +2283,12 @@ let renderToReadableStream;
     if (null === d) return gd(a, b, c);
     d.parentFlushed = !0;
     if (d.forceClientRender)
-      (d = d.errorDigest),
+      ((d = d.errorDigest),
         t(b, $a),
         p(b, bb),
         d && (p(b, db), p(b, u(C(d))), p(b, cb)),
         t(b, eb),
-        gd(a, b, c);
+        gd(a, b, c));
     else if (0 < d.pendingTasks) {
       d.rootSegmentID = a.nextSegmentId++;
       0 < d.completedSegments.length && a.partialBoundaries.push(d);
@@ -2277,10 +2299,10 @@ let renderToReadableStream;
       fb(b, a.responseState, d);
       gd(a, b, c);
     } else if (d.byteSize > a.progressiveChunkSize)
-      (d.rootSegmentID = a.nextSegmentId++),
+      ((d.rootSegmentID = a.nextSegmentId++),
         a.completedBoundaries.push(d),
         fb(b, a.responseState, d.id),
-        gd(a, b, c);
+        gd(a, b, c));
     else {
       t(b, Xa);
       c = d.completedSegments;
@@ -2363,8 +2385,8 @@ let renderToReadableStream;
         if (null === m) throw Error(k(395));
         p(d, m);
         p(d, Ob);
-        if (q || r || v) p(d, Qb), p(d, u(Sb(q || '')));
-        if (r || v) p(d, Qb), p(d, u(Sb(r || '')));
+        if (q || r || v) (p(d, Qb), p(d, u(Sb(q || ''))));
+        if (r || v) (p(d, Qb), p(d, u(Sb(r || ''))));
         v && (p(d, Qb), p(d, u(Sb(v))));
         if (!t(d, Pb)) {
           a.destination = null;
@@ -2421,12 +2443,12 @@ let renderToReadableStream;
         }
       na.splice(0, e);
     } finally {
-      ba(b),
+      (ba(b),
         0 === a.allPendingTasks &&
           0 === a.pingedTasks.length &&
           0 === a.clientRenderedBoundaries.length &&
           0 === a.completedBoundaries.length &&
-          b.close();
+          b.close());
     }
   }
   function ld(a, b) {
@@ -2438,7 +2460,7 @@ let renderToReadableStream;
       c.clear();
       null !== a.destination && fd(a, a.destination);
     } catch (d) {
-      Y(a, d), Vc(a, d);
+      (Y(a, d), Vc(a, d));
     }
   }
   renderToReadableStream = function (a, b) {
@@ -2467,13 +2489,13 @@ let renderToReadableStream;
               {
                 type: 'bytes',
                 pull: function (a) {
-                  if (1 === h.status) (h.status = 2), da(a, h.fatalError);
+                  if (1 === h.status) ((h.status = 2), da(a, h.fatalError));
                   else if (2 !== h.status && null === h.destination) {
                     h.destination = a;
                     try {
                       fd(h, a);
                     } catch (A) {
-                      Y(h, A), Vc(h, A);
+                      (Y(h, A), Vc(h, A));
                     }
                   }
                 },
