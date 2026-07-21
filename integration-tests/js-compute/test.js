@@ -31,10 +31,35 @@ async function killPortProcess(port) {
 const startTime = Date.now();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-async function sleep(seconds) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 1_000 * seconds);
-  });
+const green = '\u001b[32m';
+const red = '\u001b[31m';
+const reset = '\u001b[0m';
+const white = '\u001b[39m';
+const info = '\u2139';
+const tick = '\u2714';
+const cross = '\u2716';
+
+function appendBuildFlag(config, flag) {
+  const buildArgs = config.scripts.build.split(' ');
+  buildArgs.splice(-1, null, flag);
+  config.scripts.build = buildArgs.join(' ');
+}
+
+async function resolveFastlyApiToken() {
+  try {
+    zx.verbose = false;
+    process.env.FASTLY_API_TOKEN = String(
+      await $`fastly auth show --reveal | grep 'Token:' | cut -d ' ' -f2-`,
+    ).trim();
+  } catch {
+    console.error(
+      'No environment variable named FASTLY_API_TOKEN has been set and no default fastly profile exists.',
+    );
+    console.error(
+      'In order to run the tests, either create a fastly profile using `fastly profile create` or export a fastly token under the name FASTLY_API_TOKEN',
+    );
+    process.exit(1);
+  }
 }
 
 let args = argv.slice(2);
@@ -54,20 +79,7 @@ const bail = args.includes('--bail');
 const ci = args.includes('--ci');
 
 if (!local && process.env.FASTLY_API_TOKEN === undefined) {
-  try {
-    zx.verbose = false;
-    process.env.FASTLY_API_TOKEN = String(
-      await $`fastly auth show --reveal | grep 'Token:' | cut -d ' ' -f2-`,
-    ).trim();
-  } catch {
-    console.error(
-      'No environment variable named FASTLY_API_TOKEN has been set and no default fastly profile exists.',
-    );
-    console.error(
-      'In order to run the tests, either create a fastly profile using `fastly profile create` or export a fastly token under the name FASTLY_API_TOKEN',
-    );
-    process.exit(1);
-  }
+  await resolveFastlyApiToken();
 }
 
 const FASTLY_API_TOKEN = process.env.FASTLY_API_TOKEN;
@@ -76,11 +88,7 @@ const branchName = (await zx`git branch --show-current`).stdout
   .trim()
   .replace(/[^a-zA-Z0-9_-]/g, '_');
 
-var fixture = 'app';
-
-if (fixtureArg !== undefined) {
-  fixture = fixtureArg.split('=')[1];
-}
+const fixture = fixtureArg !== undefined ? fixtureArg.split('=')[1] : 'app';
 
 // Service names are carefully unique to support parallel runs
 const serviceName = `${GLOBAL_PREFIX}app-${branchName}${aot ? '--aot' : ''}${httpCache ? '--http' : ''}${process.env.SUFFIX_STRING ? '--' + process.env.SUFFIX_STRING : ''}`;
@@ -114,26 +122,227 @@ const config = TOML.parse(
   ),
 );
 config.name = serviceName;
-if (aot) {
-  const buildArgs = config.scripts.build.split(' ');
-  buildArgs.splice(-1, null, '--enable-aot');
-  config.scripts.build = buildArgs.join(' ');
-}
-if (debugBuild) {
-  const buildArgs = config.scripts.build.split(' ');
-  buildArgs.splice(-1, null, '--debug-build');
-  config.scripts.build = buildArgs.join(' ');
-}
-if (httpCache) {
-  const buildArgs = config.scripts.build.split(' ');
-  buildArgs.splice(-1, null, '--enable-http-cache');
-  config.scripts.build = buildArgs.join(' ');
-}
+if (aot) appendBuildFlag(config, '--enable-aot');
+if (debugBuild) appendBuildFlag(config, '--debug-build');
+if (httpCache) appendBuildFlag(config, '--enable-http-cache');
 await writeFile(
   join(fixturePath, 'fastly.toml'),
   TOML.stringify(config),
   'utf-8',
 );
+
+async function waitUntilServiceReady() {
+  // Local uses a hand-tuned backoff since we expect the build to take ~10s.
+  const localReadyBackoff = [
+    6000, 3000, 1500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+    500, 500, 500, 500, 500, 500, 500, 500,
+    // after >20s the build is unusually slow; start backing off before timeout
+    1500, 3000, 6000, 12000, 24000,
+  ].values();
+
+  await Promise.all([
+    retry(
+      27,
+      local ? localReadyBackoff : expBackoff('60s', '10s'),
+      async () => {
+        const response = await request(domain);
+        if (response.statusCode !== 200) {
+          throw new Error(
+            `Application "${fixture}" :: Not yet available on domain: ${domain}`,
+          );
+        }
+      },
+    ),
+    // we need to wait for the service resource links to all activate,
+    // and we don't currently have a reliable way to poll on that
+    local ? null : new Promise((resolve) => setTimeout(resolve, 60_000)),
+  ]);
+}
+
+async function teardownRemoteService() {
+  const teardownPath = join(__dirname, 'teardown.js');
+  if (existsSync(teardownPath)) {
+    core.startGroup('Tear down the extra set-up for the service');
+    await zx`${teardownPath} ${serviceId} ${ci ? serviceName : ''}`;
+    core.endGroup();
+  }
+  core.startGroup('Delete service');
+  try {
+    await $`fastly service delete --quiet --service-name "${serviceName}" --force --token $FASTLY_API_TOKEN`;
+  } catch (e) {
+    console.log('Failed to delete service:', e.message);
+  }
+  core.endGroup();
+}
+
+function chunks(arr, size) {
+  const output = [];
+  for (let i = 0; i < arr.length; i += size) {
+    output.push(arr.slice(i, i + size));
+  }
+  return output;
+}
+
+async function getBodyChunks(response, bodyStreaming) {
+  const bodyChunks = [];
+  let readChunks = async () => {
+    switch (bodyStreaming) {
+      case 'first-chunk-only':
+        for await (const chunk of response.body) {
+          bodyChunks.push(chunk);
+          response.body.on('error', () => {});
+          break;
+        }
+        break;
+      case 'none':
+        response.body.on('error', () => {});
+        break;
+      case 'full':
+      default:
+        for await (const chunk of response.body) {
+          bodyChunks.push(chunk);
+        }
+    }
+  };
+  let downstreamTimeout;
+  let timeoutPromise = new Promise((_, reject) => {
+    downstreamTimeout = setTimeout(() => {
+      reject(new Error(`Test downstream response body chunk timeout`));
+    }, 30_000);
+  });
+  await Promise.race([readChunks(), timeoutPromise]);
+  clearTimeout(downstreamTimeout);
+  return bodyChunks;
+}
+
+async function runLocalTest(title, test) {
+  const url = `${domain}${test.downstream_request.pathname}`;
+  return (bail || !test.flake ? (_, __, fn) => fn() : retry)(
+    5,
+    expBackoff('10s', '1s'),
+    async () => {
+      try {
+        const response = await request(url, {
+          method: test.downstream_request.method || 'GET',
+          headers: test.downstream_request.headers || undefined,
+          body: test.downstream_request.body || undefined,
+        });
+        const bodyChunks = await getBodyChunks(response, test.body_streaming);
+        await compareDownstreamResponse(
+          test.downstream_response,
+          response,
+          bodyChunks,
+        );
+        return { title, test, skipped: false };
+      } catch (error) {
+        console.error('\n' + test.downstream_request.pathname);
+        throw new Error(`${title} ${error.message}`, { cause: error });
+      }
+    },
+  );
+}
+
+async function runComputeTest(title, test) {
+  const url = `${domain}${test.downstream_request.pathname}`;
+  const onInfo = test.downstream_info
+    ? async (status, headers) => {
+        if (
+          test.downstream_info.status !== undefined &&
+          test.downstream_info.status != status
+        ) {
+          throw new Error(
+            `[DownstreamInfo: Status mismatch] Expected: ${test.downstream_info.status} - Got: ${status}`,
+          );
+        }
+        if (headers) {
+          compareHeaders(
+            test.downstream_info.headers,
+            headers,
+            test.downstream_info.headersExhaustive,
+          );
+        }
+      }
+    : undefined;
+
+  return retry(
+    test.flake ? 15 : bail ? 1 : 4,
+    expBackoff(test.flake ? '60s' : '30s', test.flake ? '30s' : '1s'),
+    async () => {
+      try {
+        const response = await request(url, {
+          method: test.downstream_request.method || 'GET',
+          headers: test.downstream_request.headers || undefined,
+          body: test.downstream_request.body || undefined,
+          onInfo,
+        });
+        const bodyChunks = await getBodyChunks(response, test.body_streaming);
+        await compareDownstreamResponse(
+          test.downstream_response,
+          response,
+          bodyChunks,
+        );
+        return { title, test, skipped: false };
+      } catch (error) {
+        console.error('\n' + test.downstream_request.pathname);
+        throw new Error(`${title} ${error.message}`);
+      }
+    },
+  );
+}
+
+async function runTest(title, test) {
+  // Apply defaults
+  if (!test.downstream_request) {
+    const [method, pathname, extra] = title.split(' ');
+    if (typeof extra === 'string')
+      throw new Error('Cannot infer downstream_request from title');
+    test.downstream_request = { method, pathname };
+  }
+  if (!test.downstream_response) {
+    test.downstream_response = { status: 200 };
+  }
+  if (!test.environments) {
+    test.environments = ['viceroy', 'compute'];
+  }
+
+  // Basic test filtering
+  if (
+    test.skip ||
+    (filter.length > 0 && filter.every((f) => !title.includes(f)))
+  ) {
+    return {
+      title,
+      test,
+      skipped: true,
+      skipReason: test.skip ? 'MARKED AS SKIPPED (pending further work)' : null,
+    };
+  }
+
+  // Feature-based test filtering
+  if (
+    (!httpCache && test.features?.includes('http-cache')) ||
+    (httpCache && test.features?.includes('skip-http-cache'))
+  ) {
+    return {
+      title,
+      test,
+      skipped: true,
+      skipReason: `feature "http-cache" ${httpCache ? '' : 'not '}"enabled`,
+    };
+  }
+
+  if (local) {
+    if (!test.environments.includes('viceroy')) {
+      return { title, test, skipped: true, skipReason: 'no environments' };
+    }
+    return runLocalTest(title, test);
+  } else {
+    if (!test.environments.includes('compute')) {
+      return { title, test, skipped: true, skipReason: 'no environments' };
+    }
+    return runComputeTest(title, test);
+  }
+}
 
 let passed = 0;
 const failed = [];
@@ -152,17 +361,15 @@ try {
 
     // It can take time for the new domain to show up on the list.
     await Promise.all([
-      (async () => {
-        await retry(27, expBackoff('60s', '10s'), async () => {
-          // get the public domain of the deployed application
-          const domainListing = JSON.parse(
-            await $`fastly service domain list --quiet --version latest --json`,
-          )[0];
-          domain = `https://${domainListing.Name}`;
-          serviceId = domainListing.ServiceID;
-          core.notice(`Service is running on ${domain}`);
-        });
-      })(),
+      retry(27, expBackoff('60s', '10s'), async () => {
+        // get the public domain of the deployed application
+        const domainListing = JSON.parse(
+          await $`fastly service domain list --quiet --version latest --json`,
+        )[0];
+        domain = `https://${domainListing.Name}`;
+        serviceId = domainListing.ServiceID;
+        core.notice(`Service is running on ${domain}`);
+      }),
       new Promise((resolve) => setTimeout(resolve, 60_000)),
     ]);
   } else {
@@ -181,37 +388,7 @@ try {
     }
   }
 
-  await Promise.all([
-    (async () => {
-      await retry(
-        27,
-        local
-          ? [
-              // we expect it to take ~10 seconds to deploy, so focus on that time
-              6000,
-              3000, 1500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
-              500, 500, 500, 500, 500, 500, 500, 500,
-              // after more than 20 seconds, means we have an unusually slow build, start backoff before timeout
-              1500,
-              3000, 6000, 12000, 24000,
-            ].values()
-          : expBackoff('60s', '10s'),
-        async () => {
-          const response = await request(domain);
-          if (response.statusCode !== 200) {
-            throw new Error(
-              `Application "${fixture}" :: Not yet available on domain: ${domain}`,
-            );
-          }
-        },
-      );
-    })(),
-    // we need to wait for the service resource links to all activate,
-    // and we don't currently have a reliable way to poll on that
-    // (perhaps we could poll on the highest version as seen from setup.js resource-link return output
-    // being fully activated?)
-    local ? null : new Promise((resolve) => setTimeout(resolve, 60_000)),
-  ]);
+  await waitUntilServiceReady();
 
   core.endGroup();
 
@@ -221,212 +398,15 @@ try {
     with: { type: 'json' },
   });
 
-  function chunks(arr, size) {
-    const output = [];
-    for (let i = 0; i < arr.length; i += size) {
-      output.push(arr.slice(i, i + size));
-    }
-    return output;
-  }
-
+  const chunkSize = serial ? 1 : 100;
+  const runChunk = bail
+    ? Promise.all.bind(Promise)
+    : Promise.allSettled.bind(Promise);
   let results = [];
-  let chunkSize = serial ? 1 : 100;
 
   for (const chunk of chunks(Object.entries(tests), chunkSize)) {
     results.push(
-      ...(await (
-        bail ? Promise.all.bind(Promise) : Promise.allSettled.bind(Promise)
-      )(
-        chunk.map(async ([title, test]) => {
-          // test defaults
-          if (!test.downstream_request) {
-            const [method, pathname, extra] = title.split(' ');
-            if (typeof extra === 'string')
-              throw new Error('Cannot infer downstream_request from title');
-            test.downstream_request = { method, pathname };
-          }
-          if (!test.downstream_response) {
-            test.downstream_response = {
-              status: 200,
-            };
-          }
-          if (!test.environments) {
-            test.environments = ['viceroy', 'compute'];
-          }
-
-          // basic test filtering
-          if (
-            test.skip ||
-            (filter.length > 0 && filter.every((f) => !title.includes(f)))
-          ) {
-            return {
-              title,
-              test,
-              skipped: true,
-              skipReason: test.skip
-                ? 'MARKED AS SKIPPED (pending further work)'
-                : null, // dont mention filtered tests
-            };
-          }
-          // feature based test filtering
-          if (
-            (!httpCache &&
-              test.features &&
-              test.features.includes('http-cache')) ||
-            (httpCache &&
-              test.features &&
-              test.features.includes('skip-http-cache'))
-          ) {
-            return {
-              title,
-              test,
-              skipped: true,
-              skipReason: `feature "http-cache" ${httpCache ? '' : 'not '}"enabled`,
-            };
-          }
-          async function getBodyChunks(response) {
-            const bodyChunks = [];
-            let downstreamTimeout;
-            await Promise.race([
-              (async () => {
-                // This body_streaming property allows us to test different cases
-                // of consumer streamining behaviours.
-                switch (test.body_streaming) {
-                  case 'first-chunk-only':
-                    for await (const chunk of response.body) {
-                      bodyChunks.push(chunk);
-                      response.body.on('error', () => {});
-                      break;
-                    }
-                    break;
-                  case 'none':
-                    response.body.on('error', () => {});
-                    break;
-                  case 'full':
-                  default:
-                    for await (const chunk of response.body) {
-                      bodyChunks.push(chunk);
-                    }
-                }
-              })(),
-              new Promise((_, reject) => {
-                downstreamTimeout = setTimeout(() => {
-                  reject(
-                    new Error(`Test downstream response body chunk timeout`),
-                  );
-                }, 30_000);
-              }),
-            ]);
-            clearTimeout(downstreamTimeout);
-            return bodyChunks;
-          }
-          let onInfoHandler = test.downstream_info
-            ? async (status, headers) => {
-                if (
-                  test.downstream_info.status !== undefined &&
-                  test.downstream_info.status != status
-                ) {
-                  throw new Error(
-                    `[DownstreamInfo: Status mismatch] Expected: ${configResponse.status} - Got: ${status}}`,
-                  );
-                }
-                if (headers) {
-                  compareHeaders(
-                    configResponse.headers,
-                    headers,
-                    configResponse.headersExhaustive,
-                  );
-                }
-              }
-            : undefined;
-
-          if (local) {
-            if (test.environments.includes('viceroy')) {
-              return (bail || !test.flake ? (_, __, fn) => fn() : retry)(
-                5,
-                expBackoff('10s', '1s'),
-                async () => {
-                  let path = test.downstream_request.pathname;
-                  let url = `${domain}${path}`;
-                  try {
-                    const response = await request(url, {
-                      method: test.downstream_request.method || 'GET',
-                      headers: test.downstream_request.headers || undefined,
-                      body: test.downstream_request.body || undefined,
-                    });
-                    const bodyChunks = await getBodyChunks(response);
-                    await compareDownstreamResponse(
-                      test.downstream_response,
-                      response,
-                      bodyChunks,
-                    );
-                    return {
-                      title,
-                      test,
-                      skipped: false,
-                    };
-                  } catch (error) {
-                    console.error('\n' + test.downstream_request.pathname);
-                    throw new Error(`${title} ${error.message}`, {
-                      cause: error,
-                    });
-                  }
-                },
-              );
-            } else {
-              return {
-                title,
-                test,
-                skipped: true,
-                skipReason: 'no environments',
-              };
-            }
-          } else {
-            if (test.environments.includes('compute')) {
-              return retry(
-                test.flake ? 15 : bail ? 1 : 4,
-                expBackoff(
-                  test.flake ? '60s' : '30s',
-                  test.flake ? '30s' : '1s',
-                ),
-                async () => {
-                  let path = test.downstream_request.pathname;
-                  let url = `${domain}${path}`;
-                  try {
-                    const response = await request(url, {
-                      method: test.downstream_request.method || 'GET',
-                      headers: test.downstream_request.headers || undefined,
-                      body: test.downstream_request.body || undefined,
-                      onInfo: onInfoHandler,
-                    });
-                    const bodyChunks = await getBodyChunks(response);
-                    await compareDownstreamResponse(
-                      test.downstream_response,
-                      response,
-                      bodyChunks,
-                    );
-                    return {
-                      title,
-                      test,
-                      skipped: false,
-                    };
-                  } catch (error) {
-                    console.error('\n' + test.downstream_request.pathname);
-                    throw new Error(`${title} ${error.message}`);
-                  }
-                },
-              );
-            } else {
-              return {
-                title,
-                test,
-                skipped: true,
-                skipReason: 'no environments',
-              };
-            }
-          }
-        }),
-      )),
+      ...(await runChunk(chunk.map(([title, test]) => runTest(title, test)))),
     );
   }
 
@@ -434,13 +414,6 @@ try {
 
   console.log('Test results');
   core.startGroup('Test results');
-  const green = '\u001b[32m';
-  const red = '\u001b[31m';
-  const reset = '\u001b[0m';
-  const white = '\u001b[39m';
-  const info = '\u2139';
-  const tick = '\u2714';
-  const cross = '\u2716';
   for (const result of results) {
     if (result.status === 'fulfilled' || bail) {
       const value = bail ? result : result.value;
@@ -481,21 +454,7 @@ try {
   }
   // No need to tear down the service if what failed was setting it up.
   if (!local && !skipTeardown && serviceId) {
-    const teardownPath = join(__dirname, 'teardown.js');
-    if (existsSync(teardownPath)) {
-      core.startGroup('Tear down the extra set-up for the service');
-      await zx`${teardownPath} ${serviceId} ${ci ? serviceName : ''}`;
-      core.endGroup();
-    }
-
-    core.startGroup('Delete service');
-    // Delete the service now the tests have finished
-    try {
-      await $`fastly service delete --quiet --service-name "${serviceName}" --force --token $FASTLY_API_TOKEN`;
-    } catch (e) {
-      console.log('Failed to delete service:', e.message);
-    }
-    core.endGroup();
+    await teardownRemoteService();
   }
   if (process.exitCode == undefined || process.exitCode == 0) {
     console.log(

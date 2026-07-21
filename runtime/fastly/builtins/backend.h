@@ -1,13 +1,13 @@
 #ifndef FASTLY_BACKEND_H
 #define FASTLY_BACKEND_H
 
+#include "../host-api/host_api_fastly.h"
 #include "builtin.h"
 #include "extension-api.h"
 
 namespace fastly::backend {
 
-class Backend : public builtins::FinalizableBuiltinImpl<Backend> {
-private:
+class Backend : public builtins::BuiltinImpl<Backend, builtins::FinalizableClassPolicy> {
 public:
   static constexpr const char *class_name = "Backend";
   static const int ctor_length = 1;
@@ -23,6 +23,7 @@ public:
 
   static JSString *name(JSContext *cx, JSObject *self);
   static JSObject *create(JSContext *cx, JS::HandleObject request);
+  static bool restore_global_state(JSContext *cx);
 
   // static methods
   static bool exists(JSContext *cx, unsigned argc, JS::Value *vp);
