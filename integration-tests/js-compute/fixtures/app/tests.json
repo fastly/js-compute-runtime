@@ -1222,6 +1222,7 @@
   "GET /request/clone/called-as-constructor": {},
   "GET /request/clone/called-unbound": {},
   "GET /request/clone/valid": {},
+  "GET /request/clone/headers-are-independent": {},
   "GET /request/clone/invalid": {},
   "POST /request/body-async-simple/no-workaround": {
     "environments": ["viceroy", "compute"],
@@ -3372,6 +3373,12 @@
       "method": "POST",
       "pathname": "/proxy-transform-stream/framing",
       "body": "hello world"
+    }
+  },
+  "GET /form-data/boundary-is-content-type-safe": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
     }
   }
 }

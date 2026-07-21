@@ -12,7 +12,7 @@ The **`get()`** method returns the value associated with the provided key in the
 ## Syntax
 
 ```js
-get(key)
+get(key);
 ```
 
 ### Parameters
@@ -28,7 +28,7 @@ A `string` representing the specified ConfigStore value or `null` if the key doe
 
 Get a value for a key in the config-store. If the provided key does not exist in the ConfigStore then this returns `null`.
 
-The `get()` method requires its `this` value to be a [`ConfigStore`](../../../fastly%3Aconfig-store/ConfigStore/ConfigStore.mdx) object.
+The `get()` method requires its `this` value to be a [`ConfigStore`](pathname://../../../fastly:config-store/ConfigStore/ConfigStore.mdx) object.
 
 If the `this` value does not inherit from `ConfigStore.prototype`, a [`TypeError`](../../../globals/TypeError/TypeError.mdx) is thrown.
 
@@ -85,12 +85,12 @@ addEventListener("fetch", event => event.respondWith(app(event)));
 
 ```js
 /// <reference types="@fastly/js-compute" />
-import { ConfigStore } from "fastly:config-store";
-async function app (event) {
+import { ConfigStore } from 'fastly:config-store';
+async function app(event) {
   const config = new ConfigStore('animals');
   return new Response(config.get('cat'));
 }
-addEventListener("fetch", event => event.respondWith(app(event)));
+addEventListener('fetch', (event) => event.respondWith(app(event)));
 ```
 
 </Fiddle>

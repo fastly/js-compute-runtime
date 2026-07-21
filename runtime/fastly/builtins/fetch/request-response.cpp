@@ -987,6 +987,10 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
     }
 
     auto boundary = MultipartFormData::boundary(encoder);
+    // We ensure the boundary is quoted as per RFC 2046, section 5.1.1, to avoid issues with special
+    // characters in the boundary string. Currently, StarlingMonkey does not quote the boundary, but
+    // in case this changes in the future, we check if the string is already quoted before quoting
+    // it ourselves.
     std::string content_type_str = "multipart/form-data; boundary=" + boundary;
     host_type_str = host_api::HostString(content_type_str.c_str());
 
@@ -2468,8 +2472,14 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
+  JS::RootedValue headers_val(cx, JS::ObjectValue(*headers));
+  JS::RootedObject cloned_headers(cx, Headers::create(cx, headers_val, Headers::guard(headers)));
+  if (!cloned_headers) {
+    return false;
+  }
+
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Headers),
-                      JS::ObjectValue(*headers));
+                      JS::ObjectValue(*cloned_headers));
 
   JS::RootedString method(cx, Request::method(cx, self));
   if (!method) {
@@ -4280,9 +4290,9 @@ bool Response::ttl_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (std::isnan(seconds) || seconds <= 0) {
+  if (std::isnan(seconds) || seconds < 0) {
     api::throw_error(cx, api::Errors::TypeError, "Response set", "ttl",
-                     "be a number greater than zero");
+                     "be a number greater than or equal to zero");
     return false;
   }
 
@@ -4310,9 +4320,9 @@ bool Response::staleWhileRevalidate_set(JSContext *cx, unsigned argc, JS::Value 
     return false;
   }
 
-  if (std::isnan(seconds) || seconds <= 0) {
+  if (std::isnan(seconds) || seconds < 0) {
     api::throw_error(cx, api::Errors::TypeError, "Response set", "staleWhileRevalidate",
-                     "be a number greater than zero");
+                     "be a number greater than or equal to zero");
     return false;
   }
 
@@ -4338,9 +4348,9 @@ bool Response::staleIfError_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (std::isnan(seconds) || seconds <= 0) {
+  if (std::isnan(seconds) || seconds < 0) {
     api::throw_error(cx, api::Errors::TypeError, "Response set", "staleIfError",
-                     "be a number greater than zero");
+                     "be a number greater than or equal to zero");
     return false;
   }
 

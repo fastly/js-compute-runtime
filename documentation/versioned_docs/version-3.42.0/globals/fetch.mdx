@@ -4,6 +4,7 @@ hide_table_of_contents: false
 pagination_next: null
 pagination_prev: null
 ---
+
 # fetch()
 
 The global **`fetch()`** method starts the process of fetching a
@@ -41,13 +42,13 @@ Dynamic backends are a compute feature that allow services to define backends fo
 
 If the `backend` option is not provided when making `fetch()` requests, a backend will be automatically created by extracting the protocol, host, and port from the provided URL.
 
-In addition, custom backend configuration options can then also be provided through the [`Backend()`](../fastly:backend/Backend/Backend.mdx) constructor.
+In addition, custom backend configuration options can then also be provided through the [`Backend()`](pathname://../fastly:backend/Backend/Backend.mdx) constructor.
 
 ## Syntax
 
 ```js
-fetch(resource)
-fetch(resource, options)
+fetch(resource);
+fetch(resource, options);
 ```
 
 ### Parameters
@@ -73,10 +74,10 @@ fetch(resource, options)
     - `body`
       - : Any body that you want to add to your request: this can be an `ArrayBuffer`, a `TypedArray`, a `DataView`, a `URLSearchParams`, string object or literal, or a `ReadableStream` object.
     - `backend` _**Fastly-specific**_
-      - *Fastly-specific*
+      - _Fastly-specific_
     - `cacheOverride` _**Fastly-specific**_
     - `cacheKey` _**Fastly-specific**_
-    - `imageOptimizerOptions` _**Fastly-specific**_, see [`imageOptimizerOptions`](../fastly:image-optimizer/imageOptimizerOptions.mdx).
+    - `imageOptimizerOptions` _**Fastly-specific**_, see [`imageOptimizerOptions`](pathname://../fastly:image-optimizer/imageOptimizerOptions.mdx).
     - `fastly` _**Fastly-specific**_
       - `decompressGzip`_: boolean_ _**optional**_
         - Whether to automatically gzip decompress the Response or not.

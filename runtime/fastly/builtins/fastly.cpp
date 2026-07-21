@@ -778,6 +778,14 @@ const JSPropertySpec Fastly::properties[] = {
 #endif
     JS_PS_END};
 
+bool Fastly::restore_builtin_state(JSContext *cx) {
+  Fastly::baseURL.reset();
+  Fastly::defaultBackend.reset();
+  Fastly::baseURL.init(cx);
+  Fastly::defaultBackend.init(cx);
+  return true;
+}
+
 bool install(api::Engine *engine) {
   ENGINE = engine;
 
@@ -1022,15 +1030,19 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
     if (!buf) {
       return JS::Result<std::tuple<JS::UniqueChars, size_t>>(JS::Error());
     }
-    // `maybeNoGC` needs to be populated for the lifetime of `buf` because
-    // short typed arrays have inline data which can move on GC, so assert
-    // that no GC happens. (Which it doesn't, because we're not allocating
-    // before `buf` goes out of scope.)
-    JS::AutoCheckCannotGC noGC;
-    bool is_shared;
-    auto *data = JS_GetArrayBufferViewData(bodyObj, &is_shared, noGC);
-    std::memcpy(buf.get(), data, length);
-    MOZ_ASSERT(!is_shared);
+    // `noGC` must remain in scope while we hold the raw pointer into the typed
+    // array's data, because short typed arrays have inline data that can move
+    // if the GC runs.  We copy into our own JS_malloc buffer before noGC goes
+    // out of scope so the returned UniqueChars owns its memory.
+    {
+      JS::AutoCheckCannotGC noGC;
+      bool is_shared;
+      void *view_data = JS_GetArrayBufferViewData(bodyObj, &is_shared, noGC);
+      MOZ_ASSERT(!is_shared);
+      if (length > 0) {
+        std::memcpy(buf.get(), view_data, length);
+      }
+    }
     return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
   } else if (bodyObj && JS::IsArrayBufferObject(bodyObj)) {
     bool is_shared;
@@ -1038,16 +1050,23 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
     JS::GetArrayBufferLengthAndData(bodyObj, &length, &is_shared, &bytes);
     MOZ_ASSERT(!is_shared);
     buf.reset(reinterpret_cast<char *>(JS_malloc(cx, length)));
-    std::memcpy(buf.get(), bytes, length);
-    return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
-  } else if (bodyObj && URLSearchParams::is_instance(bodyObj)) {
-    jsurl::SpecSlice slice = URLSearchParams::serialize(cx, bodyObj);
-    buf.reset(reinterpret_cast<char *>(JS_malloc(cx, slice.len)));
     if (!buf) {
       return JS::Result<std::tuple<JS::UniqueChars, size_t>>(JS::Error());
     }
-    std::memcpy(buf.get(), slice.data, slice.len);
+    if (length > 0) {
+      std::memcpy(buf.get(), bytes, length);
+    }
+    return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
+  } else if (bodyObj && URLSearchParams::is_instance(bodyObj)) {
+    jsurl::SpecSlice slice = URLSearchParams::serialize(cx, bodyObj);
     length = slice.len;
+    buf.reset(reinterpret_cast<char *>(JS_malloc(cx, length)));
+    if (!buf) {
+      return JS::Result<std::tuple<JS::UniqueChars, size_t>>(JS::Error());
+    }
+    if (length > 0) {
+      std::memcpy(buf.get(), slice.data, length);
+    }
     return JS::Result<std::tuple<JS::UniqueChars, size_t>>(std::make_tuple(std::move(buf), length));
   } else {
     // Convert into a String following https://tc39.es/ecma262/#sec-tostring

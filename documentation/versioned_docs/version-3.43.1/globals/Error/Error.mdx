@@ -1,0 +1,36 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Error
+
+The **`Error()`** constructor creates an error object.
+
+## Syntax
+
+```js
+new Error()
+new Error(message)
+new Error(message, options)
+new Error(message, fileName)
+new Error(message, fileName, lineNumber)
+
+Error()
+Error(message)
+Error(message, options)
+Error(message, fileName)
+Error(message, fileName, lineNumber)
+```
+
+> **Note:** `Error()` can be called with or without `new`. Both create a new `Error` instance.
+
+### Parameters
+
+- `message` _**optional**_
+  - : A human-readable description of the error.
+- `options` _**optional**_
+  - : An object that has the following properties:
+    - `cause` _**optional**_
+      - : A value indicating the specific cause of the error, reflected in the [`Error.prototype.cause`](./prototype/cause.mdx) property. When catching and re-throwing an error with a more-specific or useful error message, this property can be used to pass the original error.
