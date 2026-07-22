@@ -38,11 +38,13 @@ async function sleep(seconds) {
 }
 
 function validateSessionInfo(sessionInfo) {
-  const sandboxIds = [...new Set(sessionInfo.map(i => i.sandboxId))].sort();
+  const sandboxIds = [...new Set(sessionInfo.map((i) => i.sandboxId))].sort();
   let failed = false;
   for (const info of sessionInfo) {
     if (sandboxIds[info.expectedSession] !== info.sandboxId) {
-      console.log(`Test ${info.title} had expected session ${info.expectedSession}, which has sandbox id ${sandboxIds[info.expectedSession]}, but the actual sandbox id was ${info.sandboxId}`);
+      console.log(
+        `Test ${info.title} had expected session ${info.expectedSession}, which has sandbox id ${sandboxIds[info.expectedSession]}, but the actual sandbox id was ${info.sandboxId}`,
+      );
       failed = true;
     }
   }
@@ -371,14 +373,17 @@ try {
                     });
                     const bodyChunks = await getBodyChunks(response);
 
-                    if (test.downstream_response.session !== undefined && response.headers['sandbox-id']) {
+                    if (
+                      test.downstream_response.session !== undefined &&
+                      response.headers['sandbox-id']
+                    ) {
                       sessionInfo.push({
                         title,
                         expectedSession: test.downstream_response.session,
-                        sandboxId: response.headers['sandbox-id']
+                        sandboxId: response.headers['sandbox-id'],
                       });
                     }
-                  
+
                     await compareDownstreamResponse(
                       test.downstream_response,
                       response,
