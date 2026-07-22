@@ -360,6 +360,7 @@ bool get_or_set_then_handler(JSContext *cx, JS::HandleObject lookup_state, JS::H
 
   auto res = inserted_handle.get_body(host_api::CacheGetBodyOptions{});
   if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
 
