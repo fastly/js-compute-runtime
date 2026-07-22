@@ -37,6 +37,20 @@ async function sleep(seconds) {
   });
 }
 
+function validateSessionInfo(sessionInfo) {
+  const sandboxIds = [...new Set(sessionInfo.map(i => i.sandboxId))].sort();
+  let failed = false;
+  for (const info of sessionInfo) {
+    if (sandboxIds[info.expectedSession] !== info.sandboxId) {
+      console.log(`Test ${info.title} had expected session ${info.expectedSession}, which has sandbox id ${sandboxIds[info.expectedSession]}, but the actual sandbox id was ${info.sandboxId}`);
+      failed = true;
+    }
+  }
+  if (failed) {
+    process.exitCode = 1;
+  }
+}
+
 let args = argv.slice(2);
 
 const local = args.includes('--local');
@@ -137,6 +151,7 @@ await writeFile(
 
 let passed = 0;
 const failed = [];
+let sessionInfo = [];
 try {
   if (!local) {
     core.startGroup('Delete service if already exists');
@@ -355,6 +370,15 @@ try {
                       body: test.downstream_request.body || undefined,
                     });
                     const bodyChunks = await getBodyChunks(response);
+
+                    if (test.downstream_response.session !== undefined && response.headers['sandbox-id']) {
+                      sessionInfo.push({
+                        title,
+                        expectedSession: test.downstream_response.session,
+                        sandboxId: response.headers['sandbox-id']
+                      });
+                    }
+                  
                     await compareDownstreamResponse(
                       test.downstream_response,
                       response,
@@ -432,7 +456,6 @@ try {
 
   core.endGroup();
 
-  console.log('Test results');
   core.startGroup('Test results');
   const green = '\u001b[32m';
   const red = '\u001b[31m';
@@ -463,6 +486,7 @@ try {
   }
   core.endGroup();
 } finally {
+  validateSessionInfo(sessionInfo);
   if (failed.length || !passed) {
     process.exitCode = 1;
     core.startGroup('Failed tests');
