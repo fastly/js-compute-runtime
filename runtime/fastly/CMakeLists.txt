@@ -19,7 +19,7 @@ foreach(patch IN LISTS SM_PATCHES)
       message(FATAL_ERROR "Failed to apply StarlingMonkey patch: ${patch}")
     endif()
   else()
-    message(STATUS "StarlingMonkey patch already appliedh: ${patch}")
+    message(STATUS "StarlingMonkey patch already applied: ${patch}")
   endif()
 endforeach()
 
