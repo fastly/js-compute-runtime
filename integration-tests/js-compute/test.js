@@ -348,11 +348,7 @@ try {
                   );
                 }
                 if (headers) {
-                  compareHeaders(
-                    configResponse.headers,
-                    headers,
-                    configResponse.headersExhaustive,
-                  );
+                  compareHeaders(configResponse.headers, headers);
                 }
               }
             : undefined;
