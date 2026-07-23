@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.43.2](https://github.com/fastly/js-compute-runtime/compare/v3.43.1...v3.43.2) (2026-07-23)
+
+
+### Bug Fixes
+
+* Allow 0 ttl for responses ([#1498](https://github.com/fastly/js-compute-runtime/issues/1498)) ([55005ce](https://github.com/fastly/js-compute-runtime/commit/55005ce13abe59e6763f260c8bcf54864f87a8d1))
+* **docs:** fix docs generation ([b2b4752](https://github.com/fastly/js-compute-runtime/commit/b2b47525ea8ca7d3e55a5ee742b2791ad34e04f6))
+* **fmt:** format with updated prettier ([c4f36ad](https://github.com/fastly/js-compute-runtime/commit/c4f36ad95aaad142e92c1eed4626c962b1642902))
+* reset SDK state between requests ([#1488](https://github.com/fastly/js-compute-runtime/issues/1488)) ([e049f97](https://github.com/fastly/js-compute-runtime/commit/e049f97a75b8a919fbbd74ec386fc90974721974))
+* Reusable sandbox tests ([#1515](https://github.com/fastly/js-compute-runtime/issues/1515)) ([c038f48](https://github.com/fastly/js-compute-runtime/commit/c038f4875c499d2b0f173376cff9d5d46e1dc8c7))
+* **tests:** only run null-304-body test when http-cache enabled ([#1505](https://github.com/fastly/js-compute-runtime/issues/1505)) ([58e72b0](https://github.com/fastly/js-compute-runtime/commit/58e72b061d52d580c1c0cc076481231d9d70db8f))
+
 ## 3.43.1 (2026-06-17)
 
 ### Fixed
