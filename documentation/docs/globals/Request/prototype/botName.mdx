@@ -1,0 +1,19 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Request.botName
+
+The **`botName`** read-only property of the `Request` interface contains a
+string identifying the specific bot detected (e.g., `GoogleBot`, `GPTBot`,
+`Bingbot`).
+
+Warning: String values may change over time. Use this for logging or
+informational purposes. For conditional logic, use [`Request.botCategory`](./botCategory.mdx).
+
+## Value
+
+A `String` with the name of the bot or `null` if bot detection was not executed
+or no bot was detected.
