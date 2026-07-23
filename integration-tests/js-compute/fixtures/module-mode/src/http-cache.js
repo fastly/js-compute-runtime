@@ -345,6 +345,7 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
     const res = await fetch(url, {
       cacheOverride: {
         afterSend(res) {
+          res.headers.set('Connection', 'Close');
           res.headers.set('Custom', 'custom-header');
           res.headers.delete('access-control-allow-origin');
           res.headers.delete('access-control-allow-credentials');
