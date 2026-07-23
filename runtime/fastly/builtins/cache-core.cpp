@@ -74,6 +74,7 @@ JS::Result<host_api::CacheLookupOptions> parseLookupOptions(JSContext *cx,
       MOZ_ASSERT(headers_list);
       auto res = host_api::write_headers(request_handle.headers_writable(), *headers_list);
       if (auto *err = res.to_err()) {
+        HANDLE_ERROR(cx, *err);
         return JS::Result<host_api::CacheLookupOptions>(JS::Error());
       }
       options.request_headers = host_api::HttpReq(request_handle);
