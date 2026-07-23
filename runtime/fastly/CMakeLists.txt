@@ -1,18 +1,15 @@
 cmake_minimum_required(VERSION 3.27)
 
-#FIXME(1243)
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../rust-toolchain.toml" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/../StarlingMonkey")
-
 # Apply any local patches to StarlingMonkey before it is included as a subproject
 file(GLOB SM_PATCHES "${CMAKE_CURRENT_SOURCE_DIR}/patches/starlingmonkey-*.patch")
 foreach(patch IN LISTS SM_PATCHES)
   execute_process(
-    COMMAND git apply --check "${patch}"
+    COMMAND git apply --check --reverse "${patch}"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../StarlingMonkey"
     RESULT_VARIABLE patch_check_result
     OUTPUT_QUIET ERROR_QUIET
   )
-  if(patch_check_result EQUAL 0)
+  if(NOT patch_check_result EQUAL 0)
     execute_process(
       COMMAND git apply "${patch}"
       WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../StarlingMonkey"
@@ -21,6 +18,8 @@ foreach(patch IN LISTS SM_PATCHES)
     if(NOT patch_result EQUAL 0)
       message(FATAL_ERROR "Failed to apply StarlingMonkey patch: ${patch}")
     endif()
+  else()
+    message(STATUS "StarlingMonkey patch already applied: ${patch}")
   endif()
 endforeach()
 
@@ -61,9 +60,7 @@ add_builtin(fastly::fetch
     builtins/fetch/request-response.cpp
     builtins/fetch/request-response.cpp
     ../StarlingMonkey/builtins/web/fetch/headers.cpp
-    ../StarlingMonkey/builtins/web/fetch/fetch-utils.cpp
-  DEPENDENCIES
-    fmt)
+    ../StarlingMonkey/builtins/web/fetch/fetch-utils.cpp)
 
 add_builtin(fastly::cache_override SRC builtins/cache-override.cpp)
 
@@ -81,6 +78,9 @@ add_builtin(fastly::html_rewriter
   INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/crates/rust-lol-html/include
 )
+
+# Stub implementation of parts of `AbortSignal` depended on by the `event` StarlingMonkey builtin
+add_builtin(fastly::abort SRC builtins/abort.cpp)
 
 add_compile_definitions(PUBLIC RUNTIME_VERSION=${RUNTIME_VERSION})
 
