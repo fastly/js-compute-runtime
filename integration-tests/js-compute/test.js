@@ -152,8 +152,16 @@ await writeFile(
 );
 
 let passed = 0;
+let totalTests = 0;
 const failed = [];
 let sessionInfo = [];
+const green = '\u001b[32m';
+const red = '\u001b[31m';
+const reset = '\u001b[0m';
+const white = '\u001b[39m';
+const info = '\u2139';
+const tick = '\u2714';
+const cross = '\u2716';
 try {
   if (!local) {
     core.startGroup('Delete service if already exists');
@@ -462,13 +470,6 @@ try {
   core.endGroup();
 
   core.startGroup('Test results');
-  const green = '\u001b[32m';
-  const red = '\u001b[31m';
-  const reset = '\u001b[0m';
-  const white = '\u001b[39m';
-  const info = '\u2139';
-  const tick = '\u2714';
-  const cross = '\u2716';
   for (const result of results) {
     if (result.status === 'fulfilled' || bail) {
       const value = bail ? result : result.value;
@@ -482,11 +483,13 @@ try {
           );
       } else {
         passed += 1;
+        totalTests += 1;
         console.log(green, tick, value.title, reset);
       }
     } else {
+      totalTests += 1;
       console.log(red, cross, result.reason, reset);
-      failed.push(`${value.title} - ${result.reason}`);
+      failed.push(result.reason);
     }
   }
   core.endGroup();
@@ -494,19 +497,17 @@ try {
   validateSessionInfo(sessionInfo);
   if (failed.length || !passed) {
     process.exitCode = 1;
+    core.notice(`Tests failed.`);
     core.startGroup('Failed tests');
 
     for (const result of failed) {
       console.log(red, cross, result, reset);
     }
-    if (!passed) {
+    if (!totalTests) {
       console.log('No tests passed/ran.');
     }
 
     core.endGroup();
-  }
-  if (!local && (failed.length || !passed)) {
-    core.notice(`Tests failed.`);
   }
   // No need to tear down the service if what failed was setting it up.
   if (!local && !skipTeardown && serviceId) {
@@ -528,7 +529,7 @@ try {
   }
   if (process.exitCode == undefined || process.exitCode == 0) {
     console.log(
-      `All tests passed! Took ${(Date.now() - startTime) / 1000} seconds to complete`,
+      `All ${totalTests} tests passed! Took ${(Date.now() - startTime) / 1000} seconds to complete`,
     );
   } else {
     console.log(`Tests failed!`);
