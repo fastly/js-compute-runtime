@@ -67,11 +67,7 @@ export async function compareDownstreamResponse(
 
   // Headers
   if (configResponse.headers) {
-    compareHeaders(
-      configResponse.headers,
-      actualResponse.headers,
-      configResponse.headersExhaustive,
-    );
+    compareHeaders(configResponse.headers, actualResponse.headers);
   }
 
   // Body

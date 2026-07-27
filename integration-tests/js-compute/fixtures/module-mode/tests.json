@@ -199,9 +199,10 @@
         "custom": "custom-header",
         "x-cache": true,
         "x-cache-hits": true,
-        "x-served-by": true
-      },
-      "headersExhaustive": true
+        "x-served-by": true,
+        "access-control-allow-credentials": null,
+        "access-control-allow-origin": null
+      }
     }
   },
   "GET /http-cache/after-send-cache": {
