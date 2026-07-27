@@ -1979,6 +1979,101 @@ Result<std::optional<HostString>> HttpReq::http_req_downstream_client_oh_fingerp
   return res;
 }
 
+Result<bool> HttpReq::http_req_downstream_bot_analyzed() {
+  TRACE_CALL()
+  Result<bool> res;
+  uint32_t bot_analyzed{0};
+  auto status{fastly::http_downstream_bot_analyzed(this->handle, &bot_analyzed)};
+  fastly::fastly_host_error err;
+  if (!convert_result(status, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace((bot_analyzed & 1) != 0);
+  }
+  return res;
+}
+
+Result<bool> HttpReq::http_req_downstream_bot_detected() {
+  TRACE_CALL()
+  Result<bool> res;
+  uint32_t bot_detected{0};
+  auto status{fastly::http_downstream_bot_detected(this->handle, &bot_detected)};
+  fastly::fastly_host_error err;
+  if (!convert_result(status, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace((bot_detected & 1) != 0);
+  }
+  return res;
+}
+
+Result<std::optional<HostString>> HttpReq::http_req_downstream_bot_name() {
+  TRACE_CALL()
+  Result<std::optional<HostString>> res;
+  fastly::fastly_host_error err;
+  fastly::fastly_world_string ret;
+  uint32_t initial_buf_len{32};
+  uint32_t buf_len{initial_buf_len};
+  ret.ptr = static_cast<uint8_t *>(cabi_malloc(32, 1));
+
+  auto status = fastly::http_downstream_bot_name(this->handle, ret.ptr, 32, &ret.len);
+  if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    buf_len = ret.len;
+    ret.len = 0;
+    ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, initial_buf_len, 1, buf_len));
+    status = fastly::http_downstream_bot_name(this->handle, ret.ptr, buf_len, &ret.len);
+  }
+
+  if (!convert_result(status, &err)) {
+    cabi_free(ret.ptr);
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(make_host_string(ret));
+  }
+
+  return res;
+}
+
+Result<std::optional<uint32_t>> HttpReq::http_req_downstream_bot_category_kind() {
+  TRACE_CALL()
+  Result<std::optional<uint32_t>> res;
+  uint32_t bot_category_kind{0};
+  auto status{fastly::http_downstream_bot_category_kind(this->handle, &bot_category_kind)};
+  fastly::fastly_host_error err;
+  if (!convert_result(status, &err)) {
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(bot_category_kind);
+  }
+  return res;
+}
+
+Result<std::optional<bool>> HttpReq::http_req_downstream_bot_verified() {
+  TRACE_CALL()
+  Result<std::optional<bool>> res;
+  uint32_t bot_verified{0};
+  auto status{fastly::http_downstream_bot_verified(this->handle, &bot_verified)};
+  fastly::fastly_host_error err;
+  if (!convert_result(status, &err)) {
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace((bot_verified & 1) != 0);
+  }
+  return res;
+}
+
 bool HttpReq::is_valid() const { return this->handle != HttpReq::invalid; }
 
 Result<HttpVersion> HttpReq::get_version() const {

@@ -19,7 +19,9 @@ routes.set('/form-data/boundary-is-content-type-safe', async () => {
     // which should NOT be ignored, as this has lead to 5XX errors in production in the past.
     let contentType = body.headers['content-type'];
     assert(
-      /boundary="?--StarlingMonkeyFormBoundary[a-zA-Z0-9]+"?/.test(contentType),
+      /boundary="?--StarlingMonkeyFormBoundary[a-zA-Z0-9]+"?$/.test(
+        contentType,
+      ),
       true,
       'content-type header contains a safe boundary string, DO NOT IGNORE FAILURES',
     );
