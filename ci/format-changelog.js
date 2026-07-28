@@ -261,6 +261,7 @@ function format(ast, path) {
             "Removed",
             "Fixed",
             "Security",
+            "Miscellaneous Chores"
           ].includes(item.children[0].value)
         ) {
           console.log(
@@ -268,7 +269,7 @@ function format(ast, path) {
           );
           return {
             correct: false,
-            reason: `Level 3 headings should only be one of 'Added', 'Changed', 'Deprecated', 'Removed', 'Fixed', 'Security'`,
+            reason: `Level 3 headings should only be one of 'Added', 'Changed', 'Deprecated', 'Removed', 'Fixed', 'Security', 'Miscellaneous Chores'`,
           };
         }
 
