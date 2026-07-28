@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.44.1](https://github.com/fastly/js-compute-runtime/compare/v3.44.0...v3.44.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* **ci:** get releases working for real this time ([#1531](https://github.com/fastly/js-compute-runtime/issues/1531)) ([0c734bd](https://github.com/fastly/js-compute-runtime/commit/0c734bd84c99d766db0f262c0d2e1eb1725e2cdb))
+
+
+### Miscellaneous Chores
+
+* release 3.44.1 ([9061855](https://github.com/fastly/js-compute-runtime/commit/90618558b0b1696bf978476f58c1c2c4eccc223e))
+
 ## [3.44.0](https://github.com/fastly/js-compute-runtime/compare/v3.43.2...v3.44.0) (2026-07-27)
 
 
