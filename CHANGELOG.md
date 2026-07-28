@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.44.2](https://github.com/fastly/js-compute-runtime/compare/v3.44.1...v3.44.2) (2026-07-28)
+
+
+### Bug Fixes
+
+* **release:** target was renamed with this version bump ([#1532](https://github.com/fastly/js-compute-runtime/issues/1532)) ([fffa2d2](https://github.com/fastly/js-compute-runtime/commit/fffa2d2f7315ed76e280a8a7398b5c5212e9d7b5))
+
 ## [3.44.1](https://github.com/fastly/js-compute-runtime/compare/v3.44.0...v3.44.1) (2026-07-28)
 
 
