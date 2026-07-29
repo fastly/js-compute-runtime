@@ -1722,7 +1722,7 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   if (auto *err = res.to_err()) {
     if (host_api::error_is_unsupported(*err)) {
       JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                JSMSG_DYNAMIC_BACKENDS_UNSUPPORTED_IMPLICIT, target_string.data(),
+                                JSMSG_DYNAMIC_BACKENDS_UNSUPPORTED, target_string.data(),
                                 url_string.data);
       return nullptr;
     }
@@ -1791,7 +1791,7 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (auto *err = res.to_err()) {
     if (host_api::error_is_unsupported(*err)) {
       JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                JSMSG_DYNAMIC_BACKENDS_UNSUPPORTED_EXPLICIT,
+                                JSMSG_DYNAMIC_BACKENDS_UNSUPPORTED,
                                 target_string_slice.data);
       return false;
     }
