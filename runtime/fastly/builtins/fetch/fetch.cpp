@@ -895,6 +895,7 @@ std::optional<JSObject *> get_found_response(JSContext *cx, host_api::HttpCacheE
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
+    fastly_push_debug_message(std::string(vary_res.unwrap().value()));
     cache_options->vary_rule = std::move(vary_res.unwrap());
     auto surrogate_keys_res = cache_entry.get_surrogate_keys();
     if (auto *err = surrogate_keys_res.to_err()) {
@@ -1258,6 +1259,10 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
                       override_key_str.ptr.get() + override_key_str.size(),
                       override_key_hash.begin(), override_key_hash.end());
   }
+
+  // Ensure that any headers that could change cache behaviour (e.g. due to vary headers) are committed
+  if (!RequestOrResponse::commit_headers(cx, request))
+    return false;
 
   host_api::Result<host_api::HttpCacheEntry> transaction_res =
       host_api::HttpCacheEntry::transaction_lookup(request_handle, override_key_hash);

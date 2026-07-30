@@ -12,6 +12,7 @@
   "GET /implicit-dynamic-backend/dynamic-backends-enabled-called-twice": {},
   "GET /explicit-dynamic-backend/dynamic-backends-enabled-all-fields": {},
   "GET /explicit-dynamic-backend/dynamic-backends-enabled-minimal-fields": {},
+  "GET /explicit-dynamic-backend/dynamic-backends-disabled-exception": {},
   "GET /backend/interface": {},
   "GET /backend/constructor/called-as-regular-function": {},
   "GET /backend/constructor/empty-parameter": {},
@@ -295,6 +296,10 @@
     "features": ["http-cache"]
   },
   "GET /http-cache/cache-key-on-request": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/vary-header": {
     "environments": ["compute"],
     "features": ["http-cache"]
   },
