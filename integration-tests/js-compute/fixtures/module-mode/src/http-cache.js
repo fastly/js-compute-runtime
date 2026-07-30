@@ -1026,7 +1026,7 @@ routes.set('/http-cache/cache-key-on-request', async () => {
   req2.setCacheKey(key);
   const res2 = await fetch(req2, { cacheOverride });
   strictEqual(backendCalls, 1);
-  strictEqual(res2.cached, false);
+  strictEqual(res2.cached, true);
 
   strictEqual(await res1.text(), await res2.text());
 });
