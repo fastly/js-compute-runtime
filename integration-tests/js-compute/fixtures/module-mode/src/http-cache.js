@@ -1040,7 +1040,7 @@ routes.set('/http-cache/vary-header', async () => {
       backendCalls++;
     },
   });
-  
+
   const req1 = new Request(url);
   req1.headers.set('my-header', 'original');
   const res1 = await fetch(req1, { cacheOverride });
