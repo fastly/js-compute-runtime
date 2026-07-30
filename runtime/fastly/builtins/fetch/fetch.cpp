@@ -1259,7 +1259,8 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
                       override_key_hash.begin(), override_key_hash.end());
   }
 
-  // Ensure that any headers that could change cache behaviour (e.g. due to vary headers) are committed
+  // Ensure that any headers that could change cache behaviour (e.g. due to vary headers) are
+  // committed
   if (!RequestOrResponse::commit_headers(cx, request))
     return false;
 
