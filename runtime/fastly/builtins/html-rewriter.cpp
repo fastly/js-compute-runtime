@@ -8,6 +8,13 @@
 using builtins::web::streams::TransformStream;
 using builtins::web::streams::TransformStreamDefaultController;
 
+#define ELEMENT_METHOD_HEADER(N)                                                                   \
+  METHOD_HEADER(N)                                                                                 \
+  if (raw_element(self) == nullptr) {                                                              \
+    JS_ReportErrorUTF8(cx, "Element objects are only valid within onElement handlers");            \
+    return false;                                                                                  \
+  }
+
 namespace fastly::html_rewriter {
 const JSFunctionSpec Element::static_methods[] = {JS_FS_END};
 const JSPropertySpec Element::static_properties[] = {JS_PS_END};
@@ -33,14 +40,14 @@ lol_html_element_t *raw_element(JSObject *self) {
 }
 
 bool Element::selector_get(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(0)
+  ELEMENT_METHOD_HEADER(0)
   auto selector = JS::GetReservedSlot(self, static_cast<size_t>(Slots::Selector)).toString();
   args.rval().setString(selector);
   return true;
 }
 
 bool Element::tag_get(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(0)
+  ELEMENT_METHOD_HEADER(0)
   auto element = raw_element(self);
   MOZ_ASSERT(element);
   auto str = lol_html_element_tag_name_get(element);
@@ -63,7 +70,7 @@ static bool should_escape_html(JSContext *cx, JS::HandleValue options_arg) {
 }
 
 bool Element::before(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(1)
+  ELEMENT_METHOD_HEADER(1)
 
   JS::HandleValue content_arg = args.get(0);
   auto content = core::encode(cx, content_arg);
@@ -78,7 +85,7 @@ bool Element::before(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 bool Element::prepend(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(1)
+  ELEMENT_METHOD_HEADER(1)
 
   JS::HandleValue content_arg = args.get(0);
   auto content = core::encode(cx, content_arg);
@@ -93,7 +100,7 @@ bool Element::prepend(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 bool Element::append(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(1)
+  ELEMENT_METHOD_HEADER(1)
 
   JS::HandleValue content_arg = args.get(0);
   auto content = core::encode(cx, content_arg);
@@ -108,7 +115,7 @@ bool Element::append(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 bool Element::after(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(1)
+  ELEMENT_METHOD_HEADER(1)
 
   JS::HandleValue content_arg = args.get(0);
   auto content = core::encode(cx, content_arg);
@@ -122,7 +129,7 @@ bool Element::after(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 bool Element::getAttribute(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(1)
+  ELEMENT_METHOD_HEADER(1)
 
   JS::HandleValue name_arg = args.get(0);
   auto name = core::encode(cx, name_arg);
@@ -143,7 +150,7 @@ bool Element::getAttribute(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 bool Element::setAttribute(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(2)
+  ELEMENT_METHOD_HEADER(2)
 
   JS::HandleValue name_arg = args.get(0);
   auto name = core::encode(cx, name_arg);
@@ -164,7 +171,7 @@ bool Element::setAttribute(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 bool Element::removeAttribute(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(1)
+  ELEMENT_METHOD_HEADER(1)
 
   JS::HandleValue name_arg = args.get(0);
   auto name = core::encode(cx, name_arg);
@@ -180,7 +187,7 @@ bool Element::removeAttribute(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 bool Element::replaceChildren(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(1)
+  ELEMENT_METHOD_HEADER(1)
 
   JS::HandleValue content_arg = args.get(0);
   auto content = core::encode(cx, content_arg);
@@ -195,7 +202,7 @@ bool Element::replaceChildren(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 bool Element::replaceWith(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(1)
+  ELEMENT_METHOD_HEADER(1)
 
   JS::HandleValue content_arg = args.get(0);
   auto content = core::encode(cx, content_arg);
@@ -219,6 +226,11 @@ static JSObject *create_element(JSContext *cx, lol_html_element_t *element,
   JS::SetReservedSlot(obj, static_cast<uint32_t>(Element::Slots::Selector),
                       JS::StringValue(selector));
   return obj;
+}
+
+static void invalidate_element(JS::HandleObject element) {
+  JS::SetReservedSlot(element, static_cast<uint32_t>(Element::Slots::Raw),
+                      JS::PrivateValue(nullptr));
 }
 
 const JSFunctionSpec HTMLRewritingStream::static_methods[] = {JS_FS_END};
@@ -299,8 +311,10 @@ static lol_html_rewriter_directive_t handle_element(lol_html_element_t *element,
   JS::HandleValueArray arg(jsElementVal);
   JS::RootedValue rval(data->cx());
   if (!JS_CallFunctionValue(data->cx(), nullptr, handlerVal, arg, &rval)) {
+    invalidate_element(jsElement);
     return LOL_HTML_STOP;
   }
+  invalidate_element(jsElement);
   return LOL_HTML_CONTINUE;
 }
 

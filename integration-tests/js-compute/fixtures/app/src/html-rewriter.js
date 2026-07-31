@@ -295,3 +295,26 @@ routes.set('/html-rewriter/escape-html', async () => {
   }).text();
   strictEqual(textEscape, expectedEscape);
 });
+
+// Ensure that stashing HTML elements from within onElement handlers
+// and trying to access them after the handler has succeeded throws an exception
+// rather than accessing freed memory.
+routes.set('/html-rewriter/access-freed-element', async () => {
+  const lines = [];
+  let savedEl = null;
+  const rw = new HTMLRewritingStream().onElement('h1', (e) => {
+    savedEl = e; // ...stash it for use AFTER the callback (UAF)
+  });
+
+  // Pipe HTML through the rewriter and drain output -> handler fires, then
+  // the rewriter moves on and frees the element.
+  const html = '<html><body><h1>HELLO-HEADER</h1><p>x</p></body></html>';
+  const out = new Response(html).body.pipeThrough(rw);
+  const reader = out.getReader();
+  for (;;) {
+    const r = await reader.read();
+    if (r.done) break;
+  }
+
+  assertThrows(() => savedEl.tag);
+});
