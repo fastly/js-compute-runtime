@@ -1324,8 +1324,8 @@ bool Backend::health_for_name(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto backend = new host_api::Backend(std::move(name));
-  auto res = backend->health();
+  auto backend = host_api::Backend(std::move(name));
+  auto res = backend.health();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
