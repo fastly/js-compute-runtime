@@ -1,9 +1,8 @@
 # Changelog
 
-## [3.44.3](https://github.com/fastly/js-compute-runtime/compare/v3.44.2...v3.44.3) (2026-07-31)
+## 3.44.3 (2026-07-31)
 
-
-### Bug Fixes
+### Fixed
 
 * Disallow accessing HTML rewriter elements outside of handlers ([#1541](https://github.com/fastly/js-compute-runtime/issues/1541)) ([bf4ac3d](https://github.com/fastly/js-compute-runtime/commit/bf4ac3d5860c42d75a347afa4c6696eaec3764c8))
 * dynamic backends disabled exception ([#1535](https://github.com/fastly/js-compute-runtime/issues/1535)) ([432d059](https://github.com/fastly/js-compute-runtime/commit/432d0592f341d33f9c47488d3724bb67bfeac8de))
@@ -12,43 +11,37 @@
 * Memory leak in `Device::lookup` ([#1543](https://github.com/fastly/js-compute-runtime/issues/1543)) ([2f02080](https://github.com/fastly/js-compute-runtime/commit/2f02080d981412bf2e5713a2779ae91fb6773be2))
 * URLSearchParams premature free ([#1538](https://github.com/fastly/js-compute-runtime/issues/1538)) ([da5146c](https://github.com/fastly/js-compute-runtime/commit/da5146c04e2d872fbc166852048a4ec05cd82584))
 
-## [3.44.2](https://github.com/fastly/js-compute-runtime/compare/v3.44.1...v3.44.2) (2026-07-28)
+## 3.44.2 (2026-07-28)
 
-
-### Bug Fixes
+### Fixed
 
 * **release:** target was renamed with this version bump ([#1532](https://github.com/fastly/js-compute-runtime/issues/1532)) ([fffa2d2](https://github.com/fastly/js-compute-runtime/commit/fffa2d2f7315ed76e280a8a7398b5c5212e9d7b5))
 
-## [3.44.1](https://github.com/fastly/js-compute-runtime/compare/v3.44.0...v3.44.1) (2026-07-28)
+## 3.44.1 (2026-07-28)
 
-
-### Bug Fixes
+### Fixed
 
 * **ci:** get releases working for real this time ([#1531](https://github.com/fastly/js-compute-runtime/issues/1531)) ([0c734bd](https://github.com/fastly/js-compute-runtime/commit/0c734bd84c99d766db0f262c0d2e1eb1725e2cdb))
-
 
 ### Miscellaneous Chores
 
 * release 3.44.1 ([9061855](https://github.com/fastly/js-compute-runtime/commit/90618558b0b1696bf978476f58c1c2c4eccc223e))
 
-## [3.44.0](https://github.com/fastly/js-compute-runtime/compare/v3.43.2...v3.44.0) (2026-07-27)
+## 3.44.0 (2026-07-27)
 
-
-### Features
+### Added
 
 * bot detection ([#1524](https://github.com/fastly/js-compute-runtime/issues/1524)) ([0b26045](https://github.com/fastly/js-compute-runtime/commit/0b260453d0dcead2c378b70a6e8feb3153583446))
 
-
-### Bug Fixes
+### Fixed
 
 * **cache:** handle error ([#1519](https://github.com/fastly/js-compute-runtime/issues/1519)) ([a8d55a8](https://github.com/fastly/js-compute-runtime/commit/a8d55a88df104f8730c744ed0c2a79f58363007f))
 * **tests:** fix failing cache test ([#1520](https://github.com/fastly/js-compute-runtime/issues/1520)) ([8e56d11](https://github.com/fastly/js-compute-runtime/commit/8e56d112ca15ffb5dd67353ba33fbd546493fffd))
 * **tests:** Make test suite properly fail when a test fails ([#1518](https://github.com/fastly/js-compute-runtime/issues/1518)) ([ea4c7c7](https://github.com/fastly/js-compute-runtime/commit/ea4c7c782e383fd6b8403762367d317770dfdbe3))
 
-## [3.43.2](https://github.com/fastly/js-compute-runtime/compare/v3.43.1...v3.43.2) (2026-07-23)
+## 3.43.2 (2026-07-23)
 
-
-### Bug Fixes
+### Fixed
 
 * Allow 0 ttl for responses ([#1498](https://github.com/fastly/js-compute-runtime/issues/1498)) ([55005ce](https://github.com/fastly/js-compute-runtime/commit/55005ce13abe59e6763f260c8bcf54864f87a8d1))
 * **docs:** fix docs generation ([b2b4752](https://github.com/fastly/js-compute-runtime/commit/b2b47525ea8ca7d3e55a5ee742b2791ad34e04f6))
