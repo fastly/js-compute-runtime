@@ -295,7 +295,7 @@ routes.set('/html-rewriter/escape-html', async () => {
   }).text();
   strictEqual(textEscape, expectedEscape);
 });
-  
+
 // Ensure that stashing HTML elements from within onElement handlers
 // and trying to access them after the handler has succeeded throws an exception
 // rather than accessing freed memory.
