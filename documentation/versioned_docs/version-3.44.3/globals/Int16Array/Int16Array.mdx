@@ -1,0 +1,37 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Int16Array()
+
+The **`Int16Array()`** typed array constructor creates an array
+of twos-complement 16-bit signed integers in the platform byte order. If control over
+byte order is needed, use [`DataView`](../../globals/DataView/DataView.mdx) instead. The contents are initialized
+to `0`. Once established, you can reference elements in the array using the
+object's methods, or using standard array index syntax (that is, using bracket
+notation).
+
+## Syntax
+
+```js
+new Int16Array()
+new Int16Array(length)
+new Int16Array(typedArray)
+new Int16Array(object)
+
+new Int16Array(buffer)
+new Int16Array(buffer, byteOffset)
+new Int16Array(buffer, byteOffset, length)
+```
+
+> **Note:** `Int16Array()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.mdx).
+
+### Parameters
+
+See [`TypedArray`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#parameters).
+
+### Exceptions
+
+See [`TypedArray`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#exceptions).

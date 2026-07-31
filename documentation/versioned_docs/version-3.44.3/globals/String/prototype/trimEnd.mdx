@@ -1,0 +1,31 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# String.prototype.trimEnd()
+
+The **`trimEnd()`** method removes whitespace from the end of a string and returns a new string, without modifying the original string. `trimRight()` is an alias of this method.
+
+## Syntax
+
+```js
+trimEnd()
+
+trimRight()
+```
+
+### Return value
+
+A new string representing `str` stripped of whitespace from its end (right side). Whitespace is defined as [white space](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Lexical_grammar#white_space) characters plus [line terminators](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Lexical_grammar#line_terminators).
+
+If the end of `str` has no whitespace, a new string is still returned (essentially a copy of `str`).
+
+### Aliasing
+
+After [`String.prototype.trim()`](../../../globals/String/prototype/trim.mdx) was standardized, engines also implemented the non-standard method `trimRight`. However, for consistency with [`String.prototype.pedEnd()`](../../../globals/String/prototype/trim.mdx), when the method got standardized, its name was chosen as `trimEnd`. For web compatibility reasons, `trimRight` remains as an alias to `trimEnd`, and they refer to the exact same function object. In some engines this means:
+
+```js
+String.prototype.trimRight.name === "trimEnd";
+```

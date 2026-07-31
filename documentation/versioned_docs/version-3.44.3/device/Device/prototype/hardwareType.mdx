@@ -1,0 +1,18 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Device.prototype.hardwareType
+
+The read-only **`hardwareType`** property of the `Device` interface is
+either a string stating the hardware type of the device, or `null` if the hardware type is not known.
+
+A string representation of the device's primary platform hardware. The most commonly used device types are also identified via boolean variables. Because a device may have multiple device types and this variable only has the primary type, we recommend using the boolean variables for logic and using this string representation for logging.
+
+
+
+## Value
+
+Either a string value if a hardware type is known, otherwise `null`.
