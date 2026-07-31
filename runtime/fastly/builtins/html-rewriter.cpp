@@ -8,13 +8,12 @@
 using builtins::web::streams::TransformStream;
 using builtins::web::streams::TransformStreamDefaultController;
 
-#define ELEMENT_METHOD_HEADER(N) \
- METHOD_HEADER(N) \
- if (raw_element(self) == nullptr) { \
-   JS_ReportErrorUTF8(cx, "Element objects are only valid within onElement handlers"); \
-   return false; \
- }
-    
+#define ELEMENT_METHOD_HEADER(N)                                                                   \
+  METHOD_HEADER(N)                                                                                 \
+  if (raw_element(self) == nullptr) {                                                              \
+    JS_ReportErrorUTF8(cx, "Element objects are only valid within onElement handlers");            \
+    return false;                                                                                  \
+  }
 
 namespace fastly::html_rewriter {
 const JSFunctionSpec Element::static_methods[] = {JS_FS_END};
@@ -230,7 +229,8 @@ static JSObject *create_element(JSContext *cx, lol_html_element_t *element,
 }
 
 static void invalidate_element(JS::HandleObject element) {
-  JS::SetReservedSlot(element, static_cast<uint32_t>(Element::Slots::Raw), JS::PrivateValue(nullptr));
+  JS::SetReservedSlot(element, static_cast<uint32_t>(Element::Slots::Raw),
+                      JS::PrivateValue(nullptr));
 }
 
 const JSFunctionSpec HTMLRewritingStream::static_methods[] = {JS_FS_END};
@@ -311,13 +311,10 @@ static lol_html_rewriter_directive_t handle_element(lol_html_element_t *element,
   JS::HandleValueArray arg(jsElementVal);
   JS::RootedValue rval(data->cx());
   if (!JS_CallFunctionValue(data->cx(), nullptr, handlerVal, arg, &rval)) {
-    fastly_push_debug_message("invalidating");
     invalidate_element(jsElement);
     return LOL_HTML_STOP;
   }
-    fastly_push_debug_message("invalidating");
   invalidate_element(jsElement);
-
   return LOL_HTML_CONTINUE;
 }
 
