@@ -92,7 +92,7 @@ public:
   static std::optional<Canvas> to_canvas(JSContext *cx, JS::HandleValue val);
 
   struct Color {
-    host_api::HostString val;
+    std::string val;
   };
   static std::optional<Color> to_color(JSContext *cx, JS::HandleValue val);
 
@@ -143,7 +143,7 @@ public:
   }
 
   struct Level {
-    host_api::HostString value;
+    std::string value;
   };
   static std::optional<Level> to_level(JSContext *cx, JS::HandleValue val);
 

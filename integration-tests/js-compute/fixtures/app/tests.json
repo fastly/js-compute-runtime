@@ -3151,6 +3151,7 @@
   "GET /html-rewriter/invalid-html": {},
   "GET /html-rewriter/insertion-order": {},
   "GET /html-rewriter/escape-html": {},
+  "GET /html-rewriter/access-freed-element": {},
   "GET /image-optimizer/options/region": {},
   "GET /image-optimizer/options/auto": {},
   "GET /image-optimizer/options/bw": {},
@@ -3179,6 +3180,7 @@
   "GET /image-optimizer/options/sharpen": {},
   "GET /image-optimizer/options/trim": {},
   "GET /image-optimizer/options/viewbox": {},
+  "GET /image-optimizer/clone-request": {},
   "GET /early-hints/manual-response": {
     "environments": ["compute"],
     "downstream_response": {

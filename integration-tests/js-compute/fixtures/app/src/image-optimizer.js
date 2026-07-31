@@ -16,7 +16,7 @@ import {
   ResizeFilter,
   optionsToQueryString,
 } from 'fastly:image-optimizer';
-import { assert, assertThrows } from './assertions.js';
+import { assert, assertThrows, assertDoesNotThrow } from './assertions.js';
 
 // Enums
 routes.set('/image-optimizer/options/region', () => {
@@ -1113,4 +1113,15 @@ routes.set('/image-optimizer/options/width', () => {
     () => optionsToQueryString({ region: Region.Asia, width: 100.5 }),
     TypeError,
   );
+});
+
+// Regression test for issue where requests were not cloneable if they had
+// image optimizer options set.
+routes.set('/image-optimizer/clone-request', () => {
+  const req = new Request('https://http-me.fastly.com', {
+    imageOptimizerOptions: {
+      region: 'us_east',
+    },
+  });
+  assertDoesNotThrow(() => req.clone());
 });

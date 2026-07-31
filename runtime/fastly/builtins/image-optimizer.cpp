@@ -511,7 +511,7 @@ std::optional<ImageOptimizerOptions::Level> ImageOptimizerOptions::to_level(JSCo
     throw_error();
     return std::nullopt;
   }
-  return Level{std::move(str)};
+  return Level{std::string(str)};
 }
 std::optional<ImageOptimizerOptions::Frame> ImageOptimizerOptions::to_frame(JSContext *cx,
                                                                             JS::HandleValue val) {
@@ -610,7 +610,7 @@ std::optional<ImageOptimizerOptions::Color> ImageOptimizerOptions::to_color(JSCo
     auto str = core::encode(cx, str_val);
     if ((str.len == 3 || str.len == 6) &&
         (std::all_of(str.begin(), str.end(), [](char c) { return std::isxdigit(c); }))) {
-      return Color{std::move(str)};
+      return Color{std::string(str)};
     }
   }
   // Otherwise, it should be an rgb(a) object
@@ -644,7 +644,7 @@ std::optional<ImageOptimizerOptions::Color> ImageOptimizerOptions::to_color(JSCo
   if (!a.isUndefined()) {
     rep += ',' + std::to_string(a.toNumber());
   }
-  return Color{host_api::HostString(rep)};
+  return Color{std::move(rep)};
 }
 
 std::optional<ImageOptimizerOptions::Sides> ImageOptimizerOptions::to_sides(JSContext *cx,

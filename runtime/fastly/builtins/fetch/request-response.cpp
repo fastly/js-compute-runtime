@@ -2498,16 +2498,14 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::OverrideCacheKey),
                       override_cache_key);
 
-  JS::RootedValue image_optimizer_options(
-      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ImageOptimizerOptions)));
-  if (!image_optimizer_options.isNullOrUndefined()) {
-    if (!set_image_optimizer_options(cx, requestInstance, image_optimizer_options)) {
-      return false;
-    }
-  } else {
-    JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::ImageOptimizerOptions),
-                        image_optimizer_options);
+  auto image_optimizer_options = reinterpret_cast<image_optimizer::ImageOptimizerOptions *>(
+      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ImageOptimizerOptions)).toPrivate());
+  if (image_optimizer_options) {
+    image_optimizer_options = new image_optimizer::ImageOptimizerOptions(*image_optimizer_options);
   }
+
+  JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::ImageOptimizerOptions),
+                      JS::PrivateValue(image_optimizer_options));
 
   args.rval().setObject(*requestInstance);
   return true;
