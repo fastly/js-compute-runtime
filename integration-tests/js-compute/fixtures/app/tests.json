@@ -1319,6 +1319,7 @@
   "GET /clearTimeout/returns-undefined": {},
   "GET /clearTimeout/called-unbound": {},
   "GET /urlsearchparams/sort": {},
+  "GET /urlsearchparams/temp-url": {},
   "GET /random": {},
   "GET /error": {
     "downstream_response": {
