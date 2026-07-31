@@ -28,6 +28,6 @@ routes.set('/urlsearchparams/temp-url', async () => {
   new URL('http://www.to-force-the-above-url-to-be-gced.com').searchParams;
   new URL('http://www.to-force-the-above-url-to-be-gced.com').searchParams;
   new URL('http://www.to-force-the-above-url-to-be-gced.com').searchParams;
-  
+
   assert(searchParams.get('a'), 'b', "searchParams.get('a') == 'b'");
 });
