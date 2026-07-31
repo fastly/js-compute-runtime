@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.44.3](https://github.com/fastly/js-compute-runtime/compare/v3.44.2...v3.44.3) (2026-07-31)
+
+
+### Bug Fixes
+
+* Disallow accessing HTML rewriter elements outside of handlers ([#1541](https://github.com/fastly/js-compute-runtime/issues/1541)) ([bf4ac3d](https://github.com/fastly/js-compute-runtime/commit/bf4ac3d5860c42d75a347afa4c6696eaec3764c8))
+* dynamic backends disabled exception ([#1535](https://github.com/fastly/js-compute-runtime/issues/1535)) ([432d059](https://github.com/fastly/js-compute-runtime/commit/432d0592f341d33f9c47488d3724bb67bfeac8de))
+* Make headers of cloned requests independent ([#1539](https://github.com/fastly/js-compute-runtime/issues/1539)) ([9b34c43](https://github.com/fastly/js-compute-runtime/commit/9b34c435b8684da0a063654df3d94df80110767d))
+* Memory leak in `Backend::health_for_name` ([#1542](https://github.com/fastly/js-compute-runtime/issues/1542)) ([43e03d2](https://github.com/fastly/js-compute-runtime/commit/43e03d28509ffd7bff96105fcd0957633d73e874))
+* Memory leak in `Device::lookup` ([#1543](https://github.com/fastly/js-compute-runtime/issues/1543)) ([2f02080](https://github.com/fastly/js-compute-runtime/commit/2f02080d981412bf2e5713a2779ae91fb6773be2))
+* URLSearchParams premature free ([#1538](https://github.com/fastly/js-compute-runtime/issues/1538)) ([da5146c](https://github.com/fastly/js-compute-runtime/commit/da5146c04e2d872fbc166852048a4ec05cd82584))
+
 ## [3.44.2](https://github.com/fastly/js-compute-runtime/compare/v3.44.1...v3.44.2) (2026-07-28)
 
 
