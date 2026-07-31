@@ -3151,7 +3151,6 @@
   "GET /html-rewriter/invalid-html": {},
   "GET /html-rewriter/insertion-order": {},
   "GET /html-rewriter/escape-html": {},
-  "GET /html-rewriter/access-freed-element": {},
   "GET /image-optimizer/options/region": {},
   "GET /image-optimizer/options/auto": {},
   "GET /image-optimizer/options/bw": {},
