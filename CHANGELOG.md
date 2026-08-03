@@ -2,7 +2,7 @@
 
 ## 4.0.0-pre.0 (2026-08-03)
 
-### Features
+### Added
 
 * Upgrade StarlingMonkey - ([6687326](https://github.com/fastly/js-compute-runtime/commit/6687326eb8d3eb6184fd1d27471c626a55719df3))
 
