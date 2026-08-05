@@ -2745,7 +2745,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance,
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::CacheOverride),
                       JS::NullValue());
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::ImageOptimizerOptions),
-                      JS::NullValue());
+                      JS::PrivateValue(nullptr));
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::IsDownstream),
                       JS::BooleanValue(is_downstream));
   return requestInstance;
