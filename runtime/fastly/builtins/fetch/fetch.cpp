@@ -1221,6 +1221,11 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     return fetch_send_body<CachingMode::ImageOptimizer>(cx, request, args.rval());
   }
 
+  // Ensure that any headers that could change cache behaviour (e.g. due to vary headers) are
+  // committed
+  if (!RequestOrResponse::commit_headers(cx, request))
+    return false;
+
   // Check if request is actually cacheable
   bool is_cacheable = false;
   {
@@ -1258,11 +1263,6 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
                       override_key_str.ptr.get() + override_key_str.size(),
                       override_key_hash.begin(), override_key_hash.end());
   }
-
-  // Ensure that any headers that could change cache behaviour (e.g. due to vary headers) are
-  // committed
-  if (!RequestOrResponse::commit_headers(cx, request))
-    return false;
 
   host_api::Result<host_api::HttpCacheEntry> transaction_res =
       host_api::HttpCacheEntry::transaction_lookup(request_handle, override_key_hash);
