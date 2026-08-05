@@ -156,7 +156,8 @@ bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_
   // The WASM service uses cache_on_behalf to insert the result into
   // the service's cache.
   auto image_optimizer_opts =
-      JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ImageOptimizerOptions)).toPrivate();
+      JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ImageOptimizerOptions))
+          .toPrivate();
   if (image_optimizer_opts) {
     *caching_mode = CachingMode::ImageOptimizer;
     return true;
