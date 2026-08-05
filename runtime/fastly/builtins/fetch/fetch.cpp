@@ -157,7 +157,7 @@ bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_
   // the service's cache.
   auto image_optimizer_opts =
       JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ImageOptimizerOptions));
-  if (!image_optimizer_opts.isNullOrUndefined()) {
+  if (image_optimizer_opts) {
     *caching_mode = CachingMode::ImageOptimizer;
     return true;
   }
