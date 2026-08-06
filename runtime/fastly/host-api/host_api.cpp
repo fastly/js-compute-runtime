@@ -3301,13 +3301,13 @@ FastlyAsyncTask::Handle ObjectStorePendingDelete::async_handle() const {
   return FastlyAsyncTask::Handle{this->handle};
 }
 
-Result<std::optional<HostBytes>> Secret::plaintext() const {
+Result<std::optional<SecureHostBytes>> Secret::plaintext() const {
   return this->plaintext(CONFIG_STORE_INITIAL_BUF_LEN);
 }
 
-Result<std::optional<HostBytes>> Secret::plaintext(uint32_t initial_buf_len) const {
+Result<std::optional<SecureHostBytes>> Secret::plaintext(uint32_t initial_buf_len) const {
   TRACE_CALL()
-  Result<std::optional<HostBytes>> res;
+  Result<std::optional<SecureHostBytes>> res;
 
   uint32_t buf_len{initial_buf_len};
   fastly::fastly_world_list_u8 ret;
@@ -3331,10 +3331,10 @@ Result<std::optional<HostBytes>> Secret::plaintext(uint32_t initial_buf_len) con
   }
 
   if (!succeeded) {
+    JS_free(CONTEXT, ret.ptr);
     if (error_is_optional_none(err)) {
       res.emplace(std::nullopt);
     } else {
-      JS_free(CONTEXT, ret.ptr);
       res.emplace_err(err);
     }
   } else {
@@ -4940,6 +4940,12 @@ Result<std::optional<HostString>> Compute::purge_surrogate_key(std::string_view 
   }
 
   return res;
+}
+
+SecureHostBytes::~SecureHostBytes() {
+  volatile uint8_t* begin = bytes_.begin();
+  volatile uint8_t* end = bytes_.end();
+  std::fill(begin, end, 0);
 }
 
 } // namespace host_api
