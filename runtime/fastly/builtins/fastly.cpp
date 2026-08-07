@@ -789,10 +789,11 @@ bool Fastly::restore_builtin_state(JSContext *cx) {
 bool install(api::Engine *engine) {
   ENGINE = engine;
 
+  auto high_resolution_env = std::getenv("ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS");
   bool ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS =
-      std::string(std::getenv("ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS")) == "1";
-  ENABLE_EXPERIMENTAL_HTTP_CACHE =
-      std::string(std::getenv("ENABLE_EXPERIMENTAL_HTTP_CACHE")) == "1";
+      high_resolution_env && std::string(high_resolution_env) == "1";
+  auto http_cache_env = std::getenv("ENABLE_EXPERIMENTAL_HTTP_CACHE");
+  ENABLE_EXPERIMENTAL_HTTP_CACHE = http_cache_env && std::string(http_cache_env) == "1";
 
   JS::SetOutOfMemoryCallback(engine->cx(), oom_callback, nullptr);
 
