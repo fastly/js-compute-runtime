@@ -3091,10 +3091,10 @@ Result<std::optional<HostString>> Dict::get(std::string_view name) {
                                              name_str.len, reinterpret_cast<char *>(ret.ptr),
                                              DICTIONARY_ENTRY_MAX_LEN, &ret.len),
                       &err)) {
+    cabi_free(ret.ptr);
     if (error_is_optional_none(err)) {
       res.emplace(std::nullopt);
     } else {
-      cabi_free(ret.ptr);
       res.emplace_err(err);
     }
   } else {
