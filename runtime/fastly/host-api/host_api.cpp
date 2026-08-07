@@ -3331,10 +3331,10 @@ Result<std::optional<HostBytes>> Secret::plaintext(uint32_t initial_buf_len) con
   }
 
   if (!succeeded) {
+    JS_free(CONTEXT, ret.ptr);
     if (error_is_optional_none(err)) {
       res.emplace(std::nullopt);
     } else {
-      JS_free(CONTEXT, ret.ptr);
       res.emplace_err(err);
     }
   } else {
