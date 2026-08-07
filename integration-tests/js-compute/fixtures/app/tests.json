@@ -1122,6 +1122,7 @@
     "environments": ["compute"]
   },
   "GET /includeBytes": {},
+  "GET /includeBytes/sandbox": {},
   "GET /logger": {
     "environments": ["viceroy"],
     "logs": ["ComputeLog :: Hello!"]

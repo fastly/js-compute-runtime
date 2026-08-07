@@ -15,3 +15,13 @@ const expected = [
 routes.set('/includeBytes', () => {
   assert(Array.from(message), expected, `message === expected`);
 });
+
+let nope = null;
+
+try {
+  nope = includeBytes('../../../../README.md');
+} catch {}
+
+routes.set('/includeBytes/sandbox', () => {
+  assert(nope, null, 'includeBytes sandboxes its path to the project dir');
+});
