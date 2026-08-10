@@ -1804,7 +1804,7 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 void Backend::finalize(JS::GCContext *gcx, JSObject *obj) {
   auto backend = static_cast<host_api::Backend *>(
       JS::GetReservedSlot(obj, Backend::Slots::HostBackend).toPrivate());
-  free(backend);
+  delete backend;
 }
 
 bool Backend::restore_global_state(JSContext *cx) {
