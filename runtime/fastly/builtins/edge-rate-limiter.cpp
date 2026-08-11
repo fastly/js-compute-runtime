@@ -207,14 +207,13 @@ bool RateCounter::lookupRate(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
+  if (window != 1 && window != 10 && window != 60) {
+    JS_ReportErrorASCII(cx, "lookupRate: window parameter must be either: 1, 10, or 60");
+    return false;
+  }
+
   auto res = host_api::RateCounter::lookup_rate(name, entry, window);
   if (auto *err = res.to_err()) {
-    if (host_api::error_is_generic(*err) || host_api::error_is_invalid_argument(*err)) {
-      if (window != 1 && window != 10 && window != 60) {
-        JS_ReportErrorASCII(cx, "lookupRate: window parameter must be either: 1, 10, or 60");
-        return false;
-      }
-    }
     HANDLE_ERROR(cx, *err);
     return false;
   }
@@ -248,16 +247,15 @@ bool RateCounter::lookupCount(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
+  if (duration != 10 && duration != 20 && duration != 30 && duration != 40 && duration != 50 &&
+      duration != 60) {
+    JS_ReportErrorASCII(
+        cx, "lookupCount: duration parameter must be either: 10, 20, 30, 40, 50, or 60");
+    return false;
+  }
+
   auto res = host_api::RateCounter::lookup_count(name, entry, duration);
   if (auto *err = res.to_err()) {
-    if (host_api::error_is_generic(*err) || host_api::error_is_invalid_argument(*err)) {
-      if (duration != 10 && duration != 20 && duration != 30 && duration != 40 && duration != 50 &&
-          duration != 60) {
-        JS_ReportErrorASCII(
-            cx, "lookupCount: duration parameter must be either: 10, 20, 30, 40, 50, or 60");
-        return false;
-      }
-    }
     HANDLE_ERROR(cx, *err);
     return false;
   }
