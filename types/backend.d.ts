@@ -114,6 +114,9 @@ declare module 'fastly:backend' {
      * Minimum allowed TLS version on SSL connections to this backend.
      * If the backend server is not able to negotiate a connection meeting this constraint, a 503 response will be presented instead.
      *
+     * **Security Warning**: TLS 1.0 and 1.1 are deprecated and considered insecure.
+     * Please use TLS 1.2 or 1.3.
+     *
      * @throws {RangeError} Throws a RangeError if the value is not 1, 1.1, 1.2, or 1.3
      */
     tlsMinVersion?: 1 | 1.1 | 1.2 | 1.3;
@@ -121,8 +124,8 @@ declare module 'fastly:backend' {
      * Maximum allowed TLS version on SSL connections to this backend.
      * If the backend server is not able to negotiate a connection meeting this constraint, a 503 response will be presented instead.
      *
-     * *Security Warning**: TLS 1.0 and 1.1 are deprecated and considered insecure.
-     * Please use TLS 1.2 or 1.3.*
+     * **Security Warning**: TLS 1.0 and 1.1 are deprecated and considered insecure.
+     * Please use TLS 1.2 or 1.3.
      *
      * @throws {RangeError} Throws a RangeError if the value is not 1, 1.1, 1.2, or 1.3
      */
