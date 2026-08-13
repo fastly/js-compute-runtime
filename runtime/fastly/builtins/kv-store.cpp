@@ -282,6 +282,10 @@ bool process_pending_kv_store_list(JSContext *cx, host_api::KVStorePendingList::
   if (!JS_GetProperty(cx, json_obj, "meta", &meta)) {
     return RejectPromiseWithPendingError(cx, promise_obj);
   }
+  if (!meta.isObject()) {
+    JS_ReportErrorLatin1(cx, "Meta is not an object");
+    return RejectPromiseWithPendingError(cx, promise_obj);
+  }
   JS::RootedObject meta_obj(cx, &meta.toObject());
   JS::RootedValue next_cursor(cx);
   if (!JS_GetProperty(cx, meta_obj, "next_cursor", &next_cursor)) {
