@@ -283,7 +283,7 @@ bool process_pending_kv_store_list(JSContext *cx, host_api::KVStorePendingList::
     return RejectPromiseWithPendingError(cx, promise_obj);
   }
   if (!meta.isObject()) {
-    JS_ReportErrorLatin1(cx, "Meta is not an object");
+    JS_ReportErrorLatin1(cx, "Bad data.");
     return RejectPromiseWithPendingError(cx, promise_obj);
   }
   JS::RootedObject meta_obj(cx, &meta.toObject());
