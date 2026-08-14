@@ -1,5 +1,4 @@
 #include "image-optimizer.h"
-#include "fetch/fetch.h"
 #include "fastly.h"
 
 namespace {
@@ -32,7 +31,6 @@ bool exactly_one_defined(JS::HandleValue a, JS::HandleValue b) {
 } // namespace
 
 namespace fastly::image_optimizer {
-
 const JSFunctionSpec EnumOption::static_methods[] = {
     JS_FS_END,
 };
