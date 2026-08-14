@@ -5,6 +5,7 @@
 #include "builtin.h"
 #include "encode.h"
 #include "extension-api.h"
+#include "fetch/fetch.h"
 #include <memory>
 #include <variant>
 
@@ -309,7 +310,7 @@ inline std::string to_string(const ImageOptimizerOptions &opts) { return opts.to
     switch (val) {
 #define FASTLY_DEFINE_IMAGE_OPTIMIZER_OPTION(name, str)                                            \
   case name:                                                                                       \
-    return prefix + '=' + str;
+    return prefix + '=' + fetch::percent_encode(str);
 #define FASTLY_END_IMAGE_OPTIMIZER_OPTION_TYPE(type)                                               \
   }                                                                                                \
   }
@@ -319,7 +320,7 @@ inline std::string to_string(const ImageOptimizerOptions::Color &c) {
   return std::string{std::string_view(c.val)};
 }
 inline std::string to_string(const ImageOptimizerOptions::BGColor &bg) {
-  return "bg-color=" + to_string(bg.color);
+  return "bg-color=" + fetch::percent_encode(to_string(bg.color));
 }
 inline std::string to_string(const ImageOptimizerOptions::Blur &blur) {
   auto ret = "blur=" + std::to_string(blur.value);
@@ -362,11 +363,11 @@ inline std::string to_string(const ImageOptimizerOptions::Position &position) {
   return ret;
 }
 inline std::string to_string(const ImageOptimizerOptions::Canvas &canvas) {
-  std::string ret = "canvas=" + to_string(canvas.size);
+  std::string value_str = to_string(canvas.size);
   if (canvas.position) {
-    ret += ',' + to_string(*canvas.position);
+    value_str += ',' + to_string(*canvas.position);
   }
-  return ret;
+  return "canvas=" + fetch::percent_encode(value_str);
 }
 inline std::string to_string(const ImageOptimizerOptions::Contrast &contrast) {
   return "contrast=" + std::to_string(contrast.value);
@@ -390,7 +391,7 @@ inline std::string to_string(const ImageOptimizerOptions::CropSpec &crop) {
   return ret;
 }
 inline std::string to_string(const ImageOptimizerOptions::Crop &crop) {
-  return "crop=" + to_string(crop.value);
+  return "crop=" + fetch::percent_encode(to_string(crop.value));
 }
 inline std::string to_string(const ImageOptimizerOptions::Dpr &dpr) {
   return "dpr=" + std::to_string(dpr.value);
@@ -399,20 +400,20 @@ inline std::string to_string(const ImageOptimizerOptions::Frame &frame) {
   return "frame=" + std::to_string(frame.value);
 }
 inline std::string to_string(const ImageOptimizerOptions::Height &height) {
-  return "height=" + to_string(height.value);
+  return "height=" + fetch::percent_encode(to_string(height.value));
 }
 inline std::string to_string(const ImageOptimizerOptions::Level &level) {
-  return "level=" + std::string(std::string_view(level.value));
+  return "level=" + fetch::percent_encode(std::string_view(level.value));
 }
 inline std::string to_string(const ImageOptimizerOptions::Sides &sides) {
   return to_string(sides.top) + ',' + to_string(sides.right) + ',' + to_string(sides.bottom) + ',' +
          to_string(sides.left);
 }
 inline std::string to_string(const ImageOptimizerOptions::Pad &pad) {
-  return "pad=" + to_string(pad.value);
+  return "pad=" + fetch::percent_encode(to_string(pad.value));
 }
 inline std::string to_string(const ImageOptimizerOptions::Precrop &precrop) {
-  return "precrop=" + to_string(precrop.value);
+  return "precrop=" + fetch::percent_encode(to_string(precrop.value));
 }
 inline std::string to_string(const ImageOptimizerOptions::Quality &quality) {
   return "quality=" + std::to_string(quality.value);
@@ -421,24 +422,25 @@ inline std::string to_string(const ImageOptimizerOptions::Saturation &saturation
   return "saturation=" + std::to_string(saturation.value);
 }
 inline std::string to_string(const ImageOptimizerOptions::Trim &trim) {
-  return "trim=" + to_string(trim.value);
+  return "trim=" + fetch::percent_encode(to_string(trim.value));
 }
 inline std::string to_string(const ImageOptimizerOptions::TrimColor &trim_color) {
-  std::string ret = "trim-color=" + to_string(trim_color.color);
+  std::string value_str = to_string(trim_color.color);
   if (trim_color.threshold) {
-    ret += ",t" + std::to_string(*trim_color.threshold);
+    value_str += ",t" + std::to_string(*trim_color.threshold);
   }
-  return ret;
+  return "trim-color=" + fetch::percent_encode(value_str);
 }
 inline std::string to_string(const ImageOptimizerOptions::Sharpen &sharpen) {
-  return "sharpen=a" + std::to_string(sharpen.amount) + ",r" + std::to_string(sharpen.radius) +
+  std::string value_str = "a" + std::to_string(sharpen.amount) + ",r" + std::to_string(sharpen.radius) +
          ",t" + std::to_string(sharpen.threshold);
+  return "sharpen=" + fetch::percent_encode(value_str);
 }
 inline std::string to_string(const ImageOptimizerOptions::Viewbox &viewbox) {
   return "viewbox=" + std::to_string(viewbox.value);
 }
 inline std::string to_string(const ImageOptimizerOptions::Width &width) {
-  return "width=" + to_string(width.value);
+  return "width=" + fetch::percent_encode(to_string(width.value));
 }
 } // namespace fastly::image_optimizer
 #endif
