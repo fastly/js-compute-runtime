@@ -1030,3 +1030,26 @@ routes.set('/http-cache/cache-key-on-request', async () => {
 
   strictEqual(await res1.text(), await res2.text());
 });
+
+routes.set('/http-cache/vary-header', async () => {
+  const url = `https://http-me.fastly.dev/now/${Math.random().toString().slice(2)}?header=Vary:my-header`;
+  let backendCalls = 0;
+
+  const cacheOverride = new CacheOverride({
+    beforeSend(req) {
+      backendCalls++;
+    },
+  });
+
+  const req1 = new Request(url);
+  req1.headers.set('my-header', 'original');
+  const res1 = await fetch(req1, { cacheOverride });
+  strictEqual(backendCalls, 1);
+  strictEqual(res1.cached, false);
+
+  const req2 = new Request(url);
+  req2.headers.set('my-header', 'different');
+  const res2 = await fetch(req2, { cacheOverride });
+  strictEqual(backendCalls, 2);
+  strictEqual(res2.cached, false);
+});
