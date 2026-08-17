@@ -2525,6 +2525,12 @@
       "body": "ok"
     }
   },
+  "GET /rate-counter/increment/delta-parameter-too-large": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
   "GET /rate-counter/increment/returns-undefined": {
     "downstream_response": {
       "status": 200,
@@ -2801,6 +2807,12 @@
       "body": "ok"
     }
   },
+  "GET /edge-rate-limiter/checkRate/delta-parameter-too-large": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
   "GET /edge-rate-limiter/checkRate/window-parameter-negative": {
     "downstream_response": {
       "status": 200,
@@ -2832,6 +2844,12 @@
     }
   },
   "GET /edge-rate-limiter/checkRate/limit-parameter-NaN": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/limit-parameter-too-large": {
     "downstream_response": {
       "status": 200,
       "body": "ok"
