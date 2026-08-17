@@ -1391,6 +1391,16 @@ Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::strin
     auto cert_hostname = string_view_to_world_string(*val);
     backend_configuration.cert_hostname = reinterpret_cast<char *>(cert_hostname.ptr);
     backend_configuration.cert_hostname_len = cert_hostname.len;
+  } else if (config.use_ssl.value_or(false)) {
+    backend_config_mask |= BACKEND_CONFIG_CERT_HOSTNAME;
+    if (auto &val = config.host_override) {
+      auto host_override = string_view_to_world_string(*val);
+      backend_configuration.cert_hostname = reinterpret_cast<char *>(host_override.ptr);
+      backend_configuration.cert_hostname_len = host_override.len;
+    } else {
+      backend_configuration.cert_hostname = reinterpret_cast<char *>(target_str.ptr);
+      backend_configuration.cert_hostname_len = target_str.len;
+    }
   }
 
   if (auto &val = config.ca_cert) {
@@ -1413,8 +1423,15 @@ Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::strin
     backend_configuration.sni_hostname = reinterpret_cast<char *>(sni_hostname.ptr);
     backend_configuration.sni_hostname_len = sni_hostname.len;
   } else if (config.use_ssl.value_or(false)) {
-    backend_configuration.sni_hostname = reinterpret_cast<char *>(target_str.ptr);
-    backend_configuration.sni_hostname_len = target_str.len;
+    backend_config_mask |= BACKEND_CONFIG_SNI_HOSTNAME;
+    if (auto &val = config.host_override) {
+      auto host_override = string_view_to_world_string(*val);
+      backend_configuration.sni_hostname = reinterpret_cast<char *>(host_override.ptr);
+      backend_configuration.sni_hostname_len = host_override.len;
+    } else {
+      backend_configuration.sni_hostname = reinterpret_cast<char *>(target_str.ptr);
+      backend_configuration.sni_hostname_len = target_str.len;
+    }
   }
 
   if (auto &val = config.client_cert) {
