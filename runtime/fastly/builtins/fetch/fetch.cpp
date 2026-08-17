@@ -1130,13 +1130,12 @@ std::string percent_encode(std::string_view input) {
   static const char *hex_chars = "0123456789ABCDEF";
   std::string encoded;
   // Guess at a reasonable string length, assuming some characters will be encoded
-  encoded.reserve(input.size() * 2); 
-  
+  encoded.reserve(input.size() * 2);
+
   for (unsigned char c : input) {
     // Unreserved characters per RFC 3986
-    if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || 
-        (c >= '0' && c <= '9') || c == '-' || c == '_' || 
-        c == '.' || c == '~' ) {
+    if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' ||
+        c == '_' || c == '.' || c == '~') {
       encoded += c;
     } else {
       encoded += '%';
@@ -1144,7 +1143,7 @@ std::string percent_encode(std::string_view input) {
       encoded += hex_chars[c & 0x0F];
     }
   }
-  
+
   return encoded;
 }
 

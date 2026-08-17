@@ -432,8 +432,8 @@ inline std::string to_string(const ImageOptimizerOptions::TrimColor &trim_color)
   return "trim-color=" + fetch::percent_encode(value_str);
 }
 inline std::string to_string(const ImageOptimizerOptions::Sharpen &sharpen) {
-  std::string value_str = "a" + std::to_string(sharpen.amount) + ",r" + std::to_string(sharpen.radius) +
-         ",t" + std::to_string(sharpen.threshold);
+  std::string value_str = "a" + std::to_string(sharpen.amount) + ",r" +
+                          std::to_string(sharpen.radius) + ",t" + std::to_string(sharpen.threshold);
   return "sharpen=" + fetch::percent_encode(value_str);
 }
 inline std::string to_string(const ImageOptimizerOptions::Viewbox &viewbox) {
