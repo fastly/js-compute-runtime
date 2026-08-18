@@ -1124,6 +1124,29 @@ bool stream_back_catch_handler(JSContext *cx, JS::HandleObject request, JS::Hand
 
 namespace fastly::fetch {
 
+// Percent-encode a string for use in URL query parameters
+// Encodes all characters except: A-Z a-z 0-9 - _ . ~
+std::string percent_encode(std::string_view input) {
+  static const char *hex_chars = "0123456789ABCDEF";
+  std::string encoded;
+  // Guess at a reasonable string length, assuming some characters will be encoded
+  encoded.reserve(input.size() * 2);
+
+  for (unsigned char c : input) {
+    // Unreserved characters per RFC 3986
+    if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' ||
+        c == '_' || c == '.' || c == '~') {
+      encoded += c;
+    } else {
+      encoded += '%';
+      encoded += hex_chars[c >> 4];
+      encoded += hex_chars[c & 0x0F];
+    }
+  }
+
+  return encoded;
+}
+
 api::Engine *ENGINE;
 
 // Helper function to check for and serve stale-if-error responses when errors occur

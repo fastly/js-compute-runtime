@@ -11,4 +11,7 @@ extern bool http_caching_unsupported;
 std::optional<JSObject *> try_serve_stale_if_error(JSContext *cx,
                                                    JS::HandleObject request_or_response,
                                                    JS::HandleValue error_val);
+
+// Percent-encode a string for use in URL query parameters
+std::string percent_encode(std::string_view input);
 } // namespace fastly::fetch

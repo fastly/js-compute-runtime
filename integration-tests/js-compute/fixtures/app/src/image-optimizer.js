@@ -121,7 +121,7 @@ routes.set('/image-optimizer/options/metadata', () => {
       region: Region.Australia,
       metadata: Metadata.CopyrightAndC2PA,
     }),
-    'region=australia&metadata=copyright,c2pa',
+    'region=australia&metadata=copyright%2Cc2pa',
   );
   assertThrows(() =>
     optionsToQueryString({ region: Region.Australia, metadata: 'invalid' }),
@@ -250,7 +250,7 @@ routes.set('/image-optimizer/options/bgColor', () => {
         b: 128,
       },
     }),
-    'region=asia&bg-color=255,0,128',
+    'region=asia&bg-color=255%2C0%2C128',
   );
   assert(
     optionsToQueryString({
@@ -262,7 +262,7 @@ routes.set('/image-optimizer/options/bgColor', () => {
         a: 0.5,
       },
     }),
-    'region=asia&bg-color=255,0,128,0.500000',
+    'region=asia&bg-color=255%2C0%2C128%2C0.500000',
   );
   assertThrows(
     () =>
@@ -360,7 +360,7 @@ routes.set('/image-optimizer/options/canvas', () => {
         },
       },
     }),
-    'region=asia&canvas=100,10.000000p',
+    'region=asia&canvas=100%2C10.000000p',
   );
   assert(
     optionsToQueryString({
@@ -374,7 +374,7 @@ routes.set('/image-optimizer/options/canvas', () => {
         },
       },
     }),
-    'region=asia&canvas=4.000000:3.000000',
+    'region=asia&canvas=4.000000%3A3.000000',
   );
   assert(
     optionsToQueryString({
@@ -392,7 +392,7 @@ routes.set('/image-optimizer/options/canvas', () => {
         },
       },
     }),
-    'region=asia&canvas=100,10.000000p,x10,offset-y10.000000',
+    'region=asia&canvas=100%2C10.000000p%2Cx10%2Coffset-y10.000000',
   );
   assert(
     optionsToQueryString({
@@ -410,7 +410,7 @@ routes.set('/image-optimizer/options/canvas', () => {
         },
       },
     }),
-    'region=asia&canvas=4.000000:3.000000,offset-x10.000000,y10.000000p',
+    'region=asia&canvas=4.000000%3A3.000000%2Coffset-x10.000000%2Cy10.000000p',
   );
   assertThrows(
     () =>
@@ -496,7 +496,7 @@ routes.set('/image-optimizer/options/crop', () => {
         },
       },
     }),
-    'region=asia&crop=100,10.000000p',
+    'region=asia&crop=100%2C10.000000p',
   );
   assert(
     optionsToQueryString({
@@ -510,7 +510,7 @@ routes.set('/image-optimizer/options/crop', () => {
         },
       },
     }),
-    'region=asia&crop=4.000000:3.000000',
+    'region=asia&crop=4.000000%3A3.000000',
   );
   assert(
     optionsToQueryString({
@@ -528,7 +528,7 @@ routes.set('/image-optimizer/options/crop', () => {
         },
       },
     }),
-    'region=asia&crop=100,10.000000p,x10,offset-y10.000000',
+    'region=asia&crop=100%2C10.000000p%2Cx10%2Coffset-y10.000000',
   );
   assert(
     optionsToQueryString({
@@ -546,7 +546,7 @@ routes.set('/image-optimizer/options/crop', () => {
         },
       },
     }),
-    'region=asia&crop=4.000000:3.000000,offset-x10.000000,y10.000000p',
+    'region=asia&crop=4.000000%3A3.000000%2Coffset-x10.000000%2Cy10.000000p',
   );
   assert(
     optionsToQueryString({
@@ -565,7 +565,7 @@ routes.set('/image-optimizer/options/crop', () => {
         mode: CropMode.Safe,
       },
     }),
-    'region=asia&crop=4.000000:3.000000,offset-x10.000000,y10.000000p,safe',
+    'region=asia&crop=4.000000%3A3.000000%2Coffset-x10.000000%2Cy10.000000p%2Csafe',
   );
   assertThrows(
     () =>
@@ -671,7 +671,7 @@ routes.set('/image-optimizer/options/precrop', () => {
         },
       },
     }),
-    'region=asia&precrop=100,10.000000p',
+    'region=asia&precrop=100%2C10.000000p',
   );
   assert(
     optionsToQueryString({
@@ -685,7 +685,7 @@ routes.set('/image-optimizer/options/precrop', () => {
         },
       },
     }),
-    'region=asia&precrop=4.000000:3.000000',
+    'region=asia&precrop=4.000000%3A3.000000',
   );
   assert(
     optionsToQueryString({
@@ -703,7 +703,7 @@ routes.set('/image-optimizer/options/precrop', () => {
         },
       },
     }),
-    'region=asia&precrop=100,10.000000p,x10,offset-y10.000000',
+    'region=asia&precrop=100%2C10.000000p%2Cx10%2Coffset-y10.000000',
   );
   assert(
     optionsToQueryString({
@@ -721,7 +721,7 @@ routes.set('/image-optimizer/options/precrop', () => {
         },
       },
     }),
-    'region=asia&precrop=4.000000:3.000000,offset-x10.000000,y10.000000p',
+    'region=asia&precrop=4.000000%3A3.000000%2Coffset-x10.000000%2Cy10.000000p',
   );
   assert(
     optionsToQueryString({
@@ -740,7 +740,7 @@ routes.set('/image-optimizer/options/precrop', () => {
         mode: CropMode.Safe,
       },
     }),
-    'region=asia&precrop=4.000000:3.000000,offset-x10.000000,y10.000000p,safe',
+    'region=asia&precrop=4.000000%3A3.000000%2Coffset-x10.000000%2Cy10.000000p%2Csafe',
   );
   assertThrows(
     () =>
@@ -912,7 +912,7 @@ routes.set('/image-optimizer/options/pad', () => {
         right: '20%',
       },
     }),
-    'region=asia&pad=10,20.000000p,20,10.000000p',
+    'region=asia&pad=10%2C20.000000p%2C20%2C10.000000p',
   );
   assertThrows(
     () =>
@@ -994,7 +994,7 @@ routes.set('/image-optimizer/options/sharpen', () => {
         threshold: 1,
       },
     }),
-    'region=asia&sharpen=a10.000000,r10.000000,t1',
+    'region=asia&sharpen=a10.000000%2Cr10.000000%2Ct1',
   );
   assert(
     optionsToQueryString({
@@ -1005,7 +1005,7 @@ routes.set('/image-optimizer/options/sharpen', () => {
         threshold: 255,
       },
     }),
-    'region=asia&sharpen=a0.100000,r0.500000,t255',
+    'region=asia&sharpen=a0.100000%2Cr0.500000%2Ct255',
   );
   assertThrows(() => {
     optionsToQueryString({
@@ -1058,7 +1058,7 @@ routes.set('/image-optimizer/options/trim', () => {
         right: '20%',
       },
     }),
-    'region=asia&trim=10,20.000000p,20,10.000000p',
+    'region=asia&trim=10%2C20.000000p%2C20%2C10.000000p',
   );
   assertThrows(
     () =>
