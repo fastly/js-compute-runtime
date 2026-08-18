@@ -648,7 +648,6 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
     if (auto *err = insert_res.to_err()) {
       // Ensure that we throw an exception for all unexpected host errors.
-
       HANDLE_ERROR(cx, *err);
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
@@ -657,7 +656,6 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
 
     auto res = pending_insert.wait();
     if (auto *err = res.to_err()) {
-
       HANDLE_KV_ERROR(cx, *err, JSMSG_KV_STORE_INSERT_ERROR);
       return ReturnPromiseRejectedWithPendingError(cx, args);
     }
