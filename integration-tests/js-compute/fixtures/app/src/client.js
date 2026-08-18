@@ -127,7 +127,7 @@ routes.set('/client/ohFingerprint', (event) => {
 
 routes.set('/client/tlsClientSNI', (event) => {
   if (isRunningLocally()) {
-    strictEqual(event.client.clientSNI, null);
+    strictEqual(event.client.tlsClientSNI, null);
   } else {
     strictEqual(
       typeof event.client.clientSNI,
