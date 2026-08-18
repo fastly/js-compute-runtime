@@ -1318,7 +1318,7 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
     JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise), JS::UndefinedValue());
     return RejectPromiseWithPendingError(cx, result_promise);
   };
-  
+
   JS::RootedObject then_handler(cx, &args.callee());
   // The reader is stored in the catch handler, which we need here as well.
   // So we get that first, then the reader.
@@ -1387,7 +1387,7 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
     if (!JS::GetArrayLength(cx, contents, &contentsLength)) {
       return false;
     }
-    
+
     // TODO(performance): investigate whether we can infer the size directly from `contents`
     size_t buf_size = HANDLE_READ_CHUNK_SIZE;
     // TODO(performance): make use of malloc slack.
