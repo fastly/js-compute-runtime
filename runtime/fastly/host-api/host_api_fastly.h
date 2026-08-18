@@ -376,7 +376,7 @@ struct TlsVersion {
   uint8_t value = 0;
 
   explicit TlsVersion(uint8_t raw);
-  explicit TlsVersion(){};
+  explicit TlsVersion() {};
 
   uint8_t get_version() const;
   double get_version_number() const;
@@ -594,7 +594,7 @@ public:
   Result<std::optional<HostString>> http_req_downstream_client_h2_fingerprint();
 
   Result<std::optional<HostString>> http_req_downstream_client_oh_fingerprint();
-  
+
   Result<std::optional<HostString>> http_req_downstream_client_sni();
 
   Result<bool> http_req_downstream_bot_analyzed();

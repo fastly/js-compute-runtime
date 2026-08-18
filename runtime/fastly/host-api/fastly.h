@@ -575,7 +575,7 @@ int http_downstream_tls_client_hello(uint32_t req_handle, uint8_t *ret, size_t r
 
 WASM_IMPORT("fastly_http_downstream", "downstream_tls_client_servername")
 int http_downstream_tls_client_servername(uint32_t req_handle, uint8_t *ret, size_t ret_len,
-                                     size_t *nwritten);
+                                          size_t *nwritten);
 
 WASM_IMPORT("fastly_http_downstream", "downstream_tls_raw_client_certificate")
 int http_downstream_tls_raw_client_certificate(uint32_t req_handle, uint8_t *ret, size_t ret_len,

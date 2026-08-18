@@ -1908,7 +1908,6 @@ Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_ja3_md5() {
   return res;
 }
 
-
 // http-req-downstream-client-sni: func() -> result<option<string>, error>
 Result<std::optional<HostString>> HttpReq::http_req_downstream_client_sni() {
   TRACE_CALL()
@@ -1918,10 +1917,12 @@ Result<std::optional<HostString>> HttpReq::http_req_downstream_client_sni() {
   fastly::fastly_world_string ret;
   auto default_size = 128;
   ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
-  auto status = fastly::http_downstream_tls_client_servername(this->handle, ret.ptr, default_size, &ret.len);
+  auto status =
+      fastly::http_downstream_tls_client_servername(this->handle, ret.ptr, default_size, &ret.len);
   if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
     ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
-    status = fastly::http_downstream_tls_client_servername(this->handle, ret.ptr, ret.len, &ret.len);
+    status =
+        fastly::http_downstream_tls_client_servername(this->handle, ret.ptr, ret.len, &ret.len);
   }
   if (!convert_result(status, &err)) {
     cabi_free(ret.ptr);
