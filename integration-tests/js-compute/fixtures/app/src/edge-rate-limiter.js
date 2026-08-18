@@ -489,6 +489,16 @@ const RATE_COUNTER_NAME = `rc${FASTLY_SERVICE_NAME}`;
         `increment: delta parameter is an invalid value, only positive numbers can be used for delta values.`,
       );
     });
+    routes.set('/rate-counter/increment/delta-parameter-too-large', () => {
+      assertThrows(
+        () => {
+          let rc = new RateCounter(RATE_COUNTER_NAME);
+          rc.increment('entry', Number.MAX_SAFE_INTEGER);
+        },
+        Error,
+        `increment: delta parameter is an invalid value, only positive numbers can be used for delta values.`,
+      );
+    });
     routes.set('/rate-counter/increment/returns-undefined', () => {
       let rc = new RateCounter(RATE_COUNTER_NAME);
       assert(rc.increment('meow', 1), undefined, "rc.increment('meow', 1)");
@@ -1541,6 +1551,18 @@ const RATE_COUNTER_NAME = `rc${FASTLY_SERVICE_NAME}`;
         `checkRate: delta parameter is an invalid value, only positive numbers can be used for delta values.`,
       );
     });
+    routes.set('/edge-rate-limiter/checkRate/delta-parameter-too-large', () => {
+      assertThrows(
+        () => {
+          let rc = new RateCounter(RATE_COUNTER_NAME);
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
+          let erl = new EdgeRateLimiter(rc, pb);
+          erl.checkRate('entry', Number.MAX_SAFE_INTEGER, 1, 1, 1);
+        },
+        Error,
+        `checkRate: delta parameter is an invalid value, only positive numbers can be used for delta values.`,
+      );
+    });
     routes.set('/edge-rate-limiter/checkRate/window-parameter-negative', () => {
       assertThrows(
         () => {
@@ -1608,6 +1630,18 @@ const RATE_COUNTER_NAME = `rc${FASTLY_SERVICE_NAME}`;
           let pb = new PenaltyBox(PENALTY_BOX_NAME);
           let erl = new EdgeRateLimiter(rc, pb);
           erl.checkRate('entry', 1, 1, NaN, 1);
+        },
+        Error,
+        `checkRate: limit parameter is an invalid value, only positive numbers can be used for limit values.`,
+      );
+    });
+    routes.set('/edge-rate-limiter/checkRate/limit-parameter-too-large', () => {
+      assertThrows(
+        () => {
+          let rc = new RateCounter(RATE_COUNTER_NAME);
+          let pb = new PenaltyBox(PENALTY_BOX_NAME);
+          let erl = new EdgeRateLimiter(rc, pb);
+          erl.checkRate('entry', 1, 1, Number.MAX_SAFE_INTEGER, 1);
         },
         Error,
         `checkRate: limit parameter is an invalid value, only positive numbers can be used for limit values.`,

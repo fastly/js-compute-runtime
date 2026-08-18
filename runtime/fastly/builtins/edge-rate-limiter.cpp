@@ -3,6 +3,7 @@
 #include "../host-api/host_api_fastly.h"
 #include "builtin.h"
 #include "js/Result.h"
+#include <limits>
 #include <tuple>
 
 namespace fastly::edge_rate_limiter {
@@ -159,7 +160,8 @@ bool RateCounter::increment(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // This needs to happen on the happy-path as these all end up being valid uint32_t values that the
   // host-call accepts
-  if (delta < 0 || std::isnan(delta) || std::isinf(delta)) {
+  if (delta < 0 || std::isnan(delta) || std::isinf(delta) ||
+      delta > std::numeric_limits<std::uint32_t>::max()) {
     JS_ReportErrorASCII(cx,
                         "increment: delta parameter is an invalid value, only positive numbers can "
                         "be used for delta values.");
@@ -327,7 +329,8 @@ bool EdgeRateLimiter::checkRate(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (delta < 0 || std::isnan(delta) || std::isinf(delta)) {
+  if (delta < 0 || std::isnan(delta) || std::isinf(delta) ||
+      delta > std::numeric_limits<std::uint32_t>::max()) {
     JS_ReportErrorASCII(cx,
                         "checkRate: delta parameter is an invalid value, only positive numbers can "
                         "be used for delta values.");
@@ -353,7 +356,8 @@ bool EdgeRateLimiter::checkRate(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // This needs to happen on the happy-path as these all end up being valid uint32_t values that the
   // host-call accepts
-  if (limit < 0 || std::isnan(limit) || std::isinf(limit)) {
+  if (limit < 0 || std::isnan(limit) || std::isinf(limit) ||
+      limit > std::numeric_limits<std::uint32_t>::max()) {
     JS_ReportErrorASCII(cx,
                         "checkRate: limit parameter is an invalid value, only positive numbers can "
                         "be used for limit values.");
