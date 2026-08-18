@@ -518,6 +518,7 @@ declare interface ClientInfo {
    * @version 3.45.0
    */
   readonly tlsClientSNI: string | null;
+}
 
 /**
  * Information about the server receiving the request for the Fastly Compute service.
