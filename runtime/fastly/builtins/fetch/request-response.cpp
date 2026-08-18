@@ -1308,6 +1308,17 @@ bool RequestOrResponse::parse_body(JSContext *cx, JS::HandleObject self, JS::Uni
 
 bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::HandleObject self,
                                                          JS::HandleValue extra, JS::CallArgs args) {
+  // Helper to reject promise with error on overflow or invalid input
+  auto reject_body_promise = [&]() {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                              JSMSG_RESPONSE_VALUE_NOT_UINT8ARRAY);
+    JS::RootedObject result_promise(cx);
+    result_promise =
+        &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise)).toObject();
+    JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise), JS::UndefinedValue());
+    return RejectPromiseWithPendingError(cx, result_promise);
+  };
+
   JS::RootedObject then_handler(cx, &args.callee());
   // The reader is stored in the catch handler, which we need here as well.
   // So we get that first, then the reader.
@@ -1376,6 +1387,7 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
     if (!JS::GetArrayLength(cx, contents, &contentsLength)) {
       return false;
     }
+
     // TODO(performance): investigate whether we can infer the size directly from `contents`
     size_t buf_size = HANDLE_READ_CHUNK_SIZE;
     // TODO(performance): make use of malloc slack.
@@ -1395,11 +1407,20 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
         MOZ_ASSERT(JS_IsUint8Array(array));
         size_t length = JS_GetTypedArrayByteLength(array);
         if (length) {
+          // Check for overflow before adding to offset
+          if (length > SIZE_MAX - offset) {
+            return reject_body_promise();
+          }
           offset += length;
           // if buf is not big enough to fit the next uint8array's bytes then resize
           if (offset > buf_size) {
-            buf_size =
-                buf_size + (HANDLE_READ_CHUNK_SIZE * ((length / HANDLE_READ_CHUNK_SIZE) + 1));
+            size_t chunks_needed = (length / HANDLE_READ_CHUNK_SIZE) + 1;
+            // Check for overflow in buffer size calculation
+            if (chunks_needed > (SIZE_MAX / HANDLE_READ_CHUNK_SIZE) ||
+                buf_size > SIZE_MAX - (HANDLE_READ_CHUNK_SIZE * chunks_needed)) {
+              return reject_body_promise();
+            }
+            buf_size = buf_size + (HANDLE_READ_CHUNK_SIZE * chunks_needed);
           }
         }
       }
@@ -1458,14 +1479,7 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
   // The read operation can return anything since this stream comes from the guest
   // If it is not a UInt8Array -- reject with a TypeError
   if (!val.isObject() || !JS_IsUint8Array(&val.toObject())) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                              JSMSG_RESPONSE_VALUE_NOT_UINT8ARRAY);
-    JS::RootedObject result_promise(cx);
-    result_promise =
-        &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise)).toObject();
-    JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise), JS::UndefinedValue());
-
-    return RejectPromiseWithPendingError(cx, result_promise);
+    return reject_body_promise();
   }
 
   {
