@@ -513,6 +513,11 @@ declare interface ClientInfo {
    * @version 3.2.1
    */
   readonly tlsClientHello: ArrayBuffer | null;
+  /**
+   * The raw Server Name Indication (SNI) the client sent in the ClientHello TLS record.
+   * @version 3.45.0
+   */
+  readonly tlsClientSNI: string | null;
 }
 
 /**

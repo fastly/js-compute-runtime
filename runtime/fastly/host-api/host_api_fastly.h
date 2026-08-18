@@ -595,6 +595,8 @@ public:
 
   Result<std::optional<HostString>> http_req_downstream_client_oh_fingerprint();
 
+  Result<std::optional<HostString>> http_req_downstream_client_sni();
+
   Result<bool> http_req_downstream_bot_analyzed();
   Result<bool> http_req_downstream_bot_detected();
   Result<std::optional<HostString>> http_req_downstream_bot_name();
