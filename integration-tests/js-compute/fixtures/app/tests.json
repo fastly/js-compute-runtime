@@ -3201,6 +3201,7 @@
   "GET /image-optimizer/options/sharpen": {},
   "GET /image-optimizer/options/trim": {},
   "GET /image-optimizer/options/viewbox": {},
+  "GET /image-optimizer/clone-request": {},
   "GET /early-hints/manual-response": {
     "environments": ["compute"],
     "downstream_response": {
