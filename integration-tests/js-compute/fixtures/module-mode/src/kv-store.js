@@ -850,6 +850,14 @@ const debug = sdkVersion.endsWith('-debug');
         );
       }
     });
+    routes.set('/kv-store/put/double-add', async () => {
+      const store = new KVStore(KV_STORE_NAME);
+      await store.put('double-add-key', 'first', { mode: 'add' });
+      await assertRejects(
+        async () =>
+          await store.put('double-add-key', 'second', { mode: 'add' }),
+      );
+    });
   }
 
   // KVStore delete method

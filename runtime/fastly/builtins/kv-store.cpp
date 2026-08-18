@@ -648,16 +648,18 @@ bool KVStore::put(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
     if (auto *err = insert_res.to_err()) {
       // Ensure that we throw an exception for all unexpected host errors.
+
       HANDLE_ERROR(cx, *err);
-      return RejectPromiseWithPendingError(cx, result_promise);
+      return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
     host_api::KVStorePendingInsert pending_insert(insert_res.unwrap());
 
     auto res = pending_insert.wait();
     if (auto *err = res.to_err()) {
+
       HANDLE_KV_ERROR(cx, *err, JSMSG_KV_STORE_INSERT_ERROR);
-      return RejectPromiseWithPendingError(cx, result_promise);
+      return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
     // The insert was successful so we return a Promise which resolves to undefined
