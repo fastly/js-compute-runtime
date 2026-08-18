@@ -456,6 +456,7 @@
   "GET /client/tlsJA3MD5": {},
   "GET /client/tlsClientHello": {},
   "GET /client/tlsClientCertificate": {},
+  "GET /client/tlsClientSNI": {},
   "GET /client/tlsCipherOpensslName": {},
   "GET /client/tlsProtocol": {},
   "GET /client/tlsJA4": {},

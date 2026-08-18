@@ -74,6 +74,10 @@ JSObject *clientCert(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::ClientCert));
   return val.isObject() ? val.toObjectOrNull() : nullptr;
 }
+JSString *clientSNI(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::ClientSNI));
+  return val.isString() ? val.toString() : nullptr;
+}
 JSString *protocol(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::Protocol));
   return val.isString() ? val.toString() : nullptr;
@@ -274,6 +278,31 @@ bool ClientInfo::tls_ja4_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool ClientInfo::tls_client_sni_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  JS::RootedString result(cx, clientSNI(self));
+  if (!result) {
+    auto res = request_handle(cx, self).http_req_downstream_client_sni();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+
+    if (!res.unwrap().has_value()) {
+      args.rval().setNull();
+      return true;
+    }
+
+    auto client_sni_str = std::move(res.unwrap().value());
+    result.set(JS_NewStringCopyN(cx, client_sni_str.ptr.get(), client_sni_str.len));
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::ClientSNI),
+                        JS::StringValue(result));
+  }
+  args.rval().setString(result);
+  return true;
+}
+
 bool ClientInfo::h2_fingerprint_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
@@ -445,6 +474,7 @@ const JSPropertySpec ClientInfo::properties[] = {
     JS_PSG("ohFingerprint", oh_fingerprint_get, JSPROP_ENUMERATE),
     JS_PSG("tlsClientCertificate", tls_client_certificate_get, JSPROP_ENUMERATE),
     JS_PSG("tlsClientHello", tls_client_hello_get, JSPROP_ENUMERATE),
+    JS_PSG("tlsClientSNI", tls_client_sni_get, JSPROP_ENUMERATE),
     JS_PS_END,
 };
 

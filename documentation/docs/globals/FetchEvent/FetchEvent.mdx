@@ -34,6 +34,8 @@ It provides the [`event.respondWith()`](./prototype/respondWith.mdx) method, whi
     - : Either `null` or an ArrayBuffer containing the raw client certificate in the mutual TLS handshake message. It is in PEM format. Returns an empty ArrayBuffer if this is not mTLS or available.
   - `FetchEvent.client.tlsClientHello` _**readonly**_
     - : Either `null` or an ArrayBuffer containing the raw bytes sent by the client in the TLS ClientHello message.
+  - `FetchEvent.client.tlsClientSNI` _**readonly**_
+    - : Either `null` or a string containing the raw Server Name Indication (SNI) sent by the client in the TLS ClientHello message.
   - `FetchEvent.client.tlsJA4` _**readonly**_
     - : Either `null` or a string representation of the JA4 fingerprint of the TLS ClientHello message.
   - `FetchEvent.client.h2Fingerprint` _**readonly**_
