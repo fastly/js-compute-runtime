@@ -1573,7 +1573,7 @@ bool Backend::is_ssl_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   auto res = backend->is_ssl();
   if (auto *err = res.to_err()) {
-    args.rval().setBoolean();
+    args.rval().setBoolean(false);
     return true;
   }
   args.rval().setBoolean(res.unwrap());
