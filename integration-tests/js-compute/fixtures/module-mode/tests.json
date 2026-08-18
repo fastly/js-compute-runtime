@@ -349,6 +349,7 @@
   "GET /kv-store/put/value-parameter-arraybuffer": { "flake": true },
   "GET /kv-store/put/value-parameter-typed-arrays": { "flake": true },
   "GET /kv-store/put/value-parameter-dataview": { "flake": true },
+  "GET /kv-store/put/double-add": { "flake": true },
   "POST /kv-store/put/request-body": {
     "flake": true,
     "environments": ["compute"],
