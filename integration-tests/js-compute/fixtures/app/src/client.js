@@ -132,7 +132,7 @@ routes.set('/client/tlsClientSNI', (event) => {
     strictEqual(
       typeof event.client.tlsClientSNI,
       'string',
-      'typeof event.client.clientSNI',
+      'typeof event.client.tlsClientSNI',
     );
   }
 });
