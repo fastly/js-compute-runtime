@@ -1,5 +1,34 @@
 # Changelog
 
+## [3.45.0](https://github.com/fastly/js-compute-runtime/compare/v3.44.3...v3.45.0) (2026-08-20)
+
+
+### Features
+
+* Add clientSNI to FetchEvent.client ([#1569](https://github.com/fastly/js-compute-runtime/issues/1569)) ([9a85f2a](https://github.com/fastly/js-compute-runtime/commit/9a85f2a17594c0591cf6f3f2ba0e9b5aaa147729))
+
+
+### Bug Fixes
+
+* add test to verify includeBytes sandboxing ([#1559](https://github.com/fastly/js-compute-runtime/issues/1559)) ([8585d3a](https://github.com/fastly/js-compute-runtime/commit/8585d3acf43808fca52ef3f184a0d3a482e45986))
+* Avoid arithmetic overflow in content_stream_read_then_handler ([#1570](https://github.com/fastly/js-compute-runtime/issues/1570)) ([b390de4](https://github.com/fastly/js-compute-runtime/commit/b390de4d21a990e1a24d9724164004fd267159e7))
+* Avoid crashes if KV store list hostcall returns unexpected data ([#1563](https://github.com/fastly/js-compute-runtime/issues/1563)) ([e2e4c8b](https://github.com/fastly/js-compute-runtime/commit/e2e4c8bdb1c393ea1612d588f25f5c33d2d0e4ab))
+* Check for presence of environment variables before checking their values ([#1555](https://github.com/fastly/js-compute-runtime/issues/1555)) ([0e1779b](https://github.com/fastly/js-compute-runtime/commit/0e1779b5b073f3096ba4b49b8797f04369d7b7d8))
+* Cloning requests that have image optimizer options ([#1544](https://github.com/fastly/js-compute-runtime/issues/1544)) ([a06493b](https://github.com/fastly/js-compute-runtime/commit/a06493b6b45f5ad341a98a009a25ee2dd92f71dc))
+* Commit request prior to cache lookup when using guest caching ([#1536](https://github.com/fastly/js-compute-runtime/issues/1536)) ([d700ec9](https://github.com/fastly/js-compute-runtime/commit/d700ec913997468d846e0f73cb7f772044b5dfc1))
+* default certificateHostname to the target when useSSL is true ([#1558](https://github.com/fastly/js-compute-runtime/issues/1558)) ([8c5140c](https://github.com/fastly/js-compute-runtime/commit/8c5140ca73781c330e8eaf884289e42e634d10dd))
+* **deps:** deal with some dependency issues by upgrading ([#1572](https://github.com/fastly/js-compute-runtime/issues/1572)) ([c679ee2](https://github.com/fastly/js-compute-runtime/commit/c679ee21bb97caffd230959fe63ae5f362270e7d))
+* Memory leak in backend finalizer ([#1553](https://github.com/fastly/js-compute-runtime/issues/1553)) ([6342d74](https://github.com/fastly/js-compute-runtime/commit/6342d741c29412cde547468be1b00847488f6e14))
+* Memory leak in Dict::get ([#1556](https://github.com/fastly/js-compute-runtime/issues/1556)) ([fad92d5](https://github.com/fastly/js-compute-runtime/commit/fad92d587085dadd11f33d261b60010a3d17426d))
+* Memory leak in Secret::plaintext ([#1554](https://github.com/fastly/js-compute-runtime/issues/1554)) ([14edaa5](https://github.com/fastly/js-compute-runtime/commit/14edaa50e773379e6b5eff60da876132ef02601c))
+* Move npm from dependencies to dev-dependencies ([#1561](https://github.com/fastly/js-compute-runtime/issues/1561)) ([da373b0](https://github.com/fastly/js-compute-runtime/commit/da373b0f241f4a8b2f449c78e6938e29cea3da55))
+* Overflow checks in edge rate limiter ([#1566](https://github.com/fastly/js-compute-runtime/issues/1566)) ([25f2f92](https://github.com/fastly/js-compute-runtime/commit/25f2f926c312b4471433895b244c326eb510affb))
+* Return rejected promise upon KV store insertion failure ([#1567](https://github.com/fastly/js-compute-runtime/issues/1567)) ([a24516b](https://github.com/fastly/js-compute-runtime/commit/a24516bad038bcd74d6e84f3b856a9923491e460))
+* **server:** construct body with serde_json ([#1573](https://github.com/fastly/js-compute-runtime/issues/1573)) ([1cc96f8](https://github.com/fastly/js-compute-runtime/commit/1cc96f82e14ff77c83de639f92c3f9ee8f395ff8))
+* StarlingMonkey patches ([#1574](https://github.com/fastly/js-compute-runtime/issues/1574)) ([726c078](https://github.com/fastly/js-compute-runtime/commit/726c07810352f441a5f77236132a334db1b3fcdb))
+* URL encode image optimizer options ([#1564](https://github.com/fastly/js-compute-runtime/issues/1564)) ([d2765a8](https://github.com/fastly/js-compute-runtime/commit/d2765a8cb1ff62dfdb2e95bb61c55834621f96a0))
+* Validate edge rate options before hostcall ([#1560](https://github.com/fastly/js-compute-runtime/issues/1560)) ([908cc88](https://github.com/fastly/js-compute-runtime/commit/908cc883462bc50548185c7efa4e045c2d86ac28))
+
 ## 3.44.3 (2026-07-31)
 
 ### Fixed
