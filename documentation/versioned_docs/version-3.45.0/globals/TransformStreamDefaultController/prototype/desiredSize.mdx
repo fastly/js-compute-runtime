@@ -1,0 +1,17 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# TransformStreamDefaultController.desiredSize
+
+The **`desiredSize`** read-only property of the `TransformStreamDefaultController` interface returns the desired size to fill the queue of the associated [`ReadableStream`](../../../globals/ReadableStream/ReadableStream.mdx).
+
+The internal queue of a `ReadableStream` contains chunks that have been enqueued, but not yet read.
+
+If the `desiredSize` is `0` then the queue is full. Therefore you can use this information to manually apply backpressure to manage the queue.
+
+## Value
+
+The desired size.
