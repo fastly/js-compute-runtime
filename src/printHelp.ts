@@ -19,6 +19,10 @@ OPTIONS:
                                                            from the current environment. Multiple
                                                            variables can be comma-separated 
                                                            (e.g., --env ENV_VAR,OVERRIDE=val)
+    --disable-top-level-await                               Compile the application as a classic script
+                                                           instead of a module. As well as top level
+                                                           await, this disables strict-mode-by-default
+                                                           and import.meta.
     --module-mode                            [experimental] Run all sources as native modules,
                                                            with full error stack support.
     --engine-wasm <engine-wasm>                             The JS engine Wasm file path
@@ -26,7 +30,6 @@ OPTIONS:
     --enable-http-cache                                     Enable the HTTP cache hook API
     --enable-aot                                            Enable AOT compilation for performance
     --enable-experimental-high-resolution-time-methods      Enable experimental fastly.now() method
-    --enable-experimental-top-level-await                   Enable experimental top level await
     --enable-stack-traces                                   Enable stack traces
     --exclude-sources                                       Don't include sources in stack traces                
     --debug-intermediate-files <dir>                        Output intermediate files in directory   

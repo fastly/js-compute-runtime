@@ -69,10 +69,10 @@
     "status": "PASS"
   },
   "Construct with 2 unpaired surrogates (no trailing)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Construct with 3 unpaired surrogates (no leading)": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Construct with object with NULL, non-ASCII, and surrogate keys": {
     "status": "PASS"

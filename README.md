@@ -77,7 +77,7 @@ If an option is defined in both the command line and the configuration file, the
 | `aotCache`                                    | `--aot-cache`                                        | `string` (path)             | Specify a path to the AOT cache file                                                                                                                      |
 | `enableHttpCache`                             | `--enable-http-cache`                                | `boolean`                   | Enable the [HTTP cache hook API](https://www.fastly.com/documentation/guides/concepts/cache/#modifying-a-request-as-it-is-forwarded-to-a-backend)         |
 | `enableExperimentalHighResolutionTimeMethods` | `--enable-experimental-high-resolution-time-methods` | `boolean`                   | Enable experimental fastly.now() method                                                                                                                   |
-| `enableExperimentalTopLevelAwait`             | `--enable-experimental-top-level-await`              | `boolean`                   | Enable experimental top level await                                                                                                                       |
+| `disableTopLevelAwait`                        | `--disable-top-level-await`                          | `boolean`                   | Compile the application as a classic script rather than a module. As well as top level await, this disables strict-mode-by-default and `import.meta`        |
 | `enableStackTraces`                           | `--enable-stack-traces`                              | `boolean`                   | Enable stack traces                                                                                                                                       |
 | `excludeSources`                              | `--exclude-sources`                                  | `boolean`                   | Don't include sources in stack traces                                                                                                                     |
 | `debugIntermediateFiles`                      | `--debug-intermediate-files`                         | `string` (path)             | Output intermediate files in directory                                                                                                                    |
@@ -91,7 +91,7 @@ NOTE: The `env` field is additive. Values defined on the command-line values app
 #### Example command-line options
 
 ```sh
-js-compute-runtime --enable-aot --enable-stack-traces --enable-top-level-await --env=LOG_LEVEL=debug ./src/index.js ./bin/main.wasm
+js-compute-runtime --enable-aot --enable-stack-traces --env=LOG_LEVEL=debug ./src/index.js ./bin/main.wasm
 ```
 
 #### Example `.fastlycomputerc.json`
@@ -100,7 +100,6 @@ js-compute-runtime --enable-aot --enable-stack-traces --enable-top-level-await -
 {
   "enableAOT": true,
   "enableStackTraces": true,
-  "enableTopLevelAwait": true,
   "env": {
     "LOG_LEVEL": "debug"
   }
@@ -124,7 +123,6 @@ js-compute-runtime --enable-aot --enable-stack-traces --enable-top-level-await -
   "fastlycompute": {
     "enableAOT": true,
     "enableStackTraces": true,
-    "enableTopLevelAwait": true,
     "env": {
       "LOG_LEVEL": "debug"
     }
