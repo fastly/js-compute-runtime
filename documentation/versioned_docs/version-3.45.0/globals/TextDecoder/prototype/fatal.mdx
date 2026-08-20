@@ -1,0 +1,18 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# TextDecoder.fatal
+
+The **`fatal`** read-only property of the `TextDecoder` interface is a `Boolean` indicating whether the error mode is fatal.
+
+If the property is `true` then a decoder will throw a `TypeError` if it encounters malformed data while decoding.
+If `false` the decoder will substitute the invalid data with the replacement character `U+FFFD` (�).
+The value of the property is set in the `TextDecoder()` constructor.
+
+## Value
+
+A `boolean` which will return `true` if the error mode is set to `fatal`.
+Otherwise it returns `false`, indicating that the error mode is "replacement".

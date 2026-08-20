@@ -1,0 +1,46 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# DataView()
+
+The **`DataView()`** constructor is used to create `DataView` objects.
+
+## Syntax
+
+```js
+new DataView(buffer)
+new DataView(buffer, byteOffset)
+new DataView(buffer, byteOffset, byteLength)
+```
+
+> **Note:** `DataView()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.mdx).
+
+### Parameters
+
+- `buffer`
+  - : An existing `ArrayBuffer` to use as
+    the storage backing the new `DataView` object.
+- `byteOffset` _**optional**_
+  - : The offset, in bytes, to the first byte in the above buffer for the new view to
+    reference. If unspecified, the buffer view starts with the first byte.
+- `byteLength` _**optional**_
+  - : The number of elements in the byte array. If unspecified, the view's length will
+    match the buffer's length.
+
+### Return value
+
+A new `DataView` object representing the specified data buffer.
+
+### Exceptions
+
+- [`RangeError`](../RangeError/RangeError.mdx)
+
+  - : Thrown if the `byteOffset` or `byteLength` parameter values
+    result in the view extending past the end of the buffer.
+
+    For example, if the buffer is 16 bytes long, the `byteOffset` is 8, and
+    the `byteLength` is 10, this error is thrown because the resulting view
+    tries to extend 2 bytes past the total length of the buffer.
