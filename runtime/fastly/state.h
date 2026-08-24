@@ -62,12 +62,17 @@ public:
 };
 
 
+// Only used for its type to carry around a template parameter pack
 template <class...> struct BuiltinsList{};
 
 class Manager {
 public:
+  // These functions have a bit of template magic, but its just to call the
+  // relevant functions on every member of the parameter pack and ensure
+  // that they all return true.
   template <class... Builtins>
   static bool reset_all_request_states(BuiltinsList<Builtins...>, JSContext* cx) {
+    // Look up "fold expressions" if you don't understand this syntax
     return (reset_state<Builtins>(cx) && ...);
   }
 
