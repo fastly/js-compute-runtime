@@ -53,10 +53,6 @@ public:
 
   static state::RequestStateHolder<RequestState> request_state;
 
-  static bool init_request_state(JSContext *cx);
-  static bool snapshot_request_state(JSContext* cx);
-  static bool reset_request_state(JSContext *cx);
-  
   static const int ctor_length = 1;
   enum Slots { HostBackend, Count };
 
