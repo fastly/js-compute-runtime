@@ -1668,7 +1668,8 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
     return nullptr;
   }
   if (found) {
-    if (!JS_GetProperty(cx, Backend::request_state->backends, name_str.c_str(), &already_built_backend)) {
+    if (!JS_GetProperty(cx, Backend::request_state->backends, name_str.c_str(),
+                        &already_built_backend)) {
       return nullptr;
     }
     JS::RootedObject backend(cx, &already_built_backend.toObject());
@@ -1820,7 +1821,8 @@ bool set_default_backend_config(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   RootedObject backend_config_obj(cx, &backend_config_val.toObject());
-  if (!apply_backend_config(cx, Backend::request_state->default_backend_config, backend_config_obj)) {
+  if (!apply_backend_config(cx, Backend::request_state->default_backend_config,
+                            backend_config_obj)) {
     return false;
   }
   return true;

@@ -769,7 +769,8 @@ bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, host_api::Ht
     if (!url_instance)
       return false;
 
-    Fastly::request_state->base_url = URL::create(cx, url_instance, URL::origin(cx, WorkerLocation::url));
+    Fastly::request_state->base_url =
+        URL::create(cx, url_instance, URL::origin(cx, WorkerLocation::url));
     if (!Fastly::request_state->base_url)
       return false;
   }

@@ -9,8 +9,8 @@
 #include "extension-api.h"
 #include "fastly.h"
 #include "host_api.h"
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
 namespace fastly::fastly {
 
@@ -89,24 +89,24 @@ public:
   // then restored to snapshot between requests
   struct RequestState {
     // Environment object created during Wizer time
-    JS::PersistentRooted<JSObject*> env;
-    
+    JS::PersistentRooted<JSObject *> env;
+
     // Wizer-time environment variables
     std::unordered_map<std::string, std::string> initialized_env;
-    
+
     bool enable_experimental_http_cache = false;
     ReusableSandboxOptions reusable_sandbox_options;
-    JS::PersistentRooted<JSObject*> base_url;
-    JS::PersistentRooted<JSString*> default_backend;
+    JS::PersistentRooted<JSObject *> base_url;
+    JS::PersistentRooted<JSString *> default_backend;
     bool allow_dynamic_backends = true;
     bool allow_dynamic_backends_called = false;
     host_api::BackendConfig default_dynamic_backend_config;
     bool debug_logging_enabled = false;
 
     bool init(JSContext *cx);
-    bool snapshot(JSContext *cx, RequestState& into) const;
+    bool snapshot(JSContext *cx, RequestState &into) const;
   };
-  
+
   static state::RequestStateHolder<RequestState> request_state;
 
   static const JSPropertySpec properties[];
@@ -128,7 +128,7 @@ public:
   static bool allowDynamicBackends_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool allowDynamicBackends_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool inspect(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool setReusableSandboxOptions(JSContext *cx, unsigned argc, JS::Value *vp);  
+  static bool setReusableSandboxOptions(JSContext *cx, unsigned argc, JS::Value *vp);
 };
 
 JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,

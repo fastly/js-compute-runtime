@@ -2,9 +2,9 @@
 #define FASTLY_BACKEND_H
 
 #include "../host-api/host_api_fastly.h"
+#include "../state.h"
 #include "builtin.h"
 #include "extension-api.h"
-#include "../state.h"
 
 namespace fastly::backend {
 
@@ -27,7 +27,7 @@ public:
       return true;
     }
 
-    bool snapshot(JSContext *cx, RequestState& into) {
+    bool snapshot(JSContext *cx, RequestState &into) {
       into.default_backend_config = default_backend_config.clone();
 
       into.backends.reset();
@@ -48,7 +48,7 @@ public:
       }
 
       return true;
-    } 
+    }
   };
 
   static state::RequestStateHolder<RequestState> request_state;

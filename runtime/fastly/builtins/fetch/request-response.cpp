@@ -2880,7 +2880,8 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     if (!url_instance)
       return nullptr;
 
-    JS::RootedObject parsedURL(cx, URL::create(cx, url_instance, input, fastly::Fastly::request_state->base_url));
+    JS::RootedObject parsedURL(
+        cx, URL::create(cx, url_instance, input, fastly::Fastly::request_state->base_url));
 
     // 2.  If `parsedURL` is failure, then throw a `TypeError`.
     if (!parsedURL) {

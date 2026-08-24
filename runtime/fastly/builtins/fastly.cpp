@@ -39,7 +39,7 @@ static std::vector<std::string> debug_messages;
 
 } // namespace
 
-bool debug_logging_enabled() { 
+bool debug_logging_enabled() {
   return fastly::fastly::Fastly::request_state.get().debug_logging_enabled;
 }
 
@@ -542,7 +542,7 @@ bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   std::string key_str(ptr.get(), len);
 
   // First check initialized environment
-  auto& initialized_env = Fastly::request_state.get().initialized_env;
+  auto &initialized_env = Fastly::request_state.get().initialized_env;
   if (auto it = initialized_env.find(key_str); it != initialized_env.end()) {
     JS::RootedString env_var(cx, JS_NewStringCopyN(cx, it->second.data(), it->second.size()));
     if (!env_var)
@@ -553,7 +553,7 @@ bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // Fallback to getenv with caching
   if (const char *value = std::getenv(key_str.c_str())) {
-    auto& state = Fastly::request_state.get();
+    auto &state = Fastly::request_state.get();
     auto [it, _] = state.initialized_env.emplace(key_str, value);
     JS::RootedString env_var(cx, JS_NewStringCopyN(cx, it->second.data(), it->second.size()));
     if (!env_var)
@@ -678,7 +678,7 @@ bool Fastly::allowDynamicBackends_set(JSContext *cx, unsigned argc, JS::Value *v
 
 bool Fastly::setReusableSandboxOptions(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
-  auto& state = request_state.get();
+  auto &state = request_state.get();
   if (state.reusable_sandbox_options.frozen()) {
     JS_ReportErrorUTF8(cx, "Reusable sandbox options can only be set at initialization time");
     return false;
@@ -777,7 +777,7 @@ bool Fastly::RequestState::init(JSContext *cx) {
   if (!env) {
     return false;
   }
-  
+
   // Store initialized environment vars from Wizer
   initialized_env.clear();
   for (char **env = environ; *env; env++) {
@@ -789,20 +789,19 @@ bool Fastly::RequestState::init(JSContext *cx) {
       initialized_env.emplace(std::string(entry, eq - entry), std::string(eq + 1));
     }
   }
-  
+
   auto http_cache_env = std::getenv("ENABLE_EXPERIMENTAL_HTTP_CACHE");
-  enable_experimental_http_cache = 
-    http_cache_env && std::string(http_cache_env) == "1";
-  
+  enable_experimental_http_cache = http_cache_env && std::string(http_cache_env) == "1";
+
   // Initialize PersistentRooted members
   base_url.init(cx);
   default_backend.init(cx);
-  
+
   return true;
 }
 
-bool Fastly::RequestState::snapshot(JSContext *cx, RequestState& into) const {
-  RequestState& cur = request_state.get();
+bool Fastly::RequestState::snapshot(JSContext *cx, RequestState &into) const {
+  RequestState &cur = request_state.get();
 
   into.env.reset();
   into.env.init(cx, cur.env);
@@ -825,7 +824,7 @@ bool Fastly::RequestState::snapshot(JSContext *cx, RequestState& into) const {
   into.default_dynamic_backend_config = cur.default_dynamic_backend_config.clone();
   into.debug_logging_enabled = cur.debug_logging_enabled;
 
-  return true;  
+  return true;
 }
 
 bool install(api::Engine *engine) {
