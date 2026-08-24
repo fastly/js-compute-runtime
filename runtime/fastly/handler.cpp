@@ -14,6 +14,11 @@ using std::chrono::duration_cast;
 using std::chrono::microseconds;
 using std::chrono::system_clock;
 
+// This is the set of builtins that have RequestState types
+// that need resetting upon every request. Simply add new builtins
+// to this list, and they will be picked up by the reset machinery.
+// Note that this variable is only used for its type; it is a way of
+// carrying around a variadic template parameter pack.
 static constexpr fastly::state::BuiltinsList<
   fastly::fastly::Fastly,
   fastly::backend::Backend
