@@ -1688,9 +1688,6 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
 
   host_api::BackendConfig backend_config = request_state->default_backend_config.clone();
 
-  if (Backend::request_state->default_backend_config.between_bytes_timeout)
-  fprintf(stderr, "TIMEOUT %d", Backend::request_state->default_backend_config.between_bytes_timeout.value());
-
   auto host_backend = set_backend(cx, backend, name);
   if (!host_backend) {
     return nullptr;
