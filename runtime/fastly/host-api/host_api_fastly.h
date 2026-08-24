@@ -376,7 +376,7 @@ struct TlsVersion {
   uint8_t value = 0;
 
   explicit TlsVersion(uint8_t raw);
-  explicit TlsVersion(){};
+  explicit TlsVersion() {};
 
   uint8_t get_version() const;
   double get_version_number() const;
@@ -417,7 +417,7 @@ struct BackendConfig {
   std::optional<uint32_t> http_keepalive_time_ms;
   std::optional<TcpKeepalive> tcp_keepalive;
 
-  BackendConfig clone() {
+  BackendConfig clone() const {
     std::optional<HostString> out_host_override{};
     std::optional<uint32_t> out_connect_timeout{};
     std::optional<uint32_t> out_first_byte_timeout{};

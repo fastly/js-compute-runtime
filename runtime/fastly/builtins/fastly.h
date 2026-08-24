@@ -3,16 +3,16 @@
 
 #include "../../StarlingMonkey/builtins/web/url.h"
 #include "../host-api/host_api_fastly.h"
+#include "../state.h"
 #include "./fetch/request-response.h"
 #include "builtin.h"
 #include "extension-api.h"
 #include "fastly.h"
 #include "host_api.h"
+#include <unordered_map>
+#include <string>
 
 namespace fastly::fastly {
-
-extern bool DEBUG_LOGGING_ENABLED;
-extern bool ENABLE_EXPERIMENTAL_HTTP_CACHE;
 
 class Env : public builtins::BuiltinNoConstructor<Env> {
 private:
@@ -32,8 +32,6 @@ public:
 class ReusableSandboxOptions {
 public:
   ReusableSandboxOptions() = default;
-  ReusableSandboxOptions(const ReusableSandboxOptions &) = delete;
-  ReusableSandboxOptions &operator=(const ReusableSandboxOptions &) = delete;
 
   std::optional<uint32_t> max_requests() const { return max_requests_; }
   bool set_max_requests(uint32_t max_requests) {
@@ -87,12 +85,29 @@ private:
 public:
   static constexpr const char *class_name = "Fastly";
 
-  static JS::PersistentRooted<JSObject *> env;
-  static JS::PersistentRooted<JSObject *> baseURL;
-  static JS::PersistentRooted<JSString *> defaultBackend;
-  static bool allowDynamicBackends;
-  static host_api::BackendConfig defaultDynamicBackendConfig;
-  static ReusableSandboxOptions reusableSandboxOptions;
+  // Request State: Initialized once, snapshotted before first request,
+  // then restored to snapshot between requests
+  struct RequestState {
+    // Environment object created during Wizer time
+    JS::PersistentRooted<JSObject*> env;
+    
+    // Wizer-time environment variables
+    std::unordered_map<std::string, std::string> initialized_env;
+    
+    bool enable_experimental_http_cache = false;
+    ReusableSandboxOptions reusable_sandbox_options;
+    JS::PersistentRooted<JSObject*> base_url;
+    JS::PersistentRooted<JSString*> default_backend;
+    bool allow_dynamic_backends = true;
+    bool allow_dynamic_backends_called = false;
+    host_api::BackendConfig default_dynamic_backend_config;
+    bool debug_logging_enabled = false;
+
+    bool init(JSContext *cx);
+    bool snapshot(JSContext *cx, RequestState& into) const;
+  };
+  
+  static state::RequestStateHolder<RequestState> request_state;
 
   static const JSPropertySpec properties[];
 
@@ -113,8 +128,7 @@ public:
   static bool allowDynamicBackends_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool allowDynamicBackends_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool inspect(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool setReusableSandboxOptions(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool restore_builtin_state(JSContext *cx);
+  static bool setReusableSandboxOptions(JSContext *cx, unsigned argc, JS::Value *vp);  
 };
 
 JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,

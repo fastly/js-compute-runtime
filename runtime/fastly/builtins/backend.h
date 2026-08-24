@@ -4,6 +4,7 @@
 #include "../host-api/host_api_fastly.h"
 #include "builtin.h"
 #include "extension-api.h"
+#include "../state.h"
 
 namespace fastly::backend {
 
@@ -11,6 +12,51 @@ class Backend : public builtins::FinalizableBuiltinImpl<Backend> {
 private:
 public:
   static constexpr const char *class_name = "Backend";
+
+  // Request State: Initialized once, snapshotted before first request,
+  // then restored to snapshot between requests
+  struct RequestState {
+    JS::PersistentRootedObject backends;
+    host_api::BackendConfig default_backend_config;
+
+    bool init(JSContext *cx) {
+      backends.init(cx, JS_NewPlainObject(cx));
+      if (!backends) {
+        return false;
+      }
+      return true;
+    }
+
+    bool snapshot(JSContext *cx, RequestState& into) {
+      into.default_backend_config = default_backend_config.clone();
+
+      into.backends.reset();
+      into.backends.init(cx, JS_NewPlainObject(cx));
+
+      JS::Rooted<JS::IdVector> props(cx, cx);
+      if (!JS_Enumerate(cx, backends, &props)) {
+        return false;
+      }
+      JS::RootedValue backend(cx);
+      for (uint32_t i = 0, len = props.length(); i < len; i++) {
+        if (!JS_GetPropertyById(cx, backends, props[i], &backend)) {
+          return false;
+        }
+        if (!JS_SetPropertyById(cx, into.backends, props[i], backend)) {
+          return false;
+        }
+      }
+
+      return true;
+    } 
+  };
+
+  static state::RequestStateHolder<RequestState> request_state;
+
+  static bool init_request_state(JSContext *cx);
+  static bool snapshot_request_state(JSContext* cx);
+  static bool reset_request_state(JSContext *cx);
+  
   static const int ctor_length = 1;
   enum Slots { HostBackend, Count };
 
@@ -19,12 +65,8 @@ public:
 
   static const JSFunctionSpec methods[];
   static const JSPropertySpec properties[];
-
-  inline static JS::PersistentRootedObject backends;
-
   static JSString *name(JSContext *cx, JSObject *self);
   static JSObject *create(JSContext *cx, JS::HandleObject request);
-  static bool restore_global_state(JSContext *cx);
 
   // static methods
   static bool exists(JSContext *cx, unsigned argc, JS::Value *vp);
