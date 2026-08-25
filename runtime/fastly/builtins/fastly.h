@@ -85,8 +85,9 @@ private:
 public:
   static constexpr const char *class_name = "Fastly";
 
-  // Request State: Initialized once, snapshotted before first request,
-  // then restored to snapshot between requests
+  // GLOBALS: RequestState
+  // These globals are initialized once at Wizer time, snapshotted after the top-level
+  // script is evaluated, and restored to the snapshot at the end of every request.
   struct RequestState {
     // Environment object created during Wizer time
     JS::PersistentRooted<JSObject *> env;
@@ -102,6 +103,7 @@ public:
     bool allow_dynamic_backends_called;
     host_api::BackendConfig default_dynamic_backend_config;
     bool debug_logging_enabled;
+    bool http_caching_unsupported;
 
     bool init(JSContext *cx);
     bool snapshot(JSContext *cx, RequestState &into);

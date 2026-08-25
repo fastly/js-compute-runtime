@@ -801,6 +801,7 @@ bool Fastly::RequestState::init(JSContext *cx) {
   allow_dynamic_backends = true;
   allow_dynamic_backends_called = false;
   debug_logging_enabled = false;
+  http_caching_unsupported = false;
 
   return true;
 }
@@ -826,6 +827,7 @@ bool Fastly::RequestState::snapshot(JSContext *cx, RequestState &into) {
 
   into.default_dynamic_backend_config = default_dynamic_backend_config.clone();
   into.debug_logging_enabled = debug_logging_enabled;
+  into.http_caching_unsupported = http_caching_unsupported;
 
   return true;
 }
