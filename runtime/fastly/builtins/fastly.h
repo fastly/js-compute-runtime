@@ -94,17 +94,17 @@ public:
     // Wizer-time environment variables
     std::unordered_map<std::string, std::string> initialized_env;
 
-    bool enable_experimental_http_cache = false;
+    bool enable_experimental_http_cache;
     ReusableSandboxOptions reusable_sandbox_options;
     JS::PersistentRooted<JSObject *> base_url;
     JS::PersistentRooted<JSString *> default_backend;
-    bool allow_dynamic_backends = true;
-    bool allow_dynamic_backends_called = false;
+    bool allow_dynamic_backends;
+    bool allow_dynamic_backends_called;
     host_api::BackendConfig default_dynamic_backend_config;
-    bool debug_logging_enabled = false;
+    bool debug_logging_enabled;
 
     bool init(JSContext *cx);
-    bool snapshot(JSContext *cx, RequestState &into) const;
+    bool snapshot(JSContext *cx, RequestState &into);
   };
 
   static state::RequestStateHolder<RequestState> request_state;

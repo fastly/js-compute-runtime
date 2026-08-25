@@ -797,39 +797,41 @@ bool Fastly::RequestState::init(JSContext *cx) {
   base_url.init(cx);
   default_backend.init(cx);
 
+  enable_experimental_http_cache = false;
+  allow_dynamic_backends = true;
+  allow_dynamic_backends_called = false;
+  debug_logging_enabled = false;
+
   return true;
 }
 
-bool Fastly::RequestState::snapshot(JSContext *cx, RequestState &into) const {
-  RequestState &cur = request_state.get();
-
+bool Fastly::RequestState::snapshot(JSContext *cx, RequestState &into) {
   into.env.reset();
-  into.env.init(cx, cur.env);
+  into.env.init(cx, env);
 
-  into.initialized_env = cur.initialized_env;
-  into.enable_experimental_http_cache = cur.enable_experimental_http_cache;
+  into.initialized_env = initialized_env;
+  into.enable_experimental_http_cache = enable_experimental_http_cache;
 
   // After snapshot time, reusable sandbox options is never allowed to change
-  cur.reusable_sandbox_options.freeze();
-  into.reusable_sandbox_options = cur.reusable_sandbox_options;
+  reusable_sandbox_options.freeze();
+  into.reusable_sandbox_options = reusable_sandbox_options;
 
   into.base_url.reset();
-  into.base_url.init(cx, cur.base_url);
+  into.base_url.init(cx, base_url);
   into.default_backend.reset();
-  into.default_backend.init(cx, cur.default_backend);
+  into.default_backend.init(cx, default_backend);
 
-  into.allow_dynamic_backends = cur.allow_dynamic_backends;
-  into.allow_dynamic_backends_called = cur.allow_dynamic_backends_called;
+  into.allow_dynamic_backends = allow_dynamic_backends;
+  into.allow_dynamic_backends_called = allow_dynamic_backends_called;
 
-  into.default_dynamic_backend_config = cur.default_dynamic_backend_config.clone();
-  into.debug_logging_enabled = cur.debug_logging_enabled;
+  into.default_dynamic_backend_config = default_dynamic_backend_config.clone();
+  into.debug_logging_enabled = debug_logging_enabled;
 
   return true;
 }
 
 bool install(api::Engine *engine) {
   ENGINE = engine;
-
   auto high_resolution_env = std::getenv("ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS");
   bool ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS =
       high_resolution_env && std::string(high_resolution_env) == "1";

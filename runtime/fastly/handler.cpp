@@ -14,16 +14,28 @@ using std::chrono::duration_cast;
 using std::chrono::microseconds;
 using std::chrono::system_clock;
 
-// This is the set of builtins that have RequestState types
-// that need resetting upon every request. Simply add new builtins
-// to this list, and they will be picked up by the reset machinery.
-// Note that this variable is only used for its type; it is a way of
-// carrying around a variadic template parameter pack.
-static constexpr fastly::state::BuiltinsList<fastly::fastly::Fastly, fastly::backend::Backend>
-    builtins_with_request_state;
-
 namespace fastly::runtime {
+
 api::Engine *ENGINE;
+
+bool restore_builtin_state() {
+  JSContext *cx(ENGINE->cx());
+  if (!::fastly::backend::Backend::restore_global_state(cx)) {
+    if (ENGINE->debug_logging_enabled()) {
+      fprintf(stderr,
+              "Warning: Failed to restore Backend state processing next request. Exiting.\n");
+    }
+    return false;
+  }
+  if (!fastly::Fastly::restore_builtin_state(cx)) {
+    if (ENGINE->debug_logging_enabled()) {
+      fprintf(stderr,
+              "Warning: Failed to restore Backend state processing next request. Exiting.\n");
+    }
+    return false;
+  }
+  return true;
+}
 
 // Install corresponds to Wizer time, so we configure the engine here
 bool install(api::Engine *engine) {
@@ -110,7 +122,7 @@ bool handle_incoming(host_api::Request req) {
            total_compute / 1000);
   }
 
-  if (!state::Manager::reset_all_request_states(builtins_with_request_state, ENGINE->cx())) {
+  if (!restore_builtin_state()) {
     return false;
   }
 
@@ -122,18 +134,12 @@ bool handle_incoming(host_api::Request req) {
 int main(int argc, const char *argv[]) {
   using fastly::fastly::Fastly;
   using fastly::runtime::ENGINE;
-  if (!fastly::state::Manager::snapshot_all_request_states(builtins_with_request_state,
-                                                           ENGINE->cx())) {
-    return -1;
-  }
+  Fastly::reusableSandboxOptions.freeze();
 
   host_api::HttpReqPromise::DownstreamNextOptions options;
-  if (Fastly::request_state.get().reusable_sandbox_options.between_request_timeout()) {
-    options.timeout_ms =
-        static_cast<uint32_t>(Fastly::request_state.get()
-                                  .reusable_sandbox_options.between_request_timeout()
-                                  .value()
-                                  .count());
+  if (Fastly::reusableSandboxOptions.between_request_timeout()) {
+    options.timeout_ms = static_cast<uint32_t>(
+        Fastly::reusableSandboxOptions.between_request_timeout().value().count());
   }
 
   auto req = host_api::Request::downstream_get();
@@ -142,8 +148,7 @@ int main(int argc, const char *argv[]) {
     return -1;
   }
 
-  const auto max_requests =
-      Fastly::request_state.get().reusable_sandbox_options.max_requests().value_or(1);
+  const auto max_requests = Fastly::reusableSandboxOptions.max_requests().value_or(1);
   std::size_t requests_handled = 0;
   const auto start_time = std::chrono::high_resolution_clock::now();
   while (true) {
@@ -170,11 +175,10 @@ int main(int argc, const char *argv[]) {
     }
 
     // Check if we should exit based on configured sandbox timeout
-    if (Fastly::request_state.get().reusable_sandbox_options.sandbox_timeout()) {
+    if (Fastly::reusableSandboxOptions.sandbox_timeout()) {
       auto now = std::chrono::high_resolution_clock::now();
       auto elapsed = now - start_time;
-      if (elapsed >=
-          Fastly::request_state.get().reusable_sandbox_options.sandbox_timeout().value()) {
+      if (elapsed >= Fastly::reusableSandboxOptions.sandbox_timeout().value()) {
         if (fastly::runtime::ENGINE->debug_logging_enabled()) {
           printf("Sandbox timeout reached (%llu ms), exiting process.\n",
                  std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count());
@@ -184,7 +188,7 @@ int main(int argc, const char *argv[]) {
     }
 
     // Check if we should exit based on configured max memory usage
-    if (Fastly::request_state.get().reusable_sandbox_options.max_memory_mib()) {
+    if (Fastly::reusableSandboxOptions.max_memory_mib()) {
       uint32_t heap_mib;
       if (fastly::compute_get_heap_mib(&heap_mib) != 0) {
         // If we fail to get heap memory usage, log a warning but continue anyway since this isn't a
@@ -192,12 +196,10 @@ int main(int argc, const char *argv[]) {
         if (fastly::runtime::ENGINE->debug_logging_enabled()) {
           printf("Failed to get heap memory usage, continuing anyway.\n");
         }
-      } else if (heap_mib >=
-                 Fastly::request_state.get().reusable_sandbox_options.max_memory_mib().value()) {
+      } else if (heap_mib >= Fastly::reusableSandboxOptions.max_memory_mib().value()) {
         if (fastly::runtime::ENGINE->debug_logging_enabled()) {
           printf("Max memory exceeded (heap usage: %u MiB, max: %u MiB), exiting process.\n",
-                 heap_mib,
-                 Fastly::request_state.get().reusable_sandbox_options.max_memory_mib().value());
+                 heap_mib, Fastly::reusableSandboxOptions.max_memory_mib().value());
         }
         break;
       }

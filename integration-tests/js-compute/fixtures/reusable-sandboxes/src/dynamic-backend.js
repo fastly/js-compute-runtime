@@ -1,6 +1,10 @@
 /// <reference path="../../../../../types/index.d.ts" />
-import { Backend, setDefaultDynamicBackendConfig } from 'fastly:backend';
-import { assert, strictEqual } from './assertions.js';
+import {
+  Backend,
+  enforceExplicitBackends,
+  setDefaultDynamicBackendConfig,
+} from 'fastly:backend';
+import { assert, strictEqual, assertRejects } from './assertions.js';
 import { isRunningLocally, routes } from './routes.js';
 
 routes.set('/backend/ephemeral', async () => {
@@ -66,4 +70,18 @@ routes.set('/backend/defaultConfig2', async () => {
   });
 
   strictEqual(b4.isSSL, false);
+});
+
+// Ensure that the default backend does not persist across requests
+enforceExplicitBackends('non-existent');
+
+routes.set('/backend/defaultBackend', async () => {
+  await assertRejects(
+    () => fetch('https://http-me.fastly.dev/anything'),
+    TypeError,
+    "Requested backend named 'non-existent' does not exist",
+  );
+  enforceExplicitBackends('httpme');
+  const res = await fetch('https://http-me.fastly.dev/anything');
+  strictEqual(res.status, 200);
 });
