@@ -120,7 +120,6 @@ bool must_use_guest_caching(JSContext *cx, HandleObject request) {
   return false;
 }
 
-bool http_caching_unsupported = false;
 enum CachingMode { Guest, Host, ImageOptimizer };
 bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_mode) {
   *caching_mode = CachingMode::Guest;
@@ -165,7 +164,7 @@ bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_
 
   // If we previously found guest caching unsupported then remember that
   using fastly::fastly::Fastly;
-  if (http_caching_unsupported || !Fastly::request_state->enable_experimental_http_cache) {
+  if (Fastly::request_state->http_caching_unsupported || !Fastly::request_state->enable_experimental_http_cache) {
     if (must_use_guest_caching(cx, request)) {
       if (!Fastly::request_state->enable_experimental_http_cache) {
         JS_ReportErrorASCII(cx, "HTTP caching API is not enabled for JavaScript; enable it with "
@@ -187,7 +186,7 @@ bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_
   auto res = request_handle.is_cacheable();
   if (auto *err = res.to_err()) {
     if (host_api::error_is_unsupported(*err)) {
-      http_caching_unsupported = true;
+      Fastly::request_state->http_caching_unsupported = true;
       // Guest-side caching is unsupported, so we must use host caching.
       // If we have hooks we must fail since they require guest caching.
       if (must_use_guest_caching(cx, request)) {
