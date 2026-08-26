@@ -1024,11 +1024,11 @@ declare interface Fastly {
      * For additional references, see the [Fastly Developer Hub for Compute Environment Variables](https://developer.fastly.com/reference/compute/ecp-env/)
      *
      * @param name The name of the environment variable
-     * @returns the value of the environemnt variable
+     * @returns the value of the environment variable, or `undefined` if no such environment variable exists
      * @deprecated This has moved to {@link "fastly:env".env} - This function will be removed in the next major version.
      * @hidden
      */
-    get(name: string): string;
+    get(name: string): string | undefined;
   };
 
   /**
