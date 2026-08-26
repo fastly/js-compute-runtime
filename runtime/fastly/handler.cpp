@@ -99,7 +99,6 @@ bool handle_incoming(host_api::Request req) {
 
   // Respond with status `500` if no response was ever sent.
   if (!FetchEvent::response_started(fetch_event)) {
-    fprintf(stderr, "RESPONSE ERROR");
     FetchEvent::respondWithError(ENGINE->cx(), fetch_event);
     return false;
   }
@@ -107,13 +106,10 @@ bool handle_incoming(host_api::Request req) {
   if (ENGINE->debug_logging_enabled()) {
     auto end = system_clock::now();
     double diff = duration_cast<microseconds>(end - start).count();
-    fprintf(stderr, "Done. Total request processing time: %fms. Total compute time: %fms\n",
-            diff / 1000, total_compute / 1000);
+    printf("Done. Total request processing time: %fms. Total compute time: %fms\n", diff / 1000,
+           total_compute / 1000);
   }
 
-  if (ENGINE->debug_logging_enabled()) {
-    fprintf(stderr, "Resetting request states\n");
-  }
   if (!state::Manager::reset_all_request_states(builtins_with_request_state, ENGINE->cx())) {
     return false;
   }
@@ -127,9 +123,6 @@ int main(int argc, const char *argv[]) {
   using fastly::fastly::Fastly;
   using fastly::runtime::ENGINE;
 
-  if (ENGINE->debug_logging_enabled()) {
-    fprintf(stderr, "Snapshotting request states\n");
-  }
   if (!fastly::state::Manager::snapshot_all_request_states(builtins_with_request_state,
                                                            ENGINE->cx())) {
     return -1;
