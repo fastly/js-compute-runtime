@@ -164,7 +164,8 @@ bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_
 
   // If we previously found guest caching unsupported then remember that
   using fastly::fastly::Fastly;
-  if (Fastly::request_state->http_caching_unsupported || !Fastly::request_state->enable_experimental_http_cache) {
+  if (Fastly::request_state->http_caching_unsupported ||
+      !Fastly::request_state->enable_experimental_http_cache) {
     if (must_use_guest_caching(cx, request)) {
       if (!Fastly::request_state->enable_experimental_http_cache) {
         JS_ReportErrorASCII(cx, "HTTP caching API is not enabled for JavaScript; enable it with "
