@@ -797,7 +797,6 @@ bool Fastly::RequestState::init(JSContext *cx) {
   base_url.init(cx);
   default_backend.init(cx);
 
-  enable_experimental_http_cache = false;
   allow_dynamic_backends = true;
   allow_dynamic_backends_called = false;
   debug_logging_enabled = false;
