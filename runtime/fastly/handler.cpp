@@ -129,12 +129,9 @@ int main(int argc, const char *argv[]) {
   }
 
   host_api::HttpReqPromise::DownstreamNextOptions options;
-  if (Fastly::request_state.get().reusable_sandbox_options.between_request_timeout()) {
-    options.timeout_ms =
-        static_cast<uint32_t>(Fastly::request_state.get()
-                                  .reusable_sandbox_options.between_request_timeout()
-                                  .value()
-                                  .count());
+  if (Fastly::request_state->reusable_sandbox_options.between_request_timeout()) {
+    options.timeout_ms = static_cast<uint32_t>(
+        Fastly::request_state->reusable_sandbox_options.between_request_timeout().value().count());
   }
 
   auto req = host_api::Request::downstream_get();
@@ -144,7 +141,7 @@ int main(int argc, const char *argv[]) {
   }
 
   const auto max_requests =
-      Fastly::request_state.get().reusable_sandbox_options.max_requests().value_or(1);
+      Fastly::request_state->reusable_sandbox_options.max_requests().value_or(1);
   std::size_t requests_handled = 0;
   const auto start_time = std::chrono::high_resolution_clock::now();
   while (true) {
@@ -171,11 +168,10 @@ int main(int argc, const char *argv[]) {
     }
 
     // Check if we should exit based on configured sandbox timeout
-    if (Fastly::request_state.get().reusable_sandbox_options.sandbox_timeout()) {
+    if (Fastly::request_state->reusable_sandbox_options.sandbox_timeout()) {
       auto now = std::chrono::high_resolution_clock::now();
       auto elapsed = now - start_time;
-      if (elapsed >=
-          Fastly::request_state.get().reusable_sandbox_options.sandbox_timeout().value()) {
+      if (elapsed >= Fastly::request_state->reusable_sandbox_options.sandbox_timeout().value()) {
         if (fastly::runtime::ENGINE->debug_logging_enabled()) {
           printf("Sandbox timeout reached (%llu ms), exiting process.\n",
                  std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count());
@@ -185,7 +181,7 @@ int main(int argc, const char *argv[]) {
     }
 
     // Check if we should exit based on configured max memory usage
-    if (Fastly::request_state.get().reusable_sandbox_options.max_memory_mib()) {
+    if (Fastly::request_state->reusable_sandbox_options.max_memory_mib()) {
       uint32_t heap_mib;
       if (fastly::compute_get_heap_mib(&heap_mib) != 0) {
         // If we fail to get heap memory usage, log a warning but continue anyway since this isn't a
@@ -194,11 +190,11 @@ int main(int argc, const char *argv[]) {
           printf("Failed to get heap memory usage, continuing anyway.\n");
         }
       } else if (heap_mib >=
-                 Fastly::request_state.get().reusable_sandbox_options.max_memory_mib().value()) {
+                 Fastly::request_state->reusable_sandbox_options.max_memory_mib().value()) {
         if (fastly::runtime::ENGINE->debug_logging_enabled()) {
           printf("Max memory exceeded (heap usage: %u MiB, max: %u MiB), exiting process.\n",
                  heap_mib,
-                 Fastly::request_state.get().reusable_sandbox_options.max_memory_mib().value());
+                 Fastly::request_state->reusable_sandbox_options.max_memory_mib().value());
         }
         break;
       }
