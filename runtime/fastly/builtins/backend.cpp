@@ -793,8 +793,6 @@ bool validate_target(JSContext *cx, std::string_view target_string) {
   return true;
 }
 
-host_api::BackendConfig default_backend_config{};
-
 const uint64_t MAX_BACKEND_TIMEOUT = 0x100000000;
 
 bool apply_backend_config(JSContext *cx, host_api::BackendConfig &backend,
@@ -1666,11 +1664,12 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   // Check if we already constructed an implicit dynamic backend for this host.
   bool found;
   JS::RootedValue already_built_backend(cx);
-  if (!JS_HasProperty(cx, Backend::backends, name_str.c_str(), &found)) {
+  if (!JS_HasProperty(cx, Backend::request_state->backends, name_str.c_str(), &found)) {
     return nullptr;
   }
   if (found) {
-    if (!JS_GetProperty(cx, Backend::backends, name_str.c_str(), &already_built_backend)) {
+    if (!JS_GetProperty(cx, Backend::request_state->backends, name_str.c_str(),
+                        &already_built_backend)) {
       return nullptr;
     }
     JS::RootedObject backend(cx, &already_built_backend.toObject());
@@ -1688,7 +1687,7 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
     return nullptr;
   }
 
-  host_api::BackendConfig backend_config = default_backend_config.clone();
+  host_api::BackendConfig backend_config = request_state->default_backend_config.clone();
 
   auto host_backend = set_backend(cx, backend, name);
   if (!host_backend) {
@@ -1729,7 +1728,7 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
     HANDLE_ERROR(cx, *err);
     return nullptr;
   }
-  if (!JS_SetProperty(cx, Backend::backends, name_str.c_str(), backend_val)) {
+  if (!JS_SetProperty(cx, Backend::request_state->backends, name_str.c_str(), backend_val)) {
     return nullptr;
   }
   return backend;
@@ -1781,7 +1780,7 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  host_api::BackendConfig backend_config = default_backend_config.clone();
+  host_api::BackendConfig backend_config = request_state->default_backend_config.clone();
   if (!apply_backend_config(cx, backend_config, configuration)) {
     return false;
   }
@@ -1807,20 +1806,7 @@ void Backend::finalize(JS::GCContext *gcx, JSObject *obj) {
   delete backend;
 }
 
-bool Backend::restore_global_state(JSContext *cx) {
-  JS::Rooted<JS::IdVector> props(cx, cx);
-  if (!JS_Enumerate(cx, Backend::backends, &props)) {
-    return false;
-  }
-  JS::RootedValue backend(cx);
-  for (uint32_t i = 0, len = props.length(); i < len; i++) {
-    if (!JS_GetPropertyById(cx, Backend::backends, props[i], &backend)) {
-      return false;
-    }
-    JS_DeletePropertyById(cx, Backend::backends, props[i]);
-  }
-  return true;
-}
+state::RequestStateHolder<Backend::RequestState> Backend::request_state;
 
 bool set_default_backend_config(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
@@ -1833,8 +1819,10 @@ bool set_default_backend_config(JSContext *cx, unsigned argc, JS::Value *vp) {
                               JSMSG_BACKEND_PARAMETER_NOT_OBJECT);
     return false;
   }
+
   RootedObject backend_config_obj(cx, &backend_config_val.toObject());
-  if (!apply_backend_config(cx, default_backend_config, backend_config_obj)) {
+  if (!apply_backend_config(cx, Backend::request_state->default_backend_config,
+                            backend_config_obj)) {
     return false;
   }
   return true;
@@ -1856,19 +1844,18 @@ bool enforce_explicit_backends(JSContext *cx, unsigned argc, JS::Value *vp) {
     if (!backend) {
       return false;
     }
-    Fastly::defaultBackend = backend;
+    Fastly::request_state->default_backend = backend;
   }
-  Fastly::allowDynamicBackends = false;
+  Fastly::request_state->allow_dynamic_backends = false;
   args.rval().setUndefined();
   return true;
 }
 
 bool install(api::Engine *engine) {
-  JS::RootedObject backends(engine->cx(), JS_NewPlainObject(engine->cx()));
-  if (!backends) {
+  if (!Backend::request_state.init(engine->cx())) {
     return false;
   }
-  Backend::backends.init(engine->cx(), backends);
+
   if (!Backend::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }

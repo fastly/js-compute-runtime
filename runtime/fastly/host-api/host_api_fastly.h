@@ -417,7 +417,7 @@ struct BackendConfig {
   std::optional<uint32_t> http_keepalive_time_ms;
   std::optional<TcpKeepalive> tcp_keepalive;
 
-  BackendConfig clone() {
+  BackendConfig clone() const {
     std::optional<HostString> out_host_override{};
     std::optional<uint32_t> out_connect_timeout{};
     std::optional<uint32_t> out_first_byte_timeout{};

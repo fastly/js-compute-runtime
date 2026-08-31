@@ -99,16 +99,76 @@
     }
   },
 
-  "session #3, request #1: GET /backend/ephemeral": {
+  "session #1, request #1: GET /backend/ephemeral": {
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/ephemeral"
+    },
+    "downstream_response": {
+      "status": 200,
+      "session": 1
     }
   },
-  "session #3, request #2: GET /backend/ephemeral": {
+  "session #1, request #2: GET /backend/ephemeral": {
     "downstream_request": {
       "method": "GET",
       "pathname": "/backend/ephemeral"
+    },
+    "downstream_response": {
+      "status": 200,
+      "session": 1
+    }
+  },
+
+  "session #1, request #3: GET /backend/defaultConfig1": {
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/defaultConfig1"
+    },
+    "downstream_response": {
+      "status": 200,
+      "session": 1
+    }
+  },
+  "session #1, request #4: GET /backend/defaultConfig2": {
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/defaultConfig2"
+    },
+    "downstream_response": {
+      "status": 200,
+      "session": 1
+    }
+  },
+
+  "session #1, request #5: GET /backend/defaultBackend": {
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/defaultBackend"
+    },
+    "downstream_response": {
+      "status": 200,
+      "session": 1
+    }
+  },
+  "session #2, request #0: GET /backend/defaultBackend": {
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/defaultBackend"
+    },
+    "downstream_response": {
+      "status": 200,
+      "session": 2
+    }
+  },
+  "session #2, request #1: GET /backend/defaultBackend": {
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/backend/defaultBackend"
+    },
+    "downstream_response": {
+      "status": 200,
+      "session": 2
     }
   }
 }

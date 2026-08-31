@@ -28,9 +28,6 @@ namespace {
 
 api::Engine *ENGINE;
 
-// Global storage for Wizer-time environment
-std::unordered_map<std::string, std::string> initialized_env;
-
 static void oom_callback(JSContext *cx, void *data) {
   fprintf(stderr, "Critical Error: out of memory\n");
   fflush(stderr);
@@ -42,19 +39,13 @@ static std::vector<std::string> debug_messages;
 
 } // namespace
 
-bool debug_logging_enabled() { return fastly::fastly::DEBUG_LOGGING_ENABLED; }
+bool debug_logging_enabled() {
+  return fastly::fastly::Fastly::request_state.get().debug_logging_enabled;
+}
 
 namespace fastly::fastly {
 
-bool DEBUG_LOGGING_ENABLED = false;
-
-JS::PersistentRooted<JSObject *> Fastly::env;
-JS::PersistentRooted<JSObject *> Fastly::baseURL;
-JS::PersistentRooted<JSString *> Fastly::defaultBackend;
-bool allowDynamicBackendsCalled = false;
-bool Fastly::allowDynamicBackends = true;
-bool ENABLE_EXPERIMENTAL_HTTP_CACHE = false;
-ReusableSandboxOptions Fastly::reusableSandboxOptions{};
+state::RequestStateHolder<Fastly::RequestState> Fastly::request_state;
 
 bool Fastly::dump(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
@@ -91,7 +82,7 @@ bool Fastly::enableDebugLogging(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, __func__, 1))
     return false;
-  DEBUG_LOGGING_ENABLED = JS::ToBoolean(args[0]);
+  request_state.get().debug_logging_enabled = JS::ToBoolean(args[0]);
   args.rval().setUndefined();
   return true;
 }
@@ -488,7 +479,7 @@ bool Fastly::now(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Fastly::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setObject(*env);
+  args.rval().setObject(*request_state.get().env);
   return true;
 }
 
@@ -551,6 +542,7 @@ bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   std::string key_str(ptr.get(), len);
 
   // First check initialized environment
+  auto &initialized_env = Fastly::request_state.get().initialized_env;
   if (auto it = initialized_env.find(key_str); it != initialized_env.end()) {
     JS::RootedString env_var(cx, JS_NewStringCopyN(cx, it->second.data(), it->second.size()));
     if (!env_var)
@@ -561,7 +553,8 @@ bool Env::env_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // Fallback to getenv with caching
   if (const char *value = std::getenv(key_str.c_str())) {
-    auto [it, _] = initialized_env.emplace(key_str, value);
+    auto &state = Fastly::request_state.get();
+    auto [it, _] = state.initialized_env.emplace(key_str, value);
     JS::RootedString env_var(cx, JS_NewStringCopyN(cx, it->second.data(), it->second.size()));
     if (!env_var)
       return false;
@@ -601,29 +594,29 @@ bool Fastly::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Fastly::baseURL_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setObjectOrNull(baseURL);
+  args.rval().setObjectOrNull(request_state.get().base_url);
   return true;
 }
 
 bool Fastly::baseURL_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   if (args.get(0).isNullOrUndefined()) {
-    baseURL.set(nullptr);
+    request_state.get().base_url.set(nullptr);
   } else if (!URL::is_instance(args.get(0))) {
     JS_ReportErrorUTF8(cx, "Invalid value assigned to fastly.baseURL, must be an instance of "
                            "URL, null, or undefined");
     return false;
   }
 
-  baseURL.set(&args.get(0).toObject());
+  request_state.get().base_url.set(&args.get(0).toObject());
 
-  args.rval().setObjectOrNull(baseURL);
+  args.rval().setObjectOrNull(request_state.get().base_url);
   return true;
 }
 
 bool Fastly::defaultBackend_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setString(defaultBackend);
+  args.rval().setString(request_state.get().default_backend);
   return true;
 }
 
@@ -633,9 +626,9 @@ bool Fastly::defaultBackend_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!backend)
     return false;
 
-  defaultBackend = backend;
-  if (!allowDynamicBackendsCalled) {
-    allowDynamicBackends = false;
+  request_state.get().default_backend = backend;
+  if (!request_state.get().allow_dynamic_backends_called) {
+    request_state.get().allow_dynamic_backends = false;
   }
   args.rval().setUndefined();
   return true;
@@ -662,7 +655,7 @@ bool debugMessages_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Fastly::allowDynamicBackends_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(allowDynamicBackends);
+  args.rval().setBoolean(request_state.get().allow_dynamic_backends);
   return true;
 }
 
@@ -674,18 +667,19 @@ bool Fastly::allowDynamicBackends_set(JSContext *cx, unsigned argc, JS::Value *v
     if (!backend::set_default_backend_config(cx, argc, vp)) {
       return false;
     }
-    allowDynamicBackends = true;
+    request_state.get().allow_dynamic_backends = true;
   } else {
-    allowDynamicBackends = JS::ToBoolean(set_value);
+    request_state.get().allow_dynamic_backends = JS::ToBoolean(set_value);
   }
-  allowDynamicBackendsCalled = true;
+  request_state.get().allow_dynamic_backends_called = true;
   args.rval().setUndefined();
   return true;
 }
 
 bool Fastly::setReusableSandboxOptions(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
-  if (Fastly::reusableSandboxOptions.frozen()) {
+  auto &state = request_state.get();
+  if (state.reusable_sandbox_options.frozen()) {
     JS_ReportErrorUTF8(cx, "Reusable sandbox options can only be set at initialization time");
     return false;
   }
@@ -727,7 +721,7 @@ bool Fastly::setReusableSandboxOptions(JSContext *cx, unsigned argc, JS::Value *
   int32_t max_requests;
   if (get_non_negative_int("maxRequests", &defined, &max_requests)) {
     if (defined) {
-      Fastly::reusableSandboxOptions.set_max_requests(max_requests);
+      state.reusable_sandbox_options.set_max_requests(max_requests);
     }
   } else {
     return false;
@@ -736,7 +730,7 @@ bool Fastly::setReusableSandboxOptions(JSContext *cx, unsigned argc, JS::Value *
   int32_t between_request_timeout_ms;
   if (get_non_negative_int("betweenRequestTimeoutMs", &defined, &between_request_timeout_ms)) {
     if (defined) {
-      Fastly::reusableSandboxOptions.set_between_request_timeout(
+      state.reusable_sandbox_options.set_between_request_timeout(
           std::chrono::milliseconds(between_request_timeout_ms));
     }
   } else {
@@ -746,7 +740,7 @@ bool Fastly::setReusableSandboxOptions(JSContext *cx, unsigned argc, JS::Value *
   int32_t max_memory_mib;
   if (get_non_negative_int("maxMemoryMiB", &defined, &max_memory_mib)) {
     if (defined) {
-      Fastly::reusableSandboxOptions.set_max_memory_mib(max_memory_mib);
+      state.reusable_sandbox_options.set_max_memory_mib(max_memory_mib);
     }
   } else {
     return false;
@@ -755,7 +749,7 @@ bool Fastly::setReusableSandboxOptions(JSContext *cx, unsigned argc, JS::Value *
   int32_t sandbox_timeout_ms;
   if (get_non_negative_int("sandboxTimeoutMs", &defined, &sandbox_timeout_ms)) {
     if (defined) {
-      Fastly::reusableSandboxOptions.set_sandbox_timeout(
+      state.reusable_sandbox_options.set_sandbox_timeout(
           std::chrono::milliseconds(sandbox_timeout_ms));
     }
   } else {
@@ -778,22 +772,74 @@ const JSPropertySpec Fastly::properties[] = {
 #endif
     JS_PS_END};
 
-bool Fastly::restore_builtin_state(JSContext *cx) {
-  Fastly::baseURL.reset();
-  Fastly::defaultBackend.reset();
-  Fastly::baseURL.init(cx);
-  Fastly::defaultBackend.init(cx);
+bool Fastly::RequestState::init(JSContext *cx) {
+  env.init(cx, Env::create(cx));
+  if (!env) {
+    return false;
+  }
+
+  // Store initialized environment vars from Wizer
+  initialized_env.clear();
+  for (char **env = environ; *env; env++) {
+    const char *entry = *env;
+    const char *eq = entry;
+    while (*eq && *eq != '=')
+      eq++;
+    if (*eq == '=') {
+      initialized_env.emplace(std::string(entry, eq - entry), std::string(eq + 1));
+    }
+  }
+
+  auto http_cache_env = std::getenv("ENABLE_EXPERIMENTAL_HTTP_CACHE");
+  enable_experimental_http_cache = http_cache_env && std::string(http_cache_env) == "1";
+
+  // Initialize PersistentRooted members
+  base_url.init(cx);
+  default_backend.init(cx);
+
+  allow_dynamic_backends = true;
+  allow_dynamic_backends_called = false;
+  debug_logging_enabled = false;
+  http_caching_unsupported = false;
+
+  return true;
+}
+
+bool Fastly::RequestState::snapshot(JSContext *cx, RequestState &into) {
+  into.env.reset();
+  into.env.init(cx, env);
+
+  into.initialized_env = initialized_env;
+  into.enable_experimental_http_cache = enable_experimental_http_cache;
+
+  // After snapshot time, reusable sandbox options is never allowed to change
+  reusable_sandbox_options.freeze();
+  into.reusable_sandbox_options = reusable_sandbox_options;
+
+  into.base_url.reset();
+  into.base_url.init(cx, base_url);
+  into.default_backend.reset();
+  into.default_backend.init(cx, default_backend);
+
+  into.allow_dynamic_backends = allow_dynamic_backends;
+  into.allow_dynamic_backends_called = allow_dynamic_backends_called;
+
+  into.default_dynamic_backend_config = default_dynamic_backend_config.clone();
+  into.debug_logging_enabled = debug_logging_enabled;
+  into.http_caching_unsupported = http_caching_unsupported;
+
   return true;
 }
 
 bool install(api::Engine *engine) {
   ENGINE = engine;
-
   auto high_resolution_env = std::getenv("ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS");
   bool ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS =
       high_resolution_env && std::string(high_resolution_env) == "1";
-  auto http_cache_env = std::getenv("ENABLE_EXPERIMENTAL_HTTP_CACHE");
-  ENABLE_EXPERIMENTAL_HTTP_CACHE = http_cache_env && std::string(http_cache_env) == "1";
+
+  if (!Fastly::request_state.init(engine->cx())) {
+    return false;
+  }
 
   JS::SetOutOfMemoryCallback(engine->cx(), oom_callback, nullptr);
 
@@ -802,14 +848,6 @@ bool install(api::Engine *engine) {
   if (!fastly) {
     return false;
   }
-
-  Fastly::env.init(engine->cx(), Env::create(engine->cx()));
-  if (!Fastly::env) {
-    return false;
-  }
-
-  Fastly::baseURL.init(engine->cx());
-  Fastly::defaultBackend.init(engine->cx());
 
   JSFunctionSpec nowfn = JS_FN("now", Fastly::now, 0, JSPROP_ENUMERATE);
   JSFunctionSpec end = JS_FS_END;
@@ -834,21 +872,8 @@ bool install(api::Engine *engine) {
   }
 
   // fastly:env
-  // first, store the initialized environment vars from Wizer
-  initialized_env.clear();
-
-  for (char **env = environ; *env; env++) {
-    const char *entry = *env;
-    const char *eq = entry;
-    while (*eq && *eq != '=')
-      eq++;
-
-    if (*eq == '=') {
-      initialized_env.emplace(std::string(entry, eq - entry), std::string(eq + 1));
-    }
-  }
   RootedValue env_get(engine->cx());
-  if (!JS_GetProperty(engine->cx(), Fastly::env, "get", &env_get)) {
+  if (!JS_GetProperty(engine->cx(), Fastly::request_state.get().env, "get", &env_get)) {
     return false;
   }
   RootedObject env_builtin(engine->cx(), JS_NewObject(engine->cx(), nullptr));
@@ -1075,7 +1100,7 @@ JS::Result<std::tuple<JS::UniqueChars, size_t>> convertBodyInit(JSContext *cx,
 
 void fastly_push_debug_message(std::string msg) {
 #ifdef DEBUG
-  if (fastly::fastly::DEBUG_LOGGING_ENABLED) {
+  if (fastly::fastly::Fastly::request_state->debug_logging_enabled) {
     // Log to both stderr and debug message log
     fprintf(stderr, "%.*s\n", static_cast<int>(msg.size()), msg.data());
     fflush(stderr);

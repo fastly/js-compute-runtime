@@ -82,14 +82,14 @@ JSObject *internal_method_then(JSContext *cx, JS::HandleObject promise, JS::Hand
 JSString *get_backend(JSContext *cx, JS::HandleObject request) {
   RootedString backend(cx, RequestOrResponse::backend(request));
   if (!backend) {
-    if (Fastly::allowDynamicBackends) {
+    if (Fastly::request_state->allow_dynamic_backends) {
       JS::RootedObject dynamicBackend(cx, Backend::create(cx, request));
       if (!dynamicBackend) {
         return nullptr;
       }
       backend.set(Backend::name(cx, dynamicBackend));
     } else {
-      backend = Fastly::defaultBackend;
+      backend = Fastly::request_state->default_backend;
       if (!backend) {
         auto handle = Request::request_handle(request);
 
@@ -120,7 +120,6 @@ bool must_use_guest_caching(JSContext *cx, HandleObject request) {
   return false;
 }
 
-bool http_caching_unsupported = false;
 enum CachingMode { Guest, Host, ImageOptimizer };
 bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_mode) {
   *caching_mode = CachingMode::Guest;
@@ -164,9 +163,11 @@ bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_
   }
 
   // If we previously found guest caching unsupported then remember that
-  if (http_caching_unsupported || !fastly::fastly::ENABLE_EXPERIMENTAL_HTTP_CACHE) {
+  using fastly::fastly::Fastly;
+  if (Fastly::request_state->http_caching_unsupported ||
+      !Fastly::request_state->enable_experimental_http_cache) {
     if (must_use_guest_caching(cx, request)) {
-      if (!fastly::fastly::ENABLE_EXPERIMENTAL_HTTP_CACHE) {
+      if (!Fastly::request_state->enable_experimental_http_cache) {
         JS_ReportErrorASCII(cx, "HTTP caching API is not enabled for JavaScript; enable it with "
                                 "the --enable-http-cache flag "
                                 "to the js-compute build command, or contact support for help");
@@ -186,7 +187,7 @@ bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_
   auto res = request_handle.is_cacheable();
   if (auto *err = res.to_err()) {
     if (host_api::error_is_unsupported(*err)) {
-      http_caching_unsupported = true;
+      Fastly::request_state->http_caching_unsupported = true;
       // Guest-side caching is unsupported, so we must use host caching.
       // If we have hooks we must fail since they require guest caching.
       if (must_use_guest_caching(cx, request)) {

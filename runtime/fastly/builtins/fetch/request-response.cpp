@@ -2880,7 +2880,8 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     if (!url_instance)
       return nullptr;
 
-    JS::RootedObject parsedURL(cx, URL::create(cx, url_instance, input, fastly::Fastly::baseURL));
+    JS::RootedObject parsedURL(
+        cx, URL::create(cx, url_instance, input, fastly::Fastly::request_state->base_url));
 
     // 2.  If `parsedURL` is failure, then throw a `TypeError`.
     if (!parsedURL) {
@@ -3866,6 +3867,9 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 namespace {
+// GLOBALS: Global variable outwith RequestState
+// This is reset to false on every call to ToJSON, so there is no issue of becoming out of sync
+// across requests.
 bool callbackCalled;
 bool write_json_to_buf(const char16_t *str, uint32_t strlen, void *out) {
   callbackCalled = true;

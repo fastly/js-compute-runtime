@@ -764,13 +764,14 @@ bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, host_api::Ht
   // Set `fastly.baseURL` to the origin of the client request's URL.
   // Note that this only happens if baseURL hasn't already been set to another
   // value explicitly.
-  if (!Fastly::baseURL.get()) {
+  if (!Fastly::request_state->base_url.get()) {
     JS::RootedObject url_instance(cx, JS_NewObjectWithGivenProto(cx, &URL::class_, URL::proto_obj));
     if (!url_instance)
       return false;
 
-    Fastly::baseURL = URL::create(cx, url_instance, URL::origin(cx, WorkerLocation::url));
-    if (!Fastly::baseURL)
+    Fastly::request_state->base_url =
+        URL::create(cx, url_instance, URL::origin(cx, WorkerLocation::url));
+    if (!Fastly::request_state->base_url)
       return false;
   }
 
