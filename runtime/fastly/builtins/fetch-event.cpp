@@ -881,8 +881,12 @@ bool response_promise_catch_handler(JSContext *cx, JS::HandleObject event,
                                     JS::HandleValue promise_val, JS::CallArgs args) {
   JS::RootedObject promise(cx, &promise_val.toObject());
 
-  fprintf(stderr, "Error while running request handler: ");
-  ENGINE->dump_promise_rejection(args.get(0), promise, stderr);
+  if (ENGINE->debug_logging_enabled()) {
+    fprintf(stderr, "Error while running request handler: ");
+    ENGINE->dump_promise_rejection(args.get(0), promise, stderr);
+  } else {
+    fprintf(stderr, "Error while running request handler.");
+  }
 
   // TODO: verify that this is the right behavior.
   // Steps 9.1-2
