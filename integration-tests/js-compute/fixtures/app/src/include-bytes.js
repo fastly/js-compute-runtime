@@ -17,11 +17,31 @@ routes.set('/includeBytes', () => {
 });
 
 let nope = null;
+let dotfileNotOk = null;
+let dotfileOk = null;
 
 try {
   nope = includeBytes('../../../../README.md');
 } catch {}
 
+try {
+  dotfileOk = includeBytes('./.hidden.txt');
+} catch {}
+
+try {
+  dotfileNotOk = includeBytes('../../.hidden.txt');
+} catch {}
+
 routes.set('/includeBytes/sandbox', () => {
   assert(nope, null, 'includeBytes sandboxes its path to the project dir');
+  assert(
+    dotfileNotOk,
+    null,
+    'includeBytes sandboxes its path to the project dir',
+  );
+  assert(
+    Array.from(dotfileOk),
+    [105, 100, 107, 10],
+    'dotfile is included just fine',
+  );
 });

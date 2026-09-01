@@ -10,6 +10,8 @@ The **`includeBytes()`** function is used embed a file as a Uint8Array.
 
 >**Note**: Can only be used during build-time initialization, not when processing requests.
 
+>**SECURITY**: `includeBytes()` is fully sandboxed to prevent access to files outside the directory that contains `fastly.toml`. All other files within that scope will be accessible, including through `..` and symlink navigation, including potentially sensitive files such as `.env`.
+
 ## Syntax
 
 ```js
