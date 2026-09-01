@@ -1843,9 +1843,14 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
 
     // TODO: should we also create a rejected promise if a response reads something that's not a
     // Uint8Array?
-    fprintf(stderr, "Error: read operation on body ReadableStream didn't respond with a "
-                    "Uint8Array. Received value: ");
-    ENGINE->dump_value(val, stderr);
+    if (ENGINE->debug_logging_enabled()) {
+      fprintf(stderr, "Error: read operation on body ReadableStream didn't respond with a "
+                      "Uint8Array. Received value: ");
+      ENGINE->dump_value(val, stderr);
+    } else {
+      fprintf(stderr,
+              "Error: read operation on body ReadableStream didn't respond with a Uint8Array.");
+    }
     return false;
   }
 
@@ -1880,8 +1885,12 @@ bool RequestOrResponse::body_reader_catch_handler(JSContext *cx, JS::HandleObjec
   // in-content handler for unhandled rejections could deal with it. The body
   // stream errored during the streaming send. Not much we can do, but at least
   // close the stream, and warn.
-  fprintf(stderr, "Warning: body ReadableStream closed during body streaming. Exception: ");
-  ENGINE->dump_value(args.get(0), stderr);
+  if (ENGINE->debug_logging_enabled()) {
+    fprintf(stderr, "Warning: body ReadableStream closed during body streaming. Exception: ");
+    ENGINE->dump_value(args.get(0), stderr);
+  } else {
+    fprintf(stderr, "Warning: body ReadableStream closed during body streaming.");
+  }
 
   // The only response with a body we ever send is the one passed to
   // `FetchEvent#respondWith` to send to the client. As such, we can be certain
