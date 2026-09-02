@@ -185,7 +185,7 @@ public:
       return;
     }
 
-    auto res = this->handle.transaction_cancel();
+    auto res = this->handle.close();
     if (auto *err = res.to_err()) {
       host_api::handle_api_error(this->cx, *err, this->line, this->func);
     }
