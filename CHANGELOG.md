@@ -1,17 +1,15 @@
 # Changelog
 
-## [3.45.0](https://github.com/fastly/js-compute-runtime/compare/v3.44.3...v3.45.0) (2026-09-03)
+## 3.45.0 (2026-09-03)
 
-
-### Features
+### Added
 
 * Add clientSNI to FetchEvent.client ([#1569](https://github.com/fastly/js-compute-runtime/issues/1569)) ([9a85f2a](https://github.com/fastly/js-compute-runtime/commit/9a85f2a17594c0591cf6f3f2ba0e9b5aaa147729))
 
-
-### Bug Fixes
+### Fixed
 
 * add test to verify includeBytes sandboxing ([#1559](https://github.com/fastly/js-compute-runtime/issues/1559)) ([8585d3a](https://github.com/fastly/js-compute-runtime/commit/8585d3acf43808fca52ef3f184a0d3a482e45986))
-* Avoid arithmetic overflow in content_stream_read_then_handler ([#1570](https://github.com/fastly/js-compute-runtime/issues/1570)) ([b390de4](https://github.com/fastly/js-compute-runtime/commit/b390de4d21a990e1a24d9724164004fd267159e7))
+* Avoid arithmetic overflow in content\_stream\_read\_then\_handler ([#1570](https://github.com/fastly/js-compute-runtime/issues/1570)) ([b390de4](https://github.com/fastly/js-compute-runtime/commit/b390de4d21a990e1a24d9724164004fd267159e7))
 * Avoid crashes if KV store list hostcall returns unexpected data ([#1563](https://github.com/fastly/js-compute-runtime/issues/1563)) ([e2e4c8b](https://github.com/fastly/js-compute-runtime/commit/e2e4c8bdb1c393ea1612d588f25f5c33d2d0e4ab))
 * Check for presence of environment variables before checking their values ([#1555](https://github.com/fastly/js-compute-runtime/issues/1555)) ([0e1779b](https://github.com/fastly/js-compute-runtime/commit/0e1779b5b073f3096ba4b49b8797f04369d7b7d8))
 * Cloning requests that have image optimizer options ([#1544](https://github.com/fastly/js-compute-runtime/issues/1544)) ([a06493b](https://github.com/fastly/js-compute-runtime/commit/a06493b6b45f5ad341a98a009a25ee2dd92f71dc))
@@ -20,7 +18,7 @@
 * **deps:** deal with some dependency issues by upgrading ([#1572](https://github.com/fastly/js-compute-runtime/issues/1572)) ([c679ee2](https://github.com/fastly/js-compute-runtime/commit/c679ee21bb97caffd230959fe63ae5f362270e7d))
 * Improve restoring of global state ([#1575](https://github.com/fastly/js-compute-runtime/issues/1575)) ([7220483](https://github.com/fastly/js-compute-runtime/commit/7220483c85ca950b43ef307569cc24cb1c4b36d3))
 * **includeBytes:** additional documentation and test for particulars … ([#1578](https://github.com/fastly/js-compute-runtime/issues/1578)) ([d1cb703](https://github.com/fastly/js-compute-runtime/commit/d1cb703f22cf2d1777a900ac062fc417f01e79b7))
-* **logging:** gate some value dumping behind debug_logging_enabled ([#1579](https://github.com/fastly/js-compute-runtime/issues/1579)) ([0d9c0ac](https://github.com/fastly/js-compute-runtime/commit/0d9c0ac6c04c873ef482566e1c5ace8faa126982))
+* **logging:** gate some value dumping behind debug\_logging\_enabled ([#1579](https://github.com/fastly/js-compute-runtime/issues/1579)) ([0d9c0ac](https://github.com/fastly/js-compute-runtime/commit/0d9c0ac6c04c873ef482566e1c5ace8faa126982))
 * Memory leak in backend finalizer ([#1553](https://github.com/fastly/js-compute-runtime/issues/1553)) ([6342d74](https://github.com/fastly/js-compute-runtime/commit/6342d741c29412cde547468be1b00847488f6e14))
 * Memory leak in Dict::get ([#1556](https://github.com/fastly/js-compute-runtime/issues/1556)) ([fad92d5](https://github.com/fastly/js-compute-runtime/commit/fad92d587085dadd11f33d261b60010a3d17426d))
 * Memory leak in Secret::plaintext ([#1554](https://github.com/fastly/js-compute-runtime/issues/1554)) ([14edaa5](https://github.com/fastly/js-compute-runtime/commit/14edaa50e773379e6b5eff60da876132ef02601c))
@@ -28,7 +26,7 @@
 * Overflow checks in edge rate limiter ([#1566](https://github.com/fastly/js-compute-runtime/issues/1566)) ([25f2f92](https://github.com/fastly/js-compute-runtime/commit/25f2f926c312b4471433895b244c326eb510affb))
 * Return rejected promise upon KV store insertion failure ([#1567](https://github.com/fastly/js-compute-runtime/issues/1567)) ([a24516b](https://github.com/fastly/js-compute-runtime/commit/a24516bad038bcd74d6e84f3b856a9923491e460))
 * Send a 500 if the client request fails to init ([#1582](https://github.com/fastly/js-compute-runtime/issues/1582)) ([78c6c0a](https://github.com/fastly/js-compute-runtime/commit/78c6c0a76e769f4bf0d372b4de01ccafdd0f6679))
-* **server:** construct body with serde_json ([#1573](https://github.com/fastly/js-compute-runtime/issues/1573)) ([1cc96f8](https://github.com/fastly/js-compute-runtime/commit/1cc96f82e14ff77c83de639f92c3f9ee8f395ff8))
+* **server:** construct body with serde\_json ([#1573](https://github.com/fastly/js-compute-runtime/issues/1573)) ([1cc96f8](https://github.com/fastly/js-compute-runtime/commit/1cc96f82e14ff77c83de639f92c3f9ee8f395ff8))
 * StarlingMonkey patches ([#1574](https://github.com/fastly/js-compute-runtime/issues/1574)) ([726c078](https://github.com/fastly/js-compute-runtime/commit/726c07810352f441a5f77236132a334db1b3fcdb))
 * **types:** env() returns string | undefined for unset variables ([#1577](https://github.com/fastly/js-compute-runtime/issues/1577)) ([7fd1d5d](https://github.com/fastly/js-compute-runtime/commit/7fd1d5d906a3532e1c4feb412cace47f04df57fd))
 * URL encode image optimizer options ([#1564](https://github.com/fastly/js-compute-runtime/issues/1564)) ([d2765a8](https://github.com/fastly/js-compute-runtime/commit/d2765a8cb1ff62dfdb2e95bb61c55834621f96a0))
