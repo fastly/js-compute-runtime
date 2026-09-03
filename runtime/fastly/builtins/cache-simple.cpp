@@ -190,6 +190,12 @@ public:
       host_api::handle_api_error(this->cx, *err, this->line, this->func);
     }
 
+    if (!JS_IsExceptionPending(this->cx)) {
+      JS_ReportErrorUTF8(cx, "Cache transaction cancelled for unknown reason");
+    }
+
+    MOZ_ASSERT(JS::GetPromiseState(this->promise) == JS::PromiseState::Pending);
+
     // We always reject the promise if the transaction hasn't committed.
     RejectPromiseWithPendingError(this->cx, this->promise);
   }
@@ -444,6 +450,7 @@ bool process_pending_cache_lookup(JSContext *cx, host_api::CacheHandle::Handle h
     JS::RootedValue result(cx);
     result.setObject(*entry);
     JS::ResolvePromise(cx, promise_obj, result);
+    transaction.commit();
     return true;
   } else {
     if (!set_function_val.isObject() || !JS::IsCallable(&set_function_val.toObject())) {
