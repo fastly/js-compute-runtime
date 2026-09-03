@@ -11,6 +11,7 @@ const strictOptionsMap = {
   enableExperimentalHighResolutionTimeMethods:
     '--enable-experimental-high-resolution-time-methods',
   enableExperimentalTopLevelAwait: '--enable-experimental-top-level-await',
+  disableTopLevelAwait: '--disable-top-level-await',
   enableStackTraces: '--enable-stack-traces',
   excludeSources: '--exclude-sources',
   debugIntermediateFiles: '--debug-intermediate-files',

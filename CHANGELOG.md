@@ -1,5 +1,18 @@
 # Changelog
 
+## 4.0.0-pre.0 (2026-08-03)
+
+### Features
+
+* Upgrade StarlingMonkey - ([6687326](https://github.com/fastly/js-compute-runtime/commit/6687326eb8d3eb6184fd1d27471c626a55719df3))
+
+#### Bug Fixes
+
+* Correct error handling in SimpleCache::getOrSet (#1540) - ([fededa3](https://github.com/fastly/js-compute-runtime/commit/fededa35e89bebcc62e4c1d15a217523d16b0c53))
+* StarlingMonkey patches (#1514) - ([56ec489](https://github.com/fastly/js-compute-runtime/commit/56ec48929fcff3c619b9e66f95749de9d5a74212))
+* memory safety issues in convertBodyInit (#1504) - ([989bce6](https://github.com/fastly/js-compute-runtime/commit/989bce6dcbb1d7d63964a427c470dca189f10f8e))
+* starlingmonkey update already fixed urlsearchparams memory issue (#1549) - ([0871652](https://github.com/fastly/js-compute-runtime/commit/0871652326fab41190675ad24fd6adfd55ff4281))
+
 ## 3.44.3 (2026-07-31)
 
 ### Fixed
@@ -1492,10 +1505,10 @@ Below is an example application using the `ConfigStore` class:
 ```js
 async function app(event) {
   const store = new ConfigStore('example')
-  
+
   // Retrieve the contents of the 'hello' key
   const hello = await store.get('hello')
-  
+
   return new Response(hello)
 }
 
@@ -1554,15 +1567,15 @@ The way to use these classes is best shown with an example:
 async function app(event) {
   // Create a connection the the Object-store named 'example-store'
   const store = new ObjectStore('example-store')
-  
+
   // Create or update the 'hello' key with the contents 'world'
   await store.put('hello', 'world')
-  
+
   // Retrieve the contents of the 'hello' key
   // Note: Object-stores are eventually consistent, this means that the updated contents associated may not be available to read from all
   // Fastly edge locations immediately and some edge locations may continue returning the previous contents associated with the key.
   const hello = await store.get('hello')
-  
+
   // Read the contents of the `hello` key into a string
   const hellotext = await hello.text()
   return new Response(hellotext)
