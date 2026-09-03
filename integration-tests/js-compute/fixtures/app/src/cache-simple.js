@@ -2210,4 +2210,56 @@ async function simpleCacheEntryInterfaceTests() {
       }
     },
   );
+  routes.set(
+    '/simple-cache/getOrSet/transaction-race',
+    async () => {
+      const key = String(Math.random());
+      let resolve1;
+      const signal1 = new Promise((resolve) => {
+        resolve1 = resolve;
+      });
+      let resolve2;
+      const signal2 = new Promise((resolve) => {
+        resolve2 = resolve;
+      });
+      let resolve3;
+      const signal3 = new Promise((resolve) => {
+        resolve3 = resolve;
+      });
+      let resolve4;
+      const signal4 = new Promise((resolve) => {
+        resolve4 = resolve;
+      });
+
+
+      const set1 = (async () => {
+        try {
+          await SimpleCache.getOrSet(key, async () => {
+            resolve1(true);
+            await signal2;
+            throw "uh oh";
+          });
+        } catch {
+          resolve3(true);
+          await signal4;
+        }
+      })();
+      await signal1;
+      const set2 = SimpleCache.getOrSet(key, async () => {
+        return {
+          value: key,
+          ttl: 10,
+        };
+      });
+      await new Promise((resolve) => {
+        setTimeout(resolve, 10000);
+      });
+      resolve2(true);
+      await signal3;
+      await set2;
+      resolve4(true);
+      await signal4;
+      await set1;
+    }
+  );
 }
