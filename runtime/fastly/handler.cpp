@@ -56,6 +56,8 @@ bool handle_incoming(host_api::Request req) {
   RootedObject fetch_event(ENGINE->cx(), FetchEvent::create(ENGINE->cx()));
   if (!FetchEvent::init_request(ENGINE->cx(), fetch_event, req.req, req.body)) {
     ENGINE->dump_pending_exception("initialization of FetchEvent");
+    // init_request only touches request-side state, so it's still safe to send a 500 here.
+    FetchEvent::respondWithError(ENGINE->cx(), fetch_event);
     return false;
   }
 
