@@ -2210,24 +2210,21 @@ async function simpleCacheEntryInterfaceTests() {
       }
     },
   );
-  routes.set(
-    '/simple-cache/getOrSet/commit-on-success',
-    async () => {
-      if (!isRunningLocally()) {
-        let key = String(Math.random()) + 'commit';
-        await SimpleCache.getOrSet(key, async () => {
-          return {
-            value: key,
-            ttl: 10000,
-          };
-        });
-        await SimpleCache.getOrSet(key, async () => {
-          return {
-            value: key,
-            ttl: 10000,
-          };
-        });
-      }  
+  routes.set('/simple-cache/getOrSet/commit-on-success', async () => {
+    if (!isRunningLocally()) {
+      let key = String(Math.random()) + 'commit';
+      await SimpleCache.getOrSet(key, async () => {
+        return {
+          value: key,
+          ttl: 10000,
+        };
+      });
+      await SimpleCache.getOrSet(key, async () => {
+        return {
+          value: key,
+          ttl: 10000,
+        };
+      });
     }
-  );
+  });
 }
