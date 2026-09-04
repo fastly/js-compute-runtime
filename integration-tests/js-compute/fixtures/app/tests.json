@@ -452,6 +452,9 @@
     "flake": true,
     "environments": ["compute"]
   },
+  "GET /simple-cache/getOrSet/transaction-race": {
+    "flake": true
+  },
   "GET /client/requestId": {},
   "GET /client/tlsJA3MD5": {},
   "GET /client/tlsClientHello": {},
