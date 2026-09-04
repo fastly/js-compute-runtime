@@ -452,6 +452,10 @@
     "flake": true,
     "environments": ["compute"]
   },
+  "GET /simple-cache/getOrSet/commit-on-success": {
+    "flake": true,
+    "environments": ["compute"]
+  },
   "GET /client/requestId": {},
   "GET /client/tlsJA3MD5": {},
   "GET /client/tlsClientHello": {},
