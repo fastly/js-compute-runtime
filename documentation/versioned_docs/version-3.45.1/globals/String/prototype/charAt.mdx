@@ -1,0 +1,42 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# String.prototype.charAt()
+
+The `String` object's
+**`charAt()`** method returns a new string consisting of the
+single UTF-16 code unit located at the specified offset into the string.
+
+## Syntax
+
+```js
+charAt(index)
+```
+
+### Parameters
+
+- `index`
+  - : An integer between `0` and `str.length - 1`. If the
+    `index` cannot be converted to the integer or no
+    `index` is provided, the default is `0`, so the first
+    character of `str` is returned.
+
+### Return value
+
+A string representing the character (exactly one UTF-16 code unit) at the specified
+`index`. If `index` is out of range,
+`charAt()` returns an empty string.
+
+## Description
+
+Characters in a string are indexed from left to right. The index of the first character
+is `0`, and the index of the last character—in a string called
+`stringName` is `stringName.length - 1`. If
+the `index` you supply is out of this range, JavaScript returns an
+empty string.
+
+If no `index` is provided to `charAt()`, the default
+is `0`.
