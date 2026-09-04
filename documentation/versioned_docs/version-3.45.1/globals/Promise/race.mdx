@@ -1,0 +1,30 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Promise.race()
+
+The **`Promise.race()`** method takes an iterable of promises as input and returns a single `Promise`. This returned promise settles with the eventual state of the first promise that settles.
+
+## Syntax
+
+```js
+Promise.race(iterable)
+```
+
+### Parameters
+
+- `iterable`
+  - : An [iterable](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterable_protocol) (such as an `Array`) of promises.
+
+### Return value
+
+A `Promise` that **asynchronously settles** with the eventual state of the first promise in the `iterable` to settle. In other words, it fulfills if the first promise to settle is fulfilled, and rejects if the first promise to settle is rejected. The returned promise remains pending forever if the `iterable` passed is empty. If the `iterable` passed is non-empty but contains no pending promises, the returned promise is still asynchronously (instead of synchronously) settled.
+
+## Description
+
+The `Promise.race()` method is one of the [promise concurrency](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise#promise_concurrency) methods. It's useful when you want the first async task to complete, but do not care about its eventual state (i.e. it can either succeed or fail).
+
+If the iterable contains one or more non-promise values and/or an already settled promise, then `Promise.race()` will settle to the first of these values found in the iterable.

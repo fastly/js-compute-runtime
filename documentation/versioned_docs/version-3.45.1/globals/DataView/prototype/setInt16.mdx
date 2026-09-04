@@ -1,0 +1,38 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# DataView.prototype.setInt16()
+
+The **`setInt16()`** method stores a signed 16-bit integer
+(short) value at the specified byte offset from the start of the [`DataView`](../../../globals/DataView/DataView.mdx).
+
+## Syntax
+
+```js
+setInt16(byteOffset, value)
+setInt16(byteOffset, value, littleEndian)
+```
+
+### Parameters
+
+- `byteOffset`
+  - : The offset, in byte, from the start of the view where to store the data.
+- `value`
+  - : The value to set.
+- `littleEndian`
+  - : _**optional**_ Indicates whether the 16-bit int is stored in
+    little- or big-endian format. If `false` or
+    `undefined`, a big-endian value is written.
+
+### Return value
+
+[`undefined`](../../../globals/undefined.mdx).
+
+### Errors thrown
+
+- [`RangeError`](../../RangeError/RangeError.mdx)
+  - : Thrown if the `byteOffset` is set such as it would store beyond the end
+    of the view.

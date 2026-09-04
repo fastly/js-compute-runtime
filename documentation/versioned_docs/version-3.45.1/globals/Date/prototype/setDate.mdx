@@ -1,0 +1,35 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Date.prototype.setDate()
+
+The **`setDate()`** method changes the day of the month of a given `Date` instance, based on local time.
+
+To instead change the day of the month for a given `Date` instance based on UTC time, use the [`Date.prototype.setUTCDate()`](./setUTCDate.mdx) method.
+
+## Syntax
+
+```js
+setDate(dayValue)
+```
+
+### Parameters
+
+- `dayValue`
+  - : An integer representing the day of the month.
+
+### Return value
+
+The number of milliseconds between 1 January 1970 00:00:00 UTC and the given date (the
+`Date` object is also changed in place).
+
+## Description
+
+If the `dayValue` is outside of the range of date values for the month, `setDate()` will update the `Date` object accordingly.
+
+For example, if 0 is provided for `dayValue`, the date will be set to the last day of the previous month. If you use 40 for `dayValue`, and the month stored in the `Date` object is June, the day will be changed to 10 and the month will be incremented to July.
+
+If a negative number is provided for `dayValue`, the date will be set counting backwards from the last day of the previous month. -1 would result in the date being set to 1 day before the last day of the previous month.
