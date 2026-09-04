@@ -1627,13 +1627,19 @@ Result<HostString> HttpReq::get_uri() const {
   fastly::fastly_host_error err;
   fastly::fastly_world_string uri;
   uri.ptr = static_cast<uint8_t *>(cabi_malloc(URI_MAX_LEN, 1));
-  if (!convert_result(fastly::req_uri_get(this->handle, reinterpret_cast<char *>(uri.ptr),
-                                          URI_MAX_LEN, &uri.len),
-                      &err)) {
+
+  auto status =
+      fastly::req_uri_get(this->handle, reinterpret_cast<char *>(uri.ptr), URI_MAX_LEN, &uri.len);
+  if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    uri.ptr = static_cast<uint8_t *>(cabi_realloc(uri.ptr, URI_MAX_LEN, 1, uri.len));
+    status =
+        fastly::req_uri_get(this->handle, reinterpret_cast<char *>(uri.ptr), uri.len, &uri.len);
+  }
+
+  if (!convert_result(status, &err)) {
     cabi_free(uri.ptr);
     res.emplace_err(err);
   } else {
-    uri.ptr = static_cast<uint8_t *>(cabi_realloc(uri.ptr, URI_MAX_LEN, 1, uri.len));
     res.emplace(make_host_string(uri));
   }
 
