@@ -170,6 +170,7 @@ class CacheTransaction final {
   JSContext *cx;
   JS::RootedObject promise;
   host_api::CacheHandle handle;
+  bool committed = false;
 
   const char *func;
   int line;
@@ -180,10 +181,8 @@ public:
       : cx{cx}, promise{this->cx, promise}, handle{handle}, func{func}, line{line} {};
 
   ~CacheTransaction() {
-    // An invalid handle indicates that this transaction has been committed.
-    if (!this->handle.is_valid()) {
+    if (committed)
       return;
-    }
 
     auto res = this->handle.close();
     if (auto *err = res.to_err()) {
@@ -202,15 +201,14 @@ public:
 
   /// Commit this transaction.
   void commit() {
-    // Invalidate the handle to indicate that the transaction has been committed.
-    MOZ_ASSERT(this->handle.is_valid());
-    this->handle = host_api::CacheHandle{};
-    MOZ_ASSERT(!this->handle.is_valid());
+    MOZ_ASSERT(!committed);
+    committed = true;
   }
 };
 
 bool get_or_set_then_handler(JSContext *cx, JS::HandleObject lookup_state, JS::HandleValue extra,
                              JS::CallArgs args) {
+  fprintf(stderr, "IN THEN HANDLER");
   JS::RootedValue handle_val(cx);
   JS::RootedValue promise_val(cx);
   if (!JS_GetProperty(cx, lookup_state, "promise", &promise_val)) {

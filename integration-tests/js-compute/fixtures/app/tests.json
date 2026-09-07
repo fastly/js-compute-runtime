@@ -456,6 +456,7 @@
     "flake": true,
     "environments": ["compute"]
   },
+  "GET /simple-cache/getOrSet/transaction-closed-on-reject": {},
   "GET /client/requestId": {},
   "GET /client/tlsJA3MD5": {},
   "GET /client/tlsClientHello": {},
