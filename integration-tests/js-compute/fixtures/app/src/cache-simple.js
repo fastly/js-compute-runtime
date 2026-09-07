@@ -2227,4 +2227,30 @@ async function simpleCacheEntryInterfaceTests() {
       });
     }
   });
+
+  routes.set(
+    '/simple-cache/getOrSet/transaction-closed-on-reject',
+    async () => {
+      const key = String(Math.random()) + 'transaction-closed-on-reject';
+      await assertRejects(() =>
+        SimpleCache.getOrSet(key, async () => {
+          throw 'uh oh';
+        }),
+      );
+      // If the rejected set() handler above left the transaction open, Viceroy
+      // would hang forever waiting on the same key's transaction to be released.
+      const entry = await SimpleCache.getOrSet(key, async () => {
+        return {
+          value: 'ok',
+          ttl: 10,
+        };
+      });
+      assert(
+        entry instanceof SimpleCacheEntry,
+        true,
+        'entry instanceof SimpleCacheEntry',
+      );
+      assert(await entry.text(), 'ok', `await entry.text()`);
+    },
+  );
 }

@@ -170,6 +170,7 @@ class CacheTransaction final {
   JSContext *cx;
   JS::RootedObject promise;
   host_api::CacheHandle handle;
+  bool committed = false;
 
   const char *func;
   int line;
@@ -180,10 +181,8 @@ public:
       : cx{cx}, promise{this->cx, promise}, handle{handle}, func{func}, line{line} {};
 
   ~CacheTransaction() {
-    // An invalid handle indicates that this transaction has been committed.
-    if (!this->handle.is_valid()) {
+    if (committed)
       return;
-    }
 
     auto res = this->handle.close();
     if (auto *err = res.to_err()) {
@@ -202,10 +201,8 @@ public:
 
   /// Commit this transaction.
   void commit() {
-    // Invalidate the handle to indicate that the transaction has been committed.
-    MOZ_ASSERT(this->handle.is_valid());
-    this->handle = host_api::CacheHandle{};
-    MOZ_ASSERT(!this->handle.is_valid());
+    MOZ_ASSERT(!committed);
+    committed = true;
   }
 };
 
@@ -393,6 +390,23 @@ bool get_or_set_catch_handler(JSContext *cx, JS::HandleObject lookup_state,
   JS::RootedObject promise(cx, &promise_val.toObject());
   if (!promise) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  JS::RootedValue handle_val(cx);
+  if (!JS_GetProperty(cx, lookup_state, "handle", &handle_val)) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  MOZ_ASSERT(handle_val.isInt32());
+  // The set() callback rejected, so the transaction it was populating is still open;
+  // close it here or it stays open and blocks subsequent lookups for this key.
+  host_api::CacheHandle handle(handle_val.toInt32());
+  auto cancel_res = handle.close();
+  if (auto *err = cancel_res.to_err()) {
+    // The set() callback's rejection reason is what the caller actually cares about, so
+    // we deliberately swallow this secondary error rather than let it clobber that one.
+    if (GLOBAL_ENGINE->debug_logging_enabled()) {
+      fprintf(stderr, "Warning: failed to cancel SimpleCache transaction after set() rejected.\n");
+    }
   }
 
   JS::RootedObject inner_promise(cx, &inner_promise_val.toObject());
