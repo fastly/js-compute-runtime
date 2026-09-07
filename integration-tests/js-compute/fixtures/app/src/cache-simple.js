@@ -2237,7 +2237,7 @@ async function simpleCacheEntryInterfaceTests() {
           throw 'uh oh';
         }),
       );
-      // If the rejected set() handler above left the transaction open, this call
+      // If the rejected set() handler above left the transaction open, Viceroy
       // would hang forever waiting on the same key's transaction to be released.
       const entry = await SimpleCache.getOrSet(key, async () => {
         return {
