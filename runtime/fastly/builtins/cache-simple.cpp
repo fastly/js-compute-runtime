@@ -208,7 +208,6 @@ public:
 
 bool get_or_set_then_handler(JSContext *cx, JS::HandleObject lookup_state, JS::HandleValue extra,
                              JS::CallArgs args) {
-  fprintf(stderr, "IN THEN HANDLER");
   JS::RootedValue handle_val(cx);
   JS::RootedValue promise_val(cx);
   if (!JS_GetProperty(cx, lookup_state, "promise", &promise_val)) {
