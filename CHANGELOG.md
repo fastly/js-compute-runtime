@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.45.1](https://github.com/fastly/js-compute-runtime/compare/v3.45.0...v3.45.1) (2026-09-07)
+
+
+### Bug Fixes
+
+* Close cache transaction if getOrSet handler throws ([#1586](https://github.com/fastly/js-compute-runtime/issues/1586)) ([5e7fc87](https://github.com/fastly/js-compute-runtime/commit/5e7fc8711f0f96b914fcf85674c81d57ef64b24a))
+* Commit cache transaction in SimpleCache.getOrSet ([#1581](https://github.com/fastly/js-compute-runtime/issues/1581)) ([7789f23](https://github.com/fastly/js-compute-runtime/commit/7789f2364fc80f9f9543e20c6eae1cdfc148a738))
+
 ## 3.45.0 (2026-09-03)
 
 ### Added
