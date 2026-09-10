@@ -1,0 +1,35 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# PendingTransaction.wait
+
+The **`wait`** method of the `PendingTransaction` interface waits for the transaction lookup to resolve, returning a `TransactionCacheEntry` — the same value that `CoreCache.transactionLookup()` would have returned had it been called instead.
+
+If `timeoutMs` is provided and the lookup does not resolve within that many milliseconds, the returned promise rejects, and the pending lookup is released so that it no longer holds up e.g. other transactional lookups for the same key.
+
+`wait()` can only be called once per `PendingTransaction`; calling it again throws.
+
+## Syntax
+
+```js
+wait()
+wait(timeoutMs)
+```
+
+### Parameters
+
+- `timeoutMs` _: number_ __optional__
+  - The maximum number of milliseconds to wait for the lookup to resolve.
+  - If omitted, `wait()` blocks until the lookup resolves, however long that takes.
+
+### Return value
+
+A `Promise` which resolves with a `TransactionCacheEntry`.
+
+### Exceptions
+
+- The returned promise rejects if `timeoutMs` elapses before the lookup resolves.
+- Throws if `wait()` has already been called on this `PendingTransaction`.

@@ -1033,6 +1033,16 @@ WASM_IMPORT("fastly_cache", "transaction_lookup")
 int cache_transaction_lookup(char *cache_key, size_t cache_key_len, uint32_t options_mask,
                              fastly_host_cache_lookup_options *options, uint32_t *ret);
 
+WASM_IMPORT("fastly_cache", "transaction_lookup_async")
+int cache_transaction_lookup_async(char *cache_key, size_t cache_key_len, uint32_t options_mask,
+                                   fastly_host_cache_lookup_options *options, uint32_t *ret);
+
+WASM_IMPORT("fastly_cache", "cache_busy_handle_wait")
+int cache_busy_handle_wait(uint32_t busy_handle, uint32_t *ret);
+
+WASM_IMPORT("fastly_cache", "close_busy")
+int cache_close_busy(uint32_t busy_handle);
+
 WASM_IMPORT("fastly_cache", "transaction_insert")
 int cache_transaction_insert(uint32_t handle, uint32_t options_mask, CacheWriteOptions *options,
                              uint32_t *ret);

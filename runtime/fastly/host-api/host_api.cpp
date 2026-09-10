@@ -44,7 +44,7 @@ static void log_hostcall(const char *func_name, ...) {
 #define TRACE_CALL_RET(...)
 #endif
 
-#define NEVER_HANDLE 0xFFFFFFFD
+using host_api::NEVER_HANDLE;
 
 #define MILLISECS_IN_NANOSECS 1000000
 #define SECS_IN_NANOSECS 1000000000
@@ -3515,6 +3515,83 @@ Result<CacheHandle> CacheHandle::transaction_lookup(std::string_view key,
     res.emplace_err(err);
   } else {
     res.emplace(handle);
+  }
+
+  return res;
+}
+
+Result<CacheBusyHandle> CacheBusyHandle::transaction_lookup_async(std::string_view key,
+                                                                  const CacheLookupOptions &opts) {
+  TRACE_CALL()
+  Result<CacheBusyHandle> res;
+
+  auto key_str = string_view_to_world_string(key);
+
+  fastly::fastly_host_error err;
+  CacheBusyHandle::Handle handle;
+  fastly::fastly_host_cache_lookup_options os;
+  memset(&os, 0, sizeof(os));
+
+  uint32_t options_mask = 0;
+  if (opts.request_headers.is_valid()) {
+    os.request_headers = opts.request_headers.handle;
+    options_mask |= FASTLY_CACHE_LOOKUP_OPTIONS_MASK_REQUEST_HEADERS;
+  }
+
+  if (!convert_result(fastly::cache_transaction_lookup_async(reinterpret_cast<char *>(key_str.ptr),
+                                                             key_str.len, options_mask, &os,
+                                                             &handle),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(handle);
+  }
+
+  return res;
+}
+
+Result<CacheHandle> CacheBusyHandle::wait() {
+  TRACE_CALL()
+  Result<CacheHandle> res;
+
+  fastly::fastly_host_error err;
+  CacheHandle::Handle handle;
+
+  if (!convert_result(fastly::cache_busy_handle_wait(this->handle, &handle), &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(handle);
+  }
+
+  return res;
+}
+
+Result<bool> CacheBusyHandle::is_ready() const {
+  TRACE_CALL()
+  Result<bool> res;
+
+  fastly::fastly_host_error err;
+  uint32_t is_ready_out;
+
+  if (!convert_result(fastly::async_is_ready(this->handle, &is_ready_out), &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(is_ready_out != 0);
+  }
+
+  return res;
+}
+
+Result<Void> CacheBusyHandle::close() {
+  TRACE_CALL()
+  Result<Void> res;
+
+  fastly::fastly_host_error err;
+
+  if (!convert_result(fastly::cache_close_busy(this->handle), &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
   }
 
   return res;

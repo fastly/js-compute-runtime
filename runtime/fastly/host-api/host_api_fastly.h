@@ -158,6 +158,11 @@ using fastly::fetch::Request;
 
 namespace host_api {
 
+/// Sentinel `AsyncTask` handle used for tasks that are driven purely by a `deadline()`
+/// (e.g. timers) rather than by a real host handle. Must stay in sync with the value the
+/// host treats as "never ready" via `async_is_ready`/`async_select`.
+constexpr uint32_t NEVER_HANDLE = 0xFFFFFFFD;
+
 Result<Void>
 write_headers(HttpHeaders *headers,
               std::vector<std::tuple<host_api::HostString, host_api::HostString>> &list);
@@ -376,7 +381,7 @@ struct TlsVersion {
   uint8_t value = 0;
 
   explicit TlsVersion(uint8_t raw);
-  explicit TlsVersion(){};
+  explicit TlsVersion() {};
 
   uint8_t get_version() const;
   double get_version_number() const;
@@ -1103,6 +1108,38 @@ public:
   Result<uint64_t> get_age_ns();
 
   Result<uint64_t> get_hits();
+};
+
+/// A pending transaction lookup, issued via `CacheBusyHandle::transaction_lookup_async`.
+/// Mirrors the Rust SDK's `CacheBusyHandle`: the busy handle either resolves to a real
+/// `CacheHandle` (via `wait()`) or, if abandoned before that (e.g. on a bounded wait's
+/// timeout), must be released via `close()`.
+class CacheBusyHandle final {
+public:
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
+
+  CacheBusyHandle() = default;
+  explicit CacheBusyHandle(Handle handle) : handle{handle} {}
+
+  static Result<CacheBusyHandle> transaction_lookup_async(std::string_view key,
+                                                          const CacheLookupOptions &opts);
+
+  bool is_valid() const { return this->handle != invalid; }
+
+  /// Block until the busy handle resolves, yielding the real `CacheHandle`.
+  Result<CacheHandle> wait();
+
+  /// Non-blocking readiness check.
+  Result<bool> is_ready() const;
+
+  /// Release a still-pending lookup (used on timeout / cleanup).
+  Result<Void> close();
+
+  FastlyAsyncTask::Handle async_handle() const { return FastlyAsyncTask::Handle{this->handle}; }
 };
 
 struct BackendHealth final {

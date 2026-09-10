@@ -2072,6 +2072,54 @@
   "GET /core-cache/transactionLookup/options-parameter-headers-field-valid-Headers-instance": {
     "environments": ["compute"]
   },
+  "GET /core-cache/transactionLookupAsync/called-as-constructor": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/key-parameter-not-supplied": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/key-parameter-empty-string": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/key-parameter-8135-character-string": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/key-parameter-8136-character-string": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/options-parameter-wrong-type": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/options-parameter-headers-field-wrong-type": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/returns-PendingTransaction": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/wait-resolves-must-insert-or-update": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/pending-reflects-readiness": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/wait-called-twice-throws": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/wait-with-timeout-resolves": {
+    "environments": ["compute"]
+  },
+  "GET /pending-transaction/interface": {
+    "environments": ["compute"]
+  },
+  "GET /pending-transaction/constructor/called-as-regular-function": {
+    "environments": ["compute"]
+  },
+  "GET /pending-transaction/constructor/throws": {
+    "environments": ["compute"]
+  },
   "GET /cache-entry/interface": {
     "environments": ["compute"]
   },
