@@ -1071,10 +1071,16 @@ routes.set('/http-cache/headers-from-hostcall', async (event) => {
   const range = req.headers.get('range');
   if (range !== null) headers.set('range', range);
 
-  await fetch(new Request('https://http-me.fastly.dev/anything/no-cache', { method: 'GET', headers }), {
-    backend: 'httpme',
-    cacheOverride,
-  });
+  await fetch(
+    new Request('https://http-me.fastly.dev/anything/no-cache', {
+      method: 'GET',
+      headers,
+    }),
+    {
+      backend: 'httpme',
+      cacheOverride,
+    },
+  );
 
   strictEqual(sawRange, 'none');
 });

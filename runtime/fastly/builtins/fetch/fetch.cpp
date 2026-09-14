@@ -530,8 +530,9 @@ bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
 
   JS::RootedObject before_send_promise(cx);
   if (before_send) {
-    // Discard whatever Headers view is already cached on `request` and replace it with a fresh snapshot of that backend request's actual
-    // headers, so the hook sees (and can remove) headers the host added.
+    // Discard whatever Headers view is already cached on `request` and replace it with a fresh
+    // snapshot of that backend request's actual headers, so the hook sees (and can remove) headers
+    // the host added.
     JS::RootedObject backend_request_headers(
         cx, create_headers_snapshot(cx, backend_request_handle.headers(),
                                     builtins::web::fetch::Headers::HeadersGuard::Request));
