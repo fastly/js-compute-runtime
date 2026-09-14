@@ -2,6 +2,7 @@
 #include "../../../StarlingMonkey/builtins/web/fetch/headers.h"
 #include "../../../StarlingMonkey/builtins/web/streams/native-stream-source.h"
 #include "../../../StarlingMonkey/runtime/encode.h"
+#include "../common/validations.h"
 #include "../host-api/host_api_fastly.h"
 #include "body.h"
 #include "builtin.h"
@@ -9,10 +10,12 @@
 #include "host_api.h"
 #include "js/Stream.h"
 #include <iostream>
+#include <optional>
 
 using builtins::web::fetch::Headers;
 using builtins::web::streams::NativeStreamSource;
 using fastly::body::FastlyBody;
+using fastly::common::parse_and_validate_timeout;
 using fastly::fastly::convertBodyInit;
 using fastly::fetch::Request;
 using fastly::fetch::RequestOrResponse;
@@ -950,11 +953,205 @@ JSObject *TransactionCacheEntry::create(JSContext *cx, uint32_t handle) {
   return instance;
 }
 
+namespace {
+// The following two types implement the two sides of a `transactionLookupAsync` timed wait.
+// The reason there are two async tasks rather than simply using a single task with a timed
+// select is so that the guest does not block on the timed call, and can still make forward
+// progress.
+
+// Async task that resolves once a `transaction_lookup_async` busy handle becomes ready.
+// Unlike the generic `api::FastlyAsyncTask`, this supports cancellation: if it loses the
+// race against a paired `CacheWaitTimeoutTask`, the still-pending busy handle is released
+// host-side via `close_busy` instead of being left dangling.
+class CacheBusyAsyncTask final : public api::AsyncTask {
+  host_api::CacheBusyHandle busy_handle_;
+  Heap<JS::Value> promise_;
+  api::AsyncTask *timeout_task_ = nullptr;
+  bool settled_ = false;
+
+public:
+  CacheBusyAsyncTask(host_api::CacheBusyHandle busy_handle, JS::HandleValue promise)
+      : busy_handle_(busy_handle), promise_(promise) {
+    handle_ = static_cast<int32_t>(busy_handle.handle);
+  }
+
+  void set_timeout_task(api::AsyncTask *timeout_task) { timeout_task_ = timeout_task; }
+  bool settled() const { return settled_; }
+
+  [[nodiscard]] bool run(api::Engine *engine) override {
+    settled_ = true;
+
+    // We won the race against the timeout task, if it exists
+    if (timeout_task_) {
+      engine->cancel_async_task(timeout_task_);
+    }
+
+    JSContext *cx = engine->cx();
+    RootedObject promise_obj(cx, &promise_.get().toObject());
+
+    auto res = busy_handle_.wait();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return RejectPromiseWithPendingError(cx, promise_obj);
+    }
+    auto cache_handle = res.unwrap();
+
+    RootedObject entry(cx, TransactionCacheEntry::create(cx, cache_handle.handle));
+    if (!entry) {
+      return RejectPromiseWithPendingError(cx, promise_obj);
+    }
+    RootedValue result(cx, JS::ObjectValue(*entry));
+    JS::ResolvePromise(cx, promise_obj, result);
+    return true;
+  }
+
+  [[nodiscard]] bool cancel(api::Engine *engine) override {
+    auto res = busy_handle_.close();
+    return !res.is_err();
+  }
+
+  void trace(JSTracer *trc) override { TraceEdge(trc, &promise_, "CacheBusyAsyncTask promise"); }
+};
+
+// Deadline-only companion task implementing the bounded-wait side of
+// `PendingTransaction.wait(timeoutMs)`. Modeled on `TimerTask`
+// (StarlingMonkey/builtins/web/timers.cpp): its `handle_` is the sentinel `NEVER_HANDLE`, so
+// it's driven purely by `deadline()`, and it races against the paired `CacheBusyAsyncTask`.
+class CacheWaitTimeoutTask final : public api::AsyncTask {
+  uint64_t deadline_;
+  Heap<JS::Value> promise_;
+  CacheBusyAsyncTask *cache_task_;
+
+public:
+  CacheWaitTimeoutTask(uint64_t deadline, JS::HandleValue promise, CacheBusyAsyncTask *cache_task)
+      : deadline_(deadline), promise_(promise), cache_task_(cache_task) {
+    handle_ = static_cast<int32_t>(host_api::NEVER_HANDLE);
+  }
+
+  [[nodiscard]] uint64_t deadline() override { return deadline_; }
+
+  [[nodiscard]] bool run(api::Engine *engine) override {
+    if (cache_task_->settled()) {
+      // The paired lookup already settled; this timeout lost the race.
+      return true;
+    }
+
+    // Removes the paired task from the queue and invokes its cancel(), which releases the
+    // busy handle host-side via close_busy.
+    engine->cancel_async_task(cache_task_);
+
+    JSContext *cx = engine->cx();
+    RootedObject promise_obj(cx, &promise_.get().toObject());
+    JS_ReportErrorASCII(cx, "Timed out waiting for the cache transaction lookup to resolve");
+    return RejectPromiseWithPendingError(cx, promise_obj);
+  }
+
+  [[nodiscard]] bool cancel(api::Engine *engine) override { return true; }
+
+  void trace(JSTracer *trc) override { TraceEdge(trc, &promise_, "CacheWaitTimeoutTask promise"); }
+};
+
+} // namespace
+
+host_api::CacheBusyHandle PendingTransaction::busy_handle(JSObject *self) {
+  MOZ_ASSERT(PendingTransaction::is_instance(self));
+  host_api::CacheBusyHandle handle{static_cast<uint32_t>(
+      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::BusyHandle)).toInt32())};
+  return handle;
+}
+
+// pending(): boolean;
+bool PendingTransaction::pending(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto handle = PendingTransaction::busy_handle(self);
+  auto res = handle.is_ready();
+  if (auto *err = res.to_err()) {
+    // This will usually occur due to a call to pending() after wait(),
+    // due to the handle invalidation, so we simply return false.
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  args.rval().setBoolean(!res.unwrap());
+  return true;
+}
+
+// wait(timeoutMs?: number): Promise<TransactionCacheEntry>;
+bool PendingTransaction::wait(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  if (JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::Consumed)).toBoolean()) {
+    JS_ReportErrorASCII(
+        cx, "PendingTransaction.wait: wait() has already been called on this PendingTransaction");
+    return false;
+  }
+  JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::Consumed), JS::BooleanValue(true));
+
+  std::optional<uint32_t> timeout_ms;
+  if (!args.get(0).isUndefined()) {
+    constexpr auto max_timeout = 0x100000000;
+    auto parsed = parse_and_validate_timeout(cx, args.get(0), "PendingTransaction.wait",
+                                             "timeoutMs", max_timeout);
+    if (!parsed) {
+      return false;
+    }
+    timeout_ms = parsed;
+  }
+
+  JS::RootedObject result_promise(cx, JS::NewPromiseObject(cx, nullptr));
+  if (!result_promise) {
+    return false;
+  }
+
+  auto handle = PendingTransaction::busy_handle(self);
+  JS::RootedValue result_promise_val(cx, JS::ObjectValue(*result_promise));
+
+  auto *cache_task = new CacheBusyAsyncTask(handle, result_promise_val);
+  ENGINE->queue_async_task(cache_task);
+
+  if (timeout_ms) {
+    uint64_t deadline =
+        host_api::MonotonicClock::now() + static_cast<uint64_t>(*timeout_ms) * 1'000'000;
+    auto *timeout_task = new CacheWaitTimeoutTask(deadline, result_promise_val, cache_task);
+    cache_task->set_timeout_task(timeout_task);
+    ENGINE->queue_async_task(timeout_task);
+  }
+
+  args.rval().setObject(*result_promise);
+  return true;
+}
+
+const JSFunctionSpec PendingTransaction::static_methods[] = {JS_FS_END};
+
+const JSPropertySpec PendingTransaction::static_properties[] = {JS_PS_END};
+
+const JSFunctionSpec PendingTransaction::methods[] = {
+    JS_FN("pending", pending, 0, JSPROP_ENUMERATE),
+    JS_FN("wait", wait, 0, JSPROP_ENUMERATE),
+    JS_FS_END,
+};
+
+const JSPropertySpec PendingTransaction::properties[] = {
+    JS_STRING_SYM_PS(toStringTag, "PendingTransaction", JSPROP_READONLY), JS_PS_END};
+
+JSObject *PendingTransaction::create(JSContext *cx, uint32_t busy_handle) {
+  JS::RootedObject instance(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
+  if (!instance) {
+    return nullptr;
+  }
+  JS::SetReservedSlot(instance, static_cast<uint32_t>(Slots::BusyHandle),
+                      JS::Int32Value(busy_handle));
+  JS::SetReservedSlot(instance, static_cast<uint32_t>(Slots::Consumed), JS::BooleanValue(false));
+  return instance;
+}
+
 // Below is the implementation of the JavaScript CoreCache Class which has this definition:
 // class CoreCache {
 //   static lookup(key: string, options?: LookupOptions): CacheEntry | null;
 //   static insert(key: string, options: InsertOptions): import("fastly:body").FastlyBody;
 //   static transactionLookup(key: string, options?: LookupOptions): TransactionCacheEntry;
+//   static transactionLookupAsync(key: string, options?: LookupOptions): PendingTransaction;
 // }
 
 // static lookup(key: string, options?: LookupOptions): CacheEntry | null;
@@ -1100,10 +1297,57 @@ bool CoreCache::transactionLookup(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+// static transactionLookupAsync(key: string, options?: LookupOptions): PendingTransaction;
+bool CoreCache::transactionLookupAsync(JSContext *cx, unsigned argc, JS::Value *vp) {
+  REQUEST_HANDLER_ONLY("The CoreCache builtin");
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, "CoreCache.transactionLookupAsync", 1)) {
+    return false;
+  }
+
+  // Convert key parameter into a string and check the value adheres to our validation rules.
+  auto key = core::encode(cx, args.get(0));
+  if (!key) {
+    return false;
+  }
+
+  if (key.len == 0) {
+    JS_ReportErrorASCII(cx, "CoreCache.transactionLookupAsync: key can not be an empty string");
+    return false;
+  }
+  if (key.len > 8135) {
+    JS_ReportErrorASCII(
+        cx,
+        "CoreCache.transactionLookupAsync: key is too long, the maximum allowed length is 8135.");
+    return false;
+  }
+
+  auto options_result = parseLookupOptions(cx, args.get(1));
+  if (options_result.isErr()) {
+    return false;
+  }
+  auto options = options_result.unwrap();
+
+  auto res = host_api::CacheBusyHandle::transaction_lookup_async(key, options);
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  auto busy_handle = res.unwrap();
+
+  JS::RootedObject pending(cx, PendingTransaction::create(cx, busy_handle.handle));
+  if (!pending) {
+    return false;
+  }
+  args.rval().setObject(*pending);
+  return true;
+}
+
 const JSFunctionSpec CoreCache::static_methods[] = {
     JS_FN("lookup", lookup, 1, JSPROP_ENUMERATE),
     JS_FN("insert", insert, 2, JSPROP_ENUMERATE),
     JS_FN("transactionLookup", transactionLookup, 1, JSPROP_ENUMERATE),
+    JS_FN("transactionLookupAsync", transactionLookupAsync, 1, JSPROP_ENUMERATE),
     JS_FS_END,
 };
 
@@ -1132,6 +1376,9 @@ bool install(api::Engine *engine) {
   if (!CacheState::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
+  if (!PendingTransaction::init_class_impl(engine->cx(), engine->global())) {
+    return false;
+  }
 
   // fastly:cache
   RootedObject cache(engine->cx(), JS_NewObject(engine->cx(), nullptr));
@@ -1157,6 +1404,12 @@ bool install(api::Engine *engine) {
       engine->cx(), JS_GetConstructor(engine->cx(), TransactionCacheEntry::proto_obj));
   RootedValue transaction_cache_entry_val(engine->cx(), ObjectValue(*transaction_cache_entry_obj));
   if (!JS_SetProperty(engine->cx(), cache, "TransactionCacheEntry", transaction_cache_entry_val)) {
+    return false;
+  }
+  RootedObject pending_transaction_obj(
+      engine->cx(), JS_GetConstructor(engine->cx(), PendingTransaction::proto_obj));
+  RootedValue pending_transaction_val(engine->cx(), ObjectValue(*pending_transaction_obj));
+  if (!JS_SetProperty(engine->cx(), cache, "PendingTransaction", pending_transaction_val)) {
     return false;
   }
   RootedValue simple_cache_val(engine->cx());
