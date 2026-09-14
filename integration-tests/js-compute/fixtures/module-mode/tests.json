@@ -308,7 +308,7 @@
     "downstream_request": {
       "method": "GET",
       "pathname": "/http-cache/headers-from-hostcall",
-      "headers": ["Range", "bytes=0-3"]
+      "headers": {"Range": "bytes=0-3"}
     }
   },
   "GET /kv-store-e2e/list": {},
