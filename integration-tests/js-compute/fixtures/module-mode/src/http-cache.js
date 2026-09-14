@@ -1072,7 +1072,7 @@ routes.set('/http-cache/headers-from-hostcall', async (event) => {
   if (range !== null) headers.set('range', range);
 
   await fetch(
-    new Request('https://http-me.fastly.dev/anything/no-cache', {
+    new Request(getTestUrl(), {
       method: 'GET',
       headers,
     }),
