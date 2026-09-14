@@ -218,10 +218,9 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
     // timeout value of 0 means no timeout for async_select, so we must round any positive
     // remaining duration up to at least 1ms to avoid blocking indefinitely one sub-millisecond
     // timeouts.
-    uint32_t timeout = soonest_deadline
-                            ? (*soonest_deadline - *now + MILLISECS_IN_NANOSECS - 1) /
-                                  MILLISECS_IN_NANOSECS
-                            : 0;
+    uint32_t timeout = soonest_deadline ? (*soonest_deadline - *now + MILLISECS_IN_NANOSECS - 1) /
+                                              MILLISECS_IN_NANOSECS
+                                        : 0;
     if (!convert_result(fastly::async_select(handles.data(), handles.size(), timeout, &ret),
                         &err)) {
       if (host_api::error_is_bad_handle(err)) {
