@@ -983,7 +983,6 @@ public:
 
     // We won the race against the timeout task, if it exists
     if (timeout_task_) {
-      fastly_push_debug_message("cache busy won timeout");
       engine->cancel_async_task(timeout_task_);
     }
 
@@ -1007,7 +1006,6 @@ public:
   }
 
   [[nodiscard]] bool cancel(api::Engine *engine) override {
-    fastly_push_debug_message("cache busy task cancel");
     auto res = busy_handle_.close();
     return !res.is_err();
   }
@@ -1035,10 +1033,8 @@ public:
   [[nodiscard]] bool run(api::Engine *engine) override {
     if (cache_task_->settled()) {
       // The paired lookup already settled; this timeout lost the race.
-      fastly_push_debug_message("timeout lost race");
       return true;
     }
-    fastly_push_debug_message("timeout won race");
 
     // Removes the paired task from the queue and invokes its cancel(), which releases the
     // busy handle host-side via close_busy.

@@ -132,10 +132,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
   size_t tasks_len = tasks.size();
   std::vector<api::FastlyAsyncTask::Handle> handles;
   handles.reserve(tasks_len);
-  // `now` and `soonest_deadline` are computed lazily (only once we actually see a deadline or
-  // immediate task) and may legitimately end up holding the value 0 (an unrealistic, but not
-  // impossible, monotonic clock reading). Using optionals rather than a 0 sentinel keeps "not
-  // computed yet" and "computed, and happens to be 0" distinguishable.
+
   std::optional<uint64_t> now;
   std::optional<uint64_t> soonest_deadline;
   std::optional<size_t> soonest_deadline_idx;
@@ -219,11 +216,8 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
   while (true) {
     MOZ_ASSERT(!soonest_deadline || (now && *soonest_deadline >= *now));
     // timeout value of 0 means no timeout for async_select, so we must round any positive
-    // remaining duration up to at least 1ms -- otherwise a sub-millisecond remainder (which
-    // happens routinely: on entry here soonest_deadline is always strictly in the future, but
-    // often by well under a millisecond, and it only gets closer on each retry below) would
-    // truncate to 0 and get misread as "no timeout", turning a short deadline into an
-    // indefinite block instead of firing it.
+    // remaining duration up to at least 1ms to avoid blocking indefinitely one sub-millisecond
+    // timeouts.
     uint32_t timeout = soonest_deadline
                             ? (*soonest_deadline - *now + MILLISECS_IN_NANOSECS - 1) /
                                   MILLISECS_IN_NANOSECS
