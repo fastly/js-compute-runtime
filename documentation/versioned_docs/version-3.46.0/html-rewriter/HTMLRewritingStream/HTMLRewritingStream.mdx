@@ -1,0 +1,45 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# `HTMLRewritingStream()`
+
+The **`HTMLRewritingStream`** lets you rewrite HTML by registering callbacks on CSS selectors. When an element matching the selector is encountered, the rewriter calls your callback. This callback can manipulate the attributes of the element, and add or remove content from the immediate context.
+
+## Syntax
+
+```js
+new HTMLRewritingStream()
+```
+
+### Return value
+
+A new `HTMLRewritingStream` object.
+
+## Examples
+
+In this example, we fetch an HTML page and use the HTML rewriter to add an attribute to all `div` tags and prepend the text `Header:` to all `h1` tags:
+
+```js
+/// <reference types="@fastly/js-compute" />
+
+import { HTMLRewritingStream } from 'fastly:html-rewriter';
+
+async function handleRequest(event) {
+  let transformer = new HTMLRewritingStream()
+    .onElement("h1", e => e.prepend("Header: "))
+    .onElement("div", e => e.setAttribute("special-attribute", "top-secret"));
+  let body = (await fetch("https://example.com/")).body.pipeThrough(transformer);
+
+  return new Response(body, {
+    status: 200,
+    headers: new Headers({
+      "content-type": "text/html; charset=utf-8",
+    })
+  })
+}
+
+addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
+```

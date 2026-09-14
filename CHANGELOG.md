@@ -1,14 +1,12 @@
 # Changelog
 
-## [3.46.0](https://github.com/fastly/js-compute-runtime/compare/v3.45.1...v3.46.0) (2026-09-14)
+## 3.46.0 (2026-09-14)
 
-
-### Features
+### Added
 
 * CoreCache.transactionLookupAsync ([#1591](https://github.com/fastly/js-compute-runtime/issues/1591)) ([8aeb1ac](https://github.com/fastly/js-compute-runtime/commit/8aeb1acd7f89efe50cb23747f940953444c208fe))
 
-
-### Bug Fixes
+### Fixed
 
 * Use the correct headers for the beforeSend HTTP cache hook ([775c727](https://github.com/fastly/js-compute-runtime/commit/775c72705c56ff0336c88f9598cc8b2bf5039b15))
 * Use the correct headers for the beforeSend HTTP cache hook ([#1590](https://github.com/fastly/js-compute-runtime/issues/1590)) ([a4d6559](https://github.com/fastly/js-compute-runtime/commit/a4d655992bd361911d4b237e0813d3f6cc3b8c5c))

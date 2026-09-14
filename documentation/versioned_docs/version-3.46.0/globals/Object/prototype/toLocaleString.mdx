@@ -1,0 +1,34 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Object.prototype.toLocaleString()
+
+The **`toLocaleString()`** method returns a string representing the object. This method is meant to be overridden by derived objects for locale-specific purposes.
+
+## Syntax
+
+```js
+toLocaleString()
+```
+
+### Parameters
+
+None. However, all objects that override this method are expected to accept at most two parameters, corresponding to `locales` and `options`, such as [`Date.prototype.toLocaleString()`](../../../globals/Date/prototype/toLocaleString.mdx). The parameter positions should not be used for any other purpose.
+
+### Return value
+
+The return value of calling `this.toString()`.
+
+## Description
+
+All objects that inherit from `Object.prototype` (that is, all except [`null`-prototype objects](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object#null-prototype_objects)) inherit the `toLocaleString()` method. `Object`'s `toLocaleString` returns the result of calling [`this.toString()`](../../../globals/Object/prototype/toString.mdx).
+
+This function is provided to give objects a generic `toLocaleString` method, even though not all may use it. In the core language, these built-in objects override `toLocaleString` to provide locale-specific formatting:
+
+- `Array`: [`Array.prototype.toLocaleString()`](../../../globals/Array/prototype/toLocaleString.mdx)
+- `Number`: [`Number.prototype.toLocaleString()`](../../../globals/Number/prototype/toLocaleString.mdx)
+- `Date`: [`Date.prototype.toLocaleString()`](../../../globals/Date/prototype/toLocaleString.mdx)
+- `BigInt`: [`BigInt.prototype.toLocaleString()`](../../../globals/BigInt/prototype/toLocaleString.mdx)
