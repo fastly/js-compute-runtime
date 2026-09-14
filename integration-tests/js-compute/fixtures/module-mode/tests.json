@@ -304,7 +304,7 @@
   },
   "GET /http-cache/headers-from-hostcall": {
     "environments": ["compute"],
-    "features": ["http-cache"]
+    "features": ["http-cache"],
     "downstream_request": {
       "method": "GET",
       "pathname": "/http-cache/headers-from-hostcall",
