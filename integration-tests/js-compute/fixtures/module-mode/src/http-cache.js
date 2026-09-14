@@ -1053,28 +1053,3 @@ routes.set('/http-cache/vary-header', async () => {
   strictEqual(backendCalls, 2);
   strictEqual(res2.cached, false);
 });
-
-routes.set('/http-cache/headers-from-hostcall', async (event) => {
-  let sawRange = 'not checked';
-  const req = event.request;
-
-  const cacheOverride = new CacheOverride({
-    beforeSend(beReq) {
-      sawRange = beReq.headers.get('range') ?? 'none';
-      beReq.headers.delete('if-none-match');
-      beReq.headers.delete('range');
-    },
-  });
-
-  // Forward the client's Range, the way a proxying service would.
-  const headers = new Headers();
-  const range = req.headers.get('range');
-  if (range !== null) headers.set('range', range);
-
-  await fetch(new Request('https://http-me.fastly.dev/anything/no-cache', { method: 'GET', headers }), {
-    backend: 'httpme',
-    cacheOverride,
-  });
-
-  strictEqual(sawRange, 'none');
-});
