@@ -302,6 +302,15 @@
     "environments": ["compute"],
     "features": ["http-cache"]
   },
+  "GET /http-cache/headers-from-hostcall": {
+    "environments": ["compute"],
+    "features": ["http-cache"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/http-cache/headers-from-hostcall",
+      "headers": ["Range", "bytes=0-3"]
+    }
+  },
   "GET /kv-store-e2e/list": {},
   "GET /kv-store/exposed-as-global": {},
   "GET /kv-store/interface": { "flake": true },
