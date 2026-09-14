@@ -337,8 +337,11 @@ bool get_or_set_then_handler(JSContext *cx, JS::HandleObject lookup_state, JS::H
 
   auto inserted_res = handle.transaction_insert_and_stream_back(options);
   if (auto *err = inserted_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
     return false;
   }
+
+  transaction.commit();
 
   auto [body, inserted_handle] = inserted_res.unwrap();
   if (!body.valid()) {
@@ -348,17 +351,21 @@ bool get_or_set_then_handler(JSContext *cx, JS::HandleObject lookup_state, JS::H
   if (source_body.valid()) {
     auto res = body.append(source_body);
     if (auto *error = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
       return false;
     }
   } else {
     auto write_res = body.write_all_back(reinterpret_cast<uint8_t *>(buf.get()), options.length);
     if (auto *error = write_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
       return false;
     }
-    auto close_res = body.close();
-    if (auto *error = close_res.to_err()) {
-      return false;
-    }
+  }
+
+  auto close_res = body.close();
+  if (auto *error = close_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
   }
 
   auto res = inserted_handle.get_body(host_api::CacheGetBodyOptions{});
@@ -371,8 +378,6 @@ bool get_or_set_then_handler(JSContext *cx, JS::HandleObject lookup_state, JS::H
   if (!entry) {
     return false;
   }
-
-  transaction.commit();
 
   JS::RootedValue result(cx);
   result.setObject(*entry);
