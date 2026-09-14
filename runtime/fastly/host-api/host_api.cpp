@@ -132,33 +132,35 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
   size_t tasks_len = tasks.size();
   std::vector<api::FastlyAsyncTask::Handle> handles;
   handles.reserve(tasks_len);
-  uint64_t now = 0;
-  uint64_t soonest_deadline = 0;
-  size_t soonest_deadline_idx = -1;
+  // `now` and `soonest_deadline` are computed lazily (only once we actually see a deadline or
+  // immediate task) and may legitimately end up holding the value 0 (an unrealistic, but not
+  // impossible, monotonic clock reading). Using optionals rather than a 0 sentinel keeps "not
+  // computed yet" and "computed, and happens to be 0" distinguishable.
+  std::optional<uint64_t> now;
+  std::optional<uint64_t> soonest_deadline;
+  std::optional<size_t> soonest_deadline_idx;
   for (size_t idx = 0; idx < tasks_len; ++idx) {
     auto *task = tasks.at(idx);
     uint64_t deadline;
     if (task->id() == IMMEDIATE_TASK_HANDLE) {
-      if (now == 0) {
+      if (!now) {
         now = host_api::MonotonicClock::now();
-        MOZ_ASSERT(now > 0);
       }
-      deadline = now;
+      deadline = *now;
     } else {
       deadline = task->deadline();
     }
     if (deadline > 0) {
       MOZ_ASSERT(task->id() == NEVER_HANDLE || task->id() == IMMEDIATE_TASK_HANDLE);
-      if (now == 0) {
+      if (!now) {
         now = host_api::MonotonicClock::now();
-        MOZ_ASSERT(now > 0);
       }
       // expired timers treated as immediates
-      if (deadline < now) {
-        deadline = now;
+      if (deadline < *now) {
+        deadline = *now;
       }
       // this check will always only select the first immediate
-      if (soonest_deadline == 0 || deadline < soonest_deadline) {
+      if (!soonest_deadline || deadline < *soonest_deadline) {
         soonest_deadline = deadline;
         soonest_deadline_idx = idx;
       }
@@ -172,9 +174,11 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
 
   // When there are no async tasks, sleep until the deadline
   if (handles.size() == 0) {
-    MOZ_ASSERT(soonest_deadline >= now);
-    sleep_until(soonest_deadline, now);
-    return soonest_deadline_idx;
+    // Every task fed into this call was deadline-driven, so both of these must be set.
+    MOZ_ASSERT(soonest_deadline.has_value() && now.has_value());
+    MOZ_ASSERT(*soonest_deadline >= *now);
+    sleep_until(*soonest_deadline, *now);
+    return *soonest_deadline_idx;
   }
 
   uint32_t ret = UINT32_MAX;
@@ -182,7 +186,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
 
   // only immediate timers in the task list -> do a ready check against all handles instead of a
   // select
-  if (now != 0 && soonest_deadline == now) {
+  if (soonest_deadline && soonest_deadline == now) {
     for (ret = 0; ret < handles.size(); ++ret) {
       auto handle = handles.at(ret);
       uint32_t is_ready_out;
@@ -209,13 +213,21 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
       }
     }
     // no tasks ready -> trigger our soonest immediate or timer
-    return soonest_deadline_idx;
+    return *soonest_deadline_idx;
   }
 
   while (true) {
-    MOZ_ASSERT(soonest_deadline == 0 || soonest_deadline >= now);
-    // timeout value of 0 means no timeout for async_select
-    uint32_t timeout = soonest_deadline > 0 ? (soonest_deadline - now) / MILLISECS_IN_NANOSECS : 0;
+    MOZ_ASSERT(!soonest_deadline || (now && *soonest_deadline >= *now));
+    // timeout value of 0 means no timeout for async_select, so we must round any positive
+    // remaining duration up to at least 1ms -- otherwise a sub-millisecond remainder (which
+    // happens routinely: on entry here soonest_deadline is always strictly in the future, but
+    // often by well under a millisecond, and it only gets closer on each retry below) would
+    // truncate to 0 and get misread as "no timeout", turning a short deadline into an
+    // indefinite block instead of firing it.
+    uint32_t timeout = soonest_deadline
+                            ? (*soonest_deadline - *now + MILLISECS_IN_NANOSECS - 1) /
+                                  MILLISECS_IN_NANOSECS
+                            : 0;
     if (!convert_result(fastly::async_select(handles.data(), handles.size(), timeout, &ret),
                         &err)) {
       if (host_api::error_is_bad_handle(err)) {
@@ -242,17 +254,17 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
         }
       }
       abort();
-    } else if (soonest_deadline > 0) {
-      MOZ_ASSERT(soonest_deadline > now);
-      MOZ_ASSERT(soonest_deadline_idx != -1);
+    } else if (soonest_deadline) {
+      MOZ_ASSERT(*soonest_deadline > *now);
+      MOZ_ASSERT(soonest_deadline_idx.has_value());
       // Verify that the task definitely is ready from a time perspective, and if not loop the host
       // call again.
       now = host_api::MonotonicClock::now();
-      if (soonest_deadline > now) {
+      if (*soonest_deadline > *now) {
         err = 0;
         continue;
       }
-      return soonest_deadline_idx;
+      return *soonest_deadline_idx;
     } else {
       abort();
     }
