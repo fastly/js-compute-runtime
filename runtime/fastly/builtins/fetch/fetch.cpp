@@ -10,6 +10,7 @@
 #include "../image-optimizer.h"
 #include "./request-response.h"
 #include "builtin.h"
+#include "decode.h"
 #include "encode.h"
 #include "extension-api.h"
 #include "picosha2.h"
@@ -82,14 +83,14 @@ JSObject *internal_method_then(JSContext *cx, JS::HandleObject promise, JS::Hand
 JSString *get_backend(JSContext *cx, JS::HandleObject request) {
   RootedString backend(cx, RequestOrResponse::backend(request));
   if (!backend) {
-    if (Fastly::allowDynamicBackends) {
+    if (Fastly::request_state->allow_dynamic_backends) {
       JS::RootedObject dynamicBackend(cx, Backend::create(cx, request));
       if (!dynamicBackend) {
         return nullptr;
       }
       backend.set(Backend::name(cx, dynamicBackend));
     } else {
-      backend = Fastly::defaultBackend;
+      backend = Fastly::request_state->default_backend;
       if (!backend) {
         auto handle = Request::request_handle(request);
 
@@ -120,7 +121,6 @@ bool must_use_guest_caching(JSContext *cx, HandleObject request) {
   return false;
 }
 
-bool http_caching_unsupported = false;
 enum CachingMode { Guest, Host, ImageOptimizer };
 bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_mode) {
   *caching_mode = CachingMode::Guest;
@@ -156,16 +156,19 @@ bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_
   // The WASM service uses cache_on_behalf to insert the result into
   // the service's cache.
   auto image_optimizer_opts =
-      JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ImageOptimizerOptions));
-  if (!image_optimizer_opts.isNullOrUndefined()) {
+      JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ImageOptimizerOptions))
+          .toPrivate();
+  if (image_optimizer_opts) {
     *caching_mode = CachingMode::ImageOptimizer;
     return true;
   }
 
   // If we previously found guest caching unsupported then remember that
-  if (http_caching_unsupported || !fastly::fastly::ENABLE_EXPERIMENTAL_HTTP_CACHE) {
+  using fastly::fastly::Fastly;
+  if (Fastly::request_state->http_caching_unsupported ||
+      !Fastly::request_state->enable_experimental_http_cache) {
     if (must_use_guest_caching(cx, request)) {
-      if (!fastly::fastly::ENABLE_EXPERIMENTAL_HTTP_CACHE) {
+      if (!Fastly::request_state->enable_experimental_http_cache) {
         JS_ReportErrorASCII(cx, "HTTP caching API is not enabled for JavaScript; enable it with "
                                 "the --enable-http-cache flag "
                                 "to the js-compute build command, or contact support for help");
@@ -185,7 +188,7 @@ bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_
   auto res = request_handle.is_cacheable();
   if (auto *err = res.to_err()) {
     if (host_api::error_is_unsupported(*err)) {
-      http_caching_unsupported = true;
+      Fastly::request_state->http_caching_unsupported = true;
       // Guest-side caching is unsupported, so we must use host caching.
       // If we have hooks we must fail since they require guest caching.
       if (must_use_guest_caching(cx, request)) {
@@ -343,6 +346,44 @@ bool fetch_process_cache_hooks_origin_request(JSContext *cx, JS::HandleObject re
     return true;
   }
 
+  RootedObject cache_override(
+      cx, JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::CacheOverride))
+              .toObjectOrNull());
+  if (cache_override && CacheOverride::beforeSend(cache_override)) {
+    // beforeSend was handed a snapshot of the candidate backend request's actual headers (see
+    // fetch_send_body_with_cache_hooks). commit_headers below can only add/overwrite headers on
+    // that request -- it has no way to express a deletion -- so before running it, remove any
+    // header from the real request that beforeSend deleted from that snapshot, so it isn't left
+    // behind.
+    auto request_handle = Request::request_handle(request);
+    host_api::HttpHeadersReadOnly *current_headers = request_handle.headers();
+    auto entries_res = current_headers->entries();
+    delete current_headers;
+    if (auto *err = entries_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      RejectPromiseWithPendingError(cx, ret_promise_obj);
+      return true;
+    }
+
+    JS::RootedObject headers_obj(cx, Request::headers(cx, request));
+    if (!headers_obj) {
+      return false;
+    }
+
+    auto *writable_headers = request_handle.headers_writable();
+    for (auto &entry : entries_res.unwrap()) {
+      auto &name = std::get<0>(entry);
+      if (!builtins::web::fetch::Headers::lookup(cx, headers_obj, name)) {
+        auto res = writable_headers->remove(name);
+        if (auto *err = res.to_err()) {
+          HANDLE_ERROR(cx, *err);
+          RejectPromiseWithPendingError(cx, ret_promise_obj);
+          return true;
+        }
+      }
+    }
+  }
+
   if (!RequestOrResponse::commit_headers(cx, request)) {
     return false;
   }
@@ -410,6 +451,49 @@ bool fetch_process_cache_hooks_before_send_reject(JSContext *cx, JS::HandleObjec
   return true;
 }
 
+// Builds a plain, content-only Headers object snapshotting every entry currently on `handle`
+JSObject *create_headers_snapshot(JSContext *cx, host_api::HttpHeadersReadOnly *handle,
+                                  builtins::web::fetch::Headers::HeadersGuard guard) {
+  auto entries_res = handle->entries();
+  delete handle;
+  if (auto *err = entries_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return nullptr;
+  }
+
+  JS::RootedObject entries_arr(cx, JS::NewArrayObject(cx, 0));
+  if (!entries_arr) {
+    return nullptr;
+  }
+  size_t entry_idx = 0;
+  for (auto &entry : entries_res.unwrap()) {
+    JS::RootedString name_str(cx, core::decode_byte_string(cx, std::get<0>(entry)));
+    if (!name_str) {
+      return nullptr;
+    }
+    JS::RootedString value_str(cx, core::decode_byte_string(cx, std::get<1>(entry)));
+    if (!value_str) {
+      return nullptr;
+    }
+
+    JS::RootedValueArray<2> pair(cx);
+    pair[0].setString(name_str);
+    pair[1].setString(value_str);
+    JS::RootedObject pair_arr(cx, JS::NewArrayObject(cx, pair));
+    if (!pair_arr) {
+      return nullptr;
+    }
+
+    JS::RootedValue pair_val(cx, JS::ObjectValue(*pair_arr));
+    if (!JS_SetElement(cx, entries_arr, entry_idx++, pair_val)) {
+      return nullptr;
+    }
+  }
+
+  JS::RootedValue entries_val(cx, JS::ObjectValue(*entries_arr));
+  return builtins::web::fetch::Headers::create(cx, entries_val, guard);
+}
+
 // Sends the request body, applying the beforeSend and afterSend HTTP caching hook lifecycle
 bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
                                       host_api::HttpCacheEntry &cache_entry,
@@ -433,11 +517,9 @@ bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
   JS::SetReservedSlot(request, static_cast<uint32_t>(RequestOrResponse::Slots::CacheEntry),
                       JS::Int32Value(cache_entry.handle));
 
-  // Next, if we have a beforeSend hook, we invoke this hook prior to sending to the backend, with
-  // a newly created request object to match this request. This ensures it gets its headers freshly
-  // linked to the new host request correctly without the previous header cache state from the
-  // original request. We lock the body on this request as it is still owned by the initiating
-  // request object. If there is no beforeSend hook, we don't need to create this request.
+  // Next, if we have a beforeSend hook, we invoke this hook prior to sending to the backend. We
+  // lock the body on this request as it is still owned by the initiating request object. If there
+  // is no beforeSend hook, there's nothing to invoke and no need to touch the request's headers.
   RootedObject cache_override(
       cx, JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::CacheOverride))
               .toObjectOrNull());
@@ -448,6 +530,19 @@ bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
 
   JS::RootedObject before_send_promise(cx);
   if (before_send) {
+    // Discard whatever Headers view is already cached on `request` and replace it with a fresh
+    // snapshot of that backend request's actual headers, so the hook sees (and can remove) headers
+    // the host added.
+    JS::RootedObject backend_request_headers(
+        cx, create_headers_snapshot(cx, backend_request_handle.headers(),
+                                    builtins::web::fetch::Headers::HeadersGuard::Request));
+    if (!backend_request_headers) {
+      ret_promise.setObject(*PromiseRejectedWithPendingError(cx));
+      return true;
+    }
+    JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::Headers),
+                        JS::ObjectValue(*backend_request_headers));
+
     JS::RootedValue ret_val(cx);
     JS::RootedValueArray<1> args(cx);
     args[0].set(JS::ObjectValue(*request));
@@ -1124,6 +1219,29 @@ bool stream_back_catch_handler(JSContext *cx, JS::HandleObject request, JS::Hand
 
 namespace fastly::fetch {
 
+// Percent-encode a string for use in URL query parameters
+// Encodes all characters except: A-Z a-z 0-9 - _ . ~
+std::string percent_encode(std::string_view input) {
+  static const char *hex_chars = "0123456789ABCDEF";
+  std::string encoded;
+  // Guess at a reasonable string length, assuming some characters will be encoded
+  encoded.reserve(input.size() * 2);
+
+  for (unsigned char c : input) {
+    // Unreserved characters per RFC 3986
+    if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' ||
+        c == '_' || c == '.' || c == '~') {
+      encoded += c;
+    } else {
+      encoded += '%';
+      encoded += hex_chars[c >> 4];
+      encoded += hex_chars[c & 0x0F];
+    }
+  }
+
+  return encoded;
+}
+
 api::Engine *ENGINE;
 
 // Helper function to check for and serve stale-if-error responses when errors occur
@@ -1220,6 +1338,11 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   } else if (caching_mode == CachingMode::ImageOptimizer) {
     return fetch_send_body<CachingMode::ImageOptimizer>(cx, request, args.rval());
   }
+
+  // Ensure that any headers that could change cache behaviour (e.g. due to vary headers) are
+  // committed
+  if (!RequestOrResponse::commit_headers(cx, request))
+    return false;
 
   // Check if request is actually cacheable
   bool is_cacheable = false;

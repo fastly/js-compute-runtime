@@ -3,6 +3,7 @@
 #include "../host-api/host_api_fastly.h"
 #include "builtin.h"
 #include "js/Result.h"
+#include <limits>
 #include <tuple>
 
 namespace fastly::edge_rate_limiter {
@@ -159,7 +160,8 @@ bool RateCounter::increment(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // This needs to happen on the happy-path as these all end up being valid uint32_t values that the
   // host-call accepts
-  if (delta < 0 || std::isnan(delta) || std::isinf(delta)) {
+  if (delta < 0 || std::isnan(delta) || std::isinf(delta) ||
+      delta > std::numeric_limits<std::uint32_t>::max()) {
     JS_ReportErrorASCII(cx,
                         "increment: delta parameter is an invalid value, only positive numbers can "
                         "be used for delta values.");
@@ -207,14 +209,13 @@ bool RateCounter::lookupRate(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
+  if (window != 1 && window != 10 && window != 60) {
+    JS_ReportErrorASCII(cx, "lookupRate: window parameter must be either: 1, 10, or 60");
+    return false;
+  }
+
   auto res = host_api::RateCounter::lookup_rate(name, entry, window);
   if (auto *err = res.to_err()) {
-    if (host_api::error_is_generic(*err) || host_api::error_is_invalid_argument(*err)) {
-      if (window != 1 && window != 10 && window != 60) {
-        JS_ReportErrorASCII(cx, "lookupRate: window parameter must be either: 1, 10, or 60");
-        return false;
-      }
-    }
     HANDLE_ERROR(cx, *err);
     return false;
   }
@@ -248,16 +249,15 @@ bool RateCounter::lookupCount(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
+  if (duration != 10 && duration != 20 && duration != 30 && duration != 40 && duration != 50 &&
+      duration != 60) {
+    JS_ReportErrorASCII(
+        cx, "lookupCount: duration parameter must be either: 10, 20, 30, 40, 50, or 60");
+    return false;
+  }
+
   auto res = host_api::RateCounter::lookup_count(name, entry, duration);
   if (auto *err = res.to_err()) {
-    if (host_api::error_is_generic(*err) || host_api::error_is_invalid_argument(*err)) {
-      if (duration != 10 && duration != 20 && duration != 30 && duration != 40 && duration != 50 &&
-          duration != 60) {
-        JS_ReportErrorASCII(
-            cx, "lookupCount: duration parameter must be either: 10, 20, 30, 40, 50, or 60");
-        return false;
-      }
-    }
     HANDLE_ERROR(cx, *err);
     return false;
   }
@@ -329,7 +329,8 @@ bool EdgeRateLimiter::checkRate(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (delta < 0 || std::isnan(delta) || std::isinf(delta)) {
+  if (delta < 0 || std::isnan(delta) || std::isinf(delta) ||
+      delta > std::numeric_limits<std::uint32_t>::max()) {
     JS_ReportErrorASCII(cx,
                         "checkRate: delta parameter is an invalid value, only positive numbers can "
                         "be used for delta values.");
@@ -355,7 +356,8 @@ bool EdgeRateLimiter::checkRate(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   // This needs to happen on the happy-path as these all end up being valid uint32_t values that the
   // host-call accepts
-  if (limit < 0 || std::isnan(limit) || std::isinf(limit)) {
+  if (limit < 0 || std::isnan(limit) || std::isinf(limit) ||
+      limit > std::numeric_limits<std::uint32_t>::max()) {
     JS_ReportErrorASCII(cx,
                         "checkRate: limit parameter is an invalid value, only positive numbers can "
                         "be used for limit values.");

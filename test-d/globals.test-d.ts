@@ -481,7 +481,7 @@ import { expectError, expectType } from 'tsd';
   fastly.baseURL = undefined;
   expectType<string>(fastly.defaultBackend);
   fastly.defaultBackend = '.';
-  expectType<(key: string) => string>(fastly.env.get);
+  expectType<(key: string) => string | undefined>(fastly.env.get);
   expectType<(endpoint: string) => Logger>(fastly.getLogger);
   expectType<(enabled: boolean) => void>(fastly.enableDebugLogging);
   expectType<(address: string) => Geolocation>(

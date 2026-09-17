@@ -74,6 +74,10 @@ JSObject *clientCert(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::ClientCert));
   return val.isObject() ? val.toObjectOrNull() : nullptr;
 }
+JSString *clientSNI(JSObject *obj) {
+  JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::ClientSNI));
+  return val.isString() ? val.toString() : nullptr;
+}
 JSString *protocol(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, static_cast<uint32_t>(ClientInfo::Slots::Protocol));
   return val.isString() ? val.toString() : nullptr;
@@ -274,6 +278,31 @@ bool ClientInfo::tls_ja4_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool ClientInfo::tls_client_sni_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0);
+
+  JS::RootedString result(cx, clientSNI(self));
+  if (!result) {
+    auto res = request_handle(cx, self).http_req_downstream_client_sni();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return false;
+    }
+
+    if (!res.unwrap().has_value()) {
+      args.rval().setNull();
+      return true;
+    }
+
+    auto client_sni_str = std::move(res.unwrap().value());
+    result.set(JS_NewStringCopyN(cx, client_sni_str.ptr.get(), client_sni_str.len));
+    JS::SetReservedSlot(self, static_cast<uint32_t>(ClientInfo::Slots::ClientSNI),
+                        JS::StringValue(result));
+  }
+  args.rval().setString(result);
+  return true;
+}
+
 bool ClientInfo::h2_fingerprint_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0);
 
@@ -445,6 +474,7 @@ const JSPropertySpec ClientInfo::properties[] = {
     JS_PSG("ohFingerprint", oh_fingerprint_get, JSPROP_ENUMERATE),
     JS_PSG("tlsClientCertificate", tls_client_certificate_get, JSPROP_ENUMERATE),
     JS_PSG("tlsClientHello", tls_client_hello_get, JSPROP_ENUMERATE),
+    JS_PSG("tlsClientSNI", tls_client_sni_get, JSPROP_ENUMERATE),
     JS_PS_END,
 };
 
@@ -734,13 +764,14 @@ bool FetchEvent::init_request(JSContext *cx, JS::HandleObject self, host_api::Ht
   // Set `fastly.baseURL` to the origin of the client request's URL.
   // Note that this only happens if baseURL hasn't already been set to another
   // value explicitly.
-  if (!Fastly::baseURL.get()) {
+  if (!Fastly::request_state->base_url.get()) {
     JS::RootedObject url_instance(cx, JS_NewObjectWithGivenProto(cx, &URL::class_, URL::proto_obj));
     if (!url_instance)
       return false;
 
-    Fastly::baseURL = URL::create(cx, url_instance, URL::origin(cx, WorkerLocation::url));
-    if (!Fastly::baseURL)
+    Fastly::request_state->base_url =
+        URL::create(cx, url_instance, URL::origin(cx, WorkerLocation::url));
+    if (!Fastly::request_state->base_url)
       return false;
   }
 
@@ -850,8 +881,12 @@ bool response_promise_catch_handler(JSContext *cx, JS::HandleObject event,
                                     JS::HandleValue promise_val, JS::CallArgs args) {
   JS::RootedObject promise(cx, &promise_val.toObject());
 
-  fprintf(stderr, "Error while running request handler: ");
-  ENGINE->dump_promise_rejection(args.get(0), promise, stderr);
+  if (ENGINE->debug_logging_enabled()) {
+    fprintf(stderr, "Error while running request handler: ");
+    ENGINE->dump_promise_rejection(args.get(0), promise, stderr);
+  } else {
+    fprintf(stderr, "Error while running request handler.");
+  }
 
   // TODO: verify that this is the right behavior.
   // Steps 9.1-2

@@ -1,0 +1,59 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# KVStore.prototype.list
+
+The **`list()`** can be used to list the keys of a store.
+
+## Syntax
+
+```js
+list(options?)
+```
+
+### Parameters
+
+- `options` _: object_ _**optional**_
+  - List options supporting properties:
+  - `cursor` _: string_ _**optional**_
+    - The cursor used to pick up from a previous iteration.
+  - `limit` _: number_ _**optional**_
+    - The maximum number of keys to return.
+  - `prefix` _: string_ _**optional**_
+    - List only those keys that start with the given string prefix.
+  - `noSync` _: boolean_ _**optional**_
+    - Do not sync the key list first, instead provide a possibly out-of-date listing. May be faster but inconsistent.
+
+### Return value
+
+Returns a `Promise` which resolves with `{ list: string[], cursor: string | undefined }`.
+
+## Example
+
+In this example we list the keys of a KV Store named `'files'`, iterating 10 at a time, counting the total;
+
+```js
+/// <reference types="@fastly/js-compute" />
+
+import { KVStore } from 'fastly:kv-store';
+
+async function app(event) {
+  const files = new KVStore('files');
+
+  let cursor,
+    list,
+    total = 0;
+  do {
+    ({ cursor, list } = await files.list({ limit: 10, cursor }));
+    total += list?.length;
+  } while (list);
+
+  return new Response(`Iterated ${total} entries`);
+}
+
+addEventListener('fetch', (event) => event.respondWith(app(event)));
+```

@@ -66,13 +66,13 @@
     "cosmiconfig": "^9.0.1",
     "esbuild": "^0.28.1",
     "magic-string": "^0.30.12",
-    "npm": "^11.14.1",
     "picomatch": "^4.0.4",
     "regexpu-core": "^6.4.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@jakechampion/cli-testing-library": "^1.0.0",
+    "npm": "^11.14.1",
     "@types/node": "^24.10.1",
     "@types/picomatch": "^4.0.2",
     "brittle": "^3.5.2",

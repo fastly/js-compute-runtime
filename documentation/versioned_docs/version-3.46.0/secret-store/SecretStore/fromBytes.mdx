@@ -1,0 +1,25 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# fromBytes
+
+The **`fromBytes()`** function is used to create an in-memory secret from an array buffer.
+
+>**Note**: This API should be avoided when possible, by instead using [SecretStore.prototype.get](./prototype/get.mdx) to obtain secure secrets.
+
+## Syntax
+
+```js
+fromBytes(new Uint8Array([1, 2, 3]))
+```
+
+### Parameters
+
+None.
+
+### Return value
+
+Returns a `SecretStoreEntry`.

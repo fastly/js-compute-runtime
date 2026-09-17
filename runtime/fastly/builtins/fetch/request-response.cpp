@@ -1308,6 +1308,17 @@ bool RequestOrResponse::parse_body(JSContext *cx, JS::HandleObject self, JS::Uni
 
 bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::HandleObject self,
                                                          JS::HandleValue extra, JS::CallArgs args) {
+  // Helper to reject promise with error on overflow or invalid input
+  auto reject_body_promise = [&]() {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                              JSMSG_RESPONSE_VALUE_NOT_UINT8ARRAY);
+    JS::RootedObject result_promise(cx);
+    result_promise =
+        &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise)).toObject();
+    JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise), JS::UndefinedValue());
+    return RejectPromiseWithPendingError(cx, result_promise);
+  };
+
   JS::RootedObject then_handler(cx, &args.callee());
   // The reader is stored in the catch handler, which we need here as well.
   // So we get that first, then the reader.
@@ -1376,6 +1387,7 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
     if (!JS::GetArrayLength(cx, contents, &contentsLength)) {
       return false;
     }
+
     // TODO(performance): investigate whether we can infer the size directly from `contents`
     size_t buf_size = HANDLE_READ_CHUNK_SIZE;
     // TODO(performance): make use of malloc slack.
@@ -1395,11 +1407,20 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
         MOZ_ASSERT(JS_IsUint8Array(array));
         size_t length = JS_GetTypedArrayByteLength(array);
         if (length) {
+          // Check for overflow before adding to offset
+          if (length > SIZE_MAX - offset) {
+            return reject_body_promise();
+          }
           offset += length;
           // if buf is not big enough to fit the next uint8array's bytes then resize
           if (offset > buf_size) {
-            buf_size =
-                buf_size + (HANDLE_READ_CHUNK_SIZE * ((length / HANDLE_READ_CHUNK_SIZE) + 1));
+            size_t chunks_needed = (length / HANDLE_READ_CHUNK_SIZE) + 1;
+            // Check for overflow in buffer size calculation
+            if (chunks_needed > (SIZE_MAX / HANDLE_READ_CHUNK_SIZE) ||
+                buf_size > SIZE_MAX - (HANDLE_READ_CHUNK_SIZE * chunks_needed)) {
+              return reject_body_promise();
+            }
+            buf_size = buf_size + (HANDLE_READ_CHUNK_SIZE * chunks_needed);
           }
         }
       }
@@ -1458,14 +1479,7 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
   // The read operation can return anything since this stream comes from the guest
   // If it is not a UInt8Array -- reject with a TypeError
   if (!val.isObject() || !JS_IsUint8Array(&val.toObject())) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                              JSMSG_RESPONSE_VALUE_NOT_UINT8ARRAY);
-    JS::RootedObject result_promise(cx);
-    result_promise =
-        &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise)).toObject();
-    JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise), JS::UndefinedValue());
-
-    return RejectPromiseWithPendingError(cx, result_promise);
+    return reject_body_promise();
   }
 
   {
@@ -1829,9 +1843,14 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
 
     // TODO: should we also create a rejected promise if a response reads something that's not a
     // Uint8Array?
-    fprintf(stderr, "Error: read operation on body ReadableStream didn't respond with a "
-                    "Uint8Array. Received value: ");
-    ENGINE->dump_value(val, stderr);
+    if (ENGINE->debug_logging_enabled()) {
+      fprintf(stderr, "Error: read operation on body ReadableStream didn't respond with a "
+                      "Uint8Array. Received value: ");
+      ENGINE->dump_value(val, stderr);
+    } else {
+      fprintf(stderr,
+              "Error: read operation on body ReadableStream didn't respond with a Uint8Array.");
+    }
     return false;
   }
 
@@ -1866,8 +1885,12 @@ bool RequestOrResponse::body_reader_catch_handler(JSContext *cx, JS::HandleObjec
   // in-content handler for unhandled rejections could deal with it. The body
   // stream errored during the streaming send. Not much we can do, but at least
   // close the stream, and warn.
-  fprintf(stderr, "Warning: body ReadableStream closed during body streaming. Exception: ");
-  ENGINE->dump_value(args.get(0), stderr);
+  if (ENGINE->debug_logging_enabled()) {
+    fprintf(stderr, "Warning: body ReadableStream closed during body streaming. Exception: ");
+    ENGINE->dump_value(args.get(0), stderr);
+  } else {
+    fprintf(stderr, "Warning: body ReadableStream closed during body streaming.");
+  }
 
   // The only response with a body we ever send is the one passed to
   // `FetchEvent#respondWith` to send to the client. As such, we can be certain
@@ -2504,16 +2527,14 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::OverrideCacheKey),
                       override_cache_key);
 
-  JS::RootedValue image_optimizer_options(
-      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ImageOptimizerOptions)));
-  if (!image_optimizer_options.isNullOrUndefined()) {
-    if (!set_image_optimizer_options(cx, requestInstance, image_optimizer_options)) {
-      return false;
-    }
-  } else {
-    JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::ImageOptimizerOptions),
-                        image_optimizer_options);
+  auto image_optimizer_options = reinterpret_cast<image_optimizer::ImageOptimizerOptions *>(
+      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ImageOptimizerOptions)).toPrivate());
+  if (image_optimizer_options) {
+    image_optimizer_options = new image_optimizer::ImageOptimizerOptions(*image_optimizer_options);
   }
+
+  JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::ImageOptimizerOptions),
+                      JS::PrivateValue(image_optimizer_options));
 
   args.rval().setObject(*requestInstance);
   return true;
@@ -2753,7 +2774,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance,
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::CacheOverride),
                       JS::NullValue());
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::ImageOptimizerOptions),
-                      JS::NullValue());
+                      JS::PrivateValue(nullptr));
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::IsDownstream),
                       JS::BooleanValue(is_downstream));
   return requestInstance;
@@ -2868,7 +2889,8 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     if (!url_instance)
       return nullptr;
 
-    JS::RootedObject parsedURL(cx, URL::create(cx, url_instance, input, fastly::Fastly::baseURL));
+    JS::RootedObject parsedURL(
+        cx, URL::create(cx, url_instance, input, fastly::Fastly::request_state->base_url));
 
     // 2.  If `parsedURL` is failure, then throw a `TypeError`.
     if (!parsedURL) {
@@ -3854,6 +3876,9 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 namespace {
+// GLOBALS: Global variable outwith RequestState
+// This is reset to false on every call to ToJSON, so there is no issue of becoming out of sync
+// across requests.
 bool callbackCalled;
 bool write_json_to_buf(const char16_t *str, uint32_t strlen, void *out) {
   callbackCalled = true;

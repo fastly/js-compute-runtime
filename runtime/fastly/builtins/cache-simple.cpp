@@ -171,6 +171,7 @@ class CacheTransaction final {
   JS::RootedObject promise;
   host_api::CacheHandle handle;
   bool was_cancelled = false;
+  bool committed = false;
 
   const char *func;
   int line;
@@ -188,23 +189,27 @@ public:
       return true;
     }
 
-    auto res = this->handle.transaction_cancel();
+    auto res = this->handle.close();
     if (auto *err = res.to_err()) {
       host_api::handle_api_error(this->cx, *err, this->line, this->func);
     }
+
+    if (!JS_IsExceptionPending(this->cx)) {
+      JS_ReportErrorUTF8(cx, "Cache transaction cancelled for unknown reason");
+    }
+
+    MOZ_ASSERT(JS::GetPromiseState(this->promise) == JS::PromiseState::Pending);
 
     // We always reject the promise if the transaction hasn't committed.
     return RejectPromiseWithPendingError(this->cx, this->promise);
   }
 
-  ~CacheTransaction() { MOZ_ASSERT(!this->handle.is_valid() || this->was_cancelled); }
+  ~CacheTransaction() { MOZ_ASSERT(this->committed || this->was_cancelled); }
 
   /// Commit this transaction.
   void commit() {
-    // Invalidate the handle to indicate that the transaction has been committed.
-    MOZ_ASSERT(this->handle.is_valid());
-    this->handle = host_api::CacheHandle{};
-    MOZ_ASSERT(!this->handle.is_valid());
+    MOZ_ASSERT(!committed);
+    committed = true;
   }
 };
 
@@ -392,6 +397,23 @@ bool get_or_set_catch_handler(JSContext *cx, JS::HandleObject lookup_state,
   JS::RootedObject promise(cx, &promise_val.toObject());
   if (!promise) {
     return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  JS::RootedValue handle_val(cx);
+  if (!JS_GetProperty(cx, lookup_state, "handle", &handle_val)) {
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+  MOZ_ASSERT(handle_val.isInt32());
+  // The set() callback rejected, so the transaction it was populating is still open;
+  // close it here or it stays open and blocks subsequent lookups for this key.
+  host_api::CacheHandle handle(handle_val.toInt32());
+  auto cancel_res = handle.close();
+  if (cancel_res.is_err()) {
+    // The set() callback's rejection reason is what the caller actually cares about, so
+    // we deliberately swallow this secondary error rather than let it clobber that one.
+    if (GLOBAL_ENGINE->debug_logging_enabled()) {
+      fprintf(stderr, "Warning: failed to cancel SimpleCache transaction after set() rejected.\n");
+    }
   }
 
   JS::RootedObject inner_promise(cx, &inner_promise_val.toObject());
