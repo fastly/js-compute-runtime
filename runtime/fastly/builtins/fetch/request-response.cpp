@@ -1147,7 +1147,7 @@ bool Request::isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   auto handle = request_handle(self);
   auto res = handle.is_cacheable();
-  if (auto *err = res.to_err()) {
+  if (res.is_err()) {
     args.rval().setUndefined();
     return true;
   }
@@ -2292,7 +2292,7 @@ bool Request::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto res = request_handle(self).get_version();
-  if (auto *err = res.to_err()) {
+  if (res.is_err()) {
     args.rval().setNull();
     return true;
   }
@@ -2547,7 +2547,7 @@ bool Request::bot_analyzed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto req{Request::request_handle(self)};
 
   auto bot_analyzed = req.http_req_downstream_bot_analyzed();
-  if (auto *err = bot_analyzed.to_err()) {
+  if (bot_analyzed.is_err()) {
     args.rval().setBoolean(false);
     return true;
   } else {
@@ -2567,7 +2567,7 @@ bool Request::bot_detected_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto req{Request::request_handle(self)};
 
   auto bot_detected = req.http_req_downstream_bot_detected();
-  if (auto *err = bot_detected.to_err()) {
+  if (bot_detected.is_err()) {
     args.rval().setBoolean(false);
     return true;
   } else {
@@ -2587,7 +2587,7 @@ bool Request::bot_name_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto req{Request::request_handle(self)};
 
   auto bot_name_res = req.http_req_downstream_bot_name();
-  if (auto *err = bot_name_res.to_err()) {
+  if (bot_name_res.is_err()) {
     args.rval().setNull();
     return true;
   } else {
@@ -2612,7 +2612,7 @@ bool Request::bot_category_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto req{Request::request_handle(self)};
 
   auto bot_category_res = req.http_req_downstream_bot_category_kind();
-  if (auto *err = bot_category_res.to_err()) {
+  if (bot_category_res.is_err()) {
     args.rval().setNull();
     return true;
   } else {
@@ -2687,7 +2687,7 @@ bool Request::bot_verified_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   auto req{Request::request_handle(self)};
 
   auto bot_verified_res = req.http_req_downstream_bot_verified();
-  if (auto *err = bot_verified_res.to_err()) {
+  if (bot_verified_res.is_err()) {
     args.rval().setNull();
     return true;
   } else {
@@ -3646,7 +3646,7 @@ bool Response::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto res = response_handle(self).get_version();
-  if (auto *err = res.to_err()) {
+  if (res.is_err()) {
     args.rval().setNull();
     return true;
   }
@@ -3720,7 +3720,7 @@ bool Response::ip_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto handle = response_handle(self);
   auto res = handle.get_ip();
-  if (auto *err = res.to_err()) {
+  if (res.is_err()) {
     args.rval().setUndefined();
     return true;
   }
@@ -3751,7 +3751,7 @@ bool Response::port_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto handle = response_handle(self);
   auto res = handle.get_port();
-  if (auto *err = res.to_err()) {
+  if (res.is_err()) {
     args.rval().setUndefined();
     return true;
   }

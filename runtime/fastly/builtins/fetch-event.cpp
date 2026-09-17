@@ -205,7 +205,7 @@ bool ClientInfo::tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::V
   JS::RootedString result(cx, cipher(self));
   if (!result) {
     auto res = request_handle(cx, self).http_req_downstream_tls_cipher_openssl_name();
-    if (auto *err = res.to_err()) {
+    if (res.is_err()) {
       args.rval().setNull();
       return true;
     }
@@ -231,7 +231,7 @@ bool ClientInfo::tls_ja3_md5_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedString result(cx, ja3(self));
   if (!result) {
     auto res = request_handle(cx, self).http_req_downstream_tls_ja3_md5();
-    if (auto *err = res.to_err()) {
+    if (res.is_err()) {
       args.rval().setNull();
       return true;
     }
@@ -259,7 +259,7 @@ bool ClientInfo::tls_ja4_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedString result(cx, ja4(self));
   if (!result) {
     auto res = request_handle(cx, self).http_req_downstream_tls_ja4();
-    if (auto *err = res.to_err()) {
+    if (res.is_err()) {
       args.rval().setNull();
       return true;
     }
@@ -309,7 +309,7 @@ bool ClientInfo::h2_fingerprint_get(JSContext *cx, unsigned argc, JS::Value *vp)
   JS::RootedString result(cx, h2Fingerprint(self));
   if (!result) {
     auto res = request_handle(cx, self).http_req_downstream_client_h2_fingerprint();
-    if (auto *err = res.to_err()) {
+    if (res.is_err()) {
       args.rval().setNull();
       return true;
     }
@@ -334,7 +334,7 @@ bool ClientInfo::oh_fingerprint_get(JSContext *cx, unsigned argc, JS::Value *vp)
   JS::RootedString result(cx, ohFingerprint(self));
   if (!result) {
     auto res = request_handle(cx, self).http_req_downstream_client_oh_fingerprint();
-    if (auto *err = res.to_err()) {
+    if (res.is_err()) {
       args.rval().setNull();
       return true;
     }
@@ -359,7 +359,7 @@ bool ClientInfo::tls_client_hello_get(JSContext *cx, unsigned argc, JS::Value *v
   JS::RootedObject buffer(cx, clientHello(self));
   if (!buffer) {
     auto res = request_handle(cx, self).http_req_downstream_tls_client_hello();
-    if (auto *err = res.to_err()) {
+    if (res.is_err()) {
       args.rval().setNull();
       return true;
     }
@@ -394,7 +394,7 @@ bool ClientInfo::tls_client_certificate_get(JSContext *cx, unsigned argc, JS::Va
   JS::RootedObject buffer(cx, clientCert(self));
   if (!buffer) {
     auto res = request_handle(cx, self).http_req_downstream_tls_raw_client_certificate();
-    if (auto *err = res.to_err()) {
+    if (res.is_err()) {
       args.rval().setNull();
       return true;
     }
@@ -430,7 +430,7 @@ bool ClientInfo::tls_protocol_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedString result(cx, protocol(self));
   if (!result) {
     auto res = request_handle(cx, self).http_req_downstream_tls_protocol();
-    if (auto *err = res.to_err()) {
+    if (res.is_err()) {
       args.rval().setNull();
       return true;
     }
