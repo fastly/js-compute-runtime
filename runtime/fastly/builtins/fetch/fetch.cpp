@@ -183,6 +183,11 @@ bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_
     return true;
   }
 
+  // Ensure that any headers that could change cache behaviour (e.g. due to vary headers) are
+  // committed
+  if (!RequestOrResponse::commit_headers(cx, request))
+    return false;
+
   // Check if we must use host caching by checking if guest caching is unsupported
   auto request_handle = Request::request_handle(request);
   auto res = request_handle.is_cacheable();
@@ -1060,7 +1065,7 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
         return true;
       }
 
-      auto found_response = get_found_response(cx, cache_entry, request, response, false);
+      auto found_response = get_found_response(cx, cache_entry, request, response, true);
       MOZ_ASSERT(found_response.has_value());
       if (!found_response.value()) {
         JSObject *promise = PromiseRejectedWithPendingError(cx);
@@ -1096,7 +1101,7 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
       return false;
     }
 
-    auto found_response = get_found_response(cx, cache_entry, request, response, false);
+    auto found_response = get_found_response(cx, cache_entry, request, response, true);
     MOZ_ASSERT(found_response.has_value());
     if (!found_response.value()) {
       JSObject *promise = PromiseRejectedWithPendingError(cx);
@@ -1341,11 +1346,6 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   } else if (caching_mode == CachingMode::ImageOptimizer) {
     return fetch_send_body<CachingMode::ImageOptimizer>(cx, request, args.rval());
   }
-
-  // Ensure that any headers that could change cache behaviour (e.g. due to vary headers) are
-  // committed
-  if (!RequestOrResponse::commit_headers(cx, request))
-    return false;
 
   // Check if request is actually cacheable
   bool is_cacheable = false;
