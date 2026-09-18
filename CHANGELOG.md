@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.46.1](https://github.com/fastly/js-compute-runtime/compare/v3.46.0...v3.46.1) (2026-09-18)
+
+
+### Bug Fixes
+
+* handle potential NULL pointer dereference in debug logging ([#1593](https://github.com/fastly/js-compute-runtime/issues/1593)) ([1e5eb8b](https://github.com/fastly/js-compute-runtime/commit/1e5eb8b8d920fd2a92dd0cdfeff846ccf32e4501))
+
 ## 3.46.0 (2026-09-14)
 
 ### Added
