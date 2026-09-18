@@ -1,5 +1,13 @@
 # Changelog
 
+## 4.0,0-pre.1 (2026-09-18)
+
+This new release merges in our latest changes from the 3.x branch, including many security fixes.
+
+### Breaking Changes
+
+* Getters no longer throw. They will return `null` instead.
+
 ## 4.0.0-pre.0 (2026-08-03)
 
 ### Added
