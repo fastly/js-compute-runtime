@@ -1,0 +1,32 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# RateCounter.prototype.increment
+
+Increment the given `entry` in the RateCounter instance with the given `delta` value.
+
+## Syntax
+```js
+increment(entry, delta)
+```
+
+### Parameters
+
+- `entry` _: string_
+  - The name of the entry to look up
+- `delta` _: number_
+  - The amount to increment the entry by
+
+
+### Return value
+
+Returns `undefined`.
+
+### Exceptions
+
+- `TypeError`
+  - Thrown if the provided `entry` value can not be coerced into a string
+  - Thrown if the provided `delta` value is not a positive, finite number.
