@@ -48,8 +48,9 @@ bool handle_incoming(host_api::Request req) {
   __wasilibc_ensure_environ();
 
   if (ENGINE->debug_logging_enabled()) {
+    const char *ver = getenv("FASTLY_SERVICE_VERSION");
     printf("Running JS handleRequest function for Fastly Compute service version %s\n",
-           getenv("FASTLY_SERVICE_VERSION"));
+           ver ? ver : "unknown");
     fflush(stdout);
   }
 
