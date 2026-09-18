@@ -30,7 +30,7 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
   let enableExperimentalHighResolutionTimeMethods = false;
   let enableAOT = false;
   let customEngineSet = false;
-  let moduleMode = false;
+  let moduleMode = true;
   let bundle = true;
   let wasmEngine = join(__dirname, '../fastly.wasm');
   let aotCache = join(__dirname, '../fastly-ics.wevalcache');
@@ -81,9 +81,17 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
         enableHttpCache = true;
         break;
       }
-      case '--enable-experimental-top-level-await': {
-        moduleMode = true;
+      // Opt out of the module-mode default, compiling as a classic script.
+      // Named for its most visible effect, but note that it also drops strict
+      // mode and `import.meta` — see printHelp.ts.
+      case '--disable-top-level-await': {
+        moduleMode = false;
         bundle = true;
+        break;
+      }
+      case '--enable-experimental-top-level-await': {
+        // moduleMode is now the default, so this flag is a no-op. It is kept
+        // so that existing build invocations keep working.
         break;
       }
       case '--enable-aot': {

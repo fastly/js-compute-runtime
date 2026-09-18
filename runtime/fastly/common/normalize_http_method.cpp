@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
 #include <string_view>
 
 namespace fastly::common {
