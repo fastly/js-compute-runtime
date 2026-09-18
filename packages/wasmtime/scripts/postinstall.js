@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { extract } from 'tar-fs';
 import lzma from 'lzma-native';
-import extractZip from 'extract-zip';
+import AdmZip from 'adm-zip';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const binDir = join(__dirname, '..', 'bin');
@@ -61,21 +61,22 @@ async function extractTarXz(archivePath, destDir) {
 
 async function extractZipWithStrip(archivePath, destDir) {
   const tempDir = join(destDir, '.extract-temp');
-  
-  await extractZip(archivePath, { dir: tempDir });
-  
+
+  const zip = new AdmZip(archivePath);
+  zip.extractAllTo(tempDir);
+
   const entries = await readdir(tempDir);
   if (entries.length !== 1) {
     throw new Error('Expected single root directory in zip file');
   }
-  
+
   const rootDir = join(tempDir, entries[0]);
   const contents = await readdir(rootDir);
-  
+
   for (const item of contents) {
     await rename(join(rootDir, item), join(destDir, item));
   }
-  
+
   await rm(tempDir, { recursive: true });
 }
 
@@ -83,26 +84,26 @@ async function installWasmtime() {
   try {
     const { file, binary } = getPlatformInfo();
     const url = `https://github.com/bytecodealliance/wasmtime/releases/download/${WASMTIME_VERSION}/${file}`;
-    
+
     console.log(`Downloading wasmtime ${WASMTIME_VERSION} for ${process.platform}-${process.arch}...`);
-    
+
     await mkdir(binDir, { recursive: true });
-    
+
     const archivePath = join(binDir, file);
     await downloadFile(url, archivePath);
-    
+
     console.log('Extracting...');
     if (file.endsWith('.tar.xz')) {
       await extractTarXz(archivePath, binDir);
     } else if (file.endsWith('.zip')) {
       await extractZipWithStrip(archivePath, binDir);
     }
-    
+
     const binaryPath = join(binDir, binary);
     if (process.platform !== 'win32') {
       await chmod(binaryPath, 0o755);
     }
-    
+
     console.log('✓ wasmtime installed successfully');
   } catch (error) {
     console.error('Failed to install wasmtime:', error.message);
