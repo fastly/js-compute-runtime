@@ -1,0 +1,38 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# TextDecoder()
+
+The **`TextDecoder()`** constructor returns a newly created `TextDecoder` object for the encoding specified in parameter.
+
+## Syntax
+
+```js
+new TextDecoder()
+new TextDecoder(label)
+new TextDecoder(label, options)
+```
+
+### Parameters
+
+- `label` _**optional**_
+  - : A string, defaulting to `"utf-8"`.
+- `options` _**optional**_
+
+  - : An object with the property:
+
+    - `fatal`
+      - : A boolean value indicating if the `TextDecoder.decode()` method must throw a `TypeError` when decoding invalid data.
+        It defaults to `false`, which means that the decoder will substitute malformed data with a replacement character.
+
+    - `ignoreBOM`
+      - : A boolean value indicating whether the [byte order mark](https://www.w3.org/International/questions/qa-byte-order-mark) is ignored.
+        It defaults to `false`.
+
+### Exceptions
+
+- `RangeError`
+  - : Thrown if the value of `label` is unknown, or is one of the values leading to a `'replacement'` decoding algorithm (`"iso-2022-cn"` or `"iso-2022-cn-ext"`).

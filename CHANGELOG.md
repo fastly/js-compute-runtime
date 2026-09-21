@@ -1,14 +1,12 @@
 # Changelog
 
-## [3.47.0](https://github.com/fastly/js-compute-runtime/compare/v3.46.0...v3.47.0) (2026-09-21)
+## 3.47.0 (2026-09-21)
 
-
-### Features
+### Added
 
 * Allow URIs longer than 8192 bytes ([#1585](https://github.com/fastly/js-compute-runtime/issues/1585)) ([6ac66df](https://github.com/fastly/js-compute-runtime/commit/6ac66dff1aff48a9f271251b1d3a8a052329471e))
 
-
-### Bug Fixes
+### Fixed
 
 * get documentation generation working again ([#1595](https://github.com/fastly/js-compute-runtime/issues/1595)) ([9e3f16b](https://github.com/fastly/js-compute-runtime/commit/9e3f16bb10bba95d4c34715079f558ed10215f52))
 * handle potential NULL pointer dereference in debug logging ([#1593](https://github.com/fastly/js-compute-runtime/issues/1593)) ([1e5eb8b](https://github.com/fastly/js-compute-runtime/commit/1e5eb8b8d920fd2a92dd0cdfeff846ccf32e4501))
