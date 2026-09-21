@@ -1,0 +1,37 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# WritableStreamDefaultWriter.close()
+
+The **`close()`** method of the
+`WritableStreamDefaultWriter` interface closes the associated writable
+stream.
+
+The underlying sink will finish processing any previously-written chunks, before
+invoking the close behavior. During this time any further attempts to write will fail
+(without erroring the stream).
+
+## Syntax
+
+```js
+close()
+```
+
+### Parameters
+
+None.
+
+### Return value
+
+A `Promise`, which fulfills with the `undefined` if all
+remaining chunks were successfully written before the close, or rejects with an error if
+a problem was encountered during the process.
+
+### Exceptions
+
+- `TypeError`
+  - : The stream you are trying to close is not a `WritableStream`.
+
