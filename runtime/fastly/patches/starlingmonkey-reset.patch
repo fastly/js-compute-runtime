@@ -1,3 +1,32 @@
+diff --git a/builtins/web/timers.cpp b/builtins/web/timers.cpp
+index ee57e38..8355aa1 100644
+--- a/builtins/web/timers.cpp
++++ b/builtins/web/timers.cpp
+@@ -211,4 +211,12 @@ bool install(api::Engine *engine) {
+   return JS_DefineFunctions(engine->cx(), engine->global(), methods);
+ }
+ 
++void reset() {
++  for (auto &[id, timer] : TIMERS_MAP->timers_) {
++    timer->cancel(ENGINE);
++  }
++  TIMERS_MAP->timers_.clear();
++  TIMERS_MAP->next_timer_id = 1;
++}
++
+ } // namespace builtins::web::timers
+diff --git a/builtins/web/timers.h b/builtins/web/timers.h
+index ea3ec79..d7e7070 100644
+--- a/builtins/web/timers.h
++++ b/builtins/web/timers.h
+@@ -6,6 +6,7 @@
+ namespace builtins::web::timers {
+ 
+ bool install(api::Engine *engine);
++void reset();
+ 
+ }
+ 
 diff --git a/include/extension-api.h b/include/extension-api.h
 index 44935f7..79f13e5 100644
 --- a/include/extension-api.h
@@ -11,15 +40,24 @@ index 44935f7..79f13e5 100644
  
    bool debug_logging_enabled();
 diff --git a/runtime/engine.cpp b/runtime/engine.cpp
-index e748f93..1b3280d 100644
+index e748f93..af10504 100644
 --- a/runtime/engine.cpp
 +++ b/runtime/engine.cpp
-@@ -689,3 +689,9 @@ void Engine::report_unhandled_promise_rejections() {
+@@ -23,6 +23,7 @@
+ #ifdef JS_DEBUGGER
+   #include "debugger.h"
+ #endif
++#include "../builtins/web/timers.h"
+ #include "script_loader.h"
+ 
+ #include <decode.h>
+@@ -689,3 +690,10 @@ void Engine::report_unhandled_promise_rejections() {
  void Engine::clear_unhandled_promise_rejections() {
    JS::SetClear(CONTEXT, unhandledRejectedPromises);
  }
 +void Engine::reset() {
 +  clear_unhandled_promise_rejections();
++  builtins::web::timers::reset();
 +  core::EventLoop::reset(this);    
 +  JS::PrepareForFullGC(cx());
 +  JS::NonIncrementalGC(cx(), JS::GCOptions::Normal, JS::GCReason::API);
