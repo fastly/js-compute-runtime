@@ -36,7 +36,6 @@ bool install(api::Engine *engine) {
 }
 
 bool handle_incoming(host_api::Request req) {
-  ENGINE->clear_unhandled_promise_rejections();
   builtins::web::performance::Performance::timeOrigin.emplace(
       std::chrono::high_resolution_clock::now());
 
@@ -117,6 +116,7 @@ bool handle_incoming(host_api::Request req) {
   if (!state::Manager::reset_all_request_states(builtins_with_request_state, ENGINE->cx())) {
     return false;
   }
+  ENGINE->clear_unhandled_promise_rejections();
 
   return true;
 }
