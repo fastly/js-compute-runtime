@@ -5,7 +5,7 @@ const additiveOptionsMap = {
 };
 
 const strictOptionsMap = {
-  enableAOT: '--enable-aot',
+  disableAOT: '--disable-aot',
   aotCache: '--aot-cache',
   enableHttpCache: '--enable-http-cache',
   enableExperimentalHighResolutionTimeMethods:
