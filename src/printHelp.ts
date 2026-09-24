@@ -17,20 +17,23 @@ FLAGS:
 OPTIONS:
     --env <KEY=VALUE>                                       Set environment variables, possibly inheriting
                                                            from the current environment. Multiple
-                                                           variables can be comma-separated 
+                                                           variables can be comma-separated
                                                            (e.g., --env ENV_VAR,OVERRIDE=val)
+    --disable-top-level-await                               Compile the application as a classic script
+                                                           instead of a module. As well as top level
+                                                           await, this disables strict-mode-by-default
+                                                           and import.meta.
     --module-mode                            [experimental] Run all sources as native modules,
                                                            with full error stack support.
     --engine-wasm <engine-wasm>                             The JS engine Wasm file path
                                                             with full error stack support
     --enable-http-cache                                     Enable the HTTP cache hook API
-    --enable-aot                                            Enable AOT compilation for performance
+    --disable-aot                                           Disable AOT compilation
     --enable-experimental-high-resolution-time-methods      Enable experimental fastly.now() method
-    --enable-experimental-top-level-await                   Enable experimental top level await
     --enable-stack-traces                                   Enable stack traces
-    --exclude-sources                                       Don't include sources in stack traces                
-    --debug-intermediate-files <dir>                        Output intermediate files in directory   
-    --weval-bin <weval-bin>                                 Path to the weval binary to use for AOT compilation             
+    --exclude-sources                                       Don't include sources in stack traces
+    --debug-intermediate-files <dir>                        Output intermediate files in directory
+    --weval-bin <weval-bin>                                 Path to the weval binary to use for AOT compilation
 
 ARGS:
     <input>     The input JS script's file path [default: bin/index.js]
@@ -48,10 +51,10 @@ export async function printVersion() {
 
 export function tooManyEngines() {
   console.error(`error: The argument '--engine-wasm <engine-wasm>' was provided more than once, but cannot be used multiple times
-  
+
 USAGE:
     js-compute-runtime --engine-wasm <engine-wasm>
-      
+
 For more information try --help`);
   process.exit(1);
 }

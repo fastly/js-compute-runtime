@@ -15,7 +15,7 @@ if (parsedInputs === 'version') {
   await printHelp();
 } else {
   const {
-    enableAOT,
+    disableAOT,
     aotCache,
     enableHttpCache,
     enableExperimentalHighResolutionTimeMethods,
@@ -45,7 +45,7 @@ if (parsedInputs === 'version') {
     wasmEngine,
     enableHttpCache,
     enableExperimentalHighResolutionTimeMethods,
-    enableAOT,
+    disableAOT,
     aotCache,
     enableStackTraces,
     excludeSources,
@@ -55,5 +55,5 @@ if (parsedInputs === 'version') {
     doBundle: bundle,
     env,
   });
-  await addSdkMetadataField(output, enableAOT);
+  await addSdkMetadataField(output, !disableAOT);
 }
