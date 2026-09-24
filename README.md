@@ -71,9 +71,9 @@ If an option is defined in both the command line and the configuration file, the
 
 #### Supported Options
 
-| Config Key                                    | CLI Flag                                             | Type                        | Description                                                                                                                                               | 
+| Config Key                                    | CLI Flag                                             | Type                        | Description                                                                                                                                               |
 |:----------------------------------------------|:-----------------------------------------------------|:----------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `enableAOT`                                   | `--enable-aot`                                       | `boolean`                   | Enable AOT compilation for performance                                                                                                                    |
+| `disableAOT`                                  | `--disable-aot`                                      | `boolean`                   | Disable AOT compilation
 | `aotCache`                                    | `--aot-cache`                                        | `string` (path)             | Specify a path to the AOT cache file                                                                                                                      |
 | `enableHttpCache`                             | `--enable-http-cache`                                | `boolean`                   | Enable the [HTTP cache hook API](https://www.fastly.com/documentation/guides/concepts/cache/#modifying-a-request-as-it-is-forwarded-to-a-backend)         |
 | `enableExperimentalHighResolutionTimeMethods` | `--enable-experimental-high-resolution-time-methods` | `boolean`                   | Enable experimental fastly.now() method                                                                                                                   |
@@ -86,7 +86,7 @@ If an option is defined in both the command line and the configuration file, the
 | `wevalBin`                                    | `--weval-bin`                                        | `string` (path)             | Specify a custom weval binary (advanced)                                                                                                                  |
 | `env`                                         | `--env`                                              | `string \| object \| array` | Set environment variables, possibly inheriting from the current environment. Multiple variables can be comma-separated (e.g., --env ENV_VAR,OVERRIDE=val) |
 
-NOTE: The `env` field is additive. Values defined on the command-line values append to, rather than replace, the values defined in any configuration file. 
+NOTE: The `env` field is additive. Values defined on the command-line values append to, rather than replace, the values defined in any configuration file.
 
 #### Example command-line options
 

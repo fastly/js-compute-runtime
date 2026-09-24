@@ -34,7 +34,7 @@ export type CompileApplicationToWasmParams = {
   wasmEngine: string;
   enableHttpCache: boolean;
   enableExperimentalHighResolutionTimeMethods: boolean;
-  enableAOT: boolean;
+  disableAOT: boolean;
   aotCache: string;
   enableStackTraces: boolean;
   excludeSources: boolean;
@@ -53,7 +53,7 @@ export async function compileApplicationToWasm(
     wasmEngine,
     enableHttpCache = false,
     enableExperimentalHighResolutionTimeMethods = false,
-    enableAOT = false,
+    disableAOT = false,
     aotCache = '',
     enableStackTraces,
     excludeSources,
@@ -211,7 +211,7 @@ export async function compileApplicationToWasm(
 
     try {
       if (!doBundle) {
-        if (enableAOT) {
+        if (!disableAOT) {
           const wevalPath = wevalBin ?? (await weval());
 
           const wevalProcess = spawnSync(
@@ -255,7 +255,7 @@ export async function compileApplicationToWasm(
         }
       } else {
         spawnOpts.input = `${maybeWindowsPath(input)}${moduleMode ? '' : ' --legacy-script'}`;
-        if (enableAOT) {
+        if (!disableAOT) {
           const wevalPath = wevalBin ?? (await weval());
 
           const wevalProcess = spawnSync(

@@ -14,7 +14,10 @@ test('should create wasm file and return zero exit code', async function (t) {
 
   t.is(await exists('./bin/main.wasm'), false);
 
-  const { code, stdout, stderr } = await execute(process.execPath, cli);
+  const { code, stdout, stderr } = await execute(
+    process.execPath,
+    `${cli} --disable-aot`,
+  );
 
   t.is(await exists('./bin/main.wasm'), true);
   t.alike(stdout, []);

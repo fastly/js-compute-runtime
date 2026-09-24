@@ -7,7 +7,7 @@ export type ParsedInputs =
   | 'help'
   | 'version'
   | {
-      enableAOT: boolean;
+      disableAOT: boolean;
       aotCache: string;
       enableHttpCache: boolean;
       enableExperimentalHighResolutionTimeMethods: boolean;
@@ -28,7 +28,7 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
 
   let enableHttpCache = false;
   let enableExperimentalHighResolutionTimeMethods = false;
-  let enableAOT = false;
+  let disableAOT = false;
   let customEngineSet = false;
   let moduleMode = true;
   let bundle = true;
@@ -94,16 +94,16 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
         // so that existing build invocations keep working.
         break;
       }
-      case '--enable-aot': {
-        enableAOT = true;
+      case '--disable-aot': {
+        disableAOT = true;
         break;
       }
+      case '--enable-aot':
       case '--enable-experimental-aot': {
         console.error(
-          'Warning: --enable-experimental-aot flag is now --enable-aot. The old flag continues\n' +
-            'to work for now, but please update your build invocation!',
+          'Warning: --enable-aot and --enable-experimental-aot flags are deprecated.\n' +
+            'AOT compilation is now enabled by default, and can be disabled by using the --disable - aot flag.',
         );
-        enableAOT = true;
         break;
       }
       case '-V':
@@ -258,13 +258,13 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
     }
   }
 
-  if (!customEngineSet && enableAOT) {
+  if (!customEngineSet && !disableAOT) {
     wasmEngine = join(__dirname, '../fastly-weval.wasm');
   }
 
-  if (wevalBin && !enableAOT) {
+  if (wevalBin && disableAOT) {
     console.error(
-      'Warning: --weval-bin has no effect without --enable-aot, as weval is only used for AOT compilation',
+      'Warning: --weval-bin has no effect with --disable-aot, as weval is only used for AOT compilation',
     );
   }
 
@@ -273,7 +273,7 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
     enableHttpCache,
     moduleMode,
     bundle,
-    enableAOT,
+    disableAOT,
     aotCache,
     enableStackTraces,
     excludeSources,

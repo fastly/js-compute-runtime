@@ -273,7 +273,7 @@ jobs:
       run: npm run build:cli
 
     - name: Build WPT runtime
-      run: tests/wpt-harness/build-wpt-runtime.sh --debug-build
+      run: tests/wpt-harness/build-wpt-runtime.sh --debug-build --disable-aot
 
     - name: Prepare WPT hosts
       run: |
@@ -330,7 +330,7 @@ jobs:
       run: npm run build:cli
 
     - name: Build WPT runtime
-      run: tests/wpt-harness/build-wpt-runtime.sh ${{matrix.profile == 'weval' && '--enable-experimental-aot' || matrix.profile == 'debug' && '--debug-build' || ''}}
+      run: tests/wpt-harness/build-wpt-runtime.sh ${{matrix.profile == 'release' && '--disable-aot' || matrix.profile == 'debug' && '--debug-build --disable-aot' || ''}}
 
     - name: Prepare WPT hosts
       run: |
