@@ -1373,9 +1373,9 @@ bool Backend::is_dynamic_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
   auto res = backend->is_dynamic();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setBoolean(false);
+    return true;
   }
   args.rval().setBoolean(res.unwrap());
   return true;
@@ -1388,9 +1388,9 @@ bool Backend::target_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
   auto res = backend->get_host();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   auto str = core::decode(cx, res.unwrap());
   if (!str) {
@@ -1407,9 +1407,9 @@ bool Backend::host_override_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
   auto res = backend->get_override_host();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   auto str = core::decode(cx, res.unwrap());
   if (!str) {
@@ -1426,9 +1426,9 @@ bool Backend::port_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
   auto res = backend->get_port();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   args.rval().setNumber(res.unwrap());
   return true;
@@ -1441,9 +1441,9 @@ bool Backend::connect_timeout_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
   auto res = backend->get_connect_timeout_ms();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   if (!res.unwrap().has_value()) {
     args.rval().setNull();
@@ -1460,9 +1460,9 @@ bool Backend::first_byte_timeout_get(JSContext *cx, unsigned argc, JS::Value *vp
     return true;
   }
   auto res = backend->get_first_byte_timeout_ms();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   if (!res.unwrap().has_value()) {
     args.rval().setNull();
@@ -1479,9 +1479,9 @@ bool Backend::between_bytes_timeout_get(JSContext *cx, unsigned argc, JS::Value 
     return true;
   }
   auto res = backend->get_between_bytes_timeout_ms();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   if (!res.unwrap().has_value()) {
     args.rval().setNull();
@@ -1498,9 +1498,9 @@ bool Backend::http_keepalive_time_get(JSContext *cx, unsigned argc, JS::Value *v
     return true;
   }
   auto res = backend->get_http_keepalive_time();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   args.rval().setNumber(res.unwrap());
   return true;
@@ -1515,9 +1515,9 @@ bool Backend::tcp_keepalive_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   auto res = backend->get_tcp_keepalive_enable();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   if (!res.unwrap()) {
     args.rval().setNull();
@@ -1526,9 +1526,9 @@ bool Backend::tcp_keepalive_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     JS::RootedObject tcp_keepalive_obj(cx, JS_NewPlainObject(cx));
     {
       auto res = backend->get_tcp_keepalive_interval();
-      if (auto *err = res.to_err()) {
-        HANDLE_ERROR(cx, *err);
-        return false;
+      if (res.is_err()) {
+        args.rval().setNull();
+        return true;
       }
       JS::RootedValue val(cx, JS_NumberValue(res.unwrap()));
       if (!JS_SetProperty(cx, tcp_keepalive_obj, "intervalSecs", val)) {
@@ -1537,9 +1537,9 @@ bool Backend::tcp_keepalive_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
     {
       auto res = backend->get_tcp_keepalive_time();
-      if (auto *err = res.to_err()) {
-        HANDLE_ERROR(cx, *err);
-        return false;
+      if (res.is_err()) {
+        args.rval().setNull();
+        return true;
       }
       JS::RootedValue val(cx, JS_NumberValue(res.unwrap()));
       if (!JS_SetProperty(cx, tcp_keepalive_obj, "timeSecs", val)) {
@@ -1548,9 +1548,9 @@ bool Backend::tcp_keepalive_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
     {
       auto res = backend->get_tcp_keepalive_probes();
-      if (auto *err = res.to_err()) {
-        HANDLE_ERROR(cx, *err);
-        return false;
+      if (res.is_err()) {
+        args.rval().setNull();
+        return true;
       }
       JS::RootedValue val(cx, JS_NumberValue(res.unwrap()));
       if (!JS_SetProperty(cx, tcp_keepalive_obj, "probes", val)) {
@@ -1570,9 +1570,9 @@ bool Backend::is_ssl_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
   auto res = backend->is_ssl();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setBoolean(false);
+    return true;
   }
   args.rval().setBoolean(res.unwrap());
   return true;
@@ -1585,9 +1585,9 @@ bool Backend::tls_min_version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
   auto res = backend->ssl_min_version();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   if (!res.unwrap().has_value()) {
     args.rval().setNull();
@@ -1604,9 +1604,9 @@ bool Backend::tls_max_version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
   auto res = backend->ssl_max_version();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   if (!res.unwrap().has_value()) {
     args.rval().setNull();
@@ -1860,8 +1860,7 @@ bool install(api::Engine *engine) {
     return false;
   }
 
-  RootedObject backend_obj(engine->cx(),
-                           JS_GetConstructor(engine->cx(), BuiltinImpl<Backend>::proto_obj));
+  RootedObject backend_obj(engine->cx(), JS_GetConstructor(engine->cx(), Backend::proto_obj));
   RootedValue backend_val(engine->cx(), ObjectValue(*backend_obj));
   RootedObject backend_ns(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   if (!JS_SetProperty(engine->cx(), backend_ns, "Backend", backend_val)) {

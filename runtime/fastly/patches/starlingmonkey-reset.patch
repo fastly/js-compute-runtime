@@ -1,40 +1,40 @@
 diff --git a/include/extension-api.h b/include/extension-api.h
-index 44935f7..79f13e5 100644
+index 55af98e..68da8ab 100644
 --- a/include/extension-api.h
 +++ b/include/extension-api.h
-@@ -163,6 +163,7 @@ public:
+@@ -172,6 +172,7 @@ public:
    void report_unhandled_promise_rejections();
-   void clear_unhandled_promise_rejections();
- 
+   static void clear_unhandled_promise_rejections();
+
 +  void reset();
    void abort(const char *reason);
- 
-   bool debug_logging_enabled();
+
+   static bool debug_logging_enabled();
 diff --git a/runtime/engine.cpp b/runtime/engine.cpp
-index e748f93..1b3280d 100644
+index e9da55d..5d4a2a3 100644
 --- a/runtime/engine.cpp
 +++ b/runtime/engine.cpp
-@@ -689,3 +689,9 @@ void Engine::report_unhandled_promise_rejections() {
+@@ -708,3 +708,9 @@ void Engine::report_unhandled_promise_rejections() {
  void Engine::clear_unhandled_promise_rejections() {
    JS::SetClear(CONTEXT, unhandledRejectedPromises);
  }
 +void Engine::reset() {
 +  clear_unhandled_promise_rejections();
-+  core::EventLoop::reset(this);    
++  core::EventLoop::reset(this);
 +  JS::PrepareForFullGC(cx());
 +  JS::NonIncrementalGC(cx(), JS::GCOptions::Normal, JS::GCReason::API);
 +}
 diff --git a/runtime/event_loop.cpp b/runtime/event_loop.cpp
-index eb4909b..2412813 100644
+index cdcdaab..612bb31 100644
 --- a/runtime/event_loop.cpp
 +++ b/runtime/event_loop.cpp
-@@ -98,4 +98,13 @@ bool EventLoop::run_event_loop(api::Engine *engine, double total_compute) {
- 
+@@ -99,4 +99,13 @@ bool EventLoop::run_event_loop(api::Engine *engine, double total_compute) {
+
  void EventLoop::init(JSContext *cx) { queue.init(cx); }
- 
+
 +void EventLoop::reset(api::Engine *engine) {
 +  auto &q = queue.get();
-+  for (auto *task : q.tasks) {
++  for (auto task : q.tasks) {
 +    task->cancel(engine);
 +  }
 +  q.tasks.clear();
@@ -43,13 +43,13 @@ index eb4909b..2412813 100644
 +
  } // namespace core
 diff --git a/runtime/event_loop.h b/runtime/event_loop.h
-index 40b3696..5bf1ea3 100644
+index acca516..27838bf 100644
 --- a/runtime/event_loop.h
 +++ b/runtime/event_loop.h
-@@ -47,6 +47,12 @@ public:
+@@ -41,6 +41,12 @@ public:
     * Remove a queued async task.
     */
-   static bool cancel_async_task(api::Engine *engine, api::AsyncTask *task);
+   static bool cancel_async_task(api::Engine *engine, const RefPtr<api::AsyncTask>& task);
 +
 +  /**
 +   * Reset the event loop state, cancelling all pending tasks and clearing interest count.
@@ -57,5 +57,5 @@ index 40b3696..5bf1ea3 100644
 +   */
 +  static void reset(api::Engine *engine);
  };
- 
+
  } // namespace core

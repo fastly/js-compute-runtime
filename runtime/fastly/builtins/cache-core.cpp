@@ -1066,7 +1066,7 @@ bool PendingTransaction::pending(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto handle = PendingTransaction::busy_handle(self);
   auto res = handle.is_ready();
-  if (auto *err = res.to_err()) {
+  if (res.is_err()) {
     // This will usually occur due to a call to pending() after wait(),
     // due to the handle invalidation, so we simply return false.
     args.rval().setBoolean(false);
