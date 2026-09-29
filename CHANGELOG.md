@@ -73,7 +73,6 @@
 * URL encode image optimizer options ([#1564](https://github.com/fastly/js-compute-runtime/issues/1564)) ([d2765a8](https://github.com/fastly/js-compute-runtime/commit/d2765a8cb1ff62dfdb2e95bb61c55834621f96a0))
 * Validate edge rate options before hostcall ([#1560](https://github.com/fastly/js-compute-runtime/issues/1560)) ([908cc88](https://github.com/fastly/js-compute-runtime/commit/908cc883462bc50548185c7efa4e045c2d86ac28))
 
->>>>>>> conflict 1 of 1 ends
 ## 3.44.3 (2026-07-31)
 
 ### Fixed
