@@ -1088,17 +1088,20 @@ routes.set('/http-cache/headers-from-hostcall', async (event) => {
 routes.set('/http-cache/no-header-loss-before-send', async (event) => {
   const cacheOverride = new CacheOverride({
     beforeSend(beReq) {
-      beReq.headers.set("x-hook-ran", "yes");
+      beReq.headers.set('x-hook-ran', 'yes');
     },
   });
 
   const headers = new Headers();
-  headers.set("range", "bytes=0-3");
+  headers.set('range', 'bytes=0-3');
 
-  const res = await fetch(new Request(getTestUrl(), { method: "GET", headers }), {
-    backend: 'httpme',
-    cacheOverride,
-  });
+  const res = await fetch(
+    new Request(getTestUrl(), { method: 'GET', headers }),
+    {
+      backend: 'httpme',
+      cacheOverride,
+    },
+  );
   const json = await res.json();
   strictEqual(json['headers']['x-hook-ran'], 'yes');
 });
