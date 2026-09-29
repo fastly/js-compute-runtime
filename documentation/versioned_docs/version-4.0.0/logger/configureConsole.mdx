@@ -1,0 +1,50 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# configureConsole
+
+The **`configureConsole()`** function allows configuring the behaviour of the `console` global JS logger.
+
+## Syntax
+
+```js
+configureConsole(loggingOptions)
+```
+
+### Parameters
+
+- `loggingOptions` _: object_
+  - 
+  - The name has to be between 1 and 254 characters inclusive.
+  - Throws a [`TypeError`](../globals/TypeError/TypeError.mdx) if the value is not valid. I.E. The value is null, undefined, an empty string or a string with more than 254 characters.
+
+## Examples
+
+In this example, we disable prefixing for `console.log` and use `stderr` output for `console.error`:
+
+```js
+import { configureConsole } from "fastly:logger";
+
+configureConsole({
+  prefixing: false,
+  stderr: true
+});
+
+async function handleRequest(event) {
+  console.log(JSON.stringify(event.request.headers));
+  const url = new URL(event.request.url);
+  try {
+    validate(url);
+  } catch (e) {
+    console.error(`Validation error: ${e}`);
+    return new Response('Bad Request', { status: 400 });
+  }
+  return new Response('OK');
+}
+
+addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
+```

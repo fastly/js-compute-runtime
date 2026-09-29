@@ -1,8 +1,27 @@
 # Changelog
 
+## 4.0.0 (2026-09-29)
+
+### Changed
+
+* this enables AOT compilation by default, which might be unexpected, but will make our default operation much faster.
+
+### Added
+
+* Allow URIs longer than 8192 bytes ([#1585](https://github.com/fastly/js-compute-runtime/issues/1585)) ([6ac66df](https://github.com/fastly/js-compute-runtime/commit/6ac66dff1aff48a9f271251b1d3a8a052329471e))
+* enable AOT by default ([#1598](https://github.com/fastly/js-compute-runtime/issues/1598)) ([dfcc17f](https://github.com/fastly/js-compute-runtime/commit/dfcc17f31822f8a6eac7a28b52e7c93eb45aa33e))
+
+### Fixed
+
+* change zip extractor for wasmtime package ([5a8886e](https://github.com/fastly/js-compute-runtime/commit/5a8886ed12b8159bd21b1ba054ccb9768924047f))
+* Ensure additions to headers in beforeSend are applied ([#1600](https://github.com/fastly/js-compute-runtime/issues/1600)) ([1ae9e5b](https://github.com/fastly/js-compute-runtime/commit/1ae9e5b36193d3cb16865ba7c6b918d740cddcee))
+* get documentation generation working again ([#1595](https://github.com/fastly/js-compute-runtime/issues/1595)) ([9e3f16b](https://github.com/fastly/js-compute-runtime/commit/9e3f16bb10bba95d4c34715079f558ed10215f52))
+* handle potential NULL pointer dereference in debug logging ([#1593](https://github.com/fastly/js-compute-runtime/issues/1593)) ([1e5eb8b](https://github.com/fastly/js-compute-runtime/commit/1e5eb8b8d920fd2a92dd0cdfeff846ccf32e4501))
+* npm audit fix ([47ca0dc](https://github.com/fastly/js-compute-runtime/commit/47ca0dcc64a2faa21bd2cdb6fcefc80c1387fa06))
+
 ## 4.0.0-pre.1 (2026-09-18)
 
-### Breaking Changes
+### Changed
 
 * Getters no longer throw. They will return `null` instead.
 
