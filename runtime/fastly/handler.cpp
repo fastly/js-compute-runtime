@@ -116,6 +116,7 @@ bool handle_incoming(host_api::Request req) {
   if (!state::Manager::reset_all_request_states(builtins_with_request_state, ENGINE->cx())) {
     return false;
   }
+  ENGINE->clear_unhandled_promise_rejections();
 
   return true;
 }
@@ -140,7 +141,7 @@ int main(int argc, const char *argv[]) {
   auto req = host_api::Request::downstream_get();
   if (req.is_err()) {
     HANDLE_ERROR(ENGINE->cx(), *req.to_err());
-    return -1;
+    return 1;
   }
 
   const auto max_requests =
@@ -155,7 +156,7 @@ int main(int argc, const char *argv[]) {
         printf("Request handling not successful, exiting process.\n");
         fflush(stdout);
       }
-      return -1;
+      return 1;
     }
 
     requests_handled++;
@@ -205,19 +206,22 @@ int main(int argc, const char *argv[]) {
 
     auto next = host_api::HttpReqPromise::downstream_next(options);
     if (next.is_err()) {
+      if (fastly::runtime::ENGINE->debug_logging_enabled()) {
+        printf("HOSTCALL: downstream_next() failed with code %hhu\n", *req.to_err());
+      }
       HANDLE_ERROR(ENGINE->cx(), *next.to_err());
-      return -1;
+      return 1;
     }
 
     req = next.unwrap().wait();
     if (req.is_err()) {
       HANDLE_ERROR(ENGINE->cx(), *req.to_err());
-      return -1;
+      return 1;
     }
 
     if (JS_IsExceptionPending(ENGINE->cx())) {
       ENGINE->dump_pending_exception("running event loop");
-      return -1;
+      return 1;
     }
     ENGINE->reset();
   }

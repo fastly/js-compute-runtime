@@ -12,28 +12,28 @@
     "status": "PASS"
   },
   "request.formData() with input: ﻿test=﻿": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "response.formData() with input: ﻿test=﻿": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URLSearchParams constructed with: %EF%BB%BFtest=%EF%BB%BF": {
     "status": "PASS"
   },
   "request.formData() with input: %EF%BB%BFtest=%EF%BB%BF": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "response.formData() with input: %EF%BB%BFtest=%EF%BB%BF": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URLSearchParams constructed with: %EF%BF%BF=%EF%BF%BF": {
     "status": "PASS"
   },
   "request.formData() with input: %EF%BF%BF=%EF%BF%BF": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "response.formData() with input: %EF%BF%BF=%EF%BF%BF": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "URLSearchParams constructed with: %FE%FF": {
     "status": "PASS"

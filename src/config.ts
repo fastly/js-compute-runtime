@@ -5,12 +5,13 @@ const additiveOptionsMap = {
 };
 
 const strictOptionsMap = {
-  enableAOT: '--enable-aot',
+  disableAOT: '--disable-aot',
   aotCache: '--aot-cache',
   enableHttpCache: '--enable-http-cache',
   enableExperimentalHighResolutionTimeMethods:
     '--enable-experimental-high-resolution-time-methods',
   enableExperimentalTopLevelAwait: '--enable-experimental-top-level-await',
+  disableTopLevelAwait: '--disable-top-level-await',
   enableStackTraces: '--enable-stack-traces',
   excludeSources: '--exclude-sources',
   debugIntermediateFiles: '--debug-intermediate-files',

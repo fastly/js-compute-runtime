@@ -1,8 +1,8 @@
 {
   "Get basics": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "More get() basics": {
-    "status": "FAIL"
+    "status": "PASS"
   }
 }

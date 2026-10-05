@@ -542,6 +542,9 @@ bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
     }
     JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::Headers),
                         JS::ObjectValue(*backend_request_headers));
+    // Force header commits to go through without comparing header generation numbers
+    JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::HeadersGen),
+                        JS::UndefinedValue());
 
     JS::RootedValue ret_val(cx);
     JS::RootedValueArray<1> args(cx);

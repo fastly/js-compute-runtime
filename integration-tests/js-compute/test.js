@@ -130,9 +130,9 @@ const config = TOML.parse(
   ),
 );
 config.name = serviceName;
-if (aot) {
+if (!aot) {
   const buildArgs = config.scripts.build.split(' ');
-  buildArgs.splice(-1, null, '--enable-aot');
+  buildArgs.splice(-1, null, '--disable-aot');
   config.scripts.build = buildArgs.join(' ');
 }
 if (debugBuild) {
