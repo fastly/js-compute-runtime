@@ -1,3 +1,32 @@
+diff --git a/builtins/web/timers.cpp b/builtins/web/timers.cpp
+index d4e9a8c..47260af 100644
+--- a/builtins/web/timers.cpp
++++ b/builtins/web/timers.cpp
+@@ -229,4 +229,12 @@ bool install(api::Engine *engine) {
+   return JS_DefineFunctions(engine->cx(), engine->global(), methods);
+ }
+
++void reset() {
++  for (auto &[id, timer] : TIMERS_MAP->timers_) {
++    timer->cancel(ENGINE);
++  }
++  TIMERS_MAP->timers_.clear();
++  TIMERS_MAP->next_timer_id = 1;
++}
++
+ } // namespace builtins::web::timers
+diff --git a/builtins/web/timers.h b/builtins/web/timers.h
+index f88d36b..38a6cba 100644
+--- a/builtins/web/timers.h
++++ b/builtins/web/timers.h
+@@ -14,6 +14,7 @@ bool set_interval(JSContext *cx, HandleObject handler, JS::HandleValueVector arg
+ void clear_timeout_or_interval(int32_t timer_id);
+
+ bool install(api::Engine *engine);
++void reset();
+
+ } // namespace builtins::web::timers
+
 diff --git a/include/extension-api.h b/include/extension-api.h
 index 55af98e..68da8ab 100644
 --- a/include/extension-api.h
@@ -11,21 +40,32 @@ index 55af98e..68da8ab 100644
 
    static bool debug_logging_enabled();
 diff --git a/runtime/engine.cpp b/runtime/engine.cpp
-index e9da55d..5d4a2a3 100644
+index e9da55d..3908e56 100644
 --- a/runtime/engine.cpp
 +++ b/runtime/engine.cpp
-@@ -708,3 +708,9 @@ void Engine::report_unhandled_promise_rejections() {
+@@ -3,6 +3,7 @@
+ #include "debugger.h"
+ #include "encode.h"
+ #include "event_loop.h"
++#include "../builtins/web/timers.h"
+ #include "script_loader.h"
+
+ #include "js/CompilationAndEvaluation.h"
+@@ -708,3 +709,11 @@ void Engine::report_unhandled_promise_rejections() {
  void Engine::clear_unhandled_promise_rejections() {
    JS::SetClear(CONTEXT, unhandledRejectedPromises);
  }
 +void Engine::reset() {
 +  clear_unhandled_promise_rejections();
 +  core::EventLoop::reset(this);
++  builtins::web::timers::reset();
++  core::EventLoop::reset(this);
 +  JS::PrepareForFullGC(cx());
 +  JS::NonIncrementalGC(cx(), JS::GCOptions::Normal, JS::GCReason::API);
 +}
+\ No newline at end of file
 diff --git a/runtime/event_loop.cpp b/runtime/event_loop.cpp
-index cdcdaab..612bb31 100644
+index cdcdaab..9cfea77 100644
 --- a/runtime/event_loop.cpp
 +++ b/runtime/event_loop.cpp
 @@ -99,4 +99,13 @@ bool EventLoop::run_event_loop(api::Engine *engine, double total_compute) {
