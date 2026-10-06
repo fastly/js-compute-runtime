@@ -1,19 +1,17 @@
 # Changelog
 
-## [4.0.0](https://github.com/fastly/js-compute-runtime/compare/v3.46.0...v4.0.0) (2026-10-06)
+## 4.0.0 (2026-10-06)
 
-
-### ⚠ BREAKING CHANGES
+### Changed
 
 * this enables AOT compilation by default, which might be unexpected, but will make our default operation much faster.
 
-### Features
+### Added
 
 * Allow URIs longer than 8192 bytes ([#1585](https://github.com/fastly/js-compute-runtime/issues/1585)) ([6ac66df](https://github.com/fastly/js-compute-runtime/commit/6ac66dff1aff48a9f271251b1d3a8a052329471e))
 * enable AOT by default ([#1598](https://github.com/fastly/js-compute-runtime/issues/1598)) ([dfcc17f](https://github.com/fastly/js-compute-runtime/commit/dfcc17f31822f8a6eac7a28b52e7c93eb45aa33e))
 
-
-### Bug Fixes
+### Fixed
 
 * change zip extractor for wasmtime package ([5a8886e](https://github.com/fastly/js-compute-runtime/commit/5a8886ed12b8159bd21b1ba054ccb9768924047f))
 * Ensure additions to headers in beforeSend are applied ([#1600](https://github.com/fastly/js-compute-runtime/issues/1600)) ([1ae9e5b](https://github.com/fastly/js-compute-runtime/commit/1ae9e5b36193d3cb16865ba7c6b918d740cddcee))
@@ -25,7 +23,7 @@
 
 ## 4.0.0-pre.1 (2026-09-18)
 
-### Breaking Changes
+### Changed
 
 * Getters no longer throw. They will return `null` instead.
 

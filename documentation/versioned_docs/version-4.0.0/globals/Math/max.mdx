@@ -1,0 +1,33 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Math.max()
+
+The **`Math.max()`** function returns the largest of the numbers given as input parameters, or `-Infinity` if there are no parameters.
+
+## Syntax
+
+```js
+Math.max()
+Math.max(value0)
+Math.max(value0, value1)
+Math.max(value0, value1, /* … ,*/ valueN)
+```
+
+### Parameters
+
+- `value1`, `value2`, … , `valueN`
+  - : Zero or more numbers among which the largest value will be selected and returned.
+
+### Return value
+
+The largest of the given numbers. Returns `NaN` if any of the parameters is or is converted into `NaN`. Returns `-Infinity` if no parameters are provided.
+
+## Description
+
+Because `max()` is a static method of `Math`, you always use it as `Math.max()`, rather than as a method of a `Math` object you created (`Math` is not a constructor).
+
+[`Math.max.length`](../Function/prototype/length.mdx) is 2, which weakly signals that it's designed to handle at least two parameters.
