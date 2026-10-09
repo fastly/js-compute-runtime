@@ -1,5 +1,9 @@
 # Changelog
 
+### Fixed
+
+* update to @bytecodealliance/weval@0.5.0 and @bytecodealliance/jco@1.17.9 to drop dependency on `decompress`
+
 ## 4.0.0 (2026-10-06)
 
 ### Changed
