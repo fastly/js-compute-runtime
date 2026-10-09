@@ -1,0 +1,40 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Date.prototype\[Symbol.toPrimitive]
+
+The **`[Symbol.toPrimitive]()`** method converts a `Date`
+object to a primitive value.
+
+## Syntax
+
+```js
+Date()[Symbol.toPrimitive](hint)
+```
+
+### Return value
+
+The primitive value of the given `Date` object. Depending on the argument,
+the method can return either a string or a number.
+
+## Description
+
+The `[Symbol.toPrimitive]()` method of the `Date` object returns a
+primitive value, that is either of type number or of type string.
+
+If `hint` is `string` or `default`,
+`[Symbol.toPrimitive]()` tries to call the [`toString`](../../Object/prototype/toString.mdx) method. If the `toString` property does not exist, it tries to
+call the [`valueOf`](../../Object/prototype/valueOf.mdx) method and if the
+`valueOf` does not exist either, `[Symbol.toPrimitive]()` throws a
+[`TypeError`](../../../globals/TypeError/TypeError.mdx).
+
+If `hint` is `number`, `[Symbol.toPrimitive]()` first tries
+to call `valueOf`, and if that fails, it calls `toString`.
+
+JavaScript calls the `[Symbol.toPrimitive]()` method to convert an object to a
+primitive value. You rarely need to invoke the `[Symbol.toPrimitive]()` method
+yourself; JavaScript automatically invokes it when encountering an object where a
+primitive value is expected.

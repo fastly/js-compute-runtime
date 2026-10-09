@@ -1,0 +1,36 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# String.prototype.endsWith()
+
+The **`endsWith()`** method determines whether a string ends with the characters of a specified string, returning `true` or `false` as appropriate.
+
+## Syntax
+
+```js
+endsWith(searchString)
+endsWith(searchString, endPosition)
+```
+
+### Parameters
+
+- `searchString`
+  - : The characters to be searched for at the end of `str`. Cannot be a regex.
+- `endPosition` _**optional**_
+  - : The end position at which `searchString` is expected to be found (the index of `searchString`'s last character plus 1). Defaults to `str.length`.
+
+### Return value
+
+**`true`** if the given characters are found at the end of the string; otherwise, **`false`**.
+
+### Exceptions
+
+- [`TypeError`](../../../globals/TypeError/TypeError.mdx)
+  - : If `searchString` is a regex.
+
+## Description
+
+This method lets you determine whether or not a string ends with another string. This method is case-sensitive.
