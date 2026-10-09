@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.1 (2026-10-09)
+
+### Fixed
+
+* **dep:** Update to weval@0.5.0 and @bytecodealliance/jco@1.17.9  ([#1601](https://github.com/fastly/js-compute-runtime/issues/1601)) ([769f43b](https://github.com/fastly/js-compute-runtime/commit/769f43bcc051770c19806997e92c053e3301a97b))
+
 ## 4.0.0 (2026-10-06)
 
 ### Changed

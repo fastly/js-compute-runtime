@@ -1,0 +1,34 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Headers.set()
+
+The **`set()`** method of the `Headers` interface
+sets a new value for an existing header inside a `Headers` object, or adds
+the header if it does not already exist.
+
+The difference between `set()` and `Headers.append` is that if
+the specified header already exists and accepts multiple values, `set()`
+overwrites the existing value with the new one, whereas `Headers.append`
+appends the new value to the end of the set of values.
+
+## Syntax
+
+```js
+set(name, value)
+```
+
+### Parameters
+
+- `name`
+  - : The name of the HTTP header you want to set to a new value. If the given name is not
+    the name of an HTTP header, this method throws a `TypeError`.
+- `value`
+  - : The new value you want to set.
+
+### Return value
+
+None `undefined`.
