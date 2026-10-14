@@ -1,0 +1,35 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# `RateCounter()`
+
+The **`RateCounter` constructor** can be used with a [Edge Rate Limiter](../EdgeRateLimiter/EdgeRateLimiter.mdx) or standalone for counting and rate calculations.
+
+>**Note**: Can only be used when processing requests, not during build-time initialization.
+
+## Syntax
+
+```js
+new RateCounter(name)
+```
+
+> **Note:** `RateCounter()` can only be constructed with `new`. Attempting to call it without `new` throws a [`TypeError`](../../globals/TypeError/TypeError.mdx).
+
+### Parameters
+
+- `name` _: string_
+  - Open a RateCounter with the given name
+
+
+### Return value
+
+A new `RateCounter` object instance.
+
+### Exceptions
+
+- `TypeError`
+  - Thrown if the provided `name` value can not be coerced into a string
+
