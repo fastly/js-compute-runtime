@@ -1,0 +1,32 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# ReadableStreamDefaultReader()
+
+The **`ReadableStreamDefaultReader()`**
+constructor creates and returns a `ReadableStreamDefaultReader` object
+instance.
+
+## Syntax
+
+```js
+new ReadableStreamDefaultReader(stream)
+```
+
+### Parameters
+
+- `stream`
+  - : The `ReadableStream` to be read.
+
+### Return value
+
+An instance of the `ReadableStreamDefaultReader` object.
+
+### Exceptions
+
+- `TypeError`
+  - : Thrown if the supplied `stream` parameter is not a `ReadableStream`,
+    or it is already locked for reading by another reader.

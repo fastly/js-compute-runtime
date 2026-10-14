@@ -1,0 +1,40 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Array.prototype.includes()
+
+The **`includes()`** method determines whether an array
+includes a certain value among its entries, returning `true` or
+`false` as appropriate.
+
+## Syntax
+
+```js
+includes(searchElement)
+includes(searchElement, fromIndex)
+```
+
+### Parameters
+
+- `searchElement`
+  - : The value to search for.
+- `fromIndex` _**optional**_
+  - : Zero-based index at which to start searching, converted to an integer.
+    - Negative index counts back from the end of the array — if `fromIndex < 0`, `fromIndex + array.length` is used. However, the array is still searched from front to back in this case.
+    - If `fromIndex < -array.length` or `fromIndex` is omitted, `0` is used, causing the entire array to be searched.
+    - If `fromIndex >= array.length`, the array is not searched and `false` is returned.
+
+### Return value
+
+A boolean value which is `true` if the value `searchElement` is found within the array (or the part of the array indicated by the index `fromIndex`, if specified).
+
+## Description
+
+The `includes()` method compares `searchElement` to elements of the array using the [SameValueZero](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Strict_equality) algorithm. Values of zero are all considered to be equal, regardless of sign. (That is, `-0` is equal to `0`), but `false` is _not_ considered to be the same as `0`. [`NaN`](../../NaN.mdx) can be correctly searched for.
+
+When used on sparse arrays, the `includes()` method iterates empty slots as if they have the value `undefined`.
+
+The `includes()` method is generic. It only expects the `this` value to have a `length` property and integer-keyed properties.

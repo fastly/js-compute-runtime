@@ -1,5 +1,13 @@
 # Changelog
 
+## 4.0.1 (2026-10-14)
+
+### Fixed
+
+* Add lockfile to weval install ([#1607](https://github.com/fastly/js-compute-runtime/issues/1607)) ([bd917a0](https://github.com/fastly/js-compute-runtime/commit/bd917a0421e4fbc5bbc7b1c86f7b20b1e34945ff))
+* **deps:** bump weval to 0.5.1 ([#1604](https://github.com/fastly/js-compute-runtime/issues/1604)) ([7bb2844](https://github.com/fastly/js-compute-runtime/commit/7bb2844dfc38b50c9d5a1e2c47bcc468a88213f4))
+* **dep:** Update to weval@0.5.0 and @bytecodealliance/jco@1.17.9  ([#1601](https://github.com/fastly/js-compute-runtime/issues/1601)) ([769f43b](https://github.com/fastly/js-compute-runtime/commit/769f43bcc051770c19806997e92c053e3301a97b))
+
 ## 4.0.0 (2026-10-06)
 
 ### Changed

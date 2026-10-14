@@ -1,0 +1,39 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# WritableStreamDefaultWriter.write()
+
+The **`write()`** method of the
+`WritableStreamDefaultWriter` interface writes a passed chunk of data to a
+`WritableStream` and its underlying sink, then returns a
+`Promise` that resolves to indicate the success or failure of the write
+operation.
+
+Note that what "success" means is up to the underlying sink; it might indicate that the
+chunk has been accepted, and not necessarily that it is safely saved to its ultimate
+destination.
+
+## Syntax
+
+```js
+write(chunk)
+```
+
+### Parameters
+
+- `chunk`
+  - : A block of binary data to pass to the `WritableStream`.
+
+### Return value
+
+A `Promise`, which fulfills with the `undefined` upon a
+successful write, or rejects if the write fails or stream becomes errored before the
+writing process is initiated.
+
+### Exceptions
+
+- `TypeError`
+  - : The target stream is not a writable stream, or it does not have an owner.
