@@ -6,10 +6,10 @@ import {
 } from 'node:child_process';
 import { mkdir, readFile, mkdtemp } from 'node:fs/promises';
 import { rmSync } from 'node:fs';
-import weval from '@bytecodealliance/weval';
 import wasmtime from '@fastly/wasmtime';
 
 import { isDirectory, isFile } from './files.js';
+import { getWevalPath } from './getWevalPath.js';
 import { CompilerContext } from './compilerPipeline.js';
 import { bundleStep } from './compiler-steps/bundle.js';
 import { precompileRegexesStep } from './compiler-steps/precompileRegexes.js';
@@ -212,7 +212,7 @@ export async function compileApplicationToWasm(
     try {
       if (!doBundle) {
         if (!disableAOT) {
-          const wevalPath = wevalBin ?? (await weval());
+          const wevalPath = wevalBin ?? (await getWevalPath());
 
           const wevalProcess = spawnSync(
             `"${wevalPath}"`,
@@ -256,7 +256,7 @@ export async function compileApplicationToWasm(
       } else {
         spawnOpts.input = `${maybeWindowsPath(input)}${moduleMode ? '' : ' --legacy-script'}`;
         if (!disableAOT) {
-          const wevalPath = wevalBin ?? (await weval());
+          const wevalPath = wevalBin ?? (await getWevalPath());
 
           const wevalProcess = spawnSync(
             `"${wevalPath}"`,
