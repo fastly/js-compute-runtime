@@ -1,0 +1,56 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# handler.setPrototypeOf()
+
+The **`handler.setPrototypeOf()`** method is a trap for
+[`Object.setPrototypeOf()`](../../../globals/Object/setPrototypeOf.mdx).
+
+## Syntax
+
+```js
+new Proxy(target, {
+  setPrototypeOf(target, prototype) {
+  }
+});
+```
+
+### Parameters
+
+The following parameters are passed to the `setPrototypeOf()` method.
+`this` is bound to the handler.
+
+- `target`
+  - : The target object.
+- `prototype`
+  - : The object's new prototype or `null`.
+
+### Return value
+
+The `setPrototypeOf()` method returns `true` if the
+`[[Prototype]]` was successfully changed, otherwise `false`.
+
+## Description
+
+The **`handler.setPrototypeOf()`** method is a trap for
+[`Object.setPrototypeOf()`](../../../globals/Object/setPrototypeOf.mdx).
+
+### Interceptions
+
+This trap can intercept these operations:
+
+- [`Object.setPrototypeOf()`](../../../globals/Object/setPrototypeOf.mdx)
+- [`Reflect.setPrototypeOf()`](../../../globals/Reflect/setPrototypeOf.mdx)
+
+Or any other operation that invokes the `[[SetPrototypeOf]]` [internal method](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Proxy#object_internal_methods).
+
+### Invariants
+
+If the following invariants are violated, the trap throws a [`TypeError`](../../../globals/TypeError/TypeError.mdx) when invoked.
+
+- If `target` is not extensible, the `prototype`
+  parameter must be the same value as
+  `Object.getPrototypeOf(target)`.

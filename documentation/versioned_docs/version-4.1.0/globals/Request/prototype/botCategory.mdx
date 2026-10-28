@@ -1,0 +1,35 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Request.botCategory
+
+The **`botCategory`** read-only property of the `Request` interface contains a
+string identifying the category of the detected bot.
+
+## Value
+
+A `String` with the category of the bot or `null` if bot detection was not
+executed or no bot was detected.
+
+The possible categories are:
+
+* `"none"` - No bot was detected.
+* `"suspected"` - A suspected bot.
+* `"accessibility"` - Tools that make content accessible (e.g., screen readers).
+* `"ai-crawler"` - Crawlers used for training AIs and LLMs, generally used for building AI models or indexes.
+* `"ai-fetcher"` - Fetchers used by AIs and LLMs for enriching results in response to a user query.
+* `"content-fetcher"` - Tools that extract content from websites to be used elsewhere.
+* `"monitoring-site-tools"` - Tools that access your website to monitor things like performance, uptime, and proving domain control.
+* `"online-marketing"` - Crawlers from online marketing platforms (e.g., Facebook, Pinterest).
+* `"page-preview"` - Tools that access your website to show a preview of the page in other online services and social media platforms.
+* `"platform-integrations"` - Integration with other platforms by accessing the website's API, notably Webhooks.
+* `"research"` - Commercial and academic tools that collect and analyze data for research purposes.
+* `"search-engine-crawler"` - Crawlers that index your website for search engines.
+* `"search-engine-optimization"` - Tools that support search engine optimization tasks (e.g., link analysis, ranking).
+* `"security-tools"` - Security analysis tools that inspect your website for vulnerabilities, misconfigurations and other security features.
+* `"headless"` - A headless bot.
+* `"unknown"` - A bot was detected, but the current version of the SDK does not know what the value is. A newer version may be available with the real value.
+

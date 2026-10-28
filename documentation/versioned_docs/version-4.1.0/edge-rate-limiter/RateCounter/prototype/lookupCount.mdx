@@ -1,0 +1,32 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# RateCounter.prototype.lookupCount
+
+Look up the current rate for the given `entry` and the given `duration`.
+
+## Syntax
+```js
+lookupCount(entry, duration)
+```
+
+### Parameters
+
+- `entry` _: string_
+  - The name of the entry to look up
+- `duration` _: number_
+  - The duration to lookup alongside the entry, has to be either, 10, 20, 30, 40, 50, or 60 seconds.
+
+
+### Return value
+
+Returns a number which is the count for the given `entry` and `duration` in this `RateCounter` instance.
+
+### Exceptions
+
+- `TypeError`
+  - Thrown if the provided `entry` value can not be coerced into a string
+  - Thrown if the provided `duration` value is not either, 10, 20, 30, 40, 50 or 60.

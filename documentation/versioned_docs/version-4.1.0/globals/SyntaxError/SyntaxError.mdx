@@ -1,0 +1,38 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# SyntaxError
+
+The **`SyntaxError`** constructor creates a new error object
+that represents an error when trying to interpret syntactically invalid code.
+
+## Syntax
+
+```js
+new SyntaxError()
+new SyntaxError(message)
+new SyntaxError(message, options)
+new SyntaxError(message, fileName)
+new SyntaxError(message, fileName, lineNumber)
+
+SyntaxError()
+SyntaxError(message)
+SyntaxError(message, options)
+SyntaxError(message, fileName)
+SyntaxError(message, fileName, lineNumber)
+```
+
+> **Note:** `SyntaxError()` can be called with or without `new`. Both create a new `SyntaxError` instance.
+
+### Parameters
+
+- `message` _**optional**_
+  - : Human-readable description of the error
+- `options` _**optional**_
+  - : An object that has the following properties:
+    - `cause` _**optional**_
+      - : A property indicating the specific cause of the error.
+        When catching and re-throwing an error with a more-specific or useful error message, this property can be used to pass the original error.
