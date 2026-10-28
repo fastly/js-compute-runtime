@@ -1,0 +1,53 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# String.prototype.split()
+
+The **`split()`** method takes a pattern and divides a `String` into an ordered list of substrings by searching for the pattern, puts these substrings into an array, and returns the array.
+
+## Syntax
+
+```js
+split()
+split(separator)
+split(separator, limit)
+```
+
+### Parameters
+
+- `separator` _**optional**_
+  - : The pattern describing where each split should occur. Can be a string or an object with a [`Symbol.split`](../../../globals/Symbol/split.mdx) method — the typical example being a regular expression. If undefined, the original target string is returned wrapped in an array.
+- `limit` _**optional**_
+  - : A non-negative integer specifying a limit on the number of substrings to be included in the array. If provided, splits the string at each occurrence of the specified `separator`, but stops when `limit` entries have been placed in the array. Any leftover text is not included in the array at all.
+    - The array may contain fewer entries than `limit` if the end of the string is reached before the limit is reached.
+    - If `limit` is `0`, `[]` is returned.
+
+### Return value
+
+An `Array` of strings, split at each point where the `separator` occurs in the given string.
+
+## Description
+
+If `separator` is a non-empty string, the target string is split by all matches of the `separator` without including `separator` in the results. For example, a string containing tab separated values (TSV) could be parsed by passing a tab character as the separator, like `myString.split("\t")`. If `separator` contains multiple characters, that entire character sequence must be found in order to split. If `separator` appears at the beginning (or end) of the string, it still has the effect of splitting, resulting in an empty (i.e. zero length) string appearing at the first (or last) position of the returned array. If `separator` does not occur in `str`, the returned array contains one element consisting of the entire string.
+
+If `separator` is an empty string (`""`), `str` is converted to an array of each of its UTF-16 "characters", without empty strings on either ends of the resulting string.
+
+> **Note:** `"".split("")` is therefore the only way to produce an empty array when a string is passed as `separator`.
+
+> **Warning:** When the empty string (`""`) is used as a separator, the string is **not** split by _user-perceived characters_ ([grapheme clusters](https://unicode.org/reports/tr29/#Grapheme_Cluster_Boundaries)) or unicode characters (codepoints), but by UTF-16 codeunits. This destroys [surrogate pairs](https://unicode.org/faq/utf_bom.html#utf16-2). See ["How do you get a string to a character array in JavaScript?" on StackOverflow](https://stackoverflow.com/questions/4547609/how-to-get-character-array-from-a-string/34717402#34717402).
+
+If `separator` is a regexp that matches empty strings, whether the match is split by UTF-16 code units or Unicode codepoints depends on if the [`u`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp/unicode) flag is set.
+
+```js
+"😄😄".split(/(?:)/); // [ "\ud83d", "\ude04", "\ud83d", "\ude04" ]
+"😄😄".split(/(?:)/u); // [ "😄", "😄" ]
+```
+
+If `separator` is a regular expression with capturing groups, then each time `separator` matches, the captured groups (including any `undefined` results) are spliced into the output array. This behavior is specified by the regexp's [`Symbol.split`](../../../globals/Symbol/split.mdx) method.
+
+If `separator` is an object with a [`Symbol.split`](../../../globals/Symbol/split.mdx) method, that method is called with the target string and `limit` as arguments, and `this` set to the object. Its return value becomes the return value of `split`.
+
+Any other value will be coerced to a string before being used as separator.

@@ -1,0 +1,36 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# decodeURIComponent
+
+The **`decodeURIComponent()`** function decodes a Uniform Resource Identifier (URI) component previously created by [`encodeURIComponent()`](./encodeURIComponent.mdx) or by a similar routine.
+
+
+## Syntax
+
+```js
+decodeURIComponent(encodedURI)
+```
+
+### Parameters
+
+- `encodedURI`
+  - : An encoded component of a Uniform Resource Identifier.
+
+### Return value
+
+A new string representing the decoded version of the given encoded Uniform Resource Identifier (URI) component.
+
+### Exceptions
+
+- [`URIError`](../globals/URIError/URIError.mdx)
+  - : Thrown if `encodedURI` contains a `%` not followed by two hexadecimal digits, or if the escape sequence does not encode a valid UTF-8 character.
+
+## Description
+
+`decodeURIComponent()` is a function property of the global object.
+
+`decodeURIComponent()` uses the same decoding algorithm as described in [`decodeURI()`](./decodeURI.mdx). It decodes _all_ escape sequences, including those that are not created by [`encodeURIComponent()`](./encodeURIComponent.mdx), like `-.!~*'()`.

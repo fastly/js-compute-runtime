@@ -1,0 +1,31 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# FormData.set()
+
+The **`set()`** method of the `FormData` interface sets a new value for an existing key inside a `FormData` object, or adds the key/value if it does not already exist.
+
+The difference between `set()` and [`append()`](../../../globals/FormData/prototype/append.mdx) is that if the specified key already exists, `set()` overwrites all existing values with the new one, whereas `append()` appends the new value onto the end of the existing values.
+
+## Syntax
+
+```js
+set(name, value)
+set(name, value, filename)
+```
+
+### Parameters
+
+- `name`
+  - : The name of the field whose data is contained in `value`.
+- `value`
+  - : The value of the field. This can be a string or a `Blob` (including subclasses such as `File`). If none of these, the value is converted to a string.
+- `filename` _**optional**_
+  - : The filename reported to the server when a `Blob` or `File` is passed as the second parameter. The default filename for `Blob` objects is "blob". The default filename for `File` objects is the file's filename.
+
+### Return value
+
+`undefined`
