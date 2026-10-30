@@ -1092,16 +1092,42 @@ routes.set('/http-cache/no-header-loss-before-send', async (event) => {
     },
   });
 
-  const headers = new Headers();
-  headers.set('range', 'bytes=0-3');
-
-  const res = await fetch(
-    new Request(getTestUrl(), { method: 'GET', headers }),
-    {
-      backend: 'httpme',
-      cacheOverride,
-    },
-  );
+  const res = await fetch(new Request(getTestUrl(), { method: 'GET' }), {
+    backend: 'httpme',
+    cacheOverride,
+  });
   const json = await res.json();
   strictEqual(json['headers']['x-hook-ran'], 'yes');
+});
+
+routes.set('/http-cache/if-none-match', async () => {
+  const url = `https://http-me.fastly.dev/now/${Math.random().toString().slice(2)}?header=ETag:ABCDEFG-12345&header=Cache-Control:max-age=3600`;
+
+  let backendCalls = 0;
+
+  const cacheOverride = new CacheOverride({
+    beforeSend(req) {
+      backendCalls++;
+    },
+  });
+
+  const req1 = new Request(url);
+  req1.headers.set('if-none-match', 'ABCDEFG-12345');
+  const res1 = await fetch(req1, { cacheOverride });
+  strictEqual(res1.status, 304);
+  strictEqual(res1.cached, false);
+  strictEqual(backendCalls, 1);
+
+  const req2 = new Request(url);
+  req2.headers.set('if-none-match', 'different');
+  const res2 = await fetch(req2, { cacheOverride });
+
+  const req3 = new Request(url);
+  req3.headers.set('if-none-match', 'ABCDEFG-12345');
+  const res3 = await fetch(req3, { cacheOverride });
+  strictEqual(res2.cached, true);
+  strictEqual(res2.status, 200);
+  strictEqual(res3.cached, true);
+  strictEqual(res3.status, 304);
+  strictEqual(backendCalls, 1);
 });
