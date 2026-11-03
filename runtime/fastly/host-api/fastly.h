@@ -702,6 +702,18 @@ int req_pending_req_wait_v2(uint32_t req_handle,
                             fastly_host_http_send_error_detail *send_error_detail,
                             uint32_t *resp_handle_out, uint32_t *resp_body_handle_out);
 
+WASM_IMPORT("fastly_http_req", "pending_req_header_append")
+int req_pending_req_header_append(uint32_t pending_req_handle, const char *name, size_t name_len,
+                                  const char *value, size_t value_len, uint32_t target);
+
+WASM_IMPORT("fastly_http_req", "pending_req_header_insert")
+int req_pending_req_header_insert(uint32_t pending_req_handle, const char *name, size_t name_len,
+                                  const char *value, size_t value_len, uint32_t target);
+
+WASM_IMPORT("fastly_http_req", "pending_req_header_remove")
+int req_pending_req_header_remove(uint32_t pending_req_handle, const char *name, size_t name_len,
+                                  uint32_t target);
+
 WASM_IMPORT("fastly_http_req", "inspect")
 int req_inspect(uint32_t req_handle, uint32_t body_handle,
                 req_inspect_config_options_mask config_options_mask,
@@ -741,6 +753,9 @@ int resp_version_get(uint32_t resp_handle, uint32_t *version_out);
 
 WASM_IMPORT("fastly_http_resp", "send_downstream")
 int resp_send_downstream(uint32_t resp_handle, uint32_t body_handle, uint32_t streaming);
+
+WASM_IMPORT("fastly_http_resp", "send_downstream_pending")
+int resp_send_downstream_pending(uint32_t pending_req_handle);
 
 WASM_IMPORT("fastly_http_resp", "status_get")
 int resp_status_get(uint32_t resp_handle, uint16_t *status_out);

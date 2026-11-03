@@ -342,6 +342,12 @@ struct Response;
 
 class HttpPendingReq final {
 public:
+  enum class ResponseKind : uint32_t {
+    Any = 0,
+    Response = 1,
+    Error = 2,
+  };
+
   using Handle = uint32_t;
 
   static constexpr Handle invalid = UINT32_MAX - 1;
@@ -357,6 +363,13 @@ public:
 
   /// Block until the response is ready.
   api::FastlyResult<Response, FastlySendError> wait();
+
+  Result<Void> append_response_header(std::string_view name, std::string_view value,
+                                      ResponseKind target);
+  Result<Void> set_response_header(std::string_view name, std::string_view value,
+                                   ResponseKind target);
+  Result<Void> remove_response_header(std::string_view name, ResponseKind target);
+  Result<Void> send_to_client();
 
   /// Fetch the FastlyAsyncTask for this pending request.
   FastlyAsyncTask::Handle async_handle() const;

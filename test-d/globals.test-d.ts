@@ -211,7 +211,11 @@ import { expectError, expectType } from 'tsd';
   expectType<(response: Response | PromiseLike<Response>) => void>(
     event.respondWith,
   );
+  expectType<(pending: PendingRequest) => void>(event.respondWithPending);
   expectType<(promise: Promise<any>) => void>(event.waitUntil);
+  expectType<PendingRequest>(
+    fetchPending('https://example.com', { backend: 'origin' }),
+  );
 }
 
 // CacheOverrideMode

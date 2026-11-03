@@ -6,6 +6,7 @@
 #include "../common/normalize_http_method.h"
 #include "../host-api/fastly.h"
 #include "../host-api/host_api_fastly.h"
+#include "./fetch/pending-request.h"
 #include "./fetch/request-response.h"
 #include "encode.h"
 #include "fastly.h"
@@ -23,6 +24,7 @@ using builtins::web::fetch::Headers;
 using builtins::web::url::URL;
 using builtins::web::worker_location::WorkerLocation;
 using fastly::fastly::Fastly;
+using fastly::fetch::PendingRequest;
 using fastly::fetch::RequestOrResponse;
 using fastly::fetch::Response;
 
@@ -828,6 +830,14 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
   // very different.)
   JS::RootedObject response_obj(cx, &args[0].toObject());
 
+  if (extra.isObject()) {
+    JS::RootedObject pending(cx, &extra.toObject());
+    if (PendingRequest::is_instance(pending) &&
+        !PendingRequest::apply_response_headers(cx, pending, response_obj, false)) {
+      return false;
+    }
+  }
+
   // Store the FetchEvent on the Response so it can be accessed later
   JS::SetReservedSlot(response_obj, static_cast<uint32_t>(Response::Slots::FetchEvent),
                       JS::ObjectValue(*event));
@@ -879,7 +889,14 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
 // https://w3c.github.io/ServiceWorker/#fetch-event-respondwith
 bool response_promise_catch_handler(JSContext *cx, JS::HandleObject event,
                                     JS::HandleValue promise_val, JS::CallArgs args) {
-  JS::RootedObject promise(cx, &promise_val.toObject());
+  JS::RootedObject pending(cx);
+  JS::RootedObject promise(cx);
+  if (promise_val.isObject() && PendingRequest::is_instance(&promise_val.toObject())) {
+    pending.set(&promise_val.toObject());
+    promise.set(PendingRequest::promise(pending));
+  } else {
+    promise.set(&promise_val.toObject());
+  }
 
   if (ENGINE->debug_logging_enabled()) {
     fprintf(stderr, "Error while running request handler: ");
@@ -890,7 +907,39 @@ bool response_promise_catch_handler(JSContext *cx, JS::HandleObject event,
 
   // TODO: verify that this is the right behavior.
   // Steps 9.1-2
+  if (pending) {
+    return FetchEvent::respondWithError(cx, event, pending.get());
+  }
   return FetchEvent::respondWithError(cx, event);
+}
+
+bool respond_with_promise(JSContext *cx, JS::HandleObject self, JS::HandleObject response_promise,
+                          JS::HandleValue extra) {
+  if (!FetchEvent::is_dispatching(self)) {
+    JS_ReportErrorUTF8(cx, "FetchEvent#respondWith must be called synchronously from "
+                           "within a FetchEvent handler");
+    return false;
+  }
+  if (FetchEvent::state(self) != FetchEvent::State::unhandled &&
+      FetchEvent::state(self) != FetchEvent::State::waitToRespond) {
+    JS_ReportErrorUTF8(cx, "FetchEvent#respondWith can't be called twice on the same event");
+    return false;
+  }
+
+  add_pending_promise(cx, self, response_promise);
+  FetchEvent::set_state(self, FetchEvent::State::waitToRespond);
+
+  JS::RootedObject catch_handler(
+      cx, create_internal_method<response_promise_catch_handler>(cx, self, extra));
+  if (!catch_handler) {
+    return false;
+  }
+  JS::RootedObject then_handler(
+      cx, create_internal_method<response_promise_then_handler>(cx, self, extra));
+  if (!then_handler) {
+    return false;
+  }
+  return JS::AddPromiseReactions(cx, response_promise, then_handler, catch_handler);
 }
 
 } // namespace
@@ -905,41 +954,53 @@ bool FetchEvent::respondWith(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (!response_promise)
     return false;
 
-  // Step 2
+  JS::RootedValue extra(cx, JS::ObjectValue(*response_promise));
+  if (!respond_with_promise(cx, self, response_promise, extra)) {
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
+bool FetchEvent::respondWithPending(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(1)
+  if (!args.get(0).isObject() || !PendingRequest::is_instance(&args.get(0).toObject())) {
+    JS_ReportErrorUTF8(cx, "FetchEvent#respondWithPending must be called with a PendingRequest");
+    return false;
+  }
   if (!is_dispatching(self)) {
-    JS_ReportErrorUTF8(cx, "FetchEvent#respondWith must be called synchronously from "
+    JS_ReportErrorUTF8(cx, "FetchEvent#respondWithPending must be called synchronously from "
                            "within a FetchEvent handler");
     return false;
   }
-
-  // Step 3
-  if (state(self) != State::unhandled && state(self) != State::waitToRespond) {
-    JS_ReportErrorUTF8(cx, "FetchEvent#respondWith can't be called twice on the same event");
+  if (state(self) != State::unhandled) {
+    JS_ReportErrorUTF8(cx, "FetchEvent#respondWithPending can't be called twice on the same event");
     return false;
   }
 
-  // Step 4
-  add_pending_promise(cx, self, response_promise);
-
-  // Steps 5-7 (very roughly)
-  set_state(self, State::waitToRespond);
-
-  // Step 9 (continued in `response_promise_catch_handler` above)
-  JS::RootedObject catch_handler(cx);
-  JS::RootedValue extra(cx, JS::ObjectValue(*response_promise));
-  catch_handler = create_internal_method<response_promise_catch_handler>(cx, self, extra);
-  if (!catch_handler)
+  JS::RootedObject pending(cx, &args.get(0).toObject());
+  if (!PendingRequest::consume(cx, pending)) {
     return false;
+  }
+  if (PendingRequest::is_native(pending)) {
+    if (!PendingRequest::send_to_client(cx, pending)) {
+      return false;
+    }
+    mark_done(self, false, 0);
+    args.rval().setUndefined();
+    return true;
+  }
 
-  // Step 10 (continued in `response_promise_then_handler` above)
-  JS::RootedObject then_handler(cx);
-  then_handler = create_internal_method<response_promise_then_handler>(cx, self);
-  if (!then_handler)
+  JS::RootedObject response_promise(cx, PendingRequest::promise(pending));
+  if (!response_promise) {
+    JS_ReportErrorASCII(cx, "PendingRequest has no response");
     return false;
-
-  if (!JS::AddPromiseReactions(cx, response_promise, then_handler, catch_handler))
+  }
+  JS::RootedValue extra(cx, JS::ObjectValue(*pending));
+  if (!respond_with_promise(cx, self, response_promise, extra)) {
     return false;
-
+  }
   args.rval().setUndefined();
   return true;
 }
@@ -997,6 +1058,11 @@ bool FetchEvent::sendEarlyHints(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 bool FetchEvent::respondWithError(JSContext *cx, JS::HandleObject self) {
+  return respondWithError(cx, self, nullptr);
+}
+
+bool FetchEvent::respondWithError(JSContext *cx, JS::HandleObject self,
+                                  JSObject *pending) {
   MOZ_RELEASE_ASSERT(state(self) == State::unhandled || state(self) == State::waitToRespond);
   set_state(self, State::responsedWithError);
 
@@ -1017,6 +1083,13 @@ bool FetchEvent::respondWithError(JSContext *cx, JS::HandleObject self) {
   if (auto *err = status_res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
+  }
+
+  if (pending) {
+    JS::RootedObject pending_obj(cx, pending);
+    if (!PendingRequest::apply_error_headers(cx, pending_obj, response)) {
+      return false;
+    }
   }
 
   auto send_res = response.send_downstream(make_res.unwrap(), false);
@@ -1076,6 +1149,7 @@ const JSPropertySpec FetchEvent::static_properties[] = {
 
 const JSFunctionSpec FetchEvent::methods[] = {
     JS_FN("respondWith", respondWith, 1, JSPROP_ENUMERATE),
+  JS_FN("respondWithPending", respondWithPending, 1, JSPROP_ENUMERATE),
     JS_FN("waitUntil", waitUntil, 1, JSPROP_ENUMERATE),
     JS_FN("sendEarlyHints", sendEarlyHints, 1, JSPROP_ENUMERATE),
     JS_FS_END,

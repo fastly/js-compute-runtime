@@ -337,6 +337,17 @@ declare interface FetchEvent {
   respondWith(response: Response | PromiseLike<Response>): void;
 
   /**
+   * Transfer a pending backend response to the downstream client.
+   *
+   * If this is a direct pass or hit-for-pass request and no cache insertions are necessary, then the 
+   * PendingRequest will continue in the background allowing the sandbox to terminate early so that its 
+   * resources may be freed up for other incoming requests.
+   * 
+   * @version 4.1.1
+   */
+  respondWithPending(pending: PendingRequest): void;
+
+  /**
    * Send a [103 Early Hints](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/103)
    * response back to the client.
    *
@@ -2189,6 +2200,54 @@ declare function fetch(
   input: RequestInfo | URL,
   init?: RequestInit,
 ): Promise<Response>;
+
+/** Select which outcome receives a pending response header override. */
+type PendingResponseTarget = 'any' | 'response' | 'error';
+
+/**
+ * A backend request whose response can be handed directly to a FetchEvent.
+ * Instances are created by {@link fetchPending}.
+ */
+interface PendingRequest {
+  /** 
+   * Set or replace a response header after cache processing has completed. 
+   * @version 4.1.1
+   */
+  setResponseHeader(
+    name: string,
+    value: string,
+    target?: PendingResponseTarget,
+  ): void;
+  /** 
+   * Append a response header after cache processing has completed. 
+   * @version 4.1.1
+   */
+  appendResponseHeader(
+    name: string,
+    value: string,
+    target?: PendingResponseTarget,
+  ): void;
+  /** 
+   * Remove a response header after cache processing has completed. 
+   * @version 4.1.1
+   */
+  removeResponseHeader(name: string, target?: PendingResponseTarget): void;
+}
+
+/**
+ * Start a backend fetch that can be transferred to the downstream client with
+ * {@link FetchEvent.respondWithPending}.
+ *
+ * @param input The resource to fetch, either a URL string or a {@link Request} object.
+ * @param init Request options, including the Fastly `backend` property when required.
+ * @group Fetch API
+ * 
+ * @version 4.1.1
+ */
+declare function fetchPending(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): PendingRequest;
 
 /**
  * @group Scheduling
