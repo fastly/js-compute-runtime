@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.1.0](https://github.com/fastly/js-compute-runtime/compare/v4.0.1...v4.1.0) (2026-11-03)
+
+
+### Features
+
+* Upgrade StarlingMonkey ([3e17e8a](https://github.com/fastly/js-compute-runtime/commit/3e17e8a194b517289771a4fdf18898d1fd9436ff))
+* Upgrade StarlingMonkey to v0.4.0 ([#1610](https://github.com/fastly/js-compute-runtime/issues/1610)) ([0a776ea](https://github.com/fastly/js-compute-runtime/commit/0a776ea213874f032868b471496c5838b2e47c43))
+
+
+### Bug Fixes
+
+* **cache:** fix issues with if-none-match and if-match ([#1611](https://github.com/fastly/js-compute-runtime/issues/1611)) ([d3322b0](https://github.com/fastly/js-compute-runtime/commit/d3322b04ba61a4f4d08b3af4774bd03e38407756))
+* **tests:** fix tests using wrong variable name ([#1612](https://github.com/fastly/js-compute-runtime/issues/1612)) ([0e4c267](https://github.com/fastly/js-compute-runtime/commit/0e4c26790aba8ca40f43fa924e845f79d6f951d2))
+
 ## 4.0.1 (2026-10-14)
 
 ### Fixed
