@@ -245,11 +245,15 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
+
     - name: Set up Node LTS
       uses: actions/setup-node@v6
       with:
         node-version: 'lts/*'
     - run: npm ci
+
+    - name: Install legacy-cgi for Python
+      run: pip install legacy-cgi
 
     - name: Download Engine
       uses: actions/download-artifact@v4
@@ -296,11 +300,15 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
+
     - name: Set up Node LTS
       uses: actions/setup-node@v6
       with:
         node-version: 'lts/*'
     - run: npm ci
+
+    - name: Install legacy-cgi for Python
+      run: pip install legacy-cgi
 
     - name: Download Engine
       uses: actions/download-artifact@v4

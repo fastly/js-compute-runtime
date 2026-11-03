@@ -349,14 +349,14 @@ try {
             ? async (status, headers) => {
                 if (
                   test.downstream_info.status !== undefined &&
-                  test.downstream_info.status != status
+                  test.downstream_info.status != status.statusCode
                 ) {
                   throw new Error(
-                    `[DownstreamInfo: Status mismatch] Expected: ${configResponse.status} - Got: ${status}}`,
+                    `[DownstreamInfo: Status mismatch] Expected: ${test.downstream_info.status} - Got: ${status.statusCode}}`,
                   );
                 }
                 if (headers) {
-                  compareHeaders(configResponse.headers, headers);
+                  compareHeaders(test.downstream_info.headers, headers);
                 }
               }
             : undefined;
