@@ -86,8 +86,13 @@ namespace builtins::web::streams {
 
 bool NativeStreamSource::stream_is_body(JSContext *cx, JS::HandleObject stream) {
   JSObject *stream_source = get_stream_source(cx, stream);
-  return NativeStreamSource::is_instance(stream_source) &&
-         fastly::fetch::RequestOrResponse::is_instance(owner(stream_source));
+  if (!NativeStreamSource::is_instance(stream_source)) {
+    return false;
+  }
+  
+  JSObject *source_owner = owner(stream_source);
+  return fastly::fetch::RequestOrResponse::is_instance(source_owner) ||
+         CacheEntry::is_instance(source_owner);
 }
 
 } // namespace builtins::web::streams
@@ -1904,6 +1909,12 @@ bool RequestOrResponse::body_reader_catch_handler(JSContext *cx, JS::HandleObjec
     }
     JS::RootedObject fetch_event(cx, &fetch_event_val.toObject());
     FetchEvent::set_state(fetch_event, FetchEvent::State::responseDone);
+  }
+
+  auto res = RequestOrResponse::body_handle(body_owner).abandon();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
   }
   return true;
 }
