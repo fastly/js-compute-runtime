@@ -211,11 +211,27 @@ import { expectError, expectType } from 'tsd';
   expectType<(response: Response | PromiseLike<Response>) => void>(
     event.respondWith,
   );
-  expectType<(pending: PendingRequest) => void>(event.respondWithPending);
+  expectType<(response: Promise<Response>) => void>(event.respondWithPromise);
   expectType<(promise: Promise<any>) => void>(event.waitUntil);
-  expectType<PendingRequest>(
-    fetchPending('https://example.com', { backend: 'origin' }),
-  );
+}
+
+// Fetch promise response helpers
+{
+  const response = Promise.resolve({} as Response);
+  expectType<void>(setResponseHeader(response, 'x-test', 'one'));
+  expectType<void>(appendResponseHeader(response, 'x-test', 'two', 'response'));
+  expectType<void>(removeResponseHeader(response, 'x-test', 'error'));
+  const fetched = fetch('https://example.com', { backend: 'origin' });
+  expectType<void>(setResponseHeader(fetched, 'x-test', 'value'));
+  expectType<void>(appendResponseHeader(fetched, 'x-test', 'value'));
+  expectType<void>(removeResponseHeader(fetched, 'x-test'));
+  expectType<void>(({} as FetchEvent).respondWithPromise(fetched));
+  expectError(setResponseHeader(Promise.resolve(1), 'x-test', 'one'));
+  expectError(setResponseHeader(response, 'x-test'));
+  expectError(appendResponseHeader(response, 'x-test'));
+  expectError(removeResponseHeader(response));
+  expectError(setResponseHeader(response, 'x-test', 'one', 'invalid'));
+  expectError(({} as FetchEvent).respondWithPromise(Promise.resolve(1)));
 }
 
 // CacheOverrideMode

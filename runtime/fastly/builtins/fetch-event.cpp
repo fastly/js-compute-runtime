@@ -963,41 +963,43 @@ bool FetchEvent::respondWith(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool FetchEvent::respondWithPending(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool FetchEvent::respondWithPromise(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
-  if (!args.get(0).isObject() || !PendingRequest::is_instance(&args.get(0).toObject())) {
-    JS_ReportErrorUTF8(cx, "FetchEvent#respondWithPending must be called with a PendingRequest");
+  if (!args.get(0).isObject()) {
+    JS_ReportErrorUTF8(cx, "FetchEvent#respondWithPromise must be called with a Promise");
+    return false;
+  }
+  JS::RootedObject response_promise(cx, &args.get(0).toObject());
+  if (!JS::IsPromiseObject(response_promise)) {
+    JS_ReportErrorUTF8(cx, "FetchEvent#respondWithPromise must be called with a Promise");
     return false;
   }
   if (!is_dispatching(self)) {
-    JS_ReportErrorUTF8(cx, "FetchEvent#respondWithPending must be called synchronously from "
+    JS_ReportErrorUTF8(cx, "FetchEvent#respondWithPromise must be called synchronously from "
                            "within a FetchEvent handler");
     return false;
   }
   if (state(self) != State::unhandled) {
-    JS_ReportErrorUTF8(cx, "FetchEvent#respondWithPending can't be called twice on the same event");
+    JS_ReportErrorUTF8(cx, "FetchEvent#respondWithPromise can't be called twice on the same event");
     return false;
   }
 
-  JS::RootedObject pending(cx, &args.get(0).toObject());
-  if (!PendingRequest::consume(cx, pending)) {
+  bool sent_to_client = false;
+  if (!PendingRequest::try_send_to_client(cx, response_promise, &sent_to_client)) {
     return false;
   }
-  if (PendingRequest::is_native(pending)) {
-    if (!PendingRequest::send_to_client(cx, pending)) {
-      return false;
-    }
+  if (sent_to_client) {
     mark_done(self, false, 0);
     args.rval().setUndefined();
     return true;
   }
 
-  JS::RootedObject response_promise(cx, PendingRequest::promise(pending));
-  if (!response_promise) {
-    JS_ReportErrorASCII(cx, "PendingRequest has no response");
+  JS::RootedObject record(cx, PendingRequest::record_for_promise(cx, response_promise));
+  if (record && !PendingRequest::consume(cx, record)) {
     return false;
   }
-  JS::RootedValue extra(cx, JS::ObjectValue(*pending));
+  JS::RootedValue extra(cx, record ? JS::ObjectValue(*record)
+                                  : JS::ObjectValue(*response_promise));
   if (!respond_with_promise(cx, self, response_promise, extra)) {
     return false;
   }
@@ -1149,7 +1151,7 @@ const JSPropertySpec FetchEvent::static_properties[] = {
 
 const JSFunctionSpec FetchEvent::methods[] = {
     JS_FN("respondWith", respondWith, 1, JSPROP_ENUMERATE),
-  JS_FN("respondWithPending", respondWithPending, 1, JSPROP_ENUMERATE),
+  JS_FN("respondWithPromise", respondWithPromise, 1, JSPROP_ENUMERATE),
     JS_FN("waitUntil", waitUntil, 1, JSPROP_ENUMERATE),
     JS_FN("sendEarlyHints", sendEarlyHints, 1, JSPROP_ENUMERATE),
     JS_FS_END,

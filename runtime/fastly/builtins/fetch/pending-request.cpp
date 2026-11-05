@@ -1,6 +1,7 @@
 #include "pending-request.h"
 
 #include "request-response.h"
+#include "fetch.h"
 #include "../../../StarlingMonkey/runtime/encode.h"
 #include "host_api.h"
 #include <string_view>
@@ -12,6 +13,14 @@ namespace fastly::fetch {
 namespace {
 
 enum class HeaderOperation : uint8_t { Set, Append, Remove };
+
+JS::PersistentRootedObject PROMISE_RECORDS;
+
+bool associate_promise(JSContext *cx, JS::HandleObject promise, JS::HandleObject record) {
+  JS::RootedValue key(cx, JS::ObjectValue(*promise));
+  JS::RootedValue value(cx, JS::ObjectValue(*record));
+  return JS::SetWeakMapEntry(cx, PROMISE_RECORDS, key, value);
+}
 
 JSObject *operations(JSObject *self) {
   auto value = JS::GetReservedSlot(self, std::to_underlying(PendingRequest::Slots::Operations));
@@ -59,22 +68,7 @@ bool operation_kind(JSContext *cx, JS::HandleObject entry, HeaderOperation *kind
   if (!JS_GetElement(cx, entry, 0, &value)) {
     return false;
   }
-  JS::RootedString string(cx, JS::ToString(cx, value));
-  if (!string) {
-    return false;
-  }
-  auto encoded = core::encode(cx, string);
-  if (!encoded.ptr) {
-    return false;
-  }
-  std::string_view name(encoded.ptr.get(), encoded.len);
-  if (name == "set") {
-    *kind = HeaderOperation::Set;
-  } else if (name == "append") {
-    *kind = HeaderOperation::Append;
-  } else {
-    *kind = HeaderOperation::Remove;
-  }
+  *kind = static_cast<HeaderOperation>(value.toInt32());
   return true;
 }
 
@@ -93,13 +87,13 @@ bool operation_values(JSContext *cx, JS::HandleObject entry, JS::MutableHandleSt
   return true;
 }
 
-bool parse_target(JSContext *cx, JS::CallArgs args,
+bool parse_target(JSContext *cx, JS::CallArgs args, unsigned index,
                   host_api::HttpPendingReq::ResponseKind *target) {
-  if (args.length() < 3 || args[2].isUndefined()) {
+  if (args.length() <= index || args[index].isUndefined()) {
     *target = host_api::HttpPendingReq::ResponseKind::Any;
     return true;
   }
-  JS::RootedString string(cx, JS::ToString(cx, args[2]));
+  JS::RootedString string(cx, JS::ToString(cx, args[index]));
   if (!string) {
     return false;
   }
@@ -121,20 +115,38 @@ bool parse_target(JSContext *cx, JS::CallArgs args,
   return true;
 }
 
-bool add_header_operation(JSContext *cx, JS::CallArgs args, JS::HandleObject self,
-                          HeaderOperation kind) {
-  if (consumed(self)) {
-    JS_ReportErrorASCII(cx, "PendingRequest has already been sent to the client");
+bool add_header_operation(JSContext *cx, JS::CallArgs args, HeaderOperation kind) {
+  const unsigned value_index = 2;
+  const unsigned target_index = kind == HeaderOperation::Remove ? 2 : 3;
+  if (!args.requireAtLeast(cx, "fetch response header helper",
+                           kind == HeaderOperation::Remove ? 2 : 3)) {
     return false;
   }
-  if (!args.requireAtLeast(cx, "PendingRequest header method", kind == HeaderOperation::Remove ? 1 : 2)) {
+  if (!args[0].isObject()) {
+    JS_ReportErrorASCII(cx, "The first argument must be a Promise returned by fetch");
+    return false;
+  }
+  JS::RootedObject promise(cx, &args[0].toObject());
+  if (!JS::IsPromiseObject(promise)) {
+    JS_ReportErrorASCII(cx, "The first argument must be a Promise returned by fetch");
+    return false;
+  }
+  JS::RootedObject self(cx, PendingRequest::record_for_promise(cx, promise));
+  if (!self) {
+    if (!JS_IsExceptionPending(cx)) {
+      JS_ReportErrorASCII(cx, "The Promise is not associated with a Fastly fetch request");
+    }
+    return false;
+  }
+  if (consumed(self)) {
+    JS_ReportErrorASCII(cx, "The fetch response has already been committed");
     return false;
   }
 
-  JS::RootedString name(cx, JS::ToString(cx, args[0]));
+  JS::RootedString name(cx, JS::ToString(cx, args[1]));
   JS::RootedString value(cx);
   if (kind != HeaderOperation::Remove) {
-    value.set(JS::ToString(cx, args[1]));
+    value.set(JS::ToString(cx, args[value_index]));
     if (!value) {
       return false;
     }
@@ -144,7 +156,7 @@ bool add_header_operation(JSContext *cx, JS::CallArgs args, JS::HandleObject sel
   }
 
   host_api::HttpPendingReq::ResponseKind target;
-  if (!parse_target(cx, args, &target)) {
+  if (!parse_target(cx, args, target_index, &target)) {
     return false;
   }
 
@@ -152,14 +164,8 @@ bool add_header_operation(JSContext *cx, JS::CallArgs args, JS::HandleObject sel
   if (!entry) {
     return false;
   }
-  const char *kind_name = kind == HeaderOperation::Set ? "set" :
-                          kind == HeaderOperation::Append ? "append" : "remove";
-  JS::RootedString kind_string(cx, JS_NewStringCopyZ(cx, kind_name));
-  if (!kind_string) {
-    return false;
-  }
   JS::RootedValueArray<4> fields(cx);
-  fields[0].setString(kind_string);
+  fields[0].setInt32(static_cast<int32_t>(kind));
   fields[1].setString(name);
   fields[2].set(value ? JS::StringValue(value) : JS::UndefinedValue());
   fields[3].setInt32(static_cast<int32_t>(target));
@@ -176,6 +182,31 @@ bool add_header_operation(JSContext *cx, JS::CallArgs args, JS::HandleObject sel
   }
   return JS_SetElement(cx, list, length, entry);
 }
+
+bool set_response_header(JSContext *cx, unsigned argc, JS::Value *vp) {
+  auto args = JS::CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
+  return add_header_operation(cx, args, HeaderOperation::Set);
+}
+
+bool append_response_header(JSContext *cx, unsigned argc, JS::Value *vp) {
+  auto args = JS::CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
+  return add_header_operation(cx, args, HeaderOperation::Append);
+}
+
+bool remove_response_header(JSContext *cx, unsigned argc, JS::Value *vp) {
+  auto args = JS::CallArgsFromVp(argc, vp);
+  args.rval().setUndefined();
+  return add_header_operation(cx, args, HeaderOperation::Remove);
+}
+
+const JSFunctionSpec promise_helpers[] = {
+    JS_FN("setResponseHeader", set_response_header, 4, JSPROP_ENUMERATE),
+    JS_FN("appendResponseHeader", append_response_header, 4, JSPROP_ENUMERATE),
+    JS_FN("removeResponseHeader", remove_response_header, 3, JSPROP_ENUMERATE),
+    JS_FS_END,
+};
 
 bool apply_operations_to_http_headers(JSContext *cx, JS::HandleObject self,
                                      host_api::HttpHeaders *headers,
@@ -226,19 +257,27 @@ bool apply_operations_to_http_headers(JSContext *cx, JS::HandleObject self,
 
 const JSFunctionSpec PendingRequest::static_methods[] = {JS_FS_END};
 const JSPropertySpec PendingRequest::static_properties[] = {JS_PS_END};
-const JSFunctionSpec PendingRequest::methods[] = {
-    JS_FN("setResponseHeader", setResponseHeader, 2, JSPROP_ENUMERATE),
-    JS_FN("appendResponseHeader", appendResponseHeader, 2, JSPROP_ENUMERATE),
-    JS_FN("removeResponseHeader", removeResponseHeader, 1, JSPROP_ENUMERATE),
-    JS_FS_END,
-};
+const JSFunctionSpec PendingRequest::methods[] = {JS_FS_END};
 const JSPropertySpec PendingRequest::properties[] = {JS_PS_END};
 
 bool PendingRequest::init_class(JSContext *cx, JS::HandleObject global) {
-  return BuiltinNoConstructor<PendingRequest>::init_class(cx, global);
+  JS::RootedObject weak_map(cx, JS::NewWeakMapObject(cx));
+  if (!weak_map) {
+    return false;
+  }
+  PROMISE_RECORDS.init(cx, weak_map);
+  if (!BuiltinNoConstructor<PendingRequest>::init_class(cx, global)) {
+    return false;
+  }
+  return JS_DeleteProperty(cx, global, class_name);
 }
 
-JSObject *PendingRequest::create_handle(JSContext *cx, host_api::HttpPendingReq::Handle handle) {
+bool PendingRequest::install_promise_helpers(JSContext *cx, JS::HandleObject global) {
+  return JS_DefineFunctions(cx, global, promise_helpers);
+}
+
+JSObject *PendingRequest::create_handle(JSContext *cx, host_api::HttpPendingReq::Handle handle,
+                                       JS::HandleObject promise) {
   JS::RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!self) {
     return nullptr;
@@ -248,30 +287,44 @@ JSObject *PendingRequest::create_handle(JSContext *cx, host_api::HttpPendingReq:
     return nullptr;
   }
   JS::SetReservedSlot(self, std::to_underlying(Slots::Handle), JS::Int32Value(handle));
-  JS::SetReservedSlot(self, std::to_underlying(Slots::Promise), JS::UndefinedValue());
-  JS::SetReservedSlot(self, std::to_underlying(Slots::Operations), JS::ObjectValue(*list));
-  JS::SetReservedSlot(self, std::to_underlying(Slots::Consumed), JS::FalseValue());
-  JS::SetReservedSlot(self, std::to_underlying(Slots::GuestCacheMiss), JS::FalseValue());
-  JS::SetReservedSlot(self, std::to_underlying(Slots::PreserveSurrogateHeaders), JS::FalseValue());
-  return self;
-}
-
-JSObject *PendingRequest::create_promise(JSContext *cx, JS::HandleObject promise) {
-  JS::RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
-  if (!self) {
-    return nullptr;
-  }
-  JS::RootedObject list(cx, JS::NewArrayObject(cx, 0));
-  if (!list) {
-    return nullptr;
-  }
-  JS::SetReservedSlot(self, std::to_underlying(Slots::Handle), JS::Int32Value(-1));
   JS::SetReservedSlot(self, std::to_underlying(Slots::Promise), JS::ObjectValue(*promise));
   JS::SetReservedSlot(self, std::to_underlying(Slots::Operations), JS::ObjectValue(*list));
   JS::SetReservedSlot(self, std::to_underlying(Slots::Consumed), JS::FalseValue());
   JS::SetReservedSlot(self, std::to_underlying(Slots::GuestCacheMiss), JS::FalseValue());
   JS::SetReservedSlot(self, std::to_underlying(Slots::PreserveSurrogateHeaders), JS::FalseValue());
+  JS::SetReservedSlot(self, std::to_underlying(Slots::FetchTask), JS::PrivateValue(nullptr));
+  JS::SetReservedSlot(self, std::to_underlying(Slots::HandedOff), JS::FalseValue());
+  if (!associate_promise(cx, promise, self)) {
+    return nullptr;
+  }
   return self;
+}
+
+JSObject *PendingRequest::create_promise(JSContext *cx, JS::HandleObject promise) {
+  return create_handle(cx, static_cast<host_api::HttpPendingReq::Handle>(-1), promise);
+}
+
+JSObject *PendingRequest::record_for_promise(JSContext *cx, JS::HandleObject promise) {
+  JS::RootedValue key(cx, JS::ObjectValue(*promise));
+  JS::RootedValue record(cx);
+  if (!JS::GetWeakMapEntry(cx, PROMISE_RECORDS, key, &record)) {
+    return nullptr;
+  }
+  if (!record.isObject() || !PendingRequest::is_instance(&record.toObject())) {
+    return nullptr;
+  }
+  return &record.toObject();
+}
+
+JSObject *PendingRequest::ensure_promise_record(JSContext *cx, JS::HandleObject promise) {
+  JS::RootedObject record(cx, record_for_promise(cx, promise));
+  if (record) {
+    return record;
+  }
+  if (JS_IsExceptionPending(cx)) {
+    return nullptr;
+  }
+  return create_promise(cx, promise);
 }
 
 bool PendingRequest::is_native(JSObject *self) {
@@ -288,6 +341,48 @@ bool PendingRequest::consume(JSContext *cx, JS::HandleObject self) {
     return false;
   }
   JS::SetReservedSlot(self, std::to_underlying(Slots::Consumed), JS::TrueValue());
+  return true;
+}
+
+void PendingRequest::set_fetch_task(JSContext *cx, JS::HandleObject self, api::AsyncTask *task) {
+  JS::SetReservedSlot(self, std::to_underlying(Slots::FetchTask), JS::PrivateValue(task));
+}
+
+void PendingRequest::clear_fetch_task(JSContext *cx, JS::HandleObject self) {
+  JS::SetReservedSlot(self, std::to_underlying(Slots::FetchTask), JS::PrivateValue(nullptr));
+}
+
+bool PendingRequest::was_handed_off(JSContext *cx, JS::HandleObject promise) {
+  JS::RootedObject record(cx, record_for_promise(cx, promise));
+  return record &&
+         JS::GetReservedSlot(record, std::to_underlying(Slots::HandedOff)).toBoolean();
+}
+
+bool PendingRequest::try_send_to_client(JSContext *cx, JS::HandleObject promise, bool *sent) {
+  *sent = false;
+  JS::RootedObject record(cx, record_for_promise(cx, promise));
+  if (!record) {
+    return !JS_IsExceptionPending(cx);
+  }
+  if (!is_native(record)) {
+    return true;
+  }
+
+  auto *task = static_cast<api::AsyncTask *>(
+      JS::GetReservedSlot(record, std::to_underlying(Slots::FetchTask)).toPrivate());
+  if (!task) {
+    return true;
+  }
+  if (!ENGINE->cancel_async_task(task)) {
+    JS_ReportErrorASCII(cx, "Could not transfer the pending fetch to the downstream client");
+    return false;
+  }
+
+  if (!consume(cx, record) || !send_to_client(cx, record)) {
+    return false;
+  }
+  JS::SetReservedSlot(record, std::to_underlying(Slots::HandedOff), JS::TrueValue());
+  *sent = true;
   return true;
 }
 
@@ -372,7 +467,7 @@ bool PendingRequest::send_to_client(JSContext *cx, JS::HandleObject self) {
     std::string_view name_view(encoded_name.ptr.get(), encoded_name.len);
     std::string_view value_view(encoded_value.ptr.get(), encoded_value.len);
 
-    Result<void> result;
+    host_api::Result<host_api::Void> result;
     switch(kind) {
         case HeaderOperation::Set:
             result = pending.set_response_header(name_view, value_view, target);
@@ -505,24 +600,6 @@ bool PendingRequest::apply_error_headers(JSContext *cx, JS::HandleObject self,
   }
   return apply_operations_to_http_headers(cx, self, headers,
                                           host_api::HttpPendingReq::ResponseKind::Error);
-}
-
-bool PendingRequest::setResponseHeader(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(3)
-  args.rval().setUndefined();
-  return add_header_operation(cx, args, self, HeaderOperation::Set);
-}
-
-bool PendingRequest::appendResponseHeader(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(3)
-  args.rval().setUndefined();
-  return add_header_operation(cx, args, self, HeaderOperation::Append);
-}
-
-bool PendingRequest::removeResponseHeader(JSContext *cx, unsigned argc, JS::Value *vp) {
-  METHOD_HEADER(2)
-  args.rval().setUndefined();
-  return add_header_operation(cx, args, self, HeaderOperation::Remove);
 }
 
 } // namespace fastly::fetch

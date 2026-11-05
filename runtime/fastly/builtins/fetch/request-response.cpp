@@ -21,6 +21,7 @@
 #include "../cache-simple.h"
 #include "../fastly.h"
 #include "../fetch-event.h"
+#include "./pending-request.h"
 #include "../image-optimizer.h"
 #include "../kv-store.h"
 #include "extension-api.h"
@@ -621,8 +622,11 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
                                                 host_api::HttpPendingReq::Handle handle,
                                                 JS::HandleObject request, JS::HandleValue promise) {
   MOZ_ASSERT(Request::is_instance(request));
-  host_api::HttpPendingReq pending(handle);
   JS::RootedObject promise_obj(cx, &promise.toObject());
+  if (PendingRequest::was_handed_off(cx, promise_obj)) {
+    return true;
+  }
+  host_api::HttpPendingReq pending(handle);
   auto res_res = pending.wait();
   if (auto *err = res_res.to_err()) {
     std::string message = std::move(err->message()).value_or("when attempting to fetch resource.");
@@ -1904,6 +1908,9 @@ bool RequestOrResponse::body_reader_catch_handler(JSContext *cx, JS::HandleObjec
     }
     JS::RootedObject fetch_event(cx, &fetch_event_val.toObject());
     FetchEvent::set_state(fetch_event, FetchEvent::State::responseDone);
+  } else if (Request::is_instance(body_owner)) {
+    JS::RootedObject promise(cx, Request::response_promise(body_owner));
+    return JS::RejectPromise(cx, promise, args.get(0));
   }
   return true;
 }

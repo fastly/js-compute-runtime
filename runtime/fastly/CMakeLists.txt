@@ -57,6 +57,7 @@ add_builtin(fastly::shielding SRC builtins/shielding.cpp)
 add_builtin(fastly::fetch
   SRC
     builtins/fetch/fetch.cpp
+    builtins/fetch/pending-request.cpp
     builtins/fetch/request-response.cpp
     builtins/fetch/request-response.cpp
     ../StarlingMonkey/builtins/web/fetch/headers.cpp

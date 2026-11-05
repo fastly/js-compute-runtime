@@ -1,4 +1,190 @@
 {
+  "fetch-promise-handoff production buffered miss headers": {
+    "environments": ["compute"],
+    "features": ["http-cache"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fetch-promise-handoff/guest-buffered"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": { "x-cache": "MISS", "x-cache-hits": "0" }
+    }
+  },
+  "fetch-promise-handoff production streamed miss headers": {
+    "environments": ["compute"],
+    "features": ["http-cache"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fetch-promise-handoff/guest-streamed"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": { "x-cache": "MISS", "x-cache-hits": "0" }
+    }
+  },
+  "fetch-promise-handoff production cache fill miss headers": {
+    "environments": ["compute"],
+    "features": ["http-cache"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fetch-promise-handoff/guest-cache-fill"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": { "x-cache": "MISS", "x-cache-hits": "0" }
+    }
+  },
+  "GET /fetch-promise-handoff/upload-rejection": {
+    "environments": ["compute", "viceroy"],
+    "downstream_response": { "status": 200, "body": "ok" }
+  },
+  "GET /fetch-promise-handoff/rejected-fetch": {
+    "downstream_response_compute": {
+      "headers": { "x-error-append": "first, second" }
+    },
+    "environments": ["compute", "viceroy"],
+    "downstream_response": {
+      "status": 500,
+      "headers": {
+        "x-promise-error-only": "error-value",
+        "x-promise-any": "any-value",
+        "x-error-append": ["first", "second"],
+        "x-error-remove": null,
+        "x-promise-set": null,
+        "x-promise-append": null
+      }
+    }
+  },
+  "GET /fetch-promise-handoff/http-error": {
+    "downstream_response_compute": {
+      "headers": { "x-promise-append": "first, second" }
+    },
+    "environments": ["compute", "viceroy"],
+    "downstream_response": {
+      "status": 500,
+      "headers": {
+        "x-promise-set": "set-value",
+        "x-promise-append": ["first", "second"],
+        "x-promise-any": "any-value",
+        "x-promise-error-only": null
+      }
+    }
+  },
+  "GET /fetch-promise-handoff/validation-errors": {
+    "environments": ["compute", "viceroy"],
+    "downstream_response": { "status": 200 }
+  },
+  "GET /fetch-promise-handoff/host-stream-error": {
+    "downstream_response_compute": {
+      "headers": { "x-error-append": "first, second" }
+    },
+    "environments": ["compute", "viceroy"],
+    "features": ["skip-http-cache"],
+    "downstream_response": {
+      "status": 500,
+      "headers": {
+        "x-promise-error-only": "error-value",
+        "x-promise-any": "any-value",
+        "x-error-append": ["first", "second"],
+        "x-error-remove": null,
+        "x-promise-set": null,
+        "x-promise-append": null
+      }
+    }
+  },
+  "GET /fetch-promise-handoff/guest-stream-error": {
+    "downstream_response_compute": {
+      "headers": { "x-error-append": "first, second" }
+    },
+    "environments": ["compute", "viceroy"],
+    "features": ["http-cache"],
+    "downstream_response": {
+      "status": 500,
+      "headers": {
+        "x-promise-error-only": "error-value",
+        "x-promise-any": "any-value",
+        "x-error-append": ["first", "second"],
+        "x-error-remove": null,
+        "x-promise-set": null,
+        "x-promise-append": null
+      }
+    }
+  },
+  "GET /fetch-promise-handoff/host-buffered": {
+    "downstream_response_compute": {
+      "headers": { "x-promise-append": "first, second" }
+    },
+    "environments": ["compute", "viceroy"],
+    "features": ["skip-http-cache"],
+    "downstream_response": {
+      "status": 200,
+      "headers": {
+        "x-promise-set": "set-value",
+        "x-promise-append": ["first", "second"],
+        "x-promise-error-only": null,
+        "access-control-allow-origin": null
+      }
+    }
+  },
+  "GET /fetch-promise-handoff/host-streamed": {
+    "environments": ["compute", "viceroy"],
+    "features": ["skip-http-cache"],
+    "downstream_response": {
+      "status": 200,
+      "headers": {
+        "x-promise-set": "set-value",
+        "x-promise-append": "first, second",
+        "x-promise-error-only": null,
+        "access-control-allow-origin": null
+      }
+    }
+  },
+  "GET /fetch-promise-handoff/guest-buffered": {
+    "downstream_response_compute": {
+      "headers": { "x-promise-append": "first, second" }
+    },
+    "environments": ["compute", "viceroy"],
+    "features": ["http-cache"],
+    "downstream_response": {
+      "status": 200,
+      "headers": {
+        "x-promise-set": "set-value",
+        "x-promise-append": ["first", "second"],
+        "x-promise-error-only": null,
+        "access-control-allow-origin": null
+      }
+    }
+  },
+  "GET /fetch-promise-handoff/guest-streamed": {
+    "environments": ["compute", "viceroy"],
+    "features": ["http-cache"],
+    "downstream_response": {
+      "status": 200,
+      "headers": {
+        "x-promise-set": "set-value",
+        "x-promise-append": "first, second",
+        "x-promise-error-only": null,
+        "access-control-allow-origin": null
+      }
+    }
+  },
+  "GET /fetch-promise-handoff/guest-cache-fill": {
+    "downstream_response_compute": {
+      "headers": { "x-promise-append": "first, second" }
+    },
+    "environments": ["compute", "viceroy"],
+    "features": ["http-cache"],
+    "downstream_response": {
+      "status": 200,
+      "headers": {
+        "x-promise-set": "set-value",
+        "x-promise-append": ["first", "second"],
+        "x-promise-error-only": null,
+        "access-control-allow-origin": null
+      }
+    }
+  },
   "GET /async-select/hello": {
     "downstream_response": {
       "status": 200,

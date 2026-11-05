@@ -8,12 +8,8 @@
 namespace fastly::fetch {
 
 class PendingRequest final : public builtins::BuiltinNoConstructor<PendingRequest> {
-  static bool setResponseHeader(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool appendResponseHeader(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool removeResponseHeader(JSContext *cx, unsigned argc, JS::Value *vp);
-
 public:
-  static constexpr const char *class_name = "PendingRequest";
+  static constexpr const char *class_name = "FastlyFetchPromiseMetadata";
 
   enum class Slots : uint8_t {
     Handle,
@@ -22,6 +18,8 @@ public:
     Consumed,
     GuestCacheMiss,
     PreserveSurrogateHeaders,
+    FetchTask,
+    HandedOff,
     Count,
   };
 
@@ -31,11 +29,19 @@ public:
   static const JSPropertySpec properties[];
 
   static bool init_class(JSContext *cx, JS::HandleObject global);
-  static JSObject *create_handle(JSContext *cx, host_api::HttpPendingReq::Handle handle);
+  static bool install_promise_helpers(JSContext *cx, JS::HandleObject global);
+  static JSObject *create_handle(JSContext *cx, host_api::HttpPendingReq::Handle handle,
+                                 JS::HandleObject promise);
   static JSObject *create_promise(JSContext *cx, JS::HandleObject promise);
+  static JSObject *record_for_promise(JSContext *cx, JS::HandleObject promise);
+  static JSObject *ensure_promise_record(JSContext *cx, JS::HandleObject promise);
   static bool is_native(JSObject *self);
   static JSObject *promise(JSObject *self);
   static bool consume(JSContext *cx, JS::HandleObject self);
+  static void set_fetch_task(JSContext *cx, JS::HandleObject self, api::AsyncTask *task);
+  static void clear_fetch_task(JSContext *cx, JS::HandleObject self);
+  static bool was_handed_off(JSContext *cx, JS::HandleObject promise);
+  static bool try_send_to_client(JSContext *cx, JS::HandleObject promise, bool *sent);
   static bool mark_guest_cache_miss_headers(JSContext *cx, JS::HandleObject self,
                                             JS::HandleObject request);
   static bool send_to_client(JSContext *cx, JS::HandleObject self);
