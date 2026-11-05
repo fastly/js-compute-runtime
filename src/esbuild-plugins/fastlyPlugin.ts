@@ -21,7 +21,7 @@ export const fastlyPlugin: Plugin = {
             contents: `
 export const Backend = globalThis.Backend;
 export const setDefaultDynamicBackendConfig = Object.getOwnPropertyDescriptor(globalThis.fastly, 'allowDynamicBackends').set;
-const allowDynamicBackends = Object.getOwnPropertyDescriptor(globalThis.fastly, 'allowDynamicBackends').set;
+export const allowDynamicBackends = Object.getOwnPropertyDescriptor(globalThis.fastly, 'allowDynamicBackends').set;
 export const setDefaultBackend = Object.getOwnPropertyDescriptor(globalThis.fastly, 'defaultBackend').set;
 export function enforceExplicitBackends (defaultBackend) {
   allowDynamicBackends(false);
@@ -43,6 +43,15 @@ export function enforceExplicitBackends (defaultBackend) {
         case 'config-store': {
           return {
             contents: `export const ConfigStore = globalThis.ConfigStore;`,
+          };
+        }
+        case 'debug': {
+          return {
+            contents: `
+export const mapAndLogError = (e) => globalThis.__fastlyMapAndLogError(e);
+export const mapError = (e) => globalThis.__fastlyMapError(e);
+export const enableDebugLogging = globalThis.fastly.enableDebugLogging;
+`,
           };
         }
         case 'dictionary': {
@@ -136,10 +145,20 @@ export const TransactionCacheEntry = globalThis.TransactionCacheEntry;
         }
         case 'image-optimizer': {
           return {
-            contents: `export const { 
-              Region, Auto, Format, BWAlgorithm, Disable, Enable, Fit, Metadata, 
+            contents: `export const {
+              Region, Auto, Format, BWAlgorithm, Disable, Enable, Fit, Metadata,
               Optimize, Orient, Profile, ResizeFilter, CropMode, optionsToQueryString
             } = globalThis.fastly.imageOptimizer;`,
+          };
+        }
+        case 'runtime': {
+          return {
+            contents: `
+export const includeBytes = globalThis.fastly.includeBytes;
+export const setBaseURL = Object.getOwnPropertyDescriptor(globalThis.fastly, 'baseURL').set;
+export const sdkVersion = globalThis.fastly.sdkVersion;
+export const setReusableSandboxOptions = globalThis.fastly.setReusableSandboxOptions;
+`,
           };
         }
         case 'shielding': {

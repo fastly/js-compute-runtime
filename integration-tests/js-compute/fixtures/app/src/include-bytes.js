@@ -1,6 +1,6 @@
 import { routes } from './routes.js';
 import { assert } from './assertions.js';
-import { includeBytes } from 'fastly:experimental';
+import { includeBytes } from 'fastly:runtime';
 
 let message;
 try {

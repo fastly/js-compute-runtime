@@ -8,7 +8,7 @@ import {
 } from './assertions.js';
 import { KVStore } from 'fastly:kv-store';
 import { routes, isRunningLocally } from './routes.js';
-import { sdkVersion } from 'fastly:experimental';
+import { sdkVersion } from 'fastly:runtime';
 import { env } from 'fastly:env';
 
 const KV_STORE_NAME = env('KV_STORE_NAME');

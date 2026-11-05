@@ -3,7 +3,7 @@
 
 import { routes } from './routes.js';
 import { env } from 'fastly:env';
-import { enableDebugLogging } from 'fastly:experimental';
+import { enableDebugLogging } from 'fastly:debug';
 
 import './acl.js';
 import './console.js';

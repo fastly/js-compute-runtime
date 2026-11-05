@@ -3,7 +3,7 @@
 
 import { assert } from './assertions.js';
 import { routes } from './routes.js';
-import { sdkVersion } from 'fastly:experimental';
+import { sdkVersion } from 'fastly:runtime';
 
 routes.set('/fastly/now', function () {
   assert(typeof fastly.now, 'function', 'typeof fastly.now');
@@ -23,6 +23,6 @@ routes.set('/fastly/version', function () {
   assert(
     fastly.sdkVersion,
     sdkVersion,
-    'fastly.sdkVersion matches fastly:experimental#sdkVersion',
+    'fastly.sdkVersion matches fastly:runtime#sdkVersion',
   );
 });
