@@ -11,7 +11,7 @@ import { CacheOverride } from 'fastly:cache-override';
 import { getGeolocationForIpAddress } from 'fastly:geolocation';
 import { createFanoutHandoff } from 'fastly:fanout';
 import { routes } from './routes.js';
-import { enableDebugLogging } from 'fastly:experimental';
+import { enableDebugLogging } from 'fastly:debug';
 
 enableDebugLogging(true);
 

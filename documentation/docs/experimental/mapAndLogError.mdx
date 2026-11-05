@@ -6,6 +6,12 @@ pagination_prev: null
 ---
 # mapAndLogError
 
+::: info
+
+Please use [the version of this function in `fastly:debug` instead](../debug/mapAndLogError.mdx), as `fastly:experimental` will be deprecated in the future.
+
+:::
+
 The **`mapAndLogError()`** function calls `mapError` on an `Error` object and sends the output to standard error. This includes the error name, message, and a call stack.
 
 If `--enable-stack-traces` is specified during the build, the call stack will be mapped using source maps.

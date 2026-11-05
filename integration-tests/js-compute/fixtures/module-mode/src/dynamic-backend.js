@@ -4,7 +4,7 @@ import {
   setDefaultDynamicBackendConfig,
   enforceExplicitBackends,
 } from 'fastly:backend';
-import { allowDynamicBackends } from 'fastly:experimental';
+import { allowDynamicBackends } from 'fastly:backend';
 import { CacheOverride } from 'fastly:cache-override';
 import {
   assert,

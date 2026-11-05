@@ -17,15 +17,13 @@ intending.
 
 When calling this function, an optional default backend name can be provided.
 
->**Note**: This is a separate option to the service-level dynamic backend support for Fastly services, which is by deault disabled for Fastly services.
+>**Note**: This is a separate option to the service-level dynamic backend support for Fastly services, which is by default disabled for Fastly services.
 
 The **`enforceExplicitBackends()`** function is used to control whether or not Dynamic Backends should be allowed within this Fastly Compute Service.
 
 By default, Dynamic Backends are enabled, but can be a potential security concern since third-party JavaScript code may send arbitrary requests, potentially including sensitive/secret data, off to destinations that the JavaScript project was not intending.
 
 Using `allowDynamicBackends(false)` this security property can be restored to only use explicit backend definitions.
-
->**Note**: Dynamic Backends are disabled by default for Fastly Services. Please contact [Fastly Support](https://support.fastly.com/hc/requests/new?ticket_form_id=360000269711) to request the feature be enabled or disabled on Fastly Services.
 
 ## Syntax
 
