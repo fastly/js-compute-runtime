@@ -1888,6 +1888,24 @@ bool install(api::Engine *engine) {
     return false;
   }
 
+  auto allow_dynamic_backends =
+      JS_NewFunction(engine->cx(), &Fastly::allowDynamicBackends_set, 1, 0, "allowDynamicBackends");
+  RootedObject allow_dynamic_backends_obj(engine->cx(),
+                                          JS_GetFunctionObject(allow_dynamic_backends));
+  RootedValue allow_dynamic_backends_val(engine->cx(), ObjectValue(*allow_dynamic_backends_obj));
+  if (!JS_SetProperty(engine->cx(), backend_ns, "allowDynamicBackends",
+                      allow_dynamic_backends_val)) {
+    return false;
+  }
+
+  auto set_default_backend =
+      JS_NewFunction(engine->cx(), &Fastly::defaultBackend_set, 1, 0, "setDefaultBackend");
+  RootedObject set_default_backend_obj(engine->cx(), JS_GetFunctionObject(set_default_backend));
+  RootedValue set_default_backend_val(engine->cx(), ObjectValue(*set_default_backend_obj));
+  if (!JS_SetProperty(engine->cx(), backend_ns, "setDefaultBackend", set_default_backend_val)) {
+    return false;
+  }
+
   RootedValue backend_ns_val(engine->cx(), JS::ObjectValue(*backend_ns));
   if (!engine->define_builtin_module("fastly:backend", backend_ns_val)) {
     return false;

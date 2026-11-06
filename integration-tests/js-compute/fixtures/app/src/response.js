@@ -2,7 +2,7 @@
 
 import { routes } from './routes.js';
 import { assert, streamToString } from './assertions.js';
-import { allowDynamicBackends } from 'fastly:experimental';
+import { allowDynamicBackends } from 'fastly:backend';
 
 routes.set('/response/stall', async (event) => {
   // keep connection open 10 seconds

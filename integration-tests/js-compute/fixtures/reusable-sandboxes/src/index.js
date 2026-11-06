@@ -4,8 +4,8 @@
 import { assert, assertThrows, strictEqual } from './assertions.js';
 import { isRunningLocally, routes } from './routes.js';
 import { env } from 'fastly:env';
-import { enableDebugLogging } from 'fastly:experimental';
-import { setReusableSandboxOptions } from 'fastly:experimental';
+import { setReusableSandboxOptions } from 'fastly:runtime';
+import { enableDebugLogging } from 'fastly:debug';
 
 setReusableSandboxOptions({ maxRequests: 9001 });
 

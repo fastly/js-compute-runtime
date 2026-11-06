@@ -21,3 +21,5 @@
 /// <reference path="image-optimizer.d.ts" />
 /// <reference path="shielding.d.ts" />
 /// <reference path="security.d.ts" />
+/// <reference path="debug.d.ts" />
+/// <reference path="runtime.d.ts" />

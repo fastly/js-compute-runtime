@@ -916,13 +916,53 @@ bool install(api::Engine *engine) {
     return false;
   }
 
-  // fastly:experimental
-  RootedObject experimental(engine->cx(), JS_NewObject(engine->cx(), nullptr));
-  RootedValue experimental_val(engine->cx(), JS::ObjectValue(*experimental));
+  // fastly:debug
+  RootedObject debug(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  RootedValue debug_val(engine->cx(), JS::ObjectValue(*debug));
+  auto enable_debug_logging =
+      JS_NewFunction(engine->cx(), &Fastly::enableDebugLogging, 1, 0, "enableDebugLogging");
+  RootedObject enable_debug_logging_obj(engine->cx(), JS_GetFunctionObject(enable_debug_logging));
+  RootedValue enable_debug_logging_val(engine->cx(), ObjectValue(*enable_debug_logging_obj));
+  if (!JS_SetProperty(engine->cx(), debug, "enableDebugLogging", enable_debug_logging_val)) {
+    return false;
+  }
+  if (!engine->define_builtin_module("fastly:debug", debug_val)) {
+    return false;
+  }
+
+  // fastly:runtime
+  RootedObject runtime(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  RootedValue runtime_val(engine->cx(), JS::ObjectValue(*runtime));
   RootedValue include_bytes_val(engine->cx());
   if (!JS_GetProperty(engine->cx(), fastly, "includeBytes", &include_bytes_val)) {
     return false;
   }
+  if (!JS_SetProperty(engine->cx(), runtime, "includeBytes", include_bytes_val)) {
+    return false;
+  }
+  auto set_reusable_sandbox_options = JS_NewFunction(
+      engine->cx(), &Fastly::setReusableSandboxOptions, 1, 0, "setReusableSandboxOptions");
+  RootedObject set_reusable_sandbox_options_obj(engine->cx(),
+                                                JS_GetFunctionObject(set_reusable_sandbox_options));
+  RootedValue set_reusable_sandbox_options_val(engine->cx(),
+                                               ObjectValue(*set_reusable_sandbox_options_obj));
+  if (!JS_SetProperty(engine->cx(), runtime, "setReusableSandboxOptions",
+                      set_reusable_sandbox_options_val)) {
+    return false;
+  }
+  RootedString version_str(
+      engine->cx(), JS_NewStringCopyN(engine->cx(), RUNTIME_VERSION, strlen(RUNTIME_VERSION)));
+  RootedValue version_str_val(engine->cx(), StringValue(version_str));
+  if (!JS_SetProperty(engine->cx(), runtime, "sdkVersion", version_str_val)) {
+    return false;
+  }
+  if (!engine->define_builtin_module("fastly:runtime", runtime_val)) {
+    return false;
+  }
+
+  // fastly:experimental (to be deprecated)
+  RootedObject experimental(engine->cx(), JS_NewObject(engine->cx(), nullptr));
+  RootedValue experimental_val(engine->cx(), JS::ObjectValue(*experimental));
   if (!JS_SetProperty(engine->cx(), experimental, "includeBytes", include_bytes_val)) {
     return false;
   }
@@ -933,10 +973,9 @@ bool install(api::Engine *engine) {
   if (!JS_SetProperty(engine->cx(), experimental, "setDefaultBackend", set_default_backend_val)) {
     return false;
   }
-  auto enable_debug_logging =
-      JS_NewFunction(engine->cx(), &Fastly::enableDebugLogging, 1, 0, "enableDebugLogging");
-  RootedObject enable_debug_logging_obj(engine->cx(), JS_GetFunctionObject(enable_debug_logging));
-  RootedValue enable_debug_logging_val(engine->cx(), ObjectValue(*enable_debug_logging_obj));
+  if (!JS_SetProperty(engine->cx(), experimental, "setDefaultBackend", set_default_backend_val)) {
+    return false;
+  }
   if (!JS_SetProperty(engine->cx(), experimental, "enableDebugLogging", enable_debug_logging_val)) {
     return false;
   }
@@ -949,19 +988,10 @@ bool install(api::Engine *engine) {
                       allow_dynamic_backends_val)) {
     return false;
   }
-  auto set_reusable_sandbox_options = JS_NewFunction(
-      engine->cx(), &Fastly::setReusableSandboxOptions, 1, 0, "setReusableSandboxOptions");
-  RootedObject set_reusable_sandbox_options_obj(engine->cx(),
-                                                JS_GetFunctionObject(set_reusable_sandbox_options));
-  RootedValue set_reusable_sandbox_options_val(engine->cx(),
-                                               ObjectValue(*set_reusable_sandbox_options_obj));
   if (!JS_SetProperty(engine->cx(), experimental, "setReusableSandboxOptions",
                       set_reusable_sandbox_options_val)) {
     return false;
   }
-  RootedString version_str(
-      engine->cx(), JS_NewStringCopyN(engine->cx(), RUNTIME_VERSION, strlen(RUNTIME_VERSION)));
-  RootedValue version_str_val(engine->cx(), StringValue(version_str));
   if (!JS_SetProperty(engine->cx(), experimental, "sdkVersion", version_str_val)) {
     return false;
   }
