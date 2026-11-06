@@ -27,6 +27,7 @@ import './form-data.js';
 import './websocket.js';
 import './fastly-global.js';
 import './fetch-errors.js';
+import './fetch-promise-handoff.js';
 import './geoip.js';
 import './headers.js';
 import './html-rewriter.js';

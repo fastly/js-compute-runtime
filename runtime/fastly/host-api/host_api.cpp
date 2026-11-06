@@ -1224,6 +1224,73 @@ FastlyResult<Response, FastlySendError> HttpPendingReq::wait() {
   return res;
 }
 
+Result<Void> HttpPendingReq::append_response_header(std::string_view name, std::string_view value,
+                                                    ResponseKind target) {
+  TRACE_CALL()
+  Result<Void> res;
+  fastly::fastly_host_error err;
+  auto name_str = string_view_to_world_string(name);
+  auto value_str = string_view_to_world_string(value);
+  if (!convert_result(fastly::req_pending_req_header_append(
+                          this->handle, reinterpret_cast<char *>(name_str.ptr), name_str.len,
+                          reinterpret_cast<char *>(value_str.ptr), value_str.len,
+                          static_cast<uint32_t>(target)),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+  return res;
+}
+
+Result<Void> HttpPendingReq::set_response_header(std::string_view name, std::string_view value,
+                                                 ResponseKind target) {
+  TRACE_CALL()
+  Result<Void> res;
+  fastly::fastly_host_error err;
+  auto name_str = string_view_to_world_string(name);
+  auto value_str = string_view_to_world_string(value);
+  if (!convert_result(fastly::req_pending_req_header_insert(
+                          this->handle, reinterpret_cast<char *>(name_str.ptr), name_str.len,
+                          reinterpret_cast<char *>(value_str.ptr), value_str.len,
+                          static_cast<uint32_t>(target)),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+  return res;
+}
+
+Result<Void> HttpPendingReq::remove_response_header(std::string_view name, ResponseKind target) {
+  TRACE_CALL()
+  Result<Void> res;
+  fastly::fastly_host_error err;
+  auto name_str = string_view_to_world_string(name);
+  if (!convert_result(fastly::req_pending_req_header_remove(
+                          this->handle, reinterpret_cast<char *>(name_str.ptr), name_str.len,
+                          static_cast<uint32_t>(target)),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+  return res;
+}
+
+Result<Void> HttpPendingReq::send_to_client() {
+  TRACE_CALL()
+  Result<Void> res;
+  auto handle = std::exchange(this->handle, HttpPendingReq::invalid);
+  fastly::fastly_host_error err;
+  if (!convert_result(fastly::resp_send_downstream_pending(handle), &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+  return res;
+}
+
 FastlyAsyncTask::Handle HttpPendingReq::async_handle() const {
   return FastlyAsyncTask::Handle{this->handle};
 }
