@@ -8,6 +8,34 @@ addEventListener('fetch', (event) => {
   }
 
   const testCase = path.slice('/fetch-promise-handoff/'.length);
+  if (testCase === 'respondwith-success') {
+    const response = fetch('https://http-me.fastly.dev/anything', {
+      backend: 'httpme',
+    });
+    setResponseHeader(response, 'x-respondwith', 'success', 'response');
+    event.respondWith(response);
+    event.waitUntil(
+      response.then(() =>
+        assertThrows(() =>
+          setResponseHeader(response, 'x-respondwith-late', 'ignored'),
+        ),
+      ),
+    );
+    return;
+  }
+  if (testCase === 'respondwith-rejection') {
+    const response = fetch('http://[', { backend: 'httpme' });
+    setResponseHeader(response, 'x-respondwith-error', 'rejected', 'error');
+    event.respondWith(response);
+    event.waitUntil(
+      response.catch(() =>
+        assertThrows(() =>
+          setResponseHeader(response, 'x-respondwith-late', 'ignored'),
+        ),
+      ),
+    );
+    return;
+  }
   if (testCase === 'validation-errors') {
     for (const helper of [
       setResponseHeader,

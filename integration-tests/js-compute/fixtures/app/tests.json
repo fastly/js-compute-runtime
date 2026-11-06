@@ -35,14 +35,26 @@
       "headers": { "x-cache": "MISS", "x-cache-hits": "0" }
     }
   },
+  "GET /fetch-promise-handoff/respondwith-success": {
+    "environments": ["compute", "viceroy"],
+    "features": ["skip-http-cache"],
+    "downstream_response": {
+      "status": 200,
+      "headers": { "x-respondwith": "success" }
+    }
+  },
+  "GET /fetch-promise-handoff/respondwith-rejection": {
+    "environments": ["compute", "viceroy"],
+    "downstream_response": {
+      "status": 500,
+      "headers": { "x-respondwith-error": "rejected" }
+    }
+  },
   "GET /fetch-promise-handoff/upload-rejection": {
     "environments": ["compute", "viceroy"],
     "downstream_response": { "status": 200, "body": "ok" }
   },
   "GET /fetch-promise-handoff/rejected-fetch": {
-    "downstream_response_compute": {
-      "headers": { "x-error-append": "first, second" }
-    },
     "environments": ["compute", "viceroy"],
     "downstream_response": {
       "status": 500,
@@ -57,9 +69,6 @@
     }
   },
   "GET /fetch-promise-handoff/http-error": {
-    "downstream_response_compute": {
-      "headers": { "x-promise-append": "first, second" }
-    },
     "environments": ["compute", "viceroy"],
     "downstream_response": {
       "status": 500,
@@ -76,9 +85,6 @@
     "downstream_response": { "status": 200 }
   },
   "GET /fetch-promise-handoff/host-stream-error": {
-    "downstream_response_compute": {
-      "headers": { "x-error-append": "first, second" }
-    },
     "environments": ["compute", "viceroy"],
     "features": ["skip-http-cache"],
     "downstream_response": {
@@ -94,9 +100,6 @@
     }
   },
   "GET /fetch-promise-handoff/guest-stream-error": {
-    "downstream_response_compute": {
-      "headers": { "x-error-append": "first, second" }
-    },
     "environments": ["compute", "viceroy"],
     "features": ["http-cache"],
     "downstream_response": {
@@ -112,9 +115,6 @@
     }
   },
   "GET /fetch-promise-handoff/host-buffered": {
-    "downstream_response_compute": {
-      "headers": { "x-promise-append": "first, second" }
-    },
     "environments": ["compute", "viceroy"],
     "features": ["skip-http-cache"],
     "downstream_response": {
@@ -141,9 +141,6 @@
     }
   },
   "GET /fetch-promise-handoff/guest-buffered": {
-    "downstream_response_compute": {
-      "headers": { "x-promise-append": "first, second" }
-    },
     "environments": ["compute", "viceroy"],
     "features": ["http-cache"],
     "downstream_response": {
@@ -170,9 +167,6 @@
     }
   },
   "GET /fetch-promise-handoff/guest-cache-fill": {
-    "downstream_response_compute": {
-      "headers": { "x-promise-append": "first, second" }
-    },
     "environments": ["compute", "viceroy"],
     "features": ["http-cache"],
     "downstream_response": {

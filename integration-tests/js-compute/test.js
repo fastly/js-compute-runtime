@@ -434,16 +434,7 @@ try {
                     });
                     const bodyChunks = await getBodyChunks(response);
                     await compareDownstreamResponse(
-                      {
-                        ...test.downstream_response,
-                        ...test.downstream_response_compute,
-                        headers: test.downstream_response_compute?.headers
-                          ? {
-                              ...test.downstream_response.headers,
-                              ...test.downstream_response_compute.headers,
-                            }
-                          : test.downstream_response.headers,
-                      },
+                      test.downstream_response,
                       response,
                       bodyChunks,
                     );
