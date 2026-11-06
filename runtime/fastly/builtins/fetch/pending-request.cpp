@@ -1,9 +1,9 @@
 #include "pending-request.h"
 
-#include "request-response.h"
-#include "fetch.h"
 #include "../../../StarlingMonkey/runtime/encode.h"
+#include "fetch.h"
 #include "host_api.h"
+#include "request-response.h"
 #include <string_view>
 
 using builtins::web::fetch::Headers;
@@ -31,7 +31,8 @@ bool consumed(JSObject *self) {
   return JS::GetReservedSlot(self, std::to_underlying(PendingRequest::Slots::Consumed)).toBoolean();
 }
 
-// TODO(StarlingMonkey): Patch StarlingMonkey's header implementation to support case-insensitive header name comparison.
+// TODO(StarlingMonkey): Patch StarlingMonkey's header implementation to support case-insensitive
+// header name comparison.
 bool header_name_is(const host_api::HostString &name, std::string_view expected) {
   if (name.len != expected.size()) {
     return false;
@@ -73,7 +74,8 @@ bool operation_kind(JSContext *cx, JS::HandleObject entry, HeaderOperation *kind
 }
 
 bool operation_values(JSContext *cx, JS::HandleObject entry, JS::MutableHandleString name,
-                      JS::MutableHandleString value, host_api::HttpPendingReq::ResponseKind *target) {
+                      JS::MutableHandleString value,
+                      host_api::HttpPendingReq::ResponseKind *target) {
   JS::RootedValue name_value(cx);
   JS::RootedValue header_value(cx);
   JS::RootedValue target_value(cx);
@@ -209,8 +211,8 @@ const JSFunctionSpec promise_helpers[] = {
 };
 
 bool apply_operations_to_http_headers(JSContext *cx, JS::HandleObject self,
-                                     host_api::HttpHeaders *headers,
-                                     host_api::HttpPendingReq::ResponseKind requested_target) {
+                                      host_api::HttpHeaders *headers,
+                                      host_api::HttpPendingReq::ResponseKind requested_target) {
   JS::RootedObject list(cx, operations(self));
   uint32_t length = 0;
   if (!list || !JS::GetArrayLength(cx, list, &length)) {
@@ -242,9 +244,9 @@ bool apply_operations_to_http_headers(JSContext *cx, JS::HandleObject self,
     }
     std::string_view name_view(encoded_name.ptr.get(), encoded_name.len);
     std::string_view value_view(encoded_value.ptr.get(), encoded_value.len);
-    auto result = kind == HeaderOperation::Set ? headers->set(name_view, value_view) :
-                  kind == HeaderOperation::Append ? headers->append(name_view, value_view) :
-                  headers->remove(name_view);
+    auto result = kind == HeaderOperation::Set      ? headers->set(name_view, value_view)
+                  : kind == HeaderOperation::Append ? headers->append(name_view, value_view)
+                                                    : headers->remove(name_view);
     if (auto *err = result.to_err()) {
       HANDLE_ERROR(cx, *err);
       return false;
@@ -277,7 +279,7 @@ bool PendingRequest::install_promise_helpers(JSContext *cx, JS::HandleObject glo
 }
 
 JSObject *PendingRequest::create_handle(JSContext *cx, host_api::HttpPendingReq::Handle handle,
-                                       JS::HandleObject promise) {
+                                        JS::HandleObject promise) {
   JS::RootedObject self(cx, JS_NewObjectWithGivenProto(cx, &class_, proto_obj));
   if (!self) {
     return nullptr;
@@ -358,8 +360,7 @@ void PendingRequest::clear_fetch_task(JSContext *cx, JS::HandleObject self) {
 
 bool PendingRequest::was_handed_off(JSContext *cx, JS::HandleObject promise) {
   JS::RootedObject record(cx, record_for_promise(cx, promise));
-  return record &&
-         JS::GetReservedSlot(record, std::to_underlying(Slots::HandedOff)).toBoolean();
+  return record && JS::GetReservedSlot(record, std::to_underlying(Slots::HandedOff)).toBoolean();
 }
 
 bool PendingRequest::try_send_to_client(JSContext *cx, JS::HandleObject promise, bool *sent) {
@@ -427,7 +428,8 @@ bool PendingRequest::mark_guest_cache_miss_headers(JSContext *cx, JS::HandleObje
     }
   }
 
-  // send_to_client applies MISS/0 headers and conditionally strips surrogate headers from this state.
+  // send_to_client applies MISS/0 headers and conditionally strips surrogate headers from this
+  // state.
   JS::SetReservedSlot(self, std::to_underlying(Slots::GuestCacheMiss), JS::TrueValue());
   JS::SetReservedSlot(self, std::to_underlying(Slots::PreserveSurrogateHeaders),
                       JS::BooleanValue(preserve_surrogate_headers));
@@ -439,8 +441,8 @@ bool PendingRequest::send_to_client(JSContext *cx, JS::HandleObject self) {
     JS_ReportErrorASCII(cx, "PendingRequest does not contain a host pending request");
     return false;
   }
-  auto handle = static_cast<uint32_t>(
-      JS::GetReservedSlot(self, std::to_underlying(Slots::Handle)).toInt32());
+  auto handle =
+      static_cast<uint32_t>(JS::GetReservedSlot(self, std::to_underlying(Slots::Handle)).toInt32());
   JS::RootedObject list(cx, operations(self));
   uint32_t length = 0;
   if (!list || !JS::GetArrayLength(cx, list, &length)) {
@@ -472,18 +474,18 @@ bool PendingRequest::send_to_client(JSContext *cx, JS::HandleObject self) {
     std::string_view value_view(encoded_value.ptr.get(), encoded_value.len);
 
     host_api::Result<host_api::Void> result;
-    switch(kind) {
-        case HeaderOperation::Set:
-            result = pending.set_response_header(name_view, value_view, target);
-            break;
-        case HeaderOperation::Append:
-            result = pending.append_response_header(name_view, value_view, target);
-            break;
-        case HeaderOperation::Remove:
-            result = pending.remove_response_header(name_view, target);
-            break;
-        default:
-            return false;
+    switch (kind) {
+    case HeaderOperation::Set:
+      result = pending.set_response_header(name_view, value_view, target);
+      break;
+    case HeaderOperation::Append:
+      result = pending.append_response_header(name_view, value_view, target);
+      break;
+    case HeaderOperation::Remove:
+      result = pending.remove_response_header(name_view, target);
+      break;
+    default:
+      return false;
     }
     if (auto *err = result.to_err()) {
       HANDLE_ERROR(cx, *err);
@@ -563,17 +565,17 @@ bool PendingRequest::apply_response_headers(JSContext *cx, JS::HandleObject self
     }
     const char *method_name;
     switch (kind) {
-        case HeaderOperation::Set:
-            method_name = "set";
-            break;
-        case HeaderOperation::Append:
-            method_name = "append";
-            break;
-        case HeaderOperation::Remove:
-            method_name = "delete";
-            break;
-        default:
-            return false;
+    case HeaderOperation::Set:
+      method_name = "set";
+      break;
+    case HeaderOperation::Append:
+      method_name = "append";
+      break;
+    case HeaderOperation::Remove:
+      method_name = "delete";
+      break;
+    default:
+      return false;
     }
     JS::RootedValue method(cx);
     if (!JS_GetProperty(cx, headers, method_name, &method)) {
@@ -588,8 +590,8 @@ bool PendingRequest::apply_response_headers(JSContext *cx, JS::HandleObject self
     }
     JS::RootedValue result(cx);
     JS::RootedValue this_value(cx, JS::ObjectValue(*headers));
-    if (!JS::Call(cx, this_value, method,
-            JS::HandleValueArray::subarray(method_args, 0, argc), &result)) {
+    if (!JS::Call(cx, this_value, method, JS::HandleValueArray::subarray(method_args, 0, argc),
+                  &result)) {
       return false;
     }
   }

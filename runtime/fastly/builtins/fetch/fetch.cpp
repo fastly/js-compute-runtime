@@ -335,7 +335,7 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
 
   JS::RootedObject metadata(
       cx, streaming ? PendingRequest::create_promise(cx, response_promise)
-            : PendingRequest::create_handle(cx, pending_handle.handle, response_promise));
+                    : PendingRequest::create_handle(cx, pending_handle.handle, response_promise));
   if (!metadata) {
     return false;
   }

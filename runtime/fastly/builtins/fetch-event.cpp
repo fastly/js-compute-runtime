@@ -1014,8 +1014,7 @@ bool FetchEvent::handoffRequest(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (record && !PendingRequest::consume(cx, record)) {
     return false;
   }
-  JS::RootedValue extra(cx, record ? JS::ObjectValue(*record)
-                                  : JS::ObjectValue(*response_promise));
+  JS::RootedValue extra(cx, record ? JS::ObjectValue(*record) : JS::ObjectValue(*response_promise));
   if (!respond_with_promise(cx, self, response_promise, extra, "FetchEvent#handoffRequest")) {
     return false;
   }
@@ -1079,8 +1078,7 @@ bool FetchEvent::respondWithError(JSContext *cx, JS::HandleObject self) {
   return respondWithError(cx, self, nullptr);
 }
 
-bool FetchEvent::respondWithError(JSContext *cx, JS::HandleObject self,
-                                  JSObject *pending) {
+bool FetchEvent::respondWithError(JSContext *cx, JS::HandleObject self, JSObject *pending) {
   MOZ_RELEASE_ASSERT(state(self) == State::unhandled || state(self) == State::waitToRespond);
   set_state(self, State::responsedWithError);
 
@@ -1168,7 +1166,7 @@ const JSPropertySpec FetchEvent::static_properties[] = {
 
 const JSFunctionSpec FetchEvent::methods[] = {
     JS_FN("respondWith", respondWith, 1, JSPROP_ENUMERATE),
-  JS_FN("handoffRequest", handoffRequest, 1, JSPROP_ENUMERATE),
+    JS_FN("handoffRequest", handoffRequest, 1, JSPROP_ENUMERATE),
     JS_FN("waitUntil", waitUntil, 1, JSPROP_ENUMERATE),
     JS_FN("sendEarlyHints", sendEarlyHints, 1, JSPROP_ENUMERATE),
     JS_FS_END,
