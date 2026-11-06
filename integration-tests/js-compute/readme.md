@@ -108,6 +108,12 @@ If an array then assertions are done on each individual chunk received from resp
 An array which contains arrays, where each array contains two strings, the first is the header name and the second is the header value.
 E.G. `{"a": "1", "b": "2" }` will assert that the response only has the headers named `a` with the value `1` and a header named `b` with the value `2`.
 
+### downstream_response_compute
+
+Optional response expectations used only on Fastly Compute. These override fields in
+`downstream_response`; object-form `headers` are merged by header name. Use this for
+environment-specific wire formatting while retaining shared status and header checks.
+
 ### logs
 
 An array which contains strings used to assert against any logs emitted by the test application during it's execution.

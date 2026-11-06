@@ -342,7 +342,7 @@ declare interface FetchEvent {
    * Direct backend requests can be transferred to the host so they continue after the service
    * releases its resources. Cache-backed responses use the ordinary promise response path.
    */
-  respondWithPromise(response: Promise<Response>): void;
+  handoffRequest(response: Promise<Response>): void;
 
   /**
    * Send a [103 Early Hints](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/103)

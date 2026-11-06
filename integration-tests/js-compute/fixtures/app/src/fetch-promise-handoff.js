@@ -20,7 +20,7 @@ addEventListener('fetch', (event) => {
         helper(Promise.resolve(new Response()), 'x-test', 'value'),
       );
     }
-    assertThrows(() => event.respondWithPromise(new Response()));
+    assertThrows(() => event.handoffRequest(new Response()));
     const response = fetch('https://http-me.fastly.dev/status/200', {
       backend: 'httpme',
     });
@@ -38,11 +38,11 @@ addEventListener('fetch', (event) => {
         'value',
       ),
     );
-    event.respondWithPromise(response);
+    event.handoffRequest(response);
     assertThrows(() => setResponseHeader(response, 'x-test', 'value'));
     assertThrows(() => appendResponseHeader(response, 'x-test', 'value'));
     assertThrows(() => removeResponseHeader(response, 'x-test'));
-    assertThrows(() => event.respondWithPromise(response));
+    assertThrows(() => event.handoffRequest(response));
     return;
   }
   const isUploadError =
@@ -105,5 +105,5 @@ addEventListener('fetch', (event) => {
     setResponseHeader(response, 'x-error-remove', 'removed');
     removeResponseHeader(response, 'x-error-remove', 'error');
   }
-  event.respondWithPromise(response);
+  event.handoffRequest(response);
 });

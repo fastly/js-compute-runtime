@@ -211,7 +211,7 @@ import { expectError, expectType } from 'tsd';
   expectType<(response: Response | PromiseLike<Response>) => void>(
     event.respondWith,
   );
-  expectType<(response: Promise<Response>) => void>(event.respondWithPromise);
+  expectType<(response: Promise<Response>) => void>(event.handoffRequest);
   expectType<(promise: Promise<any>) => void>(event.waitUntil);
 }
 
@@ -225,13 +225,13 @@ import { expectError, expectType } from 'tsd';
   expectType<void>(setResponseHeader(fetched, 'x-test', 'value'));
   expectType<void>(appendResponseHeader(fetched, 'x-test', 'value'));
   expectType<void>(removeResponseHeader(fetched, 'x-test'));
-  expectType<void>(({} as FetchEvent).respondWithPromise(fetched));
+  expectType<void>(({} as FetchEvent).handoffRequest(fetched));
   expectError(setResponseHeader(Promise.resolve(1), 'x-test', 'one'));
   expectError(setResponseHeader(response, 'x-test'));
   expectError(appendResponseHeader(response, 'x-test'));
   expectError(removeResponseHeader(response));
   expectError(setResponseHeader(response, 'x-test', 'one', 'invalid'));
-  expectError(({} as FetchEvent).respondWithPromise(Promise.resolve(1)));
+  expectError(({} as FetchEvent).handoffRequest(Promise.resolve(1)));
 }
 
 // CacheOverrideMode
