@@ -963,24 +963,24 @@ bool FetchEvent::respondWith(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool FetchEvent::respondWithPromise(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool FetchEvent::handoffRequest(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
   if (!args.get(0).isObject()) {
-    JS_ReportErrorUTF8(cx, "FetchEvent#respondWithPromise must be called with a Promise");
+    JS_ReportErrorUTF8(cx, "FetchEvent#handoffRequest must be called with a Promise");
     return false;
   }
   JS::RootedObject response_promise(cx, &args.get(0).toObject());
   if (!JS::IsPromiseObject(response_promise)) {
-    JS_ReportErrorUTF8(cx, "FetchEvent#respondWithPromise must be called with a Promise");
+    JS_ReportErrorUTF8(cx, "FetchEvent#handoffRequest must be called with a Promise");
     return false;
   }
   if (!is_dispatching(self)) {
-    JS_ReportErrorUTF8(cx, "FetchEvent#respondWithPromise must be called synchronously from "
+    JS_ReportErrorUTF8(cx, "FetchEvent#handoffRequest must be called synchronously from "
                            "within a FetchEvent handler");
     return false;
   }
   if (state(self) != State::unhandled) {
-    JS_ReportErrorUTF8(cx, "FetchEvent#respondWithPromise can't be called twice on the same event");
+    JS_ReportErrorUTF8(cx, "FetchEvent#handoffRequest can't be called twice on the same event");
     return false;
   }
 
@@ -1151,7 +1151,7 @@ const JSPropertySpec FetchEvent::static_properties[] = {
 
 const JSFunctionSpec FetchEvent::methods[] = {
     JS_FN("respondWith", respondWith, 1, JSPROP_ENUMERATE),
-  JS_FN("respondWithPromise", respondWithPromise, 1, JSPROP_ENUMERATE),
+  JS_FN("handoffRequest", handoffRequest, 1, JSPROP_ENUMERATE),
     JS_FN("waitUntil", waitUntil, 1, JSPROP_ENUMERATE),
     JS_FN("sendEarlyHints", sendEarlyHints, 1, JSPROP_ENUMERATE),
     JS_FS_END,
