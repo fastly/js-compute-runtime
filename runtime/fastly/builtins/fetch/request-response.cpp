@@ -89,7 +89,7 @@ bool NativeStreamSource::stream_is_body(JSContext *cx, JS::HandleObject stream) 
   if (!NativeStreamSource::is_instance(stream_source)) {
     return false;
   }
-  
+
   JSObject *source_owner = owner(stream_source);
   return fastly::fetch::RequestOrResponse::is_instance(source_owner) ||
          CacheEntry::is_instance(source_owner);
