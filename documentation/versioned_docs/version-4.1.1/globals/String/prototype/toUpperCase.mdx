@@ -1,0 +1,32 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# String.prototype.toUpperCase()
+
+The **`toUpperCase()`** method returns the calling string value
+converted to uppercase (the value will be converted to a string if it isn't one).
+
+## Syntax
+
+```js
+toUpperCase()
+```
+
+### Return value
+
+A new string representing the calling string converted to upper case.
+
+### Exceptions
+
+- [`TypeError`](../../../globals/TypeError/TypeError.mdx)
+  - : When called on [`null`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/null) or [`undefined`](../../../globals/undefined.mdx), for example,
+    `String.prototype.toUpperCase.call(undefined)`.
+
+## Description
+
+The `toUpperCase()` method returns the value of the string converted to
+uppercase. This method does not affect the value of the string itself since JavaScript
+strings are immutable.

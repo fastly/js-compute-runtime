@@ -1,0 +1,48 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Object.prototype.constructor
+
+The **`constructor`** data property of an `Object` instance returns a reference to the constructor function that created the instance object. Note that the value of this property is a reference to _the function itself_, not a string containing the function's name.
+
+> **Note:** This is a property of JavaScript objects. For the `constructor` method in classes, see [its own reference page](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Classes/constructor).
+
+## Value
+
+A reference to the constructor function that created the instance object.
+
+> **Note:** This property is created by default on the [`prototype`](../../../globals/Function/prototype/) property of every constructor function and is inherited by all objects created by that constructor.
+
+## Description
+
+Any object (with the exception of [`null` prototype objects](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object#null-prototype_objects)) will have a `constructor` property on its `[[Prototype]]`. Objects created with literals will also have a `constructor` property that points to the constructor type for that object — for example, array literals create `Array` objects, and [object literals](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Object_initializer) create plain objects.
+
+```js
+const o1 = {};
+o1.constructor === Object; // true
+
+const o2 = new Object();
+o2.constructor === Object; // true
+
+const a1 = [];
+a1.constructor === Array; // true
+
+const a2 = new Array();
+a2.constructor === Array; // true
+
+const n = 3;
+n.constructor === Number; // true
+```
+
+Note that `constructor` usually comes from the constructor's [`prototype`](../../../globals/Function/prototype/) property. If you have a longer prototype chain, you can usually expect every object in the chain to have a `constructor` property.
+
+```js
+const o = new TypeError(); // Inheritance: TypeError -> Error -> Object
+const proto = Object.getPrototypeOf;
+proto(o).constructor === TypeError; // true
+proto(proto(o)).constructor === Error; // true
+proto(proto(proto(o))).constructor === Object; // true
+```
