@@ -830,12 +830,20 @@ bool response_promise_then_handler(JSContext *cx, JS::HandleObject event, JS::Ha
   // very different.)
   JS::RootedObject response_obj(cx, &args[0].toObject());
 
+  JS::RootedObject pending(cx);
   if (extra.isObject()) {
-    JS::RootedObject pending(cx, &extra.toObject());
-    if (PendingRequest::is_instance(pending) &&
-        !PendingRequest::apply_response_headers(cx, pending, response_obj, false)) {
+    JS::RootedObject extra_obj(cx, &extra.toObject());
+    if (PendingRequest::is_instance(extra_obj)) {
+      pending = extra_obj;
+    } else if (JS::IsPromiseObject(extra_obj)) {
+      pending = PendingRequest::record_for_promise(cx, extra_obj);
+    }
+  }
+  if (pending) {
+    if (!PendingRequest::apply_response_headers(cx, pending, response_obj, false)) {
       return false;
     }
+    PendingRequest::mark_committed(cx, pending);
   }
 
   // Store the FetchEvent on the Response so it can be accessed later
@@ -891,11 +899,15 @@ bool response_promise_catch_handler(JSContext *cx, JS::HandleObject event,
                                     JS::HandleValue promise_val, JS::CallArgs args) {
   JS::RootedObject pending(cx);
   JS::RootedObject promise(cx);
-  if (promise_val.isObject() && PendingRequest::is_instance(&promise_val.toObject())) {
-    pending.set(&promise_val.toObject());
-    promise.set(PendingRequest::promise(pending));
-  } else {
-    promise.set(&promise_val.toObject());
+  if (promise_val.isObject()) {
+    JS::RootedObject extra_obj(cx, &promise_val.toObject());
+    if (PendingRequest::is_instance(extra_obj)) {
+      pending = extra_obj;
+      promise.set(PendingRequest::promise(pending));
+    } else if (JS::IsPromiseObject(extra_obj)) {
+      promise = extra_obj;
+      pending = PendingRequest::record_for_promise(cx, extra_obj);
+    }
   }
 
   if (ENGINE->debug_logging_enabled()) {
@@ -914,15 +926,15 @@ bool response_promise_catch_handler(JSContext *cx, JS::HandleObject event,
 }
 
 bool respond_with_promise(JSContext *cx, JS::HandleObject self, JS::HandleObject response_promise,
-                          JS::HandleValue extra) {
+                          JS::HandleValue extra, const char *method_name) {
   if (!FetchEvent::is_dispatching(self)) {
-    JS_ReportErrorUTF8(cx, "FetchEvent#respondWith must be called synchronously from "
-                           "within a FetchEvent handler");
+    JS_ReportErrorUTF8(cx, "%s must be called synchronously from within a FetchEvent handler",
+                       method_name);
     return false;
   }
   if (FetchEvent::state(self) != FetchEvent::State::unhandled &&
       FetchEvent::state(self) != FetchEvent::State::waitToRespond) {
-    JS_ReportErrorUTF8(cx, "FetchEvent#respondWith can't be called twice on the same event");
+    JS_ReportErrorUTF8(cx, "%s can't be called twice on the same event", method_name);
     return false;
   }
 
@@ -955,7 +967,7 @@ bool FetchEvent::respondWith(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
 
   JS::RootedValue extra(cx, JS::ObjectValue(*response_promise));
-  if (!respond_with_promise(cx, self, response_promise, extra)) {
+  if (!respond_with_promise(cx, self, response_promise, extra, "FetchEvent#respondWith")) {
     return false;
   }
 
@@ -1000,7 +1012,7 @@ bool FetchEvent::handoffRequest(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   JS::RootedValue extra(cx, record ? JS::ObjectValue(*record)
                                   : JS::ObjectValue(*response_promise));
-  if (!respond_with_promise(cx, self, response_promise, extra)) {
+  if (!respond_with_promise(cx, self, response_promise, extra, "FetchEvent#handoffRequest")) {
     return false;
   }
   args.rval().setUndefined();
@@ -1092,6 +1104,7 @@ bool FetchEvent::respondWithError(JSContext *cx, JS::HandleObject self,
     if (!PendingRequest::apply_error_headers(cx, pending_obj, response)) {
       return false;
     }
+    PendingRequest::mark_committed(cx, pending_obj);
   }
 
   auto send_res = response.send_downstream(make_res.unwrap(), false);
