@@ -1008,6 +1008,8 @@ bool FetchEvent::handoffRequest(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
 
+  // If the pending request cannot be transferred, handle its promise through the normal response
+  // fulfillment and rejection reactions, as in respondWith().
   JS::RootedObject record(cx, PendingRequest::record_for_promise(cx, response_promise));
   if (record && !PendingRequest::consume(cx, record)) {
     return false;

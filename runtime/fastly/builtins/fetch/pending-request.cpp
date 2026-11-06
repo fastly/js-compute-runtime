@@ -344,6 +344,10 @@ bool PendingRequest::consume(JSContext *cx, JS::HandleObject self) {
   return true;
 }
 
+void PendingRequest::mark_committed(JSContext *cx, JS::HandleObject self) {
+  JS::SetReservedSlot(self, std::to_underlying(Slots::Consumed), JS::TrueValue());
+}
+
 void PendingRequest::set_fetch_task(JSContext *cx, JS::HandleObject self, api::AsyncTask *task) {
   JS::SetReservedSlot(self, std::to_underlying(Slots::FetchTask), JS::PrivateValue(task));
 }

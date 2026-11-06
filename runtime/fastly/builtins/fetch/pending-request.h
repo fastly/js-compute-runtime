@@ -38,6 +38,7 @@ public:
   static bool is_native(JSObject *self);
   static JSObject *promise(JSObject *self);
   static bool consume(JSContext *cx, JS::HandleObject self);
+  static void mark_committed(JSContext *cx, JS::HandleObject self);
   static void set_fetch_task(JSContext *cx, JS::HandleObject self, api::AsyncTask *task);
   static void clear_fetch_task(JSContext *cx, JS::HandleObject self);
   static bool was_handed_off(JSContext *cx, JS::HandleObject promise);
