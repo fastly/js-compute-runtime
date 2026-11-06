@@ -899,6 +899,8 @@ bool response_promise_catch_handler(JSContext *cx, JS::HandleObject event,
                                     JS::HandleValue promise_val, JS::CallArgs args) {
   JS::RootedObject pending(cx);
   JS::RootedObject promise(cx);
+  // The callback context is either PendingRequest metadata (handoff fallback) or the original
+  // Promise (respondWith). Keep the Promise for rejection logging and recover metadata if needed.
   if (promise_val.isObject()) {
     JS::RootedObject extra_obj(cx, &promise_val.toObject());
     if (PendingRequest::is_instance(extra_obj)) {
