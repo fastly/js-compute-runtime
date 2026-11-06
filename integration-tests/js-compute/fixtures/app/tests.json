@@ -1550,6 +1550,13 @@
       "status": 200
     }
   },
+  "GET /FastlyBody/append/data-parameter-readablestream-cache-entry-backed": {
+    "environments": ["compute"],
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
   "GET /FastlyBody/append/data-parameter-URLSearchParams": {
     "environments": ["compute"],
     "downstream_response": {

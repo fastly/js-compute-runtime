@@ -533,6 +533,22 @@ function ensureLion() {
         assert(result, undefined, `body.append(res.body)`);
       },
     );
+    routes.set(
+      '/FastlyBody/append/data-parameter-readablestream-cache-entry-backed',
+      () => {
+        const key =
+          '/FastlyBody/append/data-parameter-readablestream-cache-entry-backed' +
+          Math.random();
+        const writer = CoreCache.insert(key, { maxAge: 60 * 1000 });
+        writer.append('hello');
+        writer.close();
+        const body = new FastlyBody();
+        let result = body.append(CoreCache.lookup(key).body());
+        assert(result, undefined, `body.append(CoreCache.lookup(key).body())`);
+        const actual = new TextDecoder().decode(body.read(1024));
+        assert(actual, 'hello', `body.read(1024)`);
+      },
+    );
     // - URLSearchParams
     routes.set('/FastlyBody/append/data-parameter-URLSearchParams', () => {
       const items = [
