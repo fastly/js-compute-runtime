@@ -431,6 +431,7 @@ try {
                       headers: test.downstream_request.headers || undefined,
                       body: test.downstream_request.body || undefined,
                       onInfo: onInfoHandler,
+                      allowH2: false, // Avoid differences between Compute and Viceroy in append cases
                     });
                     const bodyChunks = await getBodyChunks(response);
                     await compareDownstreamResponse(
