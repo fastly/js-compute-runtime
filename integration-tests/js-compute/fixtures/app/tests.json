@@ -173,7 +173,7 @@
       "status": 200,
       "headers": {
         "x-promise-set": "set-value",
-        "x-promise-append": ["first", "second"],
+        "x-promise-append": "first, second",
         "x-promise-error-only": null,
         "access-control-allow-origin": null
       }
