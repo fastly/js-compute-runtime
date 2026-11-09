@@ -346,7 +346,7 @@ routes.set('/crypto.subtle', async () => {
       routes.set(
         '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-empty-key_ops-field',
         async () => {
-          await assertResolves(async () => {
+          await assertRejects(async () => {
             let webKeyData = structuredClone(publicRsaJsonWebKeyData);
             const key_ops = Array.from(webKeyData.key_ops);
             webKeyData.key_ops = [];
@@ -357,7 +357,7 @@ routes.set('/crypto.subtle', async () => {
               webKeyData.ext,
               key_ops,
             );
-          });
+          }, DOMException);
         },
       );
       routes.set(
@@ -708,7 +708,7 @@ routes.set('/crypto.subtle', async () => {
       routes.set(
         '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-empty-key_ops-field',
         async () => {
-          await assertResolves(async () => {
+          await assertRejects(async () => {
             let webKeyData = structuredClone(publicEcdsaJsonWebKeyData);
             const key_ops = Array.from(webKeyData.key_ops);
             webKeyData.key_ops = [];
@@ -719,7 +719,7 @@ routes.set('/crypto.subtle', async () => {
               webKeyData.ext,
               key_ops,
             );
-          });
+          }, DOMException);
         },
       );
       routes.set(
