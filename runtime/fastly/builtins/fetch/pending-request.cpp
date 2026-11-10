@@ -10,16 +10,25 @@ using builtins::web::fetch::Headers;
 
 namespace fastly::fetch {
 
+state::RequestStateHolder<PendingRequest::RequestState> PendingRequest::request_state;
+
+bool PendingRequest::RequestState::init(JSContext *cx) {
+  promise_records.init(cx, JS::NewWeakMapObject(cx));
+  return promise_records != nullptr;
+}
+
+bool PendingRequest::RequestState::snapshot(JSContext *cx, RequestState &into) {
+  return into.init(cx);
+}
+
 namespace {
 
 enum class HeaderOperation : uint8_t { Set, Append, Remove };
 
-JS::PersistentRootedObject PROMISE_RECORDS;
-
 bool associate_promise(JSContext *cx, JS::HandleObject promise, JS::HandleObject record) {
   JS::RootedValue key(cx, JS::ObjectValue(*promise));
   JS::RootedValue value(cx, JS::ObjectValue(*record));
-  return JS::SetWeakMapEntry(cx, PROMISE_RECORDS, key, value);
+  return JS::SetWeakMapEntry(cx, PendingRequest::request_state->promise_records, key, value);
 }
 
 JSObject *operations(JSObject *self) {
@@ -263,11 +272,9 @@ const JSFunctionSpec PendingRequest::methods[] = {JS_FS_END};
 const JSPropertySpec PendingRequest::properties[] = {JS_PS_END};
 
 bool PendingRequest::init_class(JSContext *cx, JS::HandleObject global) {
-  JS::RootedObject weak_map(cx, JS::NewWeakMapObject(cx));
-  if (!weak_map) {
+  if (!request_state.init(cx)) {
     return false;
   }
-  PROMISE_RECORDS.init(cx, weak_map);
   if (!BuiltinNoConstructor<PendingRequest>::init_class(cx, global)) {
     return false;
   }
@@ -309,7 +316,7 @@ JSObject *PendingRequest::create_promise(JSContext *cx, JS::HandleObject promise
 JSObject *PendingRequest::record_for_promise(JSContext *cx, JS::HandleObject promise) {
   JS::RootedValue key(cx, JS::ObjectValue(*promise));
   JS::RootedValue record(cx);
-  if (!JS::GetWeakMapEntry(cx, PROMISE_RECORDS, key, &record)) {
+  if (!JS::GetWeakMapEntry(cx, request_state->promise_records, key, &record)) {
     return nullptr;
   }
   if (!record.isObject() || !PendingRequest::is_instance(&record.toObject())) {

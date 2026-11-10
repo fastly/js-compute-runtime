@@ -21,6 +21,11 @@ not_ reject on HTTP errors (`404`, etc.). Instead, a
 `then()` handler must check the `Response.ok` and/or
 `Response.status` properties.
 
+To forward an upstream response without inspecting its status or body, use
+[`FetchEvent.handoffRequest()`](./FetchEvent/prototype/handoffRequest.mdx).
+Eligible requests can finish outside the JavaScript runtime. The guide also
+describes fetch-promise header helpers for adjusting the downstream response.
+
 > **Note:** The `fetch()` method's parameters are identical to
 > those of the `Request()` constructor.
 

@@ -3,6 +3,7 @@
 
 #include "../../../StarlingMonkey/builtins/web/fetch/headers.h"
 #include "../../host-api/host_api_fastly.h"
+#include "../../state.h"
 #include "builtin.h"
 
 namespace fastly::fetch {
@@ -10,6 +11,15 @@ namespace fastly::fetch {
 class PendingRequest final : public builtins::BuiltinNoConstructor<PendingRequest> {
 public:
   static constexpr const char *class_name = "FastlyFetchPromiseMetadata";
+
+  struct RequestState {
+    JS::PersistentRootedObject promise_records;
+
+    bool init(JSContext *cx);
+    bool snapshot(JSContext *cx, RequestState &into);
+  };
+
+  static state::RequestStateHolder<RequestState> request_state;
 
   enum class Slots : uint8_t {
     Handle,
