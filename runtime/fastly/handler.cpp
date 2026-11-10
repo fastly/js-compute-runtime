@@ -21,7 +21,7 @@ using std::chrono::system_clock;
 // Note that this variable is only used for its type; it is a way of
 // carrying around a variadic template parameter pack.
 static constexpr fastly::state::BuiltinsList<fastly::fastly::Fastly, fastly::backend::Backend,
-                                           fastly::fetch::PendingRequest>
+                                             fastly::fetch::PendingRequest>
     builtins_with_request_state;
 
 namespace fastly::runtime {
