@@ -1,14 +1,12 @@
 # Changelog
 
-## [4.2.0](https://github.com/fastly/js-compute-runtime/compare/v4.1.0...v4.2.0) (2026-11-10)
+## 4.2.0 (2026-11-10)
 
-
-### Features
+### Added
 
 * **crypto:** SubtleCrypto deriveBits, encrypt and decrypt via StarlingMonkey v0.5.0 ([#1617](https://github.com/fastly/js-compute-runtime/issues/1617)) ([31703e1](https://github.com/fastly/js-compute-runtime/commit/31703e105ddf0a493523a311f3b0f2619a2e86b3))
 
-
-### Bug Fixes
+### Fixed
 
 * Use correct hostcalls for core cache body operations ([#1613](https://github.com/fastly/js-compute-runtime/issues/1613)) ([7105b8e](https://github.com/fastly/js-compute-runtime/commit/7105b8e27fb2baac7f9a4c6531f51e98a72b4d82))
 
