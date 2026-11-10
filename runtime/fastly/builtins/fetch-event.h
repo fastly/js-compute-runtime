@@ -78,6 +78,7 @@ void dispatch_fetch_event(HandleObject event, double *total_compute);
 
 class FetchEvent final : public builtins::BuiltinNoConstructor<FetchEvent> {
   static bool respondWith(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool handoffRequest(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool client_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool request_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool server_get(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -129,6 +130,7 @@ public:
                            host_api::HttpBody body);
 
   static bool respondWithError(JSContext *cx, JS::HandleObject self);
+  static bool respondWithError(JSContext *cx, JS::HandleObject self, JSObject *pending);
   static bool is_active(JSObject *self);
   static bool is_dispatching(JSObject *self);
   static void start_dispatching(JSObject *self);

@@ -2,6 +2,7 @@
 #include "./builtins/backend.h"
 #include "./builtins/fastly.h"
 #include "./builtins/fetch-event.h"
+#include "./builtins/fetch/pending-request.h"
 #include "./host-api/fastly.h"
 #include "./host-api/host_api_fastly.h"
 #include "extension-api.h"
@@ -19,7 +20,8 @@ using std::chrono::system_clock;
 // to this list, and they will be picked up by the reset machinery.
 // Note that this variable is only used for its type; it is a way of
 // carrying around a variadic template parameter pack.
-static constexpr fastly::state::BuiltinsList<fastly::fastly::Fastly, fastly::backend::Backend>
+static constexpr fastly::state::BuiltinsList<fastly::fastly::Fastly, fastly::backend::Backend,
+                                             fastly::fetch::PendingRequest>
     builtins_with_request_state;
 
 namespace fastly::runtime {

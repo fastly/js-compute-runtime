@@ -1,0 +1,104 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# FetchEvent.handoffRequest()
+
+`handoffRequest()` forwards the eventual result of an upstream `fetch()` to the
+downstream client. When the request is eligible, the host takes over delivery
+without waiting for JavaScript to receive and forward the response.
+
+## When To Use Handoff
+
+Use handoff for proxy-style handlers that make routing, authentication, or request
+header decisions before contacting an origin, then forward its response without
+inspecting its status or body. It is particularly useful for slow origins and
+long downloads: an eligible pending request can continue after the runtime has
+finished its work, allowing sandbox resources to be released or reused earlier.
+Handoff does not make the origin respond sooner.
+
+Use [`respondWith()`](./respondWith.mdx) instead when JavaScript must inspect the
+upstream status, transform the response body, retry a failed request, or choose a
+custom error response. Handoff transfers responsibility for the response; it does
+not provide a second opportunity to handle the result in JavaScript.
+
+```js
+addEventListener('fetch', (event) => {
+  const response = fetch(event.request, { backend: 'origin' });
+  setResponseHeader(response, 'x-proxy', 'compute');
+  removeResponseHeader(response, 'x-internal-origin', 'response');
+  event.handoffRequest(response);
+});
+```
+
+Note the lack of an `await` or `.then()` before calling `handoffRequest()`. You pass the promise returned by `fetch()` directly to `handoffRequest()`.
+
+## Syntax And Lifetime
+
+```js
+event.handoffRequest(responsePromise);
+```
+
+Pass the original promise returned directly by `fetch()`. An `async` wrapper or
+`.then()` produces another promise without the pending-request metadata, so it
+cannot use direct handoff or the fetch-promise header helpers.
+
+Call `handoffRequest()` synchronously within the fetch event handler, before
+returning or awaiting anything. It returns `undefined`. Choose either
+`handoffRequest()` or `respondWith()` for an event, not both.
+
+Do not rely on the fetch promise settling after a direct handoff: the host owns
+the pending response and the runtime no longer resolves that promise. In
+particular, do not pass it to `waitUntil()`. Independent work registered with
+[`waitUntil()`](./waitUntil.mdx) can still keep the runtime alive, so handoff does
+not guarantee immediate sandbox completion.
+
+## When Direct Handoff Is Unavailable
+
+Not every fetch has a transferable host pending request. For example, guest-side cache fills
+must complete cache processing in the runtime, cached responses may already be
+available, and JavaScript-streamed request bodies need the runtime to finish their
+upload.
+
+In those cases, `handoffRequest()` uses the same promise reactions as
+`respondWith()`: it keeps the event alive until the promise settles, applies
+queued header operations, and sends the resulting response. This fallback does
+not release the runtime early. A rejected promise produces the runtime's normal
+500 error response. For direct handoff, the host sends the eventual origin
+response or its synthetic error response.
+
+An error while attempting the transfer itself is reported to JavaScript rather
+than silently retrying delivery through the promise path.
+
+## Adjusting Response Headers
+
+Queue header operations on the original fetch promise before handing it off:
+
+```js
+setResponseHeader(responsePromise, name, value, target);
+appendResponseHeader(responsePromise, name, value, target);
+removeResponseHeader(responsePromise, name, target);
+```
+
+`setResponseHeader()` replaces existing values, `appendResponseHeader()` preserves
+existing values and adds another, and `removeResponseHeader()` deletes the header.
+The optional `target` selects which outcome receives the operation:
+
+| Target            | Applies To                                                                    |
+| ----------------- | ----------------------------------------------------------------------------- |
+| `'response'`      | An upstream response, including HTTP statuses such as 404 and 500.            |
+| `'error'`         | A synthetic response caused by a fetch failure, such as a connection failure. |
+| `'any'` (default) | Either outcome.                                                               |
+
+An HTTP 500 received from the origin is a fulfilled fetch response, not a rejected
+promise, so it uses the `'response'` operations. For example:
+
+```js
+setResponseHeader(response, 'x-upstream-result', 'received', 'response');
+setResponseHeader(response, 'x-upstream-result', 'failed', 'error');
+setResponseHeader(response, 'access-control-allow-origin', '*');
+event.handoffRequest(response);
+```

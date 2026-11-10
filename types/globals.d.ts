@@ -337,6 +337,14 @@ declare interface FetchEvent {
   respondWith(response: Response | PromiseLike<Response>): void;
 
   /**
+   * Respond using the original promise returned by `fetch()`.
+   *
+   * Direct backend requests can be transferred to the host so they continue after the service
+   * releases its resources. Cache-backed responses use the ordinary promise response path.
+   */
+  handoffRequest(response: Promise<Response>): void;
+
+  /**
    * Send a [103 Early Hints](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/103)
    * response back to the client.
    *
@@ -2189,6 +2197,32 @@ declare function fetch(
   input: RequestInfo | URL,
   init?: RequestInit,
 ): Promise<Response>;
+
+/** Select which outcome receives a fetch response header override. */
+type PendingResponseTarget = 'any' | 'response' | 'error';
+
+/** Set or replace a response header for the original promise returned directly by `fetch()`. */
+declare function setResponseHeader(
+  response: Promise<Response>,
+  name: string,
+  value: string,
+  target?: PendingResponseTarget,
+): void;
+
+/** Append a response header for the original promise returned directly by `fetch()`. */
+declare function appendResponseHeader(
+  response: Promise<Response>,
+  name: string,
+  value: string,
+  target?: PendingResponseTarget,
+): void;
+
+/** Remove a response header for the original promise returned directly by `fetch()`. */
+declare function removeResponseHeader(
+  response: Promise<Response>,
+  name: string,
+  target?: PendingResponseTarget,
+): void;
 
 /**
  * @group Scheduling

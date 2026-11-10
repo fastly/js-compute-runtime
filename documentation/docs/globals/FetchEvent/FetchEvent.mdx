@@ -51,6 +51,8 @@ It provides the [`event.respondWith()`](./prototype/respondWith.mdx) method, whi
 
 - [`FetchEvent.respondWith()`](./prototype/respondWith.mdx)
   - : Provide (a promise for) a response for this request.
+- [`FetchEvent.handoffRequest()`](./prototype/handoffRequest.mdx)
+  - : Forward an upstream fetch response, transferring delivery to the host when possible.
 - [`FetchEvent.sendEarlyHints()`](./prototype/sendEarlyHints.mdx)
   - : Send a [103 Early Hints](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/103) response for this request.
 - [`FetchEvent.waitUntil()`](./prototype/waitUntil.mdx)
