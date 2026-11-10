@@ -1,0 +1,106 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# encrypt()
+
+The **`encrypt()`** method of the [`SubtleCrypto`](../SubtleCrypto.mdx) interface encrypts data.
+
+It takes as its arguments a key to encrypt with, some algorithm-specific
+parameters, and the data to encrypt (also known as "plaintext"). It returns a
+[`Promise`](../../Promise/Promise.mdx) which will be fulfilled with the encrypted data
+(also known as "ciphertext").
+
+You can use the corresponding [`decrypt()`](./decrypt.mdx) method to decrypt the ciphertext.
+
+## Syntax
+
+```js
+encrypt(algorithm, key, data);
+```
+
+### Parameters
+
+- `algorithm`
+  - : An object specifying the algorithm to be used and any extra parameters if required:
+    - To use [AES-CBC](#aes-cbc), pass an [`AesCbcParams`](#aescbcparams) object.
+- `key`
+  - : A [`CryptoKey`](../../CryptoKey/CryptoKey.mdx) containing the key to be used for encryption.
+    Its `usages` must include `"encrypt"`.
+- `data`
+  - : An `ArrayBuffer`, a TypedArray or a `DataView` object containing the data to be encrypted.
+
+### Return value
+
+A [`Promise`](../../Promise/Promise.mdx) that fulfills with an `ArrayBuffer` containing the ciphertext.
+
+### Exceptions
+
+The promise is rejected when one of the following exceptions is encountered:
+
+- `InvalidAccessError`
+  - : Raised when the key is not a key for the requested encryption algorithm, or when its
+    `usages` do not include `"encrypt"`.
+- `NotSupportedError`
+  - : Raised when trying to use an algorithm that is either unknown or isn't supported for
+    encryption.
+- `OperationError`
+  - : Raised when the operation failed for an operation-specific reason, for example because
+    the `iv` is not 16 bytes long.
+
+## Supported algorithms
+
+Only AES-CBC is currently supported. AES-CTR, AES-GCM, AES-KW and RSA-OAEP are not yet
+supported and reject with a `NotSupportedError`.
+
+### AES-CBC
+
+The AES-CBC algorithm is the Advanced Encryption Standard block cipher in Cipher Block
+Chaining mode, as described in
+[NIST SP 800-38A](https://csrc.nist.gov/publications/detail/sp/800-38a/final), with
+PKCS#7 padding. The plaintext may be of any length; the ciphertext is padded to a
+multiple of 16 bytes.
+
+AES-CBC does not authenticate the ciphertext: it protects confidentiality but not
+integrity. If an attacker can modify the ciphertext, combine it with a MAC
+(for example [HMAC](./sign.mdx#hmac)) or prefer an authenticated mode when one is
+available.
+
+Keys are imported with [`SubtleCrypto.importKey()`](./importKey.mdx) using the `"raw"` or
+`"jwk"` format and the `{ "name": "AES-CBC" }` algorithm. Key lengths of 128, 192 and 256
+bits are supported.
+
+#### AesCbcParams
+
+The object passed as `algorithm` has the following properties:
+
+- `name`
+  - : A string. This should be set to `AES-CBC`.
+- `iv`
+  - : An `ArrayBuffer`, a TypedArray or a `DataView` object containing the initialization vector.
+    It must be exactly 16 bytes long, and should be unpredictable: use
+    [`crypto.getRandomValues()`](../../crypto/getRandomValues.mdx) to generate it. It does not need to be secret, and the same
+    value must be used to decrypt the ciphertext.
+
+## Examples
+
+```js
+const key = await crypto.subtle.importKey(
+  'raw',
+  crypto.getRandomValues(new Uint8Array(32)),
+  { name: 'AES-CBC' },
+  false,
+  ['encrypt', 'decrypt'],
+);
+const iv = crypto.getRandomValues(new Uint8Array(16));
+
+const ciphertext = await crypto.subtle.encrypt(
+  { name: 'AES-CBC', iv },
+  key,
+  new TextEncoder().encode('hello world'),
+);
+// ciphertext is a 16-byte ArrayBuffer (11 bytes of plaintext plus PKCS#7 padding)
+```

@@ -2280,14 +2280,14 @@ type BufferSource = ArrayBufferView | ArrayBuffer;
 
 declare class SubtleCrypto {
   constructor();
-  // decrypt(algorithm: AlgorithmIdentifier | RsaOaepParams | AesCtrParams | AesCbcParams | AesGcmParams, key: CryptoKey, data: BufferSource): Promise<ArrayBuffer>;
-  // deriveBits(algorithm: AlgorithmIdentifier | EcdhKeyDeriveParams | HkdfParams | Pbkdf2Params, baseKey: CryptoKey, length: number): Promise<ArrayBuffer>;
+  decrypt(algorithm: AlgorithmIdentifier | RsaOaepParams | AesCtrParams | AesCbcParams | AesGcmParams, key: CryptoKey, data: BufferSource): Promise<ArrayBuffer>;
+  deriveBits(algorithm: AlgorithmIdentifier | EcdhKeyDeriveParams | HkdfParams | Pbkdf2Params, baseKey: CryptoKey, length: number): Promise<ArrayBuffer>;
   // deriveKey(algorithm: AlgorithmIdentifier | EcdhKeyDeriveParams | HkdfParams | Pbkdf2Params, baseKey: CryptoKey, derivedKeyType: AlgorithmIdentifier | AesDerivedKeyParams | HmacImportParams | HkdfParams | Pbkdf2Params, extractable: boolean, keyUsages: KeyUsage[]): Promise<CryptoKey>;
   digest(
     algorithm: AlgorithmIdentifier,
     data: BufferSource,
   ): Promise<ArrayBuffer>;
-  // encrypt(algorithm: AlgorithmIdentifier | RsaOaepParams | AesCtrParams | AesCbcParams | AesGcmParams, key: CryptoKey, data: BufferSource): Promise<ArrayBuffer>;
+  encrypt(algorithm: AlgorithmIdentifier | RsaOaepParams | AesCtrParams | AesCbcParams | AesGcmParams, key: CryptoKey, data: BufferSource): Promise<ArrayBuffer>;
   // exportKey(format: "jwk", key: CryptoKey): Promise<JsonWebKey>;
   // exportKey(format: Exclude<KeyFormat, "jwk">, key: CryptoKey): Promise<ArrayBuffer>;
   // generateKey(algorithm: RsaHashedKeyGenParams | EcKeyGenParams, extractable: boolean, keyUsages: ReadonlyArray<KeyUsage>): Promise<CryptoKeyPair>;
@@ -2308,8 +2308,8 @@ declare class SubtleCrypto {
       | AlgorithmIdentifier
       | RsaHashedImportParams
       // | EcKeyImportParams
-      | HmacImportParams,
-    // | AesKeyAlgorithm
+      | HmacImportParams
+      | AesKeyAlgorithm,
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey>;
@@ -2339,6 +2339,45 @@ interface RsaHashedImportParams extends Algorithm {
   hash: HashAlgorithmIdentifier;
 }
 type HashAlgorithmIdentifier = AlgorithmIdentifier;
+
+interface AesCbcParams extends Algorithm {
+  iv: BufferSource;
+}
+
+interface AesCtrParams extends Algorithm {
+  counter: BufferSource;
+  length: number;
+}
+
+interface AesGcmParams extends Algorithm {
+  additionalData?: BufferSource;
+  iv: BufferSource;
+  tagLength?: number;
+}
+
+interface AesKeyAlgorithm extends KeyAlgorithm {
+  length: number;
+}
+
+interface EcdhKeyDeriveParams extends Algorithm {
+  public: CryptoKey;
+}
+
+interface HkdfParams extends Algorithm {
+  hash: HashAlgorithmIdentifier;
+  info: BufferSource;
+  salt: BufferSource;
+}
+
+interface Pbkdf2Params extends Algorithm {
+  hash: HashAlgorithmIdentifier;
+  iterations: number;
+  salt: BufferSource;
+}
+
+interface RsaOaepParams extends Algorithm {
+  label?: BufferSource;
+}
 
 interface EcKeyImportParams {
   name: 'ECDSA';

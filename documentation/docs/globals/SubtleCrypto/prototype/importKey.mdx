@@ -35,6 +35,14 @@ importKey(format, keyData, algorithm, extractable, keyUsages)
       Pass an [`HmacImportParams`](../../HmacImportParams/HmacImportParams.mdx) object.
     - For ECDSA:
       Pass an [`EcKeyImportParams`](../../EcKeyImportParams/EcKeyImportParams.mdx) object.
+    - For AES-CBC:
+      Pass the string `"AES-CBC"` or an object of the form `{ "name": "AES-CBC" }`.
+      The key must be 128, 192 or 256 bits long, and can be used with
+      [`encrypt()`](./encrypt.mdx) and [`decrypt()`](./decrypt.mdx).
+    - For PBKDF2:
+      Pass the string `"PBKDF2"` or an object of the form `{ "name": "PBKDF2" }`.
+      The key data is the password; only the `raw` format is supported, `extractable` must be
+      `false`, and the key can be used with [`deriveBits()`](./deriveBits.mdx).
 - `extractable`
   - : A boolean value indicating whether it will be possible to export the key.
 - `keyUsages`
@@ -66,11 +74,11 @@ The promise is rejected when one of the following exceptions is encountered:
 
 ## Supported formats
 
-This API currently supports one key import/export format: JSON Web Key.
+This API currently supports two key import formats: raw and JSON Web Key.
 
 ### Raw
 
-You can use this format to import or export AES or HMAC secret keys, or Elliptic Curve
+You can use this format to import AES, HMAC or PBKDF2 secret keys, or Elliptic Curve
 public keys.
 
 In this format the key is supplied as an `ArrayBuffer` containing the raw bytes for the key.
@@ -78,8 +86,8 @@ In this format the key is supplied as an `ArrayBuffer` containing the raw bytes 
 
 ### JSON Web Key
 
-You can use JSON Web Key format to import or export RSA or Elliptic Curve public or
-private keys, as well as AES and HMAC secret keys.
+You can use JSON Web Key format to import RSA or Elliptic Curve public or
+private keys, as well as AES and HMAC secret keys. PBKDF2 keys cannot be imported in this format.
 
 JSON Web Key format is defined in [RFC 7517](https://datatracker.ietf.org/doc/html/rfc7517).
 It describes a way to represent public, private, and secret keys as JSON objects.

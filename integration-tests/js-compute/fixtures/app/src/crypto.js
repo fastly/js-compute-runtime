@@ -346,7 +346,7 @@ routes.set('/crypto.subtle', async () => {
       routes.set(
         '/crypto.subtle.importKey/rsa-jwk-public/second-parameter-empty-key_ops-field',
         async () => {
-          await assertResolves(async () => {
+          await assertRejects(async () => {
             let webKeyData = structuredClone(publicRsaJsonWebKeyData);
             const key_ops = Array.from(webKeyData.key_ops);
             webKeyData.key_ops = [];
@@ -357,7 +357,7 @@ routes.set('/crypto.subtle', async () => {
               webKeyData.ext,
               key_ops,
             );
-          });
+          }, DOMException);
         },
       );
       routes.set(
@@ -708,7 +708,7 @@ routes.set('/crypto.subtle', async () => {
       routes.set(
         '/crypto.subtle.importKey/ecdsa-jwk-public/second-parameter-empty-key_ops-field',
         async () => {
-          await assertResolves(async () => {
+          await assertRejects(async () => {
             let webKeyData = structuredClone(publicEcdsaJsonWebKeyData);
             const key_ops = Array.from(webKeyData.key_ops);
             webKeyData.key_ops = [];
@@ -719,7 +719,7 @@ routes.set('/crypto.subtle', async () => {
               webKeyData.ext,
               key_ops,
             );
-          });
+          }, DOMException);
         },
       );
       routes.set(
@@ -1904,5 +1904,691 @@ routes.set('/crypto.subtle', async () => {
         assert(result, true, 'result');
       }
     });
+  }
+}
+
+// deriveBits / encrypt / decrypt
+{
+  function fromHex(hex) {
+    return new Uint8Array(hex.match(/../g).map((byte) => parseInt(byte, 16)));
+  }
+  async function assertRejectsWithName(func, name) {
+    let rejected = false;
+    try {
+      await func();
+    } catch (error) {
+      rejected = true;
+      assert(error instanceof DOMException, true, `rejects with DOMException`);
+      assert(error.name, name, `error.name === '${name}'`);
+    }
+    assert(rejected, true, `\`${func.toString()}\` rejects`);
+  }
+  const enc = new TextEncoder();
+  const dec = new TextDecoder();
+
+  // PBKDF2-HMAC-SHA-256, password "password", salt "salt", 32 bytes.
+  // Computed with Python hashlib.pbkdf2_hmac and Node crypto.pbkdf2Sync.
+  const pbkdf2Vectors = {
+    500: 'd64e8195b42b448b3b11993fe808dba4ab8b27ee81e672ee8977bc7416e258a3',
+    1000: '632c2812e46d4604102ba7618e9d6d7d2f8128f6266b4a03264d2a0460b7dcb3',
+  };
+  function pbkdf2Params(iterations, hash = 'SHA-256') {
+    return { name: 'PBKDF2', hash, salt: enc.encode('salt'), iterations };
+  }
+  async function importPbkdf2Key(usages = ['deriveBits']) {
+    return crypto.subtle.importKey(
+      'raw',
+      enc.encode('password'),
+      'PBKDF2',
+      false,
+      usages,
+    );
+  }
+
+  // AES-CBC known answers. Ciphertexts include the PKCS#7 padding block that
+  // WebCrypto appends, so the first blocks match the published vectors and
+  // the full buffers were recomputed with openssl and Node createCipheriv.
+  // NIST SP 800-38A F.2.1 (AES-128) and F.2.5 (AES-256), four blocks.
+  const nistIv = fromHex('000102030405060708090a0b0c0d0e0f');
+  const nistPlaintext = fromHex(
+    '6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51' +
+      '30c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710',
+  );
+  const aes128Key = fromHex('2b7e151628aed2a6abf7158809cf4f3c');
+  const aes128KeyJwkK = 'K34VFiiu0qar9xWICc9PPA';
+  const aes128Ciphertext = fromHex(
+    '7649abac8119b246cee98e9b12e9197d5086cb9b507219ee95db113a917678b2' +
+      '73bed6b8e3c1743b7116e69e222295163ff1caa1681fac09120eca307586e1a7' +
+      '8cb82807230e1321d3fae00d18cc2012',
+  );
+  const aes256Key = fromHex(
+    '603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4',
+  );
+  const aes256Ciphertext = fromHex(
+    'f58c4c04d6e5f1ba779eabfb5f7bfbd69cfc4e967edb808d679f777bc6702c7d' +
+      '39f23369a9d9bacfa530e26304231461b2eb05e2c39be9fcda6c19078c6a9d1b' +
+      '3f461796d6b0d6b2e0c2a72b4d80e644',
+  );
+  // RFC 3602 section 4, case 1 (AES-128-CBC, "Single block msg").
+  const rfc3602Key = fromHex('06a9214036b8a15b512e03d534120006');
+  const rfc3602Iv = fromHex('3dafba429d9eb430b422da802c9fac41');
+  const rfc3602Ciphertext = fromHex(
+    'e353779c1079aeb82708942dbe77181ab97c825e1c785146542d396941bce55d',
+  );
+  async function importAesCbcKey(keyData, usages = ['encrypt', 'decrypt']) {
+    return crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'AES-CBC' },
+      false,
+      usages,
+    );
+  }
+
+  // deriveBits
+  {
+    routes.set('/crypto.subtle.deriveBits', async () => {
+      assert(
+        typeof crypto.subtle.deriveBits,
+        'function',
+        `typeof crypto.subtle.deriveBits`,
+      );
+      assert(
+        crypto.subtle.deriveBits,
+        SubtleCrypto.prototype.deriveBits,
+        `crypto.subtle.deriveBits === SubtleCrypto.prototype.deriveBits`,
+      );
+    });
+    routes.set('/crypto.subtle.deriveBits/length', async () => {
+      assert(
+        crypto.subtle.deriveBits.length,
+        2,
+        `crypto.subtle.deriveBits.length === 2`,
+      );
+    });
+    routes.set('/crypto.subtle.deriveBits/called-as-constructor', async () => {
+      assertThrows(
+        () => {
+          new crypto.subtle.deriveBits();
+        },
+        TypeError,
+        'crypto.subtle.deriveBits is not a constructor',
+      );
+    });
+    routes.set('/crypto.subtle.deriveBits/called-with-wrong-this', async () => {
+      await assertRejects(async () => {
+        await crypto.subtle.deriveBits.call(undefined);
+      }, TypeError);
+    });
+    routes.set(
+      '/crypto.subtle.deriveBits/called-with-no-arguments',
+      async () => {
+        await assertRejects(
+          async () => {
+            await crypto.subtle.deriveBits();
+          },
+          TypeError,
+          'SubtleCrypto.deriveBits: At least 2 arguments required, but only 0 passed',
+        );
+      },
+    );
+    routes.set('/crypto.subtle.deriveBits/pbkdf2-import-key', async () => {
+      const key = await importPbkdf2Key();
+      assert(key instanceof CryptoKey, true, `key instanceof CryptoKey`);
+      assert(key.type, 'secret', `key.type`);
+      assert(key.extractable, false, `key.extractable`);
+      assert(key.algorithm, { name: 'PBKDF2' }, `key.algorithm`);
+      assert(key.usages, ['deriveBits'], `key.usages`);
+    });
+    routes.set(
+      '/crypto.subtle.deriveBits/pbkdf2-import-key-invalid-usages',
+      async () => {
+        for (const usages of [['encrypt'], ['sign', 'deriveBits'], []]) {
+          await assertRejectsWithName(async () => {
+            await importPbkdf2Key(usages);
+          }, 'SyntaxError');
+        }
+      },
+    );
+    routes.set(
+      '/crypto.subtle.deriveBits/pbkdf2-import-key-extractable',
+      async () => {
+        await assertRejectsWithName(async () => {
+          await crypto.subtle.importKey(
+            'raw',
+            enc.encode('password'),
+            'PBKDF2',
+            true,
+            ['deriveBits'],
+          );
+        }, 'SyntaxError');
+      },
+    );
+    routes.set('/crypto.subtle.deriveBits/pbkdf2-sha-256', async () => {
+      const key = await importPbkdf2Key();
+      for (const iterations of [500, 1000]) {
+        const bits = await crypto.subtle.deriveBits(
+          pbkdf2Params(iterations),
+          key,
+          256,
+        );
+        assert(
+          bits instanceof ArrayBuffer,
+          true,
+          `bits instanceof ArrayBuffer`,
+        );
+        assert(
+          new Uint8Array(bits),
+          fromHex(pbkdf2Vectors[iterations]),
+          `deriveBits(PBKDF2-SHA-256, ${iterations} iterations)`,
+        );
+      }
+    });
+    routes.set(
+      '/crypto.subtle.deriveBits/pbkdf2-sha-256-partial-length',
+      async () => {
+        const key = await importPbkdf2Key();
+        const bits = await crypto.subtle.deriveBits(pbkdf2Params(500), key, 64);
+        assert(
+          new Uint8Array(bits),
+          fromHex(pbkdf2Vectors[500].slice(0, 16)),
+          `first 8 bytes of the 500-iteration vector`,
+        );
+      },
+    );
+    routes.set('/crypto.subtle.deriveBits/wrong-usage-key', async () => {
+      const deriveKeyOnly = await importPbkdf2Key(['deriveKey']);
+      await assertRejectsWithName(async () => {
+        await crypto.subtle.deriveBits(pbkdf2Params(500), deriveKeyOnly, 256);
+      }, 'InvalidAccessError');
+    });
+    routes.set('/crypto.subtle.deriveBits/wrong-algorithm-key', async () => {
+      const hmacKey = await crypto.subtle.importKey(
+        'raw',
+        enc.encode('password'),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign'],
+      );
+      await assertRejectsWithName(async () => {
+        await crypto.subtle.deriveBits(pbkdf2Params(500), hmacKey, 256);
+      }, 'InvalidAccessError');
+    });
+    routes.set('/crypto.subtle.deriveBits/unsupported-algorithm', async () => {
+      const key = await importPbkdf2Key();
+      for (const algorithm of [
+        {
+          name: 'HKDF',
+          hash: 'SHA-256',
+          salt: enc.encode('salt'),
+          info: enc.encode(''),
+        },
+        { name: 'ECDH' },
+        'X25519',
+      ]) {
+        await assertRejectsWithName(async () => {
+          await crypto.subtle.deriveBits(algorithm, key, 256);
+        }, 'NotSupportedError');
+      }
+    });
+    routes.set(
+      '/crypto.subtle.deriveBits/length-not-multiple-of-8',
+      async () => {
+        const key = await importPbkdf2Key();
+        await assertRejectsWithName(async () => {
+          await crypto.subtle.deriveBits(pbkdf2Params(500), key, 100);
+        }, 'OperationError');
+      },
+    );
+    routes.set('/crypto.subtle.deriveBits/zero-iterations', async () => {
+      const key = await importPbkdf2Key();
+      await assertRejectsWithName(async () => {
+        await crypto.subtle.deriveBits(pbkdf2Params(0), key, 256);
+      }, 'OperationError');
+    });
+  }
+
+  // encrypt / decrypt
+  {
+    for (const method of ['encrypt', 'decrypt']) {
+      routes.set(`/crypto.subtle.${method}`, async () => {
+        assert(
+          typeof crypto.subtle[method],
+          'function',
+          `typeof crypto.subtle.${method}`,
+        );
+        assert(
+          crypto.subtle[method],
+          SubtleCrypto.prototype[method],
+          `crypto.subtle.${method} === SubtleCrypto.prototype.${method}`,
+        );
+      });
+      routes.set(`/crypto.subtle.${method}/length`, async () => {
+        assert(
+          crypto.subtle[method].length,
+          3,
+          `crypto.subtle.${method}.length === 3`,
+        );
+      });
+      routes.set(`/crypto.subtle.${method}/called-as-constructor`, async () => {
+        assertThrows(
+          () => {
+            new crypto.subtle[method]();
+          },
+          TypeError,
+          `crypto.subtle[method] is not a constructor`,
+        );
+      });
+      routes.set(
+        `/crypto.subtle.${method}/called-with-wrong-this`,
+        async () => {
+          await assertRejects(async () => {
+            await crypto.subtle[method].call(undefined);
+          }, TypeError);
+        },
+      );
+      routes.set(
+        `/crypto.subtle.${method}/called-with-no-arguments`,
+        async () => {
+          await assertRejects(
+            async () => {
+              await crypto.subtle[method]();
+            },
+            TypeError,
+            `SubtleCrypto.${method}: At least 3 arguments required, but only 0 passed`,
+          );
+        },
+      );
+    }
+
+    routes.set('/crypto.subtle.importKey/aes-cbc-raw', async () => {
+      for (const [keyData, length] of [
+        [aes128Key, 128],
+        [aes256Key, 256],
+      ]) {
+        const key = await importAesCbcKey(keyData);
+        assert(key instanceof CryptoKey, true, `key instanceof CryptoKey`);
+        assert(key.type, 'secret', `key.type`);
+        assert(key.extractable, false, `key.extractable`);
+        assert(key.algorithm, { name: 'AES-CBC', length }, `key.algorithm`);
+        assert([...key.usages].sort(), ['decrypt', 'encrypt'], `key.usages`);
+      }
+    });
+    routes.set('/crypto.subtle.importKey/aes-cbc-raw-invalid', async () => {
+      // 15-byte key: not 128, 192 or 256 bits.
+      await assertRejectsWithName(async () => {
+        await importAesCbcKey(new Uint8Array(15));
+      }, 'DataError');
+      // AES-CBC keys can only encrypt, decrypt, wrapKey or unwrapKey.
+      await assertRejectsWithName(async () => {
+        await importAesCbcKey(aes128Key, ['sign']);
+      }, 'SyntaxError');
+      await assertRejectsWithName(async () => {
+        await importAesCbcKey(aes128Key, []);
+      }, 'SyntaxError');
+    });
+    routes.set('/crypto.subtle.importKey/aes-cbc-jwk', async () => {
+      const jwk = {
+        kty: 'oct',
+        k: aes128KeyJwkK,
+        alg: 'A128CBC',
+        ext: true,
+        key_ops: ['encrypt', 'decrypt'],
+      };
+      const key = await crypto.subtle.importKey(
+        'jwk',
+        jwk,
+        { name: 'AES-CBC' },
+        true,
+        ['decrypt'],
+      );
+      assert(key.type, 'secret', `key.type`);
+      assert(key.extractable, true, `key.extractable`);
+      assert(key.algorithm, { name: 'AES-CBC', length: 128 }, `key.algorithm`);
+      assert(key.usages, ['decrypt'], `key.usages`);
+      const plaintext = await crypto.subtle.decrypt(
+        { name: 'AES-CBC', iv: nistIv },
+        key,
+        aes128Ciphertext,
+      );
+      assert(
+        new Uint8Array(plaintext),
+        nistPlaintext,
+        `jwk key decrypts NIST F.2.1`,
+      );
+    });
+    routes.set('/crypto.subtle.importKey/aes-cbc-jwk-invalid', async () => {
+      const jwk = {
+        kty: 'oct',
+        k: aes128KeyJwkK,
+        alg: 'A128CBC',
+        ext: true,
+        key_ops: ['encrypt', 'decrypt'],
+      };
+      // alg does not match the 128-bit key length.
+      await assertRejectsWithName(async () => {
+        await crypto.subtle.importKey(
+          'jwk',
+          { ...jwk, alg: 'A256CBC' },
+          { name: 'AES-CBC' },
+          true,
+          ['encrypt'],
+        );
+      }, 'DataError');
+      // kty must be "oct".
+      await assertRejectsWithName(async () => {
+        await crypto.subtle.importKey(
+          'jwk',
+          { ...jwk, kty: 'RSA' },
+          { name: 'AES-CBC' },
+          true,
+          ['encrypt'],
+        );
+      }, 'DataError');
+      // use "sig" is not allowed for an encryption key.
+      await assertRejectsWithName(async () => {
+        await crypto.subtle.importKey(
+          'jwk',
+          { ...jwk, use: 'sig' },
+          { name: 'AES-CBC' },
+          true,
+          ['encrypt'],
+        );
+      }, 'DataError');
+      // key_ops must be a superset of usages.
+      await assertRejectsWithName(async () => {
+        await crypto.subtle.importKey(
+          'jwk',
+          { ...jwk, key_ops: ['encrypt'] },
+          { name: 'AES-CBC' },
+          true,
+          ['encrypt', 'decrypt'],
+        );
+      }, 'DataError');
+      // key_ops present but empty is not a superset of any usage.
+      await assertRejectsWithName(async () => {
+        await crypto.subtle.importKey(
+          'jwk',
+          { ...jwk, key_ops: [] },
+          { name: 'AES-CBC' },
+          true,
+          ['encrypt'],
+        );
+      }, 'DataError');
+      // ext: false but extractable requested.
+      await assertRejectsWithName(async () => {
+        await crypto.subtle.importKey(
+          'jwk',
+          { ...jwk, ext: false },
+          { name: 'AES-CBC' },
+          true,
+          ['encrypt'],
+        );
+      }, 'DataError');
+    });
+
+    routes.set('/crypto.subtle.encrypt/aes-cbc-round-trip', async () => {
+      const message = enc.encode('The quick brown fox jumps over the lazy dog');
+      for (const keyData of [aes128Key, aes256Key]) {
+        const key = await importAesCbcKey(keyData);
+        const iv = crypto.getRandomValues(new Uint8Array(16));
+        const ciphertext = await crypto.subtle.encrypt(
+          { name: 'AES-CBC', iv },
+          key,
+          message,
+        );
+        assert(
+          ciphertext instanceof ArrayBuffer,
+          true,
+          `ciphertext instanceof ArrayBuffer`,
+        );
+        // 43 bytes of plaintext pad up to 48 bytes.
+        assert(ciphertext.byteLength, 48, `ciphertext.byteLength`);
+        const plaintext = await crypto.subtle.decrypt(
+          { name: 'AES-CBC', iv },
+          key,
+          ciphertext,
+        );
+        assert(new Uint8Array(plaintext), message, `decrypt(encrypt(message))`);
+      }
+    });
+    routes.set('/crypto.subtle.encrypt/aes-cbc-empty-plaintext', async () => {
+      const key = await importAesCbcKey(aes128Key);
+      const ciphertext = await crypto.subtle.encrypt(
+        { name: 'AES-CBC', iv: nistIv },
+        key,
+        new Uint8Array(),
+      );
+      // Empty plaintext still produces one block of padding.
+      assert(ciphertext.byteLength, 16, `ciphertext.byteLength`);
+      const plaintext = await crypto.subtle.decrypt(
+        { name: 'AES-CBC', iv: nistIv },
+        key,
+        ciphertext,
+      );
+      assert(plaintext.byteLength, 0, `plaintext.byteLength`);
+    });
+    routes.set('/crypto.subtle.encrypt/aes-128-cbc-known-answer', async () => {
+      const nistKey = await importAesCbcKey(aes128Key, ['encrypt']);
+      const nistResult = await crypto.subtle.encrypt(
+        { name: 'AES-CBC', iv: nistIv },
+        nistKey,
+        nistPlaintext,
+      );
+      assert(
+        new Uint8Array(nistResult),
+        aes128Ciphertext,
+        `NIST SP 800-38A F.2.1`,
+      );
+
+      const rfcKey = await importAesCbcKey(rfc3602Key, ['encrypt']);
+      const rfcResult = await crypto.subtle.encrypt(
+        { name: 'AES-CBC', iv: rfc3602Iv },
+        rfcKey,
+        enc.encode('Single block msg'),
+      );
+      assert(new Uint8Array(rfcResult), rfc3602Ciphertext, `RFC 3602 case 1`);
+    });
+    routes.set('/crypto.subtle.encrypt/aes-256-cbc-known-answer', async () => {
+      const key = await importAesCbcKey(aes256Key, ['encrypt']);
+      const result = await crypto.subtle.encrypt(
+        { name: 'AES-CBC', iv: nistIv },
+        key,
+        nistPlaintext,
+      );
+      assert(new Uint8Array(result), aes256Ciphertext, `NIST SP 800-38A F.2.5`);
+    });
+    routes.set('/crypto.subtle.decrypt/aes-128-cbc-known-answer', async () => {
+      const nistKey = await importAesCbcKey(aes128Key, ['decrypt']);
+      const nistResult = await crypto.subtle.decrypt(
+        { name: 'AES-CBC', iv: nistIv },
+        nistKey,
+        aes128Ciphertext,
+      );
+      assert(
+        new Uint8Array(nistResult),
+        nistPlaintext,
+        `NIST SP 800-38A F.2.1`,
+      );
+
+      const rfcKey = await importAesCbcKey(rfc3602Key, ['decrypt']);
+      const rfcResult = await crypto.subtle.decrypt(
+        { name: 'AES-CBC', iv: rfc3602Iv },
+        rfcKey,
+        rfc3602Ciphertext,
+      );
+      assert(dec.decode(rfcResult), 'Single block msg', `RFC 3602 case 1`);
+    });
+    routes.set('/crypto.subtle.decrypt/aes-256-cbc-known-answer', async () => {
+      const key = await importAesCbcKey(aes256Key, ['decrypt']);
+      const result = await crypto.subtle.decrypt(
+        { name: 'AES-CBC', iv: nistIv },
+        key,
+        aes256Ciphertext,
+      );
+      assert(new Uint8Array(result), nistPlaintext, `NIST SP 800-38A F.2.5`);
+    });
+    routes.set('/crypto.subtle.encrypt/wrong-usage-key', async () => {
+      const decryptOnly = await importAesCbcKey(aes128Key, ['decrypt']);
+      await assertRejectsWithName(async () => {
+        await crypto.subtle.encrypt(
+          { name: 'AES-CBC', iv: nistIv },
+          decryptOnly,
+          nistPlaintext,
+        );
+      }, 'InvalidAccessError');
+      const hmacKey = await crypto.subtle.importKey(
+        'raw',
+        aes128Key,
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign'],
+      );
+      await assertRejectsWithName(async () => {
+        await crypto.subtle.encrypt(
+          { name: 'AES-CBC', iv: nistIv },
+          hmacKey,
+          nistPlaintext,
+        );
+      }, 'InvalidAccessError');
+    });
+    routes.set('/crypto.subtle.decrypt/wrong-usage-key', async () => {
+      const encryptOnly = await importAesCbcKey(aes128Key, ['encrypt']);
+      await assertRejectsWithName(async () => {
+        await crypto.subtle.decrypt(
+          { name: 'AES-CBC', iv: nistIv },
+          encryptOnly,
+          aes128Ciphertext,
+        );
+      }, 'InvalidAccessError');
+    });
+    routes.set('/crypto.subtle.encrypt/unsupported-algorithm', async () => {
+      const key = await importAesCbcKey(aes128Key);
+      for (const algorithm of [
+        { name: 'AES-CTR', counter: nistIv, length: 64 },
+        { name: 'AES-GCM', iv: nistIv },
+        { name: 'AES-KW' },
+        { name: 'RSA-OAEP' },
+      ]) {
+        await assertRejectsWithName(async () => {
+          await crypto.subtle.encrypt(algorithm, key, nistPlaintext);
+        }, 'NotSupportedError');
+        await assertRejectsWithName(async () => {
+          await crypto.subtle.decrypt(algorithm, key, aes128Ciphertext);
+        }, 'NotSupportedError');
+      }
+    });
+    routes.set('/crypto.subtle.encrypt/invalid-iv-length', async () => {
+      const key = await importAesCbcKey(aes128Key);
+      for (const iv of [
+        new Uint8Array(0),
+        new Uint8Array(15),
+        new Uint8Array(17),
+      ]) {
+        await assertRejectsWithName(async () => {
+          await crypto.subtle.encrypt(
+            { name: 'AES-CBC', iv },
+            key,
+            nistPlaintext,
+          );
+        }, 'OperationError');
+        await assertRejectsWithName(async () => {
+          await crypto.subtle.decrypt(
+            { name: 'AES-CBC', iv },
+            key,
+            aes128Ciphertext,
+          );
+        }, 'OperationError');
+      }
+    });
+    routes.set('/crypto.subtle.decrypt/corrupt-ciphertext', async () => {
+      const key = await importAesCbcKey(aes128Key);
+      // Flipping a byte in the final block corrupts the PKCS#7 padding.
+      const badPadding = aes128Ciphertext.slice();
+      badPadding[badPadding.length - 1] ^= 0xff;
+      await assertRejectsWithName(async () => {
+        await crypto.subtle.decrypt(
+          { name: 'AES-CBC', iv: nistIv },
+          key,
+          badPadding,
+        );
+      }, 'OperationError');
+      // Not a multiple of the block size.
+      await assertRejectsWithName(async () => {
+        await crypto.subtle.decrypt(
+          { name: 'AES-CBC', iv: nistIv },
+          key,
+          aes128Ciphertext.subarray(0, 20),
+        );
+      }, 'OperationError');
+      // Empty ciphertext.
+      await assertRejectsWithName(async () => {
+        await crypto.subtle.decrypt(
+          { name: 'AES-CBC', iv: nistIv },
+          key,
+          new Uint8Array(),
+        );
+      }, 'OperationError');
+      // Wrong key: the padding check fails.
+      const otherKey = await importAesCbcKey(aes256Key);
+      await assertRejectsWithName(async () => {
+        await crypto.subtle.decrypt(
+          { name: 'AES-CBC', iv: nistIv },
+          otherKey,
+          aes128Ciphertext,
+        );
+      }, 'OperationError');
+    });
+
+    // PBKDF2-SHA-256 -> 384 bits -> 32-byte AES-256 key + 16-byte IV -> AES-CBC -> JSON.
+    // Expected values computed with Python hashlib/openssl and Node crypto.
+    routes.set(
+      '/crypto.subtle.deriveBits/pbkdf2-aes-cbc-end-to-end',
+      async () => {
+        const baseKey = await crypto.subtle.importKey(
+          'raw',
+          enc.encode('px3-password'),
+          'PBKDF2',
+          false,
+          ['deriveBits'],
+        );
+        const bits = new Uint8Array(
+          await crypto.subtle.deriveBits(
+            {
+              name: 'PBKDF2',
+              hash: 'SHA-256',
+              salt: enc.encode('px3-salt'),
+              iterations: 1000,
+            },
+            baseKey,
+            384,
+          ),
+        );
+        assert(
+          bits,
+          fromHex(
+            '15a7cea7209c02746580b374df7a64139cc6a6e59916d8e3719763ff3dad2a77' +
+              '69d7c04f476d9042487ef55f08ea8dfe',
+          ),
+          `derived key material`,
+        );
+        const key = await importAesCbcKey(bits.subarray(0, 32), ['decrypt']);
+        const iv = bits.subarray(32, 48);
+        const plaintext = await crypto.subtle.decrypt(
+          { name: 'AES-CBC', iv },
+          key,
+          fromHex(
+            'c2e1954700c908351802d73df5494d4a3c316ee8786fc4943a2e771bd84f7b0d' +
+              '35c2038bec4cff457f1617f8ce0ff9fa4f030f45d3a15a0bd850732581524411',
+          ),
+        );
+        const payload = JSON.parse(dec.decode(plaintext));
+        assert(
+          payload,
+          { user: 'dan', roles: ['admin'], exp: 1767225600 },
+          `decrypted JSON payload`,
+        );
+      },
+    );
   }
 }

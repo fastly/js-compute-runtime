@@ -1040,6 +1040,192 @@
       "body": "ok"
     }
   },
+  "GET /crypto.subtle.deriveBits": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/length": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/called-as-constructor": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/called-with-wrong-this": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/called-with-no-arguments": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/pbkdf2-import-key": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/pbkdf2-import-key-invalid-usages": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/pbkdf2-import-key-extractable": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/pbkdf2-sha-256": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/pbkdf2-sha-256-partial-length": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/wrong-usage-key": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/wrong-algorithm-key": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/unsupported-algorithm": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/length-not-multiple-of-8": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/zero-iterations": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/aes-cbc-raw": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/aes-cbc-raw-invalid": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/aes-cbc-jwk": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/aes-cbc-jwk-invalid": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.encrypt/aes-cbc-round-trip": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.encrypt/aes-cbc-empty-plaintext": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.encrypt/aes-128-cbc-known-answer": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.encrypt/aes-256-cbc-known-answer": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.decrypt/aes-128-cbc-known-answer": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.decrypt/aes-256-cbc-known-answer": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.encrypt/wrong-usage-key": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.decrypt/wrong-usage-key": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.encrypt/unsupported-algorithm": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.encrypt/invalid-iv-length": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.decrypt/corrupt-ciphertext": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/pbkdf2-aes-cbc-end-to-end": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
   "GET /dictionary/exposed-as-global": {
     "flake": true
   },
