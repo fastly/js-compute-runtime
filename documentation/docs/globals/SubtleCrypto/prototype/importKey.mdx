@@ -23,6 +23,8 @@ importKey(format, keyData, algorithm, extractable, keyUsages)
 - `format`
   - : A string describing the data format of the key to import. It can be one of the following:
     - `raw`: [Raw](#raw) format.
+    - `pkcs8`: [PKCS #8](#pkcs-8) format.
+    - `spki`: [SubjectPublicKeyInfo](#subjectpublickeyinfo) format.
     - `jwk`: [JSON Web Key](#json-web-key) format.
 - `keyData`
   - : An `ArrayBuffer`, a TypedArray, a `DataView`, or a `JSONWebKey` object containing the key in
@@ -74,7 +76,7 @@ The promise is rejected when one of the following exceptions is encountered:
 
 ## Supported formats
 
-This API currently supports two key import formats: raw and JSON Web Key.
+This API currently supports four key import formats: raw, PKCS #8, SubjectPublicKeyInfo, and JSON Web Key.
 
 ### Raw
 
@@ -83,6 +85,53 @@ public keys.
 
 In this format the key is supplied as an `ArrayBuffer` containing the raw bytes for the key.
 
+### PKCS #8
+
+You can use this format to import RSA or Elliptic Curve private keys.
+
+The PKCS #8 format is defined in [RFC 5208](https://datatracker.ietf.org/doc/html/rfc5208),
+using the [ASN.1 notation](https://en.wikipedia.org/wiki/ASN.1).
+
+`importKey()` expects to receive this object as an `ArrayBuffer` containing the
+[DER-encoded](https://en.wikipedia.org/wiki/X.690#DER_encoding) form of the `PrivateKeyInfo`.
+A PEM file that starts with `-----BEGIN PRIVATE KEY-----` contains this data, encoded
+in base64. To get the DER data, remove the header and footer lines, and decode the base64
+text. See the example in [SubjectPublicKeyInfo](#subjectpublickeyinfo).
+
+### SubjectPublicKeyInfo
+
+You can use this format to import RSA or Elliptic Curve public keys.
+
+SubjectPublicKeyInfo is defined in [RFC 5280, Section 4.1](https://datatracker.ietf.org/doc/html/rfc5280#section-4.1),
+using the [ASN.1 notation](https://en.wikipedia.org/wiki/ASN.1).
+
+`importKey()` expects to receive this object as an `ArrayBuffer` containing the
+[DER-encoded](https://en.wikipedia.org/wiki/X.690#DER_encoding) form of the `SubjectPublicKeyInfo`.
+A PEM file that starts with `-----BEGIN PUBLIC KEY-----` contains this data, encoded
+in base64. To get the DER data, remove the header and footer lines, and decode the base64
+text:
+
+```js
+function pemToArrayBuffer(pem) {
+  const base64 = pem
+    .replace(/-----(BEGIN|END) [A-Z ]+-----/g, '')
+    .replace(/\s+/g, '');
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
+const publicKey = await crypto.subtle.importKey(
+  'spki',
+  pemToArrayBuffer(pem),
+  { name: 'ECDSA', namedCurve: 'P-256' },
+  false,
+  ['verify'],
+);
+```
 
 ### JSON Web Key
 

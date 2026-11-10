@@ -515,3 +515,53 @@ import { expectError, expectType } from 'tsd';
   expectType<WritableStream<Uint8Array<ArrayBuffer>>>(stream.writable);
   expectError((stream.writable = 'd'));
 }
+
+// SubtleCrypto.importKey
+{
+  const keyData = new Uint8Array(0);
+  expectType<Promise<CryptoKey>>(
+    crypto.subtle.importKey(
+      'spki',
+      keyData,
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      false,
+      ['verify'],
+    ),
+  );
+  expectType<Promise<CryptoKey>>(
+    crypto.subtle.importKey(
+      'pkcs8',
+      keyData,
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      false,
+      ['sign'],
+    ),
+  );
+  expectType<Promise<CryptoKey>>(
+    crypto.subtle.importKey(
+      'spki',
+      keyData,
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['verify'],
+    ),
+  );
+  expectType<Promise<CryptoKey>>(
+    crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      false,
+      ['verify'],
+    ),
+  );
+  expectError(
+    crypto.subtle.importKey(
+      'pem',
+      keyData,
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      false,
+      ['verify'],
+    ),
+  );
+}

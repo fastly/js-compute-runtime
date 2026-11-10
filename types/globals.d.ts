@@ -2307,7 +2307,7 @@ declare class SubtleCrypto {
     algorithm:
       | AlgorithmIdentifier
       | RsaHashedImportParams
-      // | EcKeyImportParams
+      | EcKeyImportParams
       | HmacImportParams
       | AesKeyAlgorithm,
     extractable: boolean,
@@ -2462,11 +2462,7 @@ interface KeyAlgorithm {
   name: string;
 }
 
-type KeyFormat =
-  | 'jwk'
-  // | "pkcs8"
-  | 'raw';
-// | "spki";
+type KeyFormat = 'jwk' | 'pkcs8' | 'raw' | 'spki';
 type KeyType = 'private' | 'public' | 'secret';
 type KeyUsage =
   | 'decrypt'
