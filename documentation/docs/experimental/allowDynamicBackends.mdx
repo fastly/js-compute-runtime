@@ -7,11 +7,15 @@ pagination_prev: null
 
 # allowDynamicBackends
 
+:::info
+
+This method is currently not needed, and dynamic backends are now always supported when enabled at the service level. See [`enforceExplicitBackends`](../backend/enforceExplicitBackends.mdx) instead. In future versions of the SDK, this method will be deprecated, and subsequently removed from `fastly:experimental`. Please use [the version in `fastly:backend`](../backend/allowDynamicBackends.mdx) for now instead.
+
+:::
+
 The **`allowDynamicBackends()`** function is used to control whether or not Dynamic Backends should be allowed within this Fastly Compute Service.
 
 By default, Dynamic Backends are disabled within a JavaScript application as it can be a potential avenue for third-party JavaScript code to send requests, potentially including sensitive/secret data,  off to destinations that the JavaScript project was not intending, which could be a security issue.
-
->**Note**: This feature is in disabled by default for Fastly Services. Please contact [Fastly Support](https://support.fastly.com/hc/requests/new?ticket_form_id=360000269711) to request the feature be enabled on the Fastly Services which require Dynamic Backends.
 
 ## Syntax
 

@@ -1,5 +1,5 @@
 import { routes } from './routes.js';
-import { allowDynamicBackends } from 'fastly:experimental';
+import { allowDynamicBackends } from 'fastly:backend';
 
 routes.set('/hono', async (evt) => {
   const app = new Hono2();

@@ -6,6 +6,12 @@ pagination_prev: null
 ---
 # mapError
 
+::: info
+
+Please use [the version of this function in `fastly:debug` instead](../debug/mapError.mdx), as `fastly:experimental` will be deprecated in the future.
+
+:::
+
 The **`mapError()`** function extracts information from an `Error` object as a human-readable array of strings. This includes the error name, message, and a call stack.
 
 If `--enable-stack-traces` is specified during the build, the call stack will be mapped using source maps.
