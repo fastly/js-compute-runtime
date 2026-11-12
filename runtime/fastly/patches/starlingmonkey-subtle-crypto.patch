@@ -1,5 +1,5 @@
 diff --git a/builtins/web/crypto/crypto-algorithm.cpp b/builtins/web/crypto/crypto-algorithm.cpp
-index 62897e02..10997358 100644
+index 62897e02..c715a0e2 100644
 --- a/builtins/web/crypto/crypto-algorithm.cpp
 +++ b/builtins/web/crypto/crypto-algorithm.cpp
 @@ -69,46 +69,7 @@ const EVP_MD *createDigestAlgorithm(JSContext *cx, CryptoAlgorithmIdentifier has
@@ -50,7 +50,7 @@ index 62897e02..10997358 100644
  }
  // This implements https://w3c.github.io/webcrypto/#sha-operations for all
  // the SHA algorithms that we support.
-@@ -414,29 +375,18 @@ JS::Result<NamedCurve> toNamedCurve(JSContext *cx, JS::HandleValue value) {
+@@ -414,24 +375,13 @@ JS::Result<NamedCurve> toNamedCurve(JSContext *cx, JS::HandleValue value) {
    return JS::Result<NamedCurve>(JS::Error());
  }
  
@@ -80,13 +80,6 @@ index 62897e02..10997358 100644
      return 521;
    }
  
--  MOZ_ASSERT_UNREACHABLE();
--  return 0;
-+  DOMException::raise(cx, "Unsupported ECDSA named curve", "OperationError");
-+  return JS::Result<size_t>(JS::Error());
- }
- 
- // https://webidl.spec.whatwg.org/#abstract-opdef-converttoint with bitLength 32, "unsigned" and
 @@ -1037,7 +987,7 @@ JSObject *CryptoAlgorithmECDSA_Sign_Verify::sign(JSContext *cx, JS::HandleObject
    const BIGNUM *r_raw = nullptr;
    const BIGNUM *s_raw = nullptr;
