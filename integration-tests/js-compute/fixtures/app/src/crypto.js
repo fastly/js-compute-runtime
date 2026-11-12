@@ -1923,6 +1923,327 @@ routes.set('/crypto.subtle', async () => {
     }
     assert(rejected, true, `\`${func.toString()}\` rejects`);
   }
+
+  // TODO: Remove these temporary regressions once the StarlingMonkey patches land.
+  routes.set('/crypto.subtle.detached-buffers', async () => {
+    const { subtle } = crypto;
+    const size = 4096;
+    const reused = [];
+    const hex = (buffer) =>
+      Array.from(new Uint8Array(buffer), (byte) =>
+        byte.toString(16).padStart(2, '0'),
+      ).join('');
+    const emptyDigest =
+      'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+    const importHmacKey = () =>
+      subtle.importKey(
+        'raw',
+        new Uint8Array(32).fill(7),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign', 'verify'],
+      );
+
+    function detachingAlgorithm(name, view) {
+      return {
+        get name() {
+          if (!view.buffer.detached) view.buffer.transfer();
+          return name;
+        },
+      };
+    }
+
+    function freeAndReuse(view) {
+      if (view.buffer.detached) return;
+      view.buffer.transfer(0);
+      for (let index = 0; index < 64; index++) {
+        reused.push(new Uint8Array(size).fill(0x5a));
+      }
+    }
+
+    async function keyThatFreesOnAlgorithmRead(view) {
+      const key = await importHmacKey();
+      Object.defineProperty(key.algorithm, 'name', {
+        get() {
+          freeAndReuse(view);
+          return 'HMAC';
+        },
+      });
+      return key;
+    }
+
+    const key = await importHmacKey();
+    const message = new Uint8Array(32).fill(0x42);
+    const mac = new Uint8Array(await subtle.sign('HMAC', key, message));
+    const emptyMac = hex(await subtle.sign('HMAC', key, new Uint8Array(0)));
+
+    {
+      const data = new Uint8Array(32).fill(0x41);
+      const result = await subtle.digest(
+        detachingAlgorithm('SHA-256', data),
+        data,
+      );
+      assert(hex(result), emptyDigest, 'digest reads data after normalization');
+    }
+    {
+      const data = message.slice();
+      const result = await subtle.sign(
+        detachingAlgorithm('HMAC', data),
+        key,
+        data,
+      );
+      assert(hex(result), emptyMac, 'sign reads data after normalization');
+    }
+    {
+      const signature = mac.slice();
+      const result = await subtle.verify(
+        detachingAlgorithm('HMAC', signature),
+        key,
+        signature,
+        message,
+      );
+      assert(result, false, 'verify reads signature after normalization');
+    }
+    {
+      const data = message.slice();
+      const result = await subtle.verify(
+        detachingAlgorithm('HMAC', data),
+        key,
+        mac,
+        data,
+      );
+      assert(result, false, 'verify reads data after normalization');
+    }
+    {
+      const data = new Uint8Array(size).fill(0x41);
+      const result = await subtle.digest(
+        {
+          get name() {
+            freeAndReuse(data);
+            return 'SHA-256';
+          },
+        },
+        data,
+      );
+      assert(hex(result), emptyDigest, 'digest does not read freed memory');
+    }
+    {
+      const data = new Uint8Array(size).fill(0x41);
+      const expected = hex(await subtle.sign('HMAC', key, data));
+      const result = await subtle.sign(
+        'HMAC',
+        await keyThatFreesOnAlgorithmRead(data),
+        data,
+      );
+      assert(
+        hex(result),
+        expected,
+        'sign copies data before reading key.algorithm',
+      );
+    }
+    {
+      const data = new Uint8Array(size).fill(0x41);
+      const signature = await subtle.sign('HMAC', key, data);
+      const result = await subtle.verify(
+        'HMAC',
+        await keyThatFreesOnAlgorithmRead(data),
+        signature,
+        data,
+      );
+      assert(result, true, 'verify copies data before reading key.algorithm');
+    }
+  });
+
+  routes.set(
+    '/crypto.subtle.key-algorithm-mutations-do-not-change-key',
+    async () => {
+      const message = new Uint8Array([0x61]);
+
+      const hmacKey = await crypto.subtle.importKey(
+        'raw',
+        new Uint8Array(32).fill(7),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign'],
+      );
+      const hmacBefore = await crypto.subtle.sign('HMAC', hmacKey, message);
+      hmacKey.algorithm.hash.name = 'SHA-512';
+      const hmacAfter = await crypto.subtle.sign('HMAC', hmacKey, message);
+      assert(
+        new Uint8Array(hmacAfter),
+        new Uint8Array(hmacBefore),
+        'HMAC keeps its imported hash',
+      );
+
+      const rsaKey = await crypto.subtle.importKey(
+        'jwk',
+        freshPrivateRsaKey(),
+        rsaJsonWebKeyAlgorithm,
+        false,
+        ['sign'],
+      );
+      const rsaBefore = await crypto.subtle.sign(
+        'RSASSA-PKCS1-v1_5',
+        rsaKey,
+        message,
+      );
+      rsaKey.algorithm.hash.name = 'MD5';
+      const rsaAfter = await crypto.subtle.sign(
+        'RSASSA-PKCS1-v1_5',
+        rsaKey,
+        message,
+      );
+      assert(
+        new Uint8Array(rsaAfter),
+        new Uint8Array(rsaBefore),
+        'RSA keeps its imported hash',
+      );
+
+      const ecdsaPrivateKey = await crypto.subtle.importKey(
+        'jwk',
+        freshPrivateEcdsaKey(),
+        ecdsaJsonWebKeyAlgorithm,
+        false,
+        ['sign'],
+      );
+      ecdsaPrivateKey.algorithm.namedCurve = 'P-384';
+      const ecdsaSignature = await crypto.subtle.sign(
+        { name: 'ECDSA', hash: 'SHA-256' },
+        ecdsaPrivateKey,
+        message,
+      );
+      assert(
+        new Uint8Array(ecdsaSignature).byteLength,
+        64,
+        'P-256 signature length',
+      );
+
+      const ecdsaPublicKey = await crypto.subtle.importKey(
+        'jwk',
+        freshPublicEcdsaKey(),
+        ecdsaJsonWebKeyAlgorithm,
+        false,
+        ['verify'],
+      );
+      ecdsaPublicKey.algorithm.name = 'HMAC';
+      ecdsaPublicKey.algorithm.hash = { name: 'SHA-256' };
+      await assertRejectsWithName(
+        () =>
+          crypto.subtle.verify(
+            'HMAC',
+            ecdsaPublicKey,
+            new Uint8Array(32),
+            message,
+          ),
+        'InvalidAccessError',
+      );
+    },
+  );
+
+  routes.set('/crypto.subtle.sign.ecdsa-unknown-curve', async () => {
+    const key = await crypto.subtle.importKey(
+      'jwk',
+      freshPrivateEcdsaKey(),
+      ecdsaJsonWebKeyAlgorithm,
+      false,
+      ['sign'],
+    );
+    key.algorithm.namedCurve = 'NOT-A-CURVE';
+    const signature = await crypto.subtle.sign(
+      { name: 'ECDSA', hash: 'SHA-256' },
+      key,
+      new Uint8Array([0x61]),
+    );
+    assert(
+      new Uint8Array(signature).byteLength,
+      64,
+      'P-256 signature length after namedCurve mutation',
+    );
+  });
+
+  routes.set('/crypto.subtle.sign.ecdsa-symbol-curve', async () => {
+    const key = await crypto.subtle.importKey(
+      'jwk',
+      freshPrivateEcdsaKey(),
+      ecdsaJsonWebKeyAlgorithm,
+      false,
+      ['sign'],
+    );
+    key.algorithm.namedCurve = Symbol('curve');
+    const signature = await crypto.subtle.sign(
+      { name: 'ECDSA', hash: 'SHA-256' },
+      key,
+      new Uint8Array([0x61]),
+    );
+    assert(
+      new Uint8Array(signature).byteLength,
+      64,
+      'P-256 signature length after namedCurve mutation',
+    );
+  });
+
+  routes.set('/crypto.subtle.verify.rsa-unknown-hash', async () => {
+    const key = await crypto.subtle.importKey(
+      'jwk',
+      freshPublicRsaKey(),
+      rsaJsonWebKeyAlgorithm,
+      false,
+      ['verify'],
+    );
+    const signingKey = await crypto.subtle.importKey(
+      'jwk',
+      freshPrivateRsaKey(),
+      rsaJsonWebKeyAlgorithm,
+      false,
+      ['sign'],
+    );
+    const message = new Uint8Array([0x61]);
+    const signature = await crypto.subtle.sign(
+      'RSASSA-PKCS1-v1_5',
+      signingKey,
+      message,
+    );
+    key.algorithm.hash.name = 'NOT-A-HASH';
+    const result = await crypto.subtle.verify(
+      'RSASSA-PKCS1-v1_5',
+      key,
+      signature,
+      message,
+    );
+    assert(result, true, 'verifies with the imported SHA-256 hash');
+  });
+
+  routes.set('/crypto.subtle.verify.rsa-missing-hash', async () => {
+    const key = await crypto.subtle.importKey(
+      'jwk',
+      freshPublicRsaKey(),
+      rsaJsonWebKeyAlgorithm,
+      false,
+      ['verify'],
+    );
+    const signingKey = await crypto.subtle.importKey(
+      'jwk',
+      freshPrivateRsaKey(),
+      rsaJsonWebKeyAlgorithm,
+      false,
+      ['sign'],
+    );
+    const message = new Uint8Array([0x61]);
+    const signature = await crypto.subtle.sign(
+      'RSASSA-PKCS1-v1_5',
+      signingKey,
+      message,
+    );
+    delete key.algorithm.hash;
+    const result = await crypto.subtle.verify(
+      'RSASSA-PKCS1-v1_5',
+      key,
+      signature,
+      message,
+    );
+    assert(result, true, 'verifies with the imported SHA-256 hash');
+  });
+
   const enc = new TextEncoder();
   const dec = new TextDecoder();
 
