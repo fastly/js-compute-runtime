@@ -1,20 +1,23 @@
+/// <reference path="backend.d.ts" />
+/// <reference path="debug.d.ts" />
 /// <reference path="runtime.d.ts" />
 /**
- * @experimental
+ * @deprecated APIs in this module have been moved to other modules. This module will go away entirely in a future major version.
  */
 declare module 'fastly:experimental' {
   import type { enforceExplicitBackends } from 'fastly:backend';
-  import type { ReusableSandboxOptions } from 'fastly:runtime';
+  import type * as runtime from 'fastly:runtime';
+  import type * as debug from 'fastly:debug';
 
   /**
    * JavaScript SDK version string for the JS runtime engine build.
    *
-   * @experimental
+   * @deprecated Use {@link runtime.sdkVersion} instead.
    * @hidden
    */
   export const sdkVersion: string;
   /**
-   * @experimental
+   * @deprecated Use {@link runtime.setBaseURL} instead.
    * @hidden
    */
   export function setBaseURL(base: URL | null | undefined): void;
@@ -26,7 +29,6 @@ declare module 'fastly:experimental' {
    * it is called, as if calling `allowDynamicBackends(false)`.
    *
    * @param backend The name of the default backend.
-   * @experimental
    * @deprecated Use {@link enforceExplicitBackends} instead.
    */
   export function setDefaultBackend(backend: string): void;
@@ -35,7 +37,7 @@ declare module 'fastly:experimental' {
    *
    * **Note**: This is mostly for internal debugging purposes and will generate highly unstable
    * output.
-   * @experimental
+   * @deprecated Use {@link debug.enableDebugLogging} instead.
    * @hidden
    */
   export function enableDebugLogging(enabled: boolean): void;
@@ -46,7 +48,7 @@ declare module 'fastly:experimental' {
    * **Note**: Can only be used during build-time initialization, not when processing requests.
    *
    * @param path The path to include, relative to the project's top-level directory.
-   * @experimental
+   * @deprecated Use {@link runtime.includeBytes} instead.
    */
   export function includeBytes(path: string): Uint8Array<ArrayBuffer>;
 
@@ -66,7 +68,6 @@ declare module 'fastly:experimental' {
    * Dynamic Backends.
    *
    * @param enabled Whether or not to allow Dynamic Backends.
-   * @experimental
    * @deprecated Use {@link enforceExplicitBackends} instead.
    */
   export function allowDynamicBackends(enabled: boolean): void;
@@ -76,7 +77,6 @@ declare module 'fastly:experimental' {
    * @param defaultConfig Default timeout configuration for dynamic backends.
    * @throws `RangeError` if any timeout value is negative or greater than or
    *   equal to 2^32.
-   * @experimental
    * @deprecated Use {@link enforceExplicitBackends} instead.
    */
   export function allowDynamicBackends(defaultConfig: {
@@ -100,6 +100,7 @@ declare module 'fastly:experimental' {
    * @param error The error to retrieve information about. If a string is
    *   provided, it is first converted to an `Error`.
    * @version 3.37.0
+   * @deprecated Use {@link debug.mapError} instead.
    */
   export function mapError(error: Error | string): (Error | string)[];
 
@@ -109,6 +110,7 @@ declare module 'fastly:experimental' {
    * @param error The error to map and log. If a string is provided, it is
    *   first converted to an `Error`.
    * @version 3.37.0
+   * @deprecated Use {@link debug.mapAndLogError} instead.
    */
   export function mapAndLogError(error: Error | string): void;
 
@@ -121,10 +123,10 @@ declare module 'fastly:experimental' {
    * processing requests.
    *
    * @param options Configuration options for sandbox reuse.
-   * @experimental
+   * @deprecated Use {@link runtime.setReusableSandboxOptions} instead.
    * @version 3.40.0
    */
   export function setReusableSandboxOptions(
-    options: ReusableSandboxOptions,
+    options: runtime.ReusableSandboxOptions,
   ): void;
 }
