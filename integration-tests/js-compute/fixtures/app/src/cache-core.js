@@ -8,6 +8,7 @@ import {
   sleep,
   streamToString,
   assertResolves,
+  assertRejects,
 } from './assertions.js';
 import { routes } from './routes.js';
 import {
@@ -15,6 +16,7 @@ import {
   CacheEntry,
   CacheState,
   TransactionCacheEntry,
+  PendingTransaction,
 } from 'fastly:cache';
 import { FastlyBody } from 'fastly:body';
 
@@ -531,6 +533,22 @@ function ensureLion() {
         assert(result, undefined, `body.append(res.body)`);
       },
     );
+    routes.set(
+      '/FastlyBody/append/data-parameter-readablestream-cache-entry-backed',
+      () => {
+        const key =
+          '/FastlyBody/append/data-parameter-readablestream-cache-entry-backed' +
+          Math.random();
+        const writer = CoreCache.insert(key, { maxAge: 60 * 1000 });
+        writer.append('hello');
+        writer.close();
+        const body = new FastlyBody();
+        let result = body.append(CoreCache.lookup(key).body());
+        assert(result, undefined, `body.append(CoreCache.lookup(key).body())`);
+        const actual = new TextDecoder().decode(body.read(1024));
+        assert(actual, 'hello', `body.read(1024)`);
+      },
+    );
     // - URLSearchParams
     routes.set('/FastlyBody/append/data-parameter-URLSearchParams', () => {
       const items = [
@@ -1029,6 +1047,7 @@ function ensureLion() {
       'lookup',
       'insert',
       'transactionLookup',
+      'transactionLookupAsync',
       'length',
       'name',
     ];
@@ -1310,6 +1329,63 @@ function ensureLion() {
         actual,
         expected,
         `Reflect.getOwnPropertyDescriptor(CoreCache.transactionLookup, 'name')`,
+      );
+    }
+
+    // Check the transactionLookupAsync static method has correct descriptors, length and name
+    {
+      actual = Reflect.getOwnPropertyDescriptor(
+        CoreCache,
+        'transactionLookupAsync',
+      );
+      expected = {
+        writable: true,
+        enumerable: true,
+        configurable: true,
+        value: CoreCache.transactionLookupAsync,
+      };
+      assert(
+        actual,
+        expected,
+        `Reflect.getOwnPropertyDescriptor(CoreCache, 'transactionLookupAsync')`,
+      );
+
+      assert(
+        typeof CoreCache.transactionLookupAsync,
+        'function',
+        `typeof CoreCache.transactionLookupAsync`,
+      );
+
+      actual = Reflect.getOwnPropertyDescriptor(
+        CoreCache.transactionLookupAsync,
+        'length',
+      );
+      expected = {
+        value: 1,
+        writable: false,
+        enumerable: false,
+        configurable: true,
+      };
+      assert(
+        actual,
+        expected,
+        `Reflect.getOwnPropertyDescriptor(CoreCache.transactionLookupAsync, 'length')`,
+      );
+
+      actual = Reflect.getOwnPropertyDescriptor(
+        CoreCache.transactionLookupAsync,
+        'name',
+      );
+      expected = {
+        value: 'transactionLookupAsync',
+        writable: false,
+        enumerable: false,
+        configurable: true,
+      };
+      assert(
+        actual,
+        expected,
+        `Reflect.getOwnPropertyDescriptor(CoreCache.transactionLookupAsync, 'name')`,
       );
     }
   });
@@ -2205,6 +2281,428 @@ function ensureLion() {
       },
     );
   }
+
+  //static transactionLookupAsync(key: string, options?: LookupOptions): PendingTransaction;
+  {
+    routes.set(
+      '/core-cache/transactionLookupAsync/called-as-constructor',
+      () => {
+        assertThrows(() => {
+          new CoreCache.transactionLookupAsync('1');
+        }, TypeError);
+      },
+    );
+    // https://tc39.es/ecma262/#sec-tostring
+    routes.set(
+      '/core-cache/transactionLookupAsync/key-parameter-calls-7.1.17-ToString',
+      () => {
+        let sentinel;
+        const test = () => {
+          sentinel = Symbol('sentinel');
+          const key = {
+            toString() {
+              throw sentinel;
+            },
+          };
+          CoreCache.transactionLookupAsync(key);
+        };
+        assertThrows(test);
+        try {
+          test();
+        } catch (thrownError) {
+          assert(thrownError, sentinel, 'thrownError === sentinel');
+        }
+        assertThrows(
+          () => {
+            CoreCache.transactionLookupAsync(Symbol());
+          },
+          TypeError,
+          `can't convert symbol to string`,
+        );
+      },
+    );
+    routes.set(
+      '/core-cache/transactionLookupAsync/key-parameter-not-supplied',
+      () => {
+        assertThrows(
+          () => {
+            CoreCache.transactionLookupAsync();
+          },
+          TypeError,
+          `CoreCache.transactionLookupAsync: At least 1 argument required, but only 0 passed`,
+        );
+      },
+    );
+    routes.set(
+      '/core-cache/transactionLookupAsync/key-parameter-empty-string',
+      () => {
+        assertThrows(
+          () => {
+            CoreCache.transactionLookupAsync('');
+          },
+          Error,
+          `CoreCache.transactionLookupAsync: key can not be an empty string`,
+        );
+      },
+    );
+    routes.set(
+      '/core-cache/transactionLookupAsync/key-parameter-8135-character-string',
+      () => {
+        assertDoesNotThrow(() => {
+          const key = 'a'.repeat(8135);
+          CoreCache.transactionLookupAsync(key);
+        });
+      },
+    );
+    routes.set(
+      '/core-cache/transactionLookupAsync/key-parameter-8136-character-string',
+      () => {
+        assertThrows(
+          () => {
+            const key = 'a'.repeat(8136);
+            CoreCache.transactionLookupAsync(key);
+          },
+          Error,
+          `CoreCache.transactionLookupAsync: key is too long, the maximum allowed length is 8135.`,
+        );
+      },
+    );
+    routes.set(
+      '/core-cache/transactionLookupAsync/options-parameter-wrong-type',
+      () => {
+        assertThrows(() => {
+          CoreCache.transactionLookupAsync('cat', '');
+        });
+      },
+    );
+    routes.set(
+      '/core-cache/transactionLookupAsync/options-parameter-headers-field-wrong-type',
+      () => {
+        assertThrows(() => {
+          CoreCache.transactionLookupAsync('cat', { headers: '' });
+        });
+      },
+    );
+    routes.set(
+      '/core-cache/transactionLookupAsync/returns-PendingTransaction',
+      (event) => {
+        const path = new URL(event.request.url).pathname;
+        const key = path + Math.random();
+        let pending;
+        assertDoesNotThrow(() => {
+          pending = CoreCache.transactionLookupAsync(key);
+        });
+        assert(
+          pending instanceof PendingTransaction,
+          true,
+          `CoreCache.transactionLookupAsync(key) instanceof PendingTransaction`,
+        );
+      },
+    );
+    routes.set(
+      '/core-cache/transactionLookupAsync/wait-resolves-must-insert-or-update',
+      async (event) => {
+        const path = new URL(event.request.url).pathname;
+        const key = path + Math.random();
+        const pending = CoreCache.transactionLookupAsync(key);
+        const entry = await pending.wait();
+        assert(
+          entry instanceof TransactionCacheEntry,
+          true,
+          `await pending.wait() instanceof TransactionCacheEntry`,
+        );
+        assert(
+          entry.state().mustInsertOrUpdate(),
+          true,
+          `entry.state().mustInsertOrUpdate()`,
+        );
+      },
+    );
+    routes.set(
+      '/core-cache/transactionLookupAsync/pending-reflects-readiness',
+      async (event) => {
+        const path = new URL(event.request.url).pathname;
+        const key = path + Math.random();
+        const pending = CoreCache.transactionLookupAsync(key);
+        assert(typeof pending.pending(), 'boolean', `typeof pending.pending()`);
+        await pending.wait();
+        assert(pending.pending(), false, `pending.pending() after wait()`);
+      },
+    );
+    routes.set(
+      '/core-cache/transactionLookupAsync/wait-called-twice-throws',
+      async (event) => {
+        const path = new URL(event.request.url).pathname;
+        const key = path + Math.random();
+        const pending = CoreCache.transactionLookupAsync(key);
+        await pending.wait();
+        assertThrows(
+          () => {
+            pending.wait();
+          },
+          Error,
+          `PendingTransaction.wait: wait() has already been called on this PendingTransaction`,
+        );
+      },
+    );
+    routes.set(
+      '/core-cache/transactionLookupAsync/wait-with-timeout-resolves',
+      async (event) => {
+        const path = new URL(event.request.url).pathname;
+        const key = path + Math.random();
+        const pending = CoreCache.transactionLookupAsync(key);
+        await assertResolves(async () => {
+          await pending.wait(60_000);
+        });
+      },
+    );
+  }
+}
+
+// PendingTransaction
+{
+  routes.set('/pending-transaction/interface', () => {
+    let actual = Reflect.ownKeys(PendingTransaction);
+    let expected = ['prototype', 'length', 'name'];
+    assert(actual, expected, `Reflect.ownKeys(PendingTransaction)`);
+
+    // Check the prototype descriptors are correct
+    {
+      actual = Reflect.getOwnPropertyDescriptor(
+        PendingTransaction,
+        'prototype',
+      );
+      expected = {
+        value: PendingTransaction.prototype,
+        writable: false,
+        enumerable: false,
+        configurable: false,
+      };
+      assert(
+        actual,
+        expected,
+        `Reflect.getOwnPropertyDescriptor(PendingTransaction, 'prototype')`,
+      );
+    }
+
+    // Check the constructor function's defined parameter length is correct
+    {
+      actual = Reflect.getOwnPropertyDescriptor(PendingTransaction, 'length');
+      expected = {
+        value: 0,
+        writable: false,
+        enumerable: false,
+        configurable: true,
+      };
+      assert(
+        actual,
+        expected,
+        `Reflect.getOwnPropertyDescriptor(PendingTransaction, 'length')`,
+      );
+    }
+
+    // Check the constructor function's name is correct
+    {
+      actual = Reflect.getOwnPropertyDescriptor(PendingTransaction, 'name');
+      expected = {
+        value: 'PendingTransaction',
+        writable: false,
+        enumerable: false,
+        configurable: true,
+      };
+      assert(
+        actual,
+        expected,
+        `Reflect.getOwnPropertyDescriptor(PendingTransaction, 'name')`,
+      );
+    }
+
+    // Check the prototype has the correct keys
+    {
+      actual = Reflect.ownKeys(PendingTransaction.prototype);
+      expected = ['constructor', 'pending', 'wait', Symbol.toStringTag];
+      assert(actual, expected, `Reflect.ownKeys(PendingTransaction.prototype)`);
+    }
+
+    // Check the constructor on the prototype is correct
+    {
+      actual = Reflect.getOwnPropertyDescriptor(
+        PendingTransaction.prototype,
+        'constructor',
+      );
+      expected = {
+        writable: true,
+        enumerable: false,
+        configurable: true,
+        value: PendingTransaction.prototype.constructor,
+      };
+      assert(
+        actual,
+        expected,
+        `Reflect.getOwnPropertyDescriptor(PendingTransaction.prototype, 'constructor')`,
+      );
+
+      assert(
+        typeof PendingTransaction.prototype.constructor,
+        'function',
+        `typeof PendingTransaction.prototype.constructor`,
+      );
+    }
+
+    // Check the Symbol.toStringTag on the prototype is correct
+    {
+      actual = Reflect.getOwnPropertyDescriptor(
+        PendingTransaction.prototype,
+        Symbol.toStringTag,
+      );
+      expected = {
+        writable: false,
+        enumerable: false,
+        configurable: true,
+        value: 'PendingTransaction',
+      };
+      assert(
+        actual,
+        expected,
+        `Reflect.getOwnPropertyDescriptor(PendingTransaction.prototype, [Symbol.toStringTag])`,
+      );
+
+      assert(
+        typeof PendingTransaction.prototype[Symbol.toStringTag],
+        'string',
+        `typeof PendingTransaction.prototype[Symbol.toStringTag]`,
+      );
+    }
+
+    // Check the pending method has correct descriptors, length and name
+    {
+      actual = Reflect.getOwnPropertyDescriptor(
+        PendingTransaction.prototype,
+        'pending',
+      );
+      expected = {
+        writable: true,
+        enumerable: true,
+        configurable: true,
+        value: PendingTransaction.prototype.pending,
+      };
+      assert(
+        actual,
+        expected,
+        `Reflect.getOwnPropertyDescriptor(PendingTransaction.prototype, 'pending')`,
+      );
+
+      assert(
+        typeof PendingTransaction.prototype.pending,
+        'function',
+        `typeof PendingTransaction.prototype.pending`,
+      );
+
+      actual = Reflect.getOwnPropertyDescriptor(
+        PendingTransaction.prototype.pending,
+        'length',
+      );
+      expected = {
+        value: 0,
+        writable: false,
+        enumerable: false,
+        configurable: true,
+      };
+      assert(
+        actual,
+        expected,
+        `Reflect.getOwnPropertyDescriptor(PendingTransaction.prototype.pending, 'length')`,
+      );
+
+      actual = Reflect.getOwnPropertyDescriptor(
+        PendingTransaction.prototype.pending,
+        'name',
+      );
+      expected = {
+        value: 'pending',
+        writable: false,
+        enumerable: false,
+        configurable: true,
+      };
+      assert(
+        actual,
+        expected,
+        `Reflect.getOwnPropertyDescriptor(PendingTransaction.prototype.pending, 'name')`,
+      );
+    }
+
+    // Check the wait method has correct descriptors, length and name
+    {
+      actual = Reflect.getOwnPropertyDescriptor(
+        PendingTransaction.prototype,
+        'wait',
+      );
+      expected = {
+        writable: true,
+        enumerable: true,
+        configurable: true,
+        value: PendingTransaction.prototype.wait,
+      };
+      assert(
+        actual,
+        expected,
+        `Reflect.getOwnPropertyDescriptor(PendingTransaction.prototype, 'wait')`,
+      );
+
+      assert(
+        typeof PendingTransaction.prototype.wait,
+        'function',
+        `typeof PendingTransaction.prototype.wait`,
+      );
+
+      actual = Reflect.getOwnPropertyDescriptor(
+        PendingTransaction.prototype.wait,
+        'length',
+      );
+      expected = {
+        value: 0,
+        writable: false,
+        enumerable: false,
+        configurable: true,
+      };
+      assert(
+        actual,
+        expected,
+        `Reflect.getOwnPropertyDescriptor(PendingTransaction.prototype.wait, 'length')`,
+      );
+
+      actual = Reflect.getOwnPropertyDescriptor(
+        PendingTransaction.prototype.wait,
+        'name',
+      );
+      expected = {
+        value: 'wait',
+        writable: false,
+        enumerable: false,
+        configurable: true,
+      };
+      assert(
+        actual,
+        expected,
+        `Reflect.getOwnPropertyDescriptor(PendingTransaction.prototype.wait, 'name')`,
+      );
+    }
+  });
+
+  routes.set(
+    '/pending-transaction/constructor/called-as-regular-function',
+    () => {
+      assertThrows(() => {
+        PendingTransaction();
+      }, TypeError);
+    },
+  );
+
+  routes.set('/pending-transaction/constructor/throws', () => {
+    assertThrows(() => {
+      new PendingTransaction();
+    }, TypeError);
+  });
 }
 
 // CacheEntry
@@ -3154,7 +3652,7 @@ function ensureLion() {
       });
       writer.append('hello');
       writer.close();
-      let result = CoreCache.lookup(key).body({ start: 1, end: 0 });
+      let result = CoreCache.lookup(key).body({ start: 0, end: 0 });
       assert(
         result instanceof ReadableStream,
         true,
@@ -3163,10 +3661,21 @@ function ensureLion() {
 
       result = await streamToString(result);
       console.log({ result });
-      assert(
-        result,
-        'hello',
-        `await streamToString(CoreCache.lookup(key).body())`,
+      assert(result, 'h', `await streamToString(CoreCache.lookup(key).body())`);
+    });
+    routes.set('/cache-entry/body/options-end-before-start', async () => {
+      let key = '/cache-entry/body/options-end-before-start' + Math.random();
+      let writer = CoreCache.insert(key, {
+        maxAge: 60 * 1000,
+      });
+      writer.append('hello');
+      writer.close();
+      assertThrows(
+        () => {
+          CoreCache.lookup(key).body({ start: 10, end: 5 });
+        },
+        Error,
+        'end field is before the start field',
       );
     });
   }

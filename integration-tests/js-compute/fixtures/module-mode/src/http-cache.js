@@ -345,6 +345,7 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
     const res = await fetch(url, {
       cacheOverride: {
         afterSend(res) {
+          res.headers.set('Connection', 'Close');
           res.headers.set('Custom', 'custom-header');
           res.headers.delete('access-control-allow-origin');
           res.headers.delete('access-control-allow-credentials');
@@ -1028,4 +1029,105 @@ routes.set('/http-cache/cache-key-on-request', async () => {
   strictEqual(res2.cached, true);
 
   strictEqual(await res1.text(), await res2.text());
+});
+
+routes.set('/http-cache/vary-header', async () => {
+  const url = `https://http-me.fastly.dev/now/${Math.random().toString().slice(2)}?header=Vary:my-header`;
+  let backendCalls = 0;
+
+  const cacheOverride = new CacheOverride({
+    beforeSend(req) {
+      backendCalls++;
+    },
+  });
+
+  const req1 = new Request(url);
+  req1.headers.set('my-header', 'original');
+  const res1 = await fetch(req1, { cacheOverride });
+  strictEqual(backendCalls, 1);
+  strictEqual(res1.cached, false);
+
+  const req2 = new Request(url);
+  req2.headers.set('my-header', 'different');
+  const res2 = await fetch(req2, { cacheOverride });
+  strictEqual(backendCalls, 2);
+  strictEqual(res2.cached, false);
+});
+
+routes.set('/http-cache/headers-from-hostcall', async (event) => {
+  let sawRange = 'not checked';
+  const req = event.request;
+
+  const cacheOverride = new CacheOverride({
+    beforeSend(beReq) {
+      sawRange = beReq.headers.get('range') ?? 'none';
+      beReq.headers.delete('if-none-match');
+      beReq.headers.delete('range');
+    },
+  });
+
+  // Forward the client's Range, the way a proxying service would.
+  const headers = new Headers();
+  const range = req.headers.get('range');
+  if (range !== null) headers.set('range', range);
+
+  await fetch(
+    new Request('https://http-me.fastly.dev/anything/no-cache', {
+      method: 'GET',
+      headers,
+    }),
+    {
+      backend: 'httpme',
+      cacheOverride,
+    },
+  );
+
+  strictEqual(sawRange, 'none');
+});
+
+routes.set('/http-cache/no-header-loss-before-send', async (event) => {
+  const cacheOverride = new CacheOverride({
+    beforeSend(beReq) {
+      beReq.headers.set('x-hook-ran', 'yes');
+    },
+  });
+
+  const res = await fetch(new Request(getTestUrl(), { method: 'GET' }), {
+    backend: 'httpme',
+    cacheOverride,
+  });
+  const json = await res.json();
+  strictEqual(json['headers']['x-hook-ran'], 'yes');
+});
+
+routes.set('/http-cache/if-none-match', async () => {
+  const url = `https://http-me.fastly.dev/now/${Math.random().toString().slice(2)}?header=ETag:ABCDEFG-12345&header=Cache-Control:max-age=3600`;
+
+  let backendCalls = 0;
+
+  const cacheOverride = new CacheOverride({
+    beforeSend(req) {
+      backendCalls++;
+    },
+  });
+
+  const req1 = new Request(url);
+  req1.headers.set('if-none-match', 'ABCDEFG-12345');
+  const res1 = await fetch(req1, { cacheOverride });
+  strictEqual(res1.status, 304);
+  strictEqual(res1.cached, false);
+  strictEqual(backendCalls, 1);
+
+  const req2 = new Request(url);
+  req2.headers.set('if-none-match', 'different');
+  const res2 = await fetch(req2, { cacheOverride });
+
+  const req3 = new Request(url);
+  req3.headers.set('if-none-match', 'ABCDEFG-12345');
+  const res3 = await fetch(req3, { cacheOverride });
+  strictEqual(res2.cached, true);
+  strictEqual(res2.status, 200);
+  strictEqual(res3.cached, true);
+  strictEqual(res3.status, 304);
+  strictEqual(backendCalls, 1);
 });

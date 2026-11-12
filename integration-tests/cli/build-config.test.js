@@ -22,7 +22,7 @@ test('should build the fastly condition', async function (t) {
 
   const { code, stdout, stderr } = await execute(
     process.execPath,
-    `${cli} ${path}/index.js ${path}/app.wasm`,
+    `${cli} ${path}/index.js --disable-aot ${path}/app.wasm`,
   );
 
   t.is(await exists('./app.wasm'), true);

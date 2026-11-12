@@ -124,3 +124,15 @@ routes.set('/client/ohFingerprint', (event) => {
     );
   }
 });
+
+routes.set('/client/tlsClientSNI', (event) => {
+  if (isRunningLocally()) {
+    strictEqual(event.client.tlsClientSNI, null);
+  } else {
+    strictEqual(
+      typeof event.client.tlsClientSNI,
+      'string',
+      'typeof event.client.tlsClientSNI',
+    );
+  }
+});

@@ -23,6 +23,7 @@
 #include "../fetch-event.h"
 #include "../image-optimizer.h"
 #include "../kv-store.h"
+#include "./pending-request.h"
 #include "extension-api.h"
 #include "fetch.h"
 #include "mozilla/ResultVariant.h"
@@ -86,8 +87,13 @@ namespace builtins::web::streams {
 
 bool NativeStreamSource::stream_is_body(JSContext *cx, JS::HandleObject stream) {
   JSObject *stream_source = get_stream_source(cx, stream);
-  return NativeStreamSource::is_instance(stream_source) &&
-         fastly::fetch::RequestOrResponse::is_instance(owner(stream_source));
+  if (!NativeStreamSource::is_instance(stream_source)) {
+    return false;
+  }
+
+  JSObject *source_owner = owner(stream_source);
+  return fastly::fetch::RequestOrResponse::is_instance(source_owner) ||
+         CacheEntry::is_instance(source_owner);
 }
 
 } // namespace builtins::web::streams
@@ -568,6 +574,9 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue p
     cache_write_options->stale_while_revalidate_ns =
         suggested_cache_write_options->stale_while_revalidate_ns;
   }
+  if (!cache_write_options->stale_if_error_ns.has_value()) {
+    cache_write_options->stale_if_error_ns = suggested_cache_write_options->stale_if_error_ns;
+  }
   if (!cache_write_options->surrogate_keys.has_value()) {
     cache_write_options->surrogate_keys = std::move(suggested_cache_write_options->surrogate_keys);
   }
@@ -599,6 +608,14 @@ bool after_send_then(JSContext *cx, JS::HandleObject response, JS::HandleValue p
 bool after_send_catch(JSContext *cx, JS::HandleObject response, JS::HandleValue promise,
                       JS::CallArgs args) {
   JS::RootedObject promise_obj(cx, &promise.toObject());
+
+  auto maybe_stale = try_serve_stale_if_error(cx, response, args.get(0));
+  if (maybe_stale.has_value()) {
+    JS::RootedValue response_val(cx, JS::ObjectValue(*maybe_stale.value()));
+    return JS::ResolvePromise(cx, promise_obj, response_val);
+  }
+
+  // No stale-if-error available, close cache and reject
   if (!RequestOrResponse::close_if_cache_entry(cx, response)) {
     return false;
   }
@@ -610,8 +627,11 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
                                                 host_api::HttpPendingReq::Handle handle,
                                                 JS::HandleObject request, JS::HandleValue promise) {
   MOZ_ASSERT(Request::is_instance(request));
-  host_api::HttpPendingReq pending(handle);
   JS::RootedObject promise_obj(cx, &promise.toObject());
+  if (PendingRequest::was_handed_off(cx, promise_obj)) {
+    return true;
+  }
+  host_api::HttpPendingReq pending(handle);
   auto res_res = pending.wait();
   if (auto *err = res_res.to_err()) {
     std::string message = std::move(err->message()).value_or("when attempting to fetch resource.");
@@ -674,7 +694,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
     suggested_storage_action = host_api::HttpStorageAction::RecordUncacheable;
   }
 
-  host_api::HttpCacheWriteOptions *override_cache_options = new host_api::HttpCacheWriteOptions();
+  auto override_cache_options = std::make_unique<host_api::HttpCacheWriteOptions>();
 
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::StorageAction),
                       JS::Int32Value(static_cast<uint32_t>(suggested_storage_action)));
@@ -709,10 +729,16 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
       override_cache_options->max_age_ns = ttl_ns + initial_age_ns;
     }
 
-    RootedValue override_swr(cx, CacheOverride::swr(cache_override));
+    RootedValue override_swr(cx, CacheOverride::staleWhileRevalidate(cache_override));
     if (!override_swr.isUndefined()) {
       override_cache_options->stale_while_revalidate_ns =
           static_cast<uint64_t>(override_swr.toInt32() * 1e9);
+    }
+
+    RootedValue override_sie(cx, CacheOverride::staleIfError(cache_override));
+    if (!override_sie.isUndefined()) {
+      override_cache_options->stale_if_error_ns =
+          static_cast<uint64_t>(override_sie.toInt32() * 1e9);
     }
 
     // overriding surrogate keys composes suggested surrogate keys with the original cache override
@@ -770,7 +796,7 @@ bool RequestOrResponse::process_pending_request(JSContext *cx,
   }
 
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::OverrideCacheWriteOptions),
-                      JS::PrivateValue(override_cache_options));
+                      JS::PrivateValue(override_cache_options.release()));
 
   JS::RootedObject after_send_promise(cx);
   if (after_send) {
@@ -970,6 +996,10 @@ bool RequestOrResponse::extract_body(JSContext *cx, JS::HandleObject self,
     }
 
     auto boundary = MultipartFormData::boundary(encoder);
+    // We ensure the boundary is quoted as per RFC 2046, section 5.1.1, to avoid issues with special
+    // characters in the boundary string. Currently, StarlingMonkey does not quote the boundary, but
+    // in case this changes in the future, we check if the string is already quoted before quoting
+    // it ourselves.
     std::string content_type_str = "multipart/form-data; boundary=" + boundary;
     host_type_str = host_api::HostString(content_type_str.c_str());
 
@@ -1126,13 +1156,9 @@ bool Request::isCacheable_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   auto handle = request_handle(self);
   auto res = handle.is_cacheable();
-  if (auto *err = res.to_err()) {
-    if (host_api::error_is_unsupported(*err)) {
-      args.rval().setUndefined();
-      return true;
-    }
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setUndefined();
+    return true;
   }
 
   args.rval().setBoolean(res.unwrap());
@@ -1287,6 +1313,17 @@ bool RequestOrResponse::parse_body(JSContext *cx, JS::HandleObject self, JS::Uni
 
 bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::HandleObject self,
                                                          JS::HandleValue extra, JS::CallArgs args) {
+  // Helper to reject promise with error on overflow or invalid input
+  auto reject_body_promise = [&]() {
+    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
+                              JSMSG_RESPONSE_VALUE_NOT_UINT8ARRAY);
+    JS::RootedObject result_promise(cx);
+    result_promise =
+        &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise)).toObject();
+    JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise), JS::UndefinedValue());
+    return RejectPromiseWithPendingError(cx, result_promise);
+  };
+
   JS::RootedObject then_handler(cx, &args.callee());
   // The reader is stored in the catch handler, which we need here as well.
   // So we get that first, then the reader.
@@ -1355,6 +1392,7 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
     if (!JS::GetArrayLength(cx, contents, &contentsLength)) {
       return false;
     }
+
     // TODO(performance): investigate whether we can infer the size directly from `contents`
     size_t buf_size = HANDLE_READ_CHUNK_SIZE;
     // TODO(performance): make use of malloc slack.
@@ -1374,11 +1412,20 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
         MOZ_ASSERT(JS_IsUint8Array(array));
         size_t length = JS_GetTypedArrayByteLength(array);
         if (length) {
+          // Check for overflow before adding to offset
+          if (length > SIZE_MAX - offset) {
+            return reject_body_promise();
+          }
           offset += length;
           // if buf is not big enough to fit the next uint8array's bytes then resize
           if (offset > buf_size) {
-            buf_size =
-                buf_size + (HANDLE_READ_CHUNK_SIZE * ((length / HANDLE_READ_CHUNK_SIZE) + 1));
+            size_t chunks_needed = (length / HANDLE_READ_CHUNK_SIZE) + 1;
+            // Check for overflow in buffer size calculation
+            if (chunks_needed > (SIZE_MAX / HANDLE_READ_CHUNK_SIZE) ||
+                buf_size > SIZE_MAX - (HANDLE_READ_CHUNK_SIZE * chunks_needed)) {
+              return reject_body_promise();
+            }
+            buf_size = buf_size + (HANDLE_READ_CHUNK_SIZE * chunks_needed);
           }
         }
       }
@@ -1437,14 +1484,7 @@ bool RequestOrResponse::content_stream_read_then_handler(JSContext *cx, JS::Hand
   // The read operation can return anything since this stream comes from the guest
   // If it is not a UInt8Array -- reject with a TypeError
   if (!val.isObject() || !JS_IsUint8Array(&val.toObject())) {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                              JSMSG_RESPONSE_VALUE_NOT_UINT8ARRAY);
-    JS::RootedObject result_promise(cx);
-    result_promise =
-        &JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise)).toObject();
-    JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::BodyAllPromise), JS::UndefinedValue());
-
-    return RejectPromiseWithPendingError(cx, result_promise);
+    return reject_body_promise();
   }
 
   {
@@ -1808,9 +1848,14 @@ bool RequestOrResponse::body_reader_then_handler(JSContext *cx, JS::HandleObject
 
     // TODO: should we also create a rejected promise if a response reads something that's not a
     // Uint8Array?
-    fprintf(stderr, "Error: read operation on body ReadableStream didn't respond with a "
-                    "Uint8Array. Received value: ");
-    ENGINE->dump_value(val, stderr);
+    if (ENGINE->debug_logging_enabled()) {
+      fprintf(stderr, "Error: read operation on body ReadableStream didn't respond with a "
+                      "Uint8Array. Received value: ");
+      ENGINE->dump_value(val, stderr);
+    } else {
+      fprintf(stderr,
+              "Error: read operation on body ReadableStream didn't respond with a Uint8Array.");
+    }
     return false;
   }
 
@@ -1845,8 +1890,12 @@ bool RequestOrResponse::body_reader_catch_handler(JSContext *cx, JS::HandleObjec
   // in-content handler for unhandled rejections could deal with it. The body
   // stream errored during the streaming send. Not much we can do, but at least
   // close the stream, and warn.
-  fprintf(stderr, "Warning: body ReadableStream closed during body streaming. Exception: ");
-  ENGINE->dump_value(args.get(0), stderr);
+  if (ENGINE->debug_logging_enabled()) {
+    fprintf(stderr, "Warning: body ReadableStream closed during body streaming. Exception: ");
+    ENGINE->dump_value(args.get(0), stderr);
+  } else {
+    fprintf(stderr, "Warning: body ReadableStream closed during body streaming.");
+  }
 
   // The only response with a body we ever send is the one passed to
   // `FetchEvent#respondWith` to send to the client. As such, we can be certain
@@ -1864,6 +1913,15 @@ bool RequestOrResponse::body_reader_catch_handler(JSContext *cx, JS::HandleObjec
     }
     JS::RootedObject fetch_event(cx, &fetch_event_val.toObject());
     FetchEvent::set_state(fetch_event, FetchEvent::State::responseDone);
+  } else if (Request::is_instance(body_owner)) {
+    JS::RootedObject promise(cx, Request::response_promise(body_owner));
+    return JS::RejectPromise(cx, promise, args.get(0));
+  }
+
+  auto res = RequestOrResponse::body_handle(body_owner).abandon();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
   }
   return true;
 }
@@ -1986,21 +2044,20 @@ bool RequestOrResponse::backend_get(JSContext *cx, JS::CallArgs args, JS::Handle
   return true;
 }
 
-bool RequestOrResponse::body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self,
-                                 bool create_if_undefined) {
+bool RequestOrResponse::body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self) {
   if (!has_body(self)) {
     args.rval().setNull();
     return true;
   }
 
   JS::RootedObject body_stream(cx, RequestOrResponse::body_stream(self));
-  if (!body_stream && create_if_undefined) {
+  if (!body_stream) {
     body_stream = create_body_stream(cx, self);
     if (!body_stream)
       return false;
   }
 
-  args.rval().setObjectOrNull(body_stream);
+  args.rval().setObject(*body_stream);
   return true;
 }
 
@@ -2110,10 +2167,11 @@ bool Request::set_cache_key(JSContext *cx, JS::HandleObject self, JS::HandleValu
   if (!headers) {
     return false;
   }
+  JS::RootedObject headers_val(cx, headers);
   JS::SetReservedSlot(self, static_cast<uint32_t>(Slots::OverrideCacheKey), cache_key_str_val);
   JS::RootedString hex_str_js(cx, JS_NewStringCopyN(cx, hex_str.c_str(), hex_str.length()));
   JS::RootedValue value_val(cx, JS::StringValue(hex_str_js));
-  if (!Headers::append_valid_header(cx, headers, "fastly-xqd-cache-key", value_val,
+  if (!Headers::append_valid_header(cx, headers_val, "fastly-xqd-cache-key", value_val,
                                     "Request.prototype.setCacheKey")) {
     return false;
   }
@@ -2202,7 +2260,7 @@ bool Request::apply_cache_override(JSContext *cx, JS::HandleObject self) {
   }
 
   std::optional<uint32_t> stale_while_revalidate;
-  val = CacheOverride::swr(override);
+  val = CacheOverride::staleWhileRevalidate(override);
   if (!val.isUndefined()) {
     stale_while_revalidate = val.toInt32();
   }
@@ -2252,9 +2310,9 @@ bool Request::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto res = request_handle(self).get_version();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
 
   args.rval().setInt32(res.unwrap());
@@ -2285,7 +2343,7 @@ bool Request::backend_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
 bool Request::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
-  return RequestOrResponse::body_get(cx, args, self, is_downstream(self));
+  return RequestOrResponse::body_get(cx, args, self);
 }
 
 bool Request::bodyUsed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -2451,8 +2509,14 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
+  JS::RootedValue headers_val(cx, JS::ObjectValue(*headers));
+  JS::RootedObject cloned_headers(cx, Headers::create(cx, headers_val, Headers::guard(headers)));
+  if (!cloned_headers) {
+    return false;
+  }
+
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::Headers),
-                      JS::ObjectValue(*headers));
+                      JS::ObjectValue(*cloned_headers));
 
   JS::RootedString method(cx, Request::method(cx, self));
   if (!method) {
@@ -2477,19 +2541,181 @@ bool Request::clone(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::OverrideCacheKey),
                       override_cache_key);
 
-  JS::RootedValue image_optimizer_options(
-      cx, JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ImageOptimizerOptions)));
-  if (!image_optimizer_options.isNullOrUndefined()) {
-    if (!set_image_optimizer_options(cx, requestInstance, image_optimizer_options)) {
-      return false;
-    }
-  } else {
-    JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::ImageOptimizerOptions),
-                        image_optimizer_options);
+  auto image_optimizer_options = reinterpret_cast<image_optimizer::ImageOptimizerOptions *>(
+      JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::ImageOptimizerOptions)).toPrivate());
+  if (image_optimizer_options) {
+    image_optimizer_options = new image_optimizer::ImageOptimizerOptions(*image_optimizer_options);
   }
+
+  JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::ImageOptimizerOptions),
+                      JS::PrivateValue(image_optimizer_options));
 
   args.rval().setObject(*requestInstance);
   return true;
+}
+
+bool Request::bot_analyzed_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  if (!is_downstream(self)) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  auto req{Request::request_handle(self)};
+
+  auto bot_analyzed = req.http_req_downstream_bot_analyzed();
+  if (bot_analyzed.is_err()) {
+    args.rval().setBoolean(false);
+    return true;
+  } else {
+    args.rval().setBoolean(bot_analyzed.unwrap());
+    return true;
+  }
+}
+
+bool Request::bot_detected_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  if (!is_downstream(self)) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  auto req{Request::request_handle(self)};
+
+  auto bot_detected = req.http_req_downstream_bot_detected();
+  if (bot_detected.is_err()) {
+    args.rval().setBoolean(false);
+    return true;
+  } else {
+    args.rval().setBoolean(bot_detected.unwrap());
+    return true;
+  }
+}
+
+bool Request::bot_name_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  if (!is_downstream(self)) {
+    args.rval().setNull();
+    return true;
+  }
+
+  auto req{Request::request_handle(self)};
+
+  auto bot_name_res = req.http_req_downstream_bot_name();
+  if (bot_name_res.is_err()) {
+    args.rval().setNull();
+    return true;
+  } else {
+    if (bot_name_res.unwrap().has_value()) {
+      auto bot_name_str = std::move(bot_name_res.unwrap().value());
+      args.rval().setString(JS_NewStringCopyN(cx, bot_name_str.ptr.get(), bot_name_str.len));
+    } else {
+      args.rval().setNull();
+    }
+    return true;
+  }
+}
+
+bool Request::bot_category_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  if (!is_downstream(self)) {
+    args.rval().setNull();
+    return true;
+  }
+
+  auto req{Request::request_handle(self)};
+
+  auto bot_category_res = req.http_req_downstream_bot_category_kind();
+  if (bot_category_res.is_err()) {
+    args.rval().setNull();
+    return true;
+  } else {
+    if (bot_category_res.unwrap().has_value()) {
+      std::string kind_str;
+      switch (bot_category_res.unwrap().value()) {
+      case 0:
+        kind_str = "none";
+        break;
+      case 1:
+        kind_str = "suspected";
+        break;
+      case 2:
+        kind_str = "accessibility";
+        break;
+      case 3:
+        kind_str = "ai-crawler";
+        break;
+      case 4:
+        kind_str = "ai-fetcher";
+        break;
+      case 5:
+        kind_str = "content-fetcher";
+        break;
+      case 6:
+        kind_str = "monitoring-site-tools";
+        break;
+      case 7:
+        kind_str = "online-marketing";
+        break;
+      case 8:
+        kind_str = "page-preview";
+        break;
+      case 9:
+        kind_str = "platform-integrations";
+        break;
+      case 10:
+        kind_str = "research";
+        break;
+      case 11:
+        kind_str = "search-engine-crawler";
+        break;
+      case 12:
+        kind_str = "search-engine-specialization";
+        break;
+      case 13:
+        kind_str = "security-tools";
+        break;
+      case 14:
+        kind_str = "headless";
+        break;
+      default:
+        kind_str = "unknown";
+        break;
+      }
+      args.rval().setString(JS_NewStringCopyN(cx, kind_str.data(), kind_str.length()));
+    } else {
+      args.rval().setNull();
+    }
+    return true;
+  }
+}
+
+bool Request::bot_verified_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  if (!is_downstream(self)) {
+    args.rval().setNull();
+    return true;
+  }
+
+  auto req{Request::request_handle(self)};
+
+  auto bot_verified_res = req.http_req_downstream_bot_verified();
+  if (bot_verified_res.is_err()) {
+    args.rval().setNull();
+    return true;
+  } else {
+    if (bot_verified_res.unwrap().has_value()) {
+      args.rval().setBoolean(bot_verified_res.unwrap().value());
+    } else {
+      args.rval().setNull();
+    }
+    return true;
+  }
 }
 
 const JSFunctionSpec Request::static_methods[] = {
@@ -2524,6 +2750,11 @@ const JSPropertySpec Request::properties[] = {
     JS_PSG("body", body_get, JSPROP_ENUMERATE),
     JS_PSG("bodyUsed", bodyUsed_get, JSPROP_ENUMERATE),
     JS_PSG("isCacheable", isCacheable_get, JSPROP_ENUMERATE),
+    JS_PSG("botAnalyzed", bot_analyzed_get, JSPROP_ENUMERATE),
+    JS_PSG("botDetected", bot_detected_get, JSPROP_ENUMERATE),
+    JS_PSG("botName", bot_name_get, JSPROP_ENUMERATE),
+    JS_PSG("botCategory", bot_category_get, JSPROP_ENUMERATE),
+    JS_PSG("botVerified", bot_verified_get, JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "Request", JSPROP_READONLY),
     JS_PS_END,
 };
@@ -2557,7 +2788,7 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance,
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::CacheOverride),
                       JS::NullValue());
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::ImageOptimizerOptions),
-                      JS::NullValue());
+                      JS::PrivateValue(nullptr));
   JS::SetReservedSlot(requestInstance, static_cast<uint32_t>(Slots::IsDownstream),
                       JS::BooleanValue(is_downstream));
   return requestInstance;
@@ -2672,7 +2903,8 @@ JSObject *Request::create(JSContext *cx, JS::HandleObject requestInstance, JS::H
     if (!url_instance)
       return nullptr;
 
-    JS::RootedObject parsedURL(cx, URL::create(cx, url_instance, input, fastly::Fastly::baseURL));
+    JS::RootedObject parsedURL(
+        cx, URL::create(cx, url_instance, input, fastly::Fastly::request_state->base_url));
 
     // 2.  If `parsedURL` is failure, then throw a `TypeError`.
     if (!parsedURL) {
@@ -3432,9 +3664,9 @@ bool Response::version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto res = response_handle(self).get_version();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
 
   args.rval().setInt32(res.unwrap());
@@ -3481,7 +3713,7 @@ bool Response::bodyAll(JSContext *cx, unsigned argc, JS::Value *vp) {
 bool Response::body_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
-  return RequestOrResponse::body_get(cx, args, self, true);
+  return RequestOrResponse::body_get(cx, args, self);
 }
 
 bool Response::backend_get(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -3506,9 +3738,9 @@ bool Response::ip_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto handle = response_handle(self);
   auto res = handle.get_ip();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setUndefined();
+    return true;
   }
 
   auto ret = std::move(res.unwrap());
@@ -3537,9 +3769,9 @@ bool Response::port_get(JSContext *cx, unsigned argc, JS::Value *vp) {
 
   auto handle = response_handle(self);
   auto res = handle.get_port();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setUndefined();
+    return true;
   }
   if (!res.unwrap().has_value()) {
     args.rval().setUndefined();
@@ -3658,6 +3890,9 @@ bool Response::redirect(JSContext *cx, unsigned argc, JS::Value *vp) {
 }
 
 namespace {
+// GLOBALS: Global variable outwith RequestState
+// This is reset to false on every call to ToJSON, so there is no issue of becoming out of sync
+// across requests.
 bool callbackCalled;
 bool write_json_to_buf(const char16_t *str, uint32_t strlen, void *out) {
   callbackCalled = true;
@@ -3847,6 +4082,7 @@ const JSFunctionSpec Response::methods[] = {
     JS_FN("json", bodyAll<RequestOrResponse::BodyReadResult::JSON>, 0, JSPROP_ENUMERATE),
     JS_FN("text", bodyAll<RequestOrResponse::BodyReadResult::Text>, 0, JSPROP_ENUMERATE),
     JS_FN("setManualFramingHeaders", Response::setManualFramingHeaders, 1, JSPROP_ENUMERATE),
+    JS_FN("staleIfErrorAvailable", staleIfErrorAvailable, 0, JSPROP_ENUMERATE),
     JS_FS_END,
 };
 
@@ -3868,10 +4104,14 @@ const JSPropertySpec Response::properties[] = {
     JS_PSG("stale", stale_get, JSPROP_ENUMERATE),
     JS_PSGS("ttl", ttl_get, ttl_set, JSPROP_ENUMERATE),
     JS_PSG("age", age_get, JSPROP_ENUMERATE),
-    JS_PSGS("swr", swr_get, swr_set, JSPROP_ENUMERATE),
+    JS_PSGS("swr", staleWhileRevalidate_get, staleWhileRevalidate_set, JSPROP_ENUMERATE),
+    JS_PSGS("staleWhileRevalidate", staleWhileRevalidate_get, staleWhileRevalidate_set,
+            JSPROP_ENUMERATE),
+    JS_PSGS("staleIfError", staleIfError_get, staleIfError_set, JSPROP_ENUMERATE),
     JS_PSGS("vary", vary_get, vary_set, JSPROP_ENUMERATE),
     JS_PSGS("surrogateKeys", surrogateKeys_get, surrogateKeys_set, JSPROP_ENUMERATE),
     JS_PSGS("pci", pci_get, pci_set, JSPROP_ENUMERATE),
+    JS_PSG("maskedError", maskedError_get, JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "Response", JSPROP_READONLY),
     JS_PS_END,
 };
@@ -4007,7 +4247,7 @@ bool Response::age_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool Response::swr_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool Response::staleWhileRevalidate_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(0)
 
   auto entry = RequestOrResponse::cache_entry(self);
@@ -4033,6 +4273,35 @@ bool Response::swr_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   args.rval().setNumber(static_cast<double>(swr_ns) / 1e9);
+  return true;
+}
+
+bool Response::staleIfError_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  auto entry = RequestOrResponse::cache_entry(self);
+
+  // all caching paths should set the override options as the final options
+  // so if they aren't set we are in the undefined cases of no caching API use / no hostcall support
+  auto override_opts = override_cache_options(self);
+  if (!override_opts) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  uint64_t sie_ns;
+  // a promoted candidate response must define all cache options
+  if (!entry.has_value() || override_opts->stale_if_error_ns.has_value()) {
+    sie_ns = override_opts->stale_if_error_ns.value();
+  } else {
+    auto suggested_opts = suggested_cache_options(cx, self);
+    if (!suggested_opts) {
+      return false;
+    }
+    sie_ns = suggested_opts->stale_if_error_ns.value();
+  }
+
+  args.rval().setNumber(static_cast<double>(sie_ns) / 1e9);
   return true;
 }
 
@@ -4199,6 +4468,12 @@ bool Response::pci_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool Response::maskedError_get(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+  args.rval().set(JS::GetReservedSlot(self, static_cast<uint32_t>(Slots::MaskedError)));
+  return true;
+}
+
 // Setters for mutable properties
 
 bool Response::ttl_set(JSContext *cx, unsigned argc, JS::Value *vp) {
@@ -4223,9 +4498,9 @@ bool Response::ttl_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (std::isnan(seconds) || seconds <= 0) {
+  if (std::isnan(seconds) || seconds < 0) {
     api::throw_error(cx, api::Errors::TypeError, "Response set", "ttl",
-                     "be a number greater than zero");
+                     "be a number greater than or equal to zero");
     return false;
   }
 
@@ -4237,12 +4512,12 @@ bool Response::ttl_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
-bool Response::swr_set(JSContext *cx, unsigned argc, JS::Value *vp) {
+bool Response::staleWhileRevalidate_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   METHOD_HEADER(1)
 
   auto override_opts = override_cache_options(self);
   if (!RequestOrResponse::cache_entry(self).has_value()) {
-    api::throw_error(cx, api::Errors::TypeError, "Response set", "swr",
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "staleWhileRevalidate",
                      "be set only on unsent cache transaction responses");
     return false;
   }
@@ -4253,13 +4528,41 @@ bool Response::swr_set(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  if (std::isnan(seconds) || seconds <= 0) {
-    api::throw_error(cx, api::Errors::TypeError, "Response set", "swr",
-                     "be a number greater than zero");
+  if (std::isnan(seconds) || seconds < 0) {
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "staleWhileRevalidate",
+                     "be a number greater than or equal to zero");
     return false;
   }
 
   override_opts->stale_while_revalidate_ns = static_cast<uint64_t>(seconds * 1e9);
+
+  args.rval().setUndefined();
+  return true;
+}
+
+bool Response::staleIfError_set(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(1)
+
+  auto override_opts = override_cache_options(self);
+  if (!RequestOrResponse::cache_entry(self).has_value()) {
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "staleIfError",
+                     "be set only on unsent cache transaction responses");
+    return false;
+  }
+  MOZ_ASSERT(override_opts);
+
+  double seconds;
+  if (!JS::ToNumber(cx, args[0], &seconds)) {
+    return false;
+  }
+
+  if (std::isnan(seconds) || seconds < 0) {
+    api::throw_error(cx, api::Errors::TypeError, "Response set", "staleIfError",
+                     "be a number greater than or equal to zero");
+    return false;
+  }
+
+  override_opts->stale_if_error_ns = static_cast<uint64_t>(seconds * 1e9);
 
   args.rval().setUndefined();
   return true;
@@ -4424,6 +4727,27 @@ bool Response::pci_set(JSContext *cx, unsigned argc, JS::Value *vp) {
   return true;
 }
 
+bool Response::staleIfErrorAvailable(JSContext *cx, unsigned argc, JS::Value *vp) {
+  METHOD_HEADER(0)
+
+  // This method is only valid on candidate responses (inside afterSend callback)
+  auto cache_entry = RequestOrResponse::cache_entry(self);
+  if (!cache_entry) {
+    // Cache entry has been taken - this is not a candidate response
+    api::throw_error(cx, api::Errors::TypeError, "Response", "staleIfErrorAvailable()",
+                     "can only be called on candidate responses inside afterSend callback");
+    return false;
+  }
+
+  auto res = cache_entry->get_state();
+  if (auto *err = res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+
+  args.rval().setBoolean(res.unwrap().is_usable_if_error());
+  return true;
+}
 /**
  * The `Response` constructor https://fetch.spec.whatwg.org/#dom-response
  */

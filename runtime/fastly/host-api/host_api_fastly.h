@@ -158,6 +158,11 @@ using fastly::fetch::Request;
 
 namespace host_api {
 
+/// Sentinel `AsyncTask` handle used for tasks that are driven purely by a `deadline()`
+/// (e.g. timers) rather than by a real host handle. Must stay in sync with the value the
+/// host treats as "never ready" via `async_is_ready`/`async_select`.
+constexpr uint32_t NEVER_HANDLE = 0xFFFFFFFD;
+
 Result<Void>
 write_headers(HttpHeaders *headers,
               std::vector<std::tuple<host_api::HostString, host_api::HostString>> &list);
@@ -337,6 +342,12 @@ struct Response;
 
 class HttpPendingReq final {
 public:
+  enum class ResponseKind : uint32_t {
+    Any = 0,
+    Response = 1,
+    Error = 2,
+  };
+
   using Handle = uint32_t;
 
   static constexpr Handle invalid = UINT32_MAX - 1;
@@ -352,6 +363,13 @@ public:
 
   /// Block until the response is ready.
   api::FastlyResult<Response, FastlySendError> wait();
+
+  Result<Void> append_response_header(std::string_view name, std::string_view value,
+                                      ResponseKind target);
+  Result<Void> set_response_header(std::string_view name, std::string_view value,
+                                   ResponseKind target);
+  Result<Void> remove_response_header(std::string_view name, ResponseKind target);
+  Result<Void> send_to_client();
 
   /// Fetch the FastlyAsyncTask for this pending request.
   FastlyAsyncTask::Handle async_handle() const;
@@ -376,7 +394,7 @@ struct TlsVersion {
   uint8_t value = 0;
 
   explicit TlsVersion(uint8_t raw);
-  explicit TlsVersion(){};
+  explicit TlsVersion() {};
 
   uint8_t get_version() const;
   double get_version_number() const;
@@ -417,7 +435,7 @@ struct BackendConfig {
   std::optional<uint32_t> http_keepalive_time_ms;
   std::optional<TcpKeepalive> tcp_keepalive;
 
-  BackendConfig clone() {
+  BackendConfig clone() const {
     std::optional<HostString> out_host_override{};
     std::optional<uint32_t> out_connect_timeout{};
     std::optional<uint32_t> out_first_byte_timeout{};
@@ -595,6 +613,15 @@ public:
 
   Result<std::optional<HostString>> http_req_downstream_client_oh_fingerprint();
 
+  Result<std::optional<HostString>> http_req_downstream_client_sni();
+
+  Result<bool> http_req_downstream_bot_analyzed();
+  Result<bool> http_req_downstream_bot_detected();
+  Result<std::optional<HostString>> http_req_downstream_bot_name();
+  Result<std::optional<HostString>> http_req_downstream_bot_category();
+  Result<std::optional<uint32_t>> http_req_downstream_bot_category_kind();
+  Result<std::optional<bool>> http_req_downstream_bot_verified();
+
   Result<Void> auto_decompress_gzip();
 
   /// Send this request synchronously, and wait for the response.
@@ -764,6 +791,9 @@ struct HttpCacheWriteOptions final {
 
   // Optional flag indicating if this contains sensitive data
   std::optional<bool> sensitive_data;
+
+  // Optional stale-if-error duration in nanoseconds
+  std::optional<uint64_t> stale_if_error_ns;
 };
 
 struct CacheState final {
@@ -776,6 +806,7 @@ struct CacheState final {
   bool is_usable() const;
   bool is_stale() const;
   bool must_insert_or_update() const;
+  bool is_usable_if_error() const;
 };
 
 enum class HttpStorageAction : uint8_t {
@@ -820,6 +851,9 @@ public:
   transaction_record_not_cacheable(uint64_t max_age_ns,
                                    std::optional<std::string_view> vary_rule = std::nullopt);
 
+  /// Substitute stale-if-error response
+  Result<Void> transaction_choose_stale();
+
   /// Abandon the transaction
   Result<Void> transaction_abandon();
 
@@ -849,6 +883,9 @@ public:
 
   /// Get stale while revalidate time in nanoseconds
   Result<uint64_t> get_stale_while_revalidate_ns() const;
+
+  /// Get stale if error time in nanoseconds
+  Result<uint64_t> get_stale_if_error_ns() const;
 
   /// Get age in nanoseconds
   Result<uint64_t> get_age_ns() const;
@@ -1084,6 +1121,38 @@ public:
   Result<uint64_t> get_age_ns();
 
   Result<uint64_t> get_hits();
+};
+
+/// A pending transaction lookup, issued via `CacheBusyHandle::transaction_lookup_async`.
+/// Mirrors the Rust SDK's `CacheBusyHandle`: the busy handle either resolves to a real
+/// `CacheHandle` (via `wait()`) or, if abandoned before that (e.g. on a bounded wait's
+/// timeout), must be released via `close()`.
+class CacheBusyHandle final {
+public:
+  using Handle = uint32_t;
+
+  static constexpr Handle invalid = UINT32_MAX - 1;
+
+  Handle handle = invalid;
+
+  CacheBusyHandle() = default;
+  explicit CacheBusyHandle(Handle handle) : handle{handle} {}
+
+  static Result<CacheBusyHandle> transaction_lookup_async(std::string_view key,
+                                                          const CacheLookupOptions &opts);
+
+  bool is_valid() const { return this->handle != invalid; }
+
+  /// Block until the busy handle resolves, yielding the real `CacheHandle`.
+  Result<CacheHandle> wait();
+
+  /// Non-blocking readiness check.
+  Result<bool> is_ready() const;
+
+  /// Release a still-pending lookup (used on timeout / cleanup).
+  Result<Void> close();
+
+  FastlyAsyncTask::Handle async_handle() const { return FastlyAsyncTask::Handle{this->handle}; }
 };
 
 struct BackendHealth final {

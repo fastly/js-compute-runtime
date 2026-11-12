@@ -211,7 +211,27 @@ import { expectError, expectType } from 'tsd';
   expectType<(response: Response | PromiseLike<Response>) => void>(
     event.respondWith,
   );
+  expectType<(response: Promise<Response>) => void>(event.handoffRequest);
   expectType<(promise: Promise<any>) => void>(event.waitUntil);
+}
+
+// Fetch promise response helpers
+{
+  const response = Promise.resolve({} as Response);
+  expectType<void>(setResponseHeader(response, 'x-test', 'one'));
+  expectType<void>(appendResponseHeader(response, 'x-test', 'two', 'response'));
+  expectType<void>(removeResponseHeader(response, 'x-test', 'error'));
+  const fetched = fetch('https://example.com', { backend: 'origin' });
+  expectType<void>(setResponseHeader(fetched, 'x-test', 'value'));
+  expectType<void>(appendResponseHeader(fetched, 'x-test', 'value'));
+  expectType<void>(removeResponseHeader(fetched, 'x-test'));
+  expectType<void>(({} as FetchEvent).handoffRequest(fetched));
+  expectError(setResponseHeader(Promise.resolve(1), 'x-test', 'one'));
+  expectError(setResponseHeader(response, 'x-test'));
+  expectError(appendResponseHeader(response, 'x-test'));
+  expectError(removeResponseHeader(response));
+  expectError(setResponseHeader(response, 'x-test', 'one', 'invalid'));
+  expectError(({} as FetchEvent).handoffRequest(Promise.resolve(1)));
 }
 
 // CacheOverrideMode
@@ -481,7 +501,7 @@ import { expectError, expectType } from 'tsd';
   fastly.baseURL = undefined;
   expectType<string>(fastly.defaultBackend);
   fastly.defaultBackend = '.';
-  expectType<(key: string) => string>(fastly.env.get);
+  expectType<(key: string) => string | undefined>(fastly.env.get);
   expectType<(endpoint: string) => Logger>(fastly.getLogger);
   expectType<(enabled: boolean) => void>(fastly.enableDebugLogging);
   expectType<(address: string) => Geolocation>(
@@ -514,4 +534,54 @@ import { expectError, expectType } from 'tsd';
   expectError((stream.readable = 'd'));
   expectType<WritableStream<Uint8Array<ArrayBuffer>>>(stream.writable);
   expectError((stream.writable = 'd'));
+}
+
+// SubtleCrypto.importKey
+{
+  const keyData = new Uint8Array(0);
+  expectType<Promise<CryptoKey>>(
+    crypto.subtle.importKey(
+      'spki',
+      keyData,
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      false,
+      ['verify'],
+    ),
+  );
+  expectType<Promise<CryptoKey>>(
+    crypto.subtle.importKey(
+      'pkcs8',
+      keyData,
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      false,
+      ['sign'],
+    ),
+  );
+  expectType<Promise<CryptoKey>>(
+    crypto.subtle.importKey(
+      'spki',
+      keyData,
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['verify'],
+    ),
+  );
+  expectType<Promise<CryptoKey>>(
+    crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      false,
+      ['verify'],
+    ),
+  );
+  expectError(
+    crypto.subtle.importKey(
+      'pem',
+      keyData,
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      false,
+      ['verify'],
+    ),
+  );
 }

@@ -1,13 +1,12 @@
 #ifndef fastly_H
 #define fastly_H
 #ifdef __cplusplus
-extern "C" {
-namespace fastly {
-#endif
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+extern "C" {
+namespace fastly {
+#endif
 
 typedef struct fastly_world_string {
   uint8_t *ptr;
@@ -359,6 +358,7 @@ typedef struct __attribute__((aligned(8))) fastly_http_cache_write_options {
   const char *surrogate_keys;
   size_t surrogate_keys_len;
   uint64_t length;
+  uint64_t stale_if_error_ns;
 } fastly_http_cache_write_options;
 
 // HTTP Cache write options mask
@@ -369,6 +369,7 @@ typedef struct __attribute__((aligned(8))) fastly_http_cache_write_options {
 #define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS (1 << 4)
 #define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_LENGTH (1 << 5)
 #define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA (1 << 6)
+#define FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_IF_ERROR_NS (1 << 7)
 
 // HTTP Cache host calls
 WASM_IMPORT("fastly_http_cache", "is_request_cacheable")
@@ -403,6 +404,9 @@ int http_cache_transaction_update_and_return_fresh(uint32_t handle, uint32_t res
                                                    uint32_t options_mask,
                                                    fastly_http_cache_write_options *options,
                                                    uint32_t *fresh_handle_out);
+
+WASM_IMPORT("fastly_http_cache", "transaction_choose_stale")
+int http_cache_transaction_choose_stale(uint32_t handle);
 
 WASM_IMPORT("fastly_http_cache", "transaction_record_not_cacheable")
 int http_cache_transaction_record_not_cacheable(uint32_t handle, uint32_t options_mask,
@@ -445,6 +449,9 @@ int http_cache_get_max_age_ns(uint32_t handle, uint64_t *max_age_ns_out);
 WASM_IMPORT("fastly_http_cache", "get_stale_while_revalidate_ns")
 int http_cache_get_stale_while_revalidate_ns(uint32_t handle, uint64_t *swr_ns_out);
 
+WASM_IMPORT("fastly_http_cache", "get_stale_if_error_ns")
+int http_cache_get_stale_if_error_ns(uint32_t handle, uint64_t *sie_ns_out);
+
 WASM_IMPORT("fastly_http_cache", "get_age_ns")
 int http_cache_get_age_ns(uint32_t handle, uint64_t *age_ns_out);
 
@@ -472,7 +479,7 @@ int log_write(uint32_t endpoint_handle, const char *msg, size_t msg_len, size_t 
 // Module fastly_http_downstream
 
 typedef struct fastly_http_downstream_next_request_options {
-  uint32_t timeout_ms;
+  uint64_t timeout_ms;
 } fastly_http_downstream_next_request_options;
 
 #define FASTLY_HTTP_DOWNSTREAM_NEXT_REQUEST_OPTIONS_MASK_RESERVED (1 << 0)
@@ -565,6 +572,10 @@ WASM_IMPORT("fastly_http_downstream", "downstream_tls_client_hello")
 int http_downstream_tls_client_hello(uint32_t req_handle, uint8_t *ret, size_t ret_len,
                                      size_t *nwritten);
 
+WASM_IMPORT("fastly_http_downstream", "downstream_tls_client_servername")
+int http_downstream_tls_client_servername(uint32_t req_handle, uint8_t *ret, size_t ret_len,
+                                          size_t *nwritten);
+
 WASM_IMPORT("fastly_http_downstream", "downstream_tls_raw_client_certificate")
 int http_downstream_tls_raw_client_certificate(uint32_t req_handle, uint8_t *ret, size_t ret_len,
                                                size_t *nwritten);
@@ -582,6 +593,26 @@ int http_downstream_client_h2_fingerprint(uint32_t req_handle, uint8_t *ret, siz
 WASM_IMPORT("fastly_http_downstream", "downstream_client_oh_fingerprint")
 int http_downstream_client_oh_fingerprint(uint32_t req_handle, uint8_t *ret, size_t ret_len,
                                           size_t *nwritten);
+
+WASM_IMPORT("fastly_http_downstream", "downstream_bot_analyzed")
+int http_downstream_bot_analyzed(uint32_t req_handle, uint32_t *bot_analyzed_out);
+
+WASM_IMPORT("fastly_http_downstream", "downstream_bot_detected")
+int http_downstream_bot_detected(uint32_t req_handle, uint32_t *bot_detected_out);
+
+WASM_IMPORT("fastly_http_downstream", "downstream_bot_name")
+int http_downstream_bot_name(uint32_t req_handle, uint8_t *bot_name_out, size_t bot_name_max_len,
+                             size_t *nwritten);
+
+WASM_IMPORT("fastly_http_downstream", "downstream_bot_category")
+int http_downstream_bot_category(uint32_t req_handle, uint8_t *bot_category_out,
+                                 size_t bot_category_max_len, size_t *nwritten);
+
+WASM_IMPORT("fastly_http_downstream", "downstream_bot_category_kind")
+int http_downstream_bot_category_kind(uint32_t req_handle, uint32_t *bot_category_kind_out);
+
+WASM_IMPORT("fastly_http_downstream", "downstream_bot_verified")
+int http_downstream_bot_verified(uint32_t req_handle, uint32_t *bot_verified_out);
 
 WASM_IMPORT("fastly_http_req", "new")
 int req_new(uint32_t *req_handle_out);
@@ -671,6 +702,18 @@ int req_pending_req_wait_v2(uint32_t req_handle,
                             fastly_host_http_send_error_detail *send_error_detail,
                             uint32_t *resp_handle_out, uint32_t *resp_body_handle_out);
 
+WASM_IMPORT("fastly_http_req", "pending_req_header_append")
+int req_pending_req_header_append(uint32_t pending_req_handle, const char *name, size_t name_len,
+                                  const char *value, size_t value_len, uint32_t target);
+
+WASM_IMPORT("fastly_http_req", "pending_req_header_insert")
+int req_pending_req_header_insert(uint32_t pending_req_handle, const char *name, size_t name_len,
+                                  const char *value, size_t value_len, uint32_t target);
+
+WASM_IMPORT("fastly_http_req", "pending_req_header_remove")
+int req_pending_req_header_remove(uint32_t pending_req_handle, const char *name, size_t name_len,
+                                  uint32_t target);
+
 WASM_IMPORT("fastly_http_req", "inspect")
 int req_inspect(uint32_t req_handle, uint32_t body_handle,
                 req_inspect_config_options_mask config_options_mask,
@@ -710,6 +753,9 @@ int resp_version_get(uint32_t resp_handle, uint32_t *version_out);
 
 WASM_IMPORT("fastly_http_resp", "send_downstream")
 int resp_send_downstream(uint32_t resp_handle, uint32_t body_handle, uint32_t streaming);
+
+WASM_IMPORT("fastly_http_resp", "send_downstream_pending")
+int resp_send_downstream_pending(uint32_t pending_req_handle);
 
 WASM_IMPORT("fastly_http_resp", "status_get")
 int resp_status_get(uint32_t resp_handle, uint16_t *status_out);
@@ -961,6 +1007,7 @@ typedef struct fastly_host_cache_write_options {
   uint64_t length;
   fastly_world_list_u8 user_metadata;
   bool sensitive_data;
+  uint64_t stale_if_error_ns;
 } fastly_host_cache_write_options;
 
 // a cached object was found
@@ -971,6 +1018,8 @@ typedef struct fastly_host_cache_write_options {
 #define FASTLY_HOST_CACHE_LOOKUP_STATE_STALE (1 << 2)
 // this client is requested to insert or revalidate an object
 #define FASTLY_HOST_CACHE_LOOKUP_STATE_MUST_INSERT_OR_UPDATE (1 << 3)
+// a cached object was found and it is only usable if synchronous revalidation fails
+#define FASTLY_HOST_CACHE_LOOKUP_STATE_USABLE_IF_ERROR (1 << 4)
 
 WASM_IMPORT("fastly_cache", "lookup")
 int cache_lookup(char *cache_key, size_t cache_key_len, uint32_t options_mask,
@@ -997,6 +1046,16 @@ int cache_insert(char *cache_key, size_t cache_key_len, uint32_t options_mask,
 WASM_IMPORT("fastly_cache", "transaction_lookup")
 int cache_transaction_lookup(char *cache_key, size_t cache_key_len, uint32_t options_mask,
                              fastly_host_cache_lookup_options *options, uint32_t *ret);
+
+WASM_IMPORT("fastly_cache", "transaction_lookup_async")
+int cache_transaction_lookup_async(char *cache_key, size_t cache_key_len, uint32_t options_mask,
+                                   fastly_host_cache_lookup_options *options, uint32_t *ret);
+
+WASM_IMPORT("fastly_cache", "cache_busy_handle_wait")
+int cache_busy_handle_wait(uint32_t busy_handle, uint32_t *ret);
+
+WASM_IMPORT("fastly_cache", "close_busy")
+int cache_close_busy(uint32_t busy_handle);
 
 WASM_IMPORT("fastly_cache", "transaction_insert")
 int cache_transaction_insert(uint32_t handle, uint32_t options_mask, CacheWriteOptions *options,

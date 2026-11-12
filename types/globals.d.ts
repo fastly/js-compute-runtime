@@ -337,6 +337,14 @@ declare interface FetchEvent {
   respondWith(response: Response | PromiseLike<Response>): void;
 
   /**
+   * Respond using the original promise returned by `fetch()`.
+   *
+   * Direct backend requests can be transferred to the host so they continue after the service
+   * releases its resources. Cache-backed responses use the ordinary promise response path.
+   */
+  handoffRequest(response: Promise<Response>): void;
+
+  /**
    * Send a [103 Early Hints](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/103)
    * response back to the client.
    *
@@ -513,6 +521,11 @@ declare interface ClientInfo {
    * @version 3.2.1
    */
   readonly tlsClientHello: ArrayBuffer | null;
+  /**
+   * The raw Server Name Indication (SNI) the client sent in the ClientHello TLS record.
+   * @version 3.45.0
+   */
+  readonly tlsClientSNI: string | null;
 }
 
 /**
@@ -1019,11 +1032,11 @@ declare interface Fastly {
      * For additional references, see the [Fastly Developer Hub for Compute Environment Variables](https://developer.fastly.com/reference/compute/ecp-env/)
      *
      * @param name The name of the environment variable
-     * @returns the value of the environemnt variable
+     * @returns the value of the environment variable, or `undefined` if no such environment variable exists
      * @deprecated This has moved to {@link "fastly:env".env} - This function will be removed in the next major version.
      * @hidden
      */
-    get(name: string): string;
+    get(name: string): string | undefined;
   };
 
   /**
@@ -2185,6 +2198,32 @@ declare function fetch(
   init?: RequestInit,
 ): Promise<Response>;
 
+/** Select which outcome receives a fetch response header override. */
+type PendingResponseTarget = 'any' | 'response' | 'error';
+
+/** Set or replace a response header for the original promise returned directly by `fetch()`. */
+declare function setResponseHeader(
+  response: Promise<Response>,
+  name: string,
+  value: string,
+  target?: PendingResponseTarget,
+): void;
+
+/** Append a response header for the original promise returned directly by `fetch()`. */
+declare function appendResponseHeader(
+  response: Promise<Response>,
+  name: string,
+  value: string,
+  target?: PendingResponseTarget,
+): void;
+
+/** Remove a response header for the original promise returned directly by `fetch()`. */
+declare function removeResponseHeader(
+  response: Promise<Response>,
+  name: string,
+  target?: PendingResponseTarget,
+): void;
+
 /**
  * @group Scheduling
  */
@@ -2275,14 +2314,14 @@ type BufferSource = ArrayBufferView | ArrayBuffer;
 
 declare class SubtleCrypto {
   constructor();
-  // decrypt(algorithm: AlgorithmIdentifier | RsaOaepParams | AesCtrParams | AesCbcParams | AesGcmParams, key: CryptoKey, data: BufferSource): Promise<ArrayBuffer>;
-  // deriveBits(algorithm: AlgorithmIdentifier | EcdhKeyDeriveParams | HkdfParams | Pbkdf2Params, baseKey: CryptoKey, length: number): Promise<ArrayBuffer>;
+  decrypt(algorithm: AlgorithmIdentifier | RsaOaepParams | AesCtrParams | AesCbcParams | AesGcmParams, key: CryptoKey, data: BufferSource): Promise<ArrayBuffer>;
+  deriveBits(algorithm: AlgorithmIdentifier | EcdhKeyDeriveParams | HkdfParams | Pbkdf2Params, baseKey: CryptoKey, length: number): Promise<ArrayBuffer>;
   // deriveKey(algorithm: AlgorithmIdentifier | EcdhKeyDeriveParams | HkdfParams | Pbkdf2Params, baseKey: CryptoKey, derivedKeyType: AlgorithmIdentifier | AesDerivedKeyParams | HmacImportParams | HkdfParams | Pbkdf2Params, extractable: boolean, keyUsages: KeyUsage[]): Promise<CryptoKey>;
   digest(
     algorithm: AlgorithmIdentifier,
     data: BufferSource,
   ): Promise<ArrayBuffer>;
-  // encrypt(algorithm: AlgorithmIdentifier | RsaOaepParams | AesCtrParams | AesCbcParams | AesGcmParams, key: CryptoKey, data: BufferSource): Promise<ArrayBuffer>;
+  encrypt(algorithm: AlgorithmIdentifier | RsaOaepParams | AesCtrParams | AesCbcParams | AesGcmParams, key: CryptoKey, data: BufferSource): Promise<ArrayBuffer>;
   // exportKey(format: "jwk", key: CryptoKey): Promise<JsonWebKey>;
   // exportKey(format: Exclude<KeyFormat, "jwk">, key: CryptoKey): Promise<ArrayBuffer>;
   // generateKey(algorithm: RsaHashedKeyGenParams | EcKeyGenParams, extractable: boolean, keyUsages: ReadonlyArray<KeyUsage>): Promise<CryptoKeyPair>;
@@ -2302,9 +2341,9 @@ declare class SubtleCrypto {
     algorithm:
       | AlgorithmIdentifier
       | RsaHashedImportParams
-      // | EcKeyImportParams
-      | HmacImportParams,
-    // | AesKeyAlgorithm
+      | EcKeyImportParams
+      | HmacImportParams
+      | AesKeyAlgorithm,
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey>;
@@ -2334,6 +2373,45 @@ interface RsaHashedImportParams extends Algorithm {
   hash: HashAlgorithmIdentifier;
 }
 type HashAlgorithmIdentifier = AlgorithmIdentifier;
+
+interface AesCbcParams extends Algorithm {
+  iv: BufferSource;
+}
+
+interface AesCtrParams extends Algorithm {
+  counter: BufferSource;
+  length: number;
+}
+
+interface AesGcmParams extends Algorithm {
+  additionalData?: BufferSource;
+  iv: BufferSource;
+  tagLength?: number;
+}
+
+interface AesKeyAlgorithm extends KeyAlgorithm {
+  length: number;
+}
+
+interface EcdhKeyDeriveParams extends Algorithm {
+  public: CryptoKey;
+}
+
+interface HkdfParams extends Algorithm {
+  hash: HashAlgorithmIdentifier;
+  info: BufferSource;
+  salt: BufferSource;
+}
+
+interface Pbkdf2Params extends Algorithm {
+  hash: HashAlgorithmIdentifier;
+  iterations: number;
+  salt: BufferSource;
+}
+
+interface RsaOaepParams extends Algorithm {
+  label?: BufferSource;
+}
 
 interface EcKeyImportParams {
   name: 'ECDSA';
@@ -2418,11 +2496,7 @@ interface KeyAlgorithm {
   name: string;
 }
 
-type KeyFormat =
-  | 'jwk'
-  // | "pkcs8"
-  | 'raw';
-// | "spki";
+type KeyFormat = 'jwk' | 'pkcs8' | 'raw' | 'spki';
 type KeyType = 'private' | 'public' | 'secret';
 type KeyUsage =
   | 'decrypt'

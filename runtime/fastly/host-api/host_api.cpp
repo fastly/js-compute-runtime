@@ -44,7 +44,7 @@ static void log_hostcall(const char *func_name, ...) {
 #define TRACE_CALL_RET(...)
 #endif
 
-#define NEVER_HANDLE 0xFFFFFFFD
+using host_api::NEVER_HANDLE;
 
 #define MILLISECS_IN_NANOSECS 1000000
 #define SECS_IN_NANOSECS 1000000000
@@ -112,7 +112,7 @@ void sleep_until(uint64_t time_ns, uint64_t now) {
   }
 }
 
-size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
+size_t api::AsyncTask::select(std::vector<RefPtr<api::AsyncTask>> &tasks) {
   if (tasks.size() == 0) {
     TRACE_CALL()
   } else {
@@ -132,33 +132,32 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
   size_t tasks_len = tasks.size();
   std::vector<api::FastlyAsyncTask::Handle> handles;
   handles.reserve(tasks_len);
-  uint64_t now = 0;
-  uint64_t soonest_deadline = 0;
-  size_t soonest_deadline_idx = -1;
+
+  std::optional<uint64_t> now;
+  std::optional<uint64_t> soonest_deadline;
+  std::optional<size_t> soonest_deadline_idx;
   for (size_t idx = 0; idx < tasks_len; ++idx) {
-    auto *task = tasks.at(idx);
+    auto task = tasks.at(idx);
     uint64_t deadline;
     if (task->id() == IMMEDIATE_TASK_HANDLE) {
-      if (now == 0) {
+      if (!now) {
         now = host_api::MonotonicClock::now();
-        MOZ_ASSERT(now > 0);
       }
-      deadline = now;
+      deadline = *now;
     } else {
       deadline = task->deadline();
     }
     if (deadline > 0) {
       MOZ_ASSERT(task->id() == NEVER_HANDLE || task->id() == IMMEDIATE_TASK_HANDLE);
-      if (now == 0) {
+      if (!now) {
         now = host_api::MonotonicClock::now();
-        MOZ_ASSERT(now > 0);
       }
       // expired timers treated as immediates
-      if (deadline < now) {
-        deadline = now;
+      if (deadline < *now) {
+        deadline = *now;
       }
       // this check will always only select the first immediate
-      if (soonest_deadline == 0 || deadline < soonest_deadline) {
+      if (!soonest_deadline || deadline < *soonest_deadline) {
         soonest_deadline = deadline;
         soonest_deadline_idx = idx;
       }
@@ -172,9 +171,11 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
 
   // When there are no async tasks, sleep until the deadline
   if (handles.size() == 0) {
-    MOZ_ASSERT(soonest_deadline >= now);
-    sleep_until(soonest_deadline, now);
-    return soonest_deadline_idx;
+    // Every task fed into this call was deadline-driven, so both of these must be set.
+    MOZ_ASSERT(soonest_deadline.has_value() && now.has_value());
+    MOZ_ASSERT(*soonest_deadline >= *now);
+    sleep_until(*soonest_deadline, *now);
+    return *soonest_deadline_idx;
   }
 
   uint32_t ret = UINT32_MAX;
@@ -182,7 +183,7 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
 
   // only immediate timers in the task list -> do a ready check against all handles instead of a
   // select
-  if (now != 0 && soonest_deadline == now) {
+  if (soonest_deadline && soonest_deadline == now) {
     for (ret = 0; ret < handles.size(); ++ret) {
       auto handle = handles.at(ret);
       uint32_t is_ready_out;
@@ -209,13 +210,17 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
       }
     }
     // no tasks ready -> trigger our soonest immediate or timer
-    return soonest_deadline_idx;
+    return *soonest_deadline_idx;
   }
 
   while (true) {
-    MOZ_ASSERT(soonest_deadline == 0 || soonest_deadline >= now);
-    // timeout value of 0 means no timeout for async_select
-    uint32_t timeout = soonest_deadline > 0 ? (soonest_deadline - now) / MILLISECS_IN_NANOSECS : 0;
+    MOZ_ASSERT(!soonest_deadline || (now && *soonest_deadline >= *now));
+    // timeout value of 0 means no timeout for async_select, so we must round any positive
+    // remaining duration up to at least 1ms to avoid blocking indefinitely one sub-millisecond
+    // timeouts.
+    uint32_t timeout = soonest_deadline ? (*soonest_deadline - *now + MILLISECS_IN_NANOSECS - 1) /
+                                              MILLISECS_IN_NANOSECS
+                                        : 0;
     if (!convert_result(fastly::async_select(handles.data(), handles.size(), timeout, &ret),
                         &err)) {
       if (host_api::error_is_bad_handle(err)) {
@@ -242,17 +247,17 @@ size_t api::AsyncTask::select(std::vector<api::AsyncTask *> &tasks) {
         }
       }
       abort();
-    } else if (soonest_deadline > 0) {
-      MOZ_ASSERT(soonest_deadline > now);
-      MOZ_ASSERT(soonest_deadline_idx != -1);
+    } else if (soonest_deadline) {
+      MOZ_ASSERT(*soonest_deadline > *now);
+      MOZ_ASSERT(soonest_deadline_idx.has_value());
       // Verify that the task definitely is ready from a time perspective, and if not loop the host
       // call again.
       now = host_api::MonotonicClock::now();
-      if (soonest_deadline > now) {
+      if (*soonest_deadline > *now) {
         err = 0;
         continue;
       }
-      return soonest_deadline_idx;
+      return *soonest_deadline_idx;
     } else {
       abort();
     }
@@ -529,16 +534,7 @@ int32_t MonotonicClock::subscribe(const uint64_t when, const bool absolute) {
   return NEVER_HANDLE;
 }
 
-void MonotonicClock::unsubscribe(const int32_t handle_id){TRACE_CALL()}
-
-// HttpHeaders and HttpHeadersReadOnly extend Resource.
-// Resource provdes handle_state_ which is a HandleState
-// which gets to be fully host-defined.
-Resource::~Resource() {
-  if (handle_state_ != nullptr) {
-    handle_state_ = nullptr;
-  }
-};
+void MonotonicClock::unsubscribe(const int32_t handle_id) { TRACE_CALL() }
 
 // Fastly handle state is currently just a wrapper around
 // an arbitrary fastly handle, along with a bit indicating
@@ -556,6 +552,15 @@ public:
   api::FastlyAsyncTask::Handle handle() { return handle_; }
   bool is_req() { return is_req_; }
   bool valid() const { return true; }
+};
+
+// HttpHeaders and HttpHeadersReadOnly extend Resource.
+// Resource provdes handle_state_ which is a HandleState
+// which gets to be fully host-defined.
+Resource::~Resource() {
+  if (handle_state_ != nullptr) {
+    handle_state_ = nullptr;
+  }
 };
 
 HttpHeaders *HttpHeadersReadOnly::clone() { return new HttpHeaders(*this); }
@@ -597,9 +602,10 @@ Result<vector<tuple<HostString, HostString>>> HttpHeadersReadOnly::entries() con
       // original js-compute-runtime also skipped here, but should this be an error or empty entry?
       continue;
     }
-    auto last_val = &(*values.value().end());
-    for (auto &value : values.value()) {
-      if (&value == last_val) {
+    auto &vals = values.value();
+    auto *last_val = vals.data() + vals.size();
+    for (auto &value : vals) {
+      if (&value + 1 == last_val) {
         entries_vec.emplace_back(std::move(name), std::move(value));
       } else {
         std::string_view host_name_view(name);
@@ -1218,6 +1224,73 @@ FastlyResult<Response, FastlySendError> HttpPendingReq::wait() {
   return res;
 }
 
+Result<Void> HttpPendingReq::append_response_header(std::string_view name, std::string_view value,
+                                                    ResponseKind target) {
+  TRACE_CALL()
+  Result<Void> res;
+  fastly::fastly_host_error err;
+  auto name_str = string_view_to_world_string(name);
+  auto value_str = string_view_to_world_string(value);
+  if (!convert_result(fastly::req_pending_req_header_append(
+                          this->handle, reinterpret_cast<char *>(name_str.ptr), name_str.len,
+                          reinterpret_cast<char *>(value_str.ptr), value_str.len,
+                          static_cast<uint32_t>(target)),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+  return res;
+}
+
+Result<Void> HttpPendingReq::set_response_header(std::string_view name, std::string_view value,
+                                                 ResponseKind target) {
+  TRACE_CALL()
+  Result<Void> res;
+  fastly::fastly_host_error err;
+  auto name_str = string_view_to_world_string(name);
+  auto value_str = string_view_to_world_string(value);
+  if (!convert_result(fastly::req_pending_req_header_insert(
+                          this->handle, reinterpret_cast<char *>(name_str.ptr), name_str.len,
+                          reinterpret_cast<char *>(value_str.ptr), value_str.len,
+                          static_cast<uint32_t>(target)),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+  return res;
+}
+
+Result<Void> HttpPendingReq::remove_response_header(std::string_view name, ResponseKind target) {
+  TRACE_CALL()
+  Result<Void> res;
+  fastly::fastly_host_error err;
+  auto name_str = string_view_to_world_string(name);
+  if (!convert_result(fastly::req_pending_req_header_remove(
+                          this->handle, reinterpret_cast<char *>(name_str.ptr), name_str.len,
+                          static_cast<uint32_t>(target)),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+  return res;
+}
+
+Result<Void> HttpPendingReq::send_to_client() {
+  TRACE_CALL()
+  Result<Void> res;
+  auto handle = std::exchange(this->handle, HttpPendingReq::invalid);
+  fastly::fastly_host_error err;
+  if (!convert_result(fastly::resp_send_downstream_pending(handle), &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
+  }
+  return res;
+}
+
 FastlyAsyncTask::Handle HttpPendingReq::async_handle() const {
   return FastlyAsyncTask::Handle{this->handle};
 }
@@ -1390,6 +1463,16 @@ Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::strin
     auto cert_hostname = string_view_to_world_string(*val);
     backend_configuration.cert_hostname = reinterpret_cast<char *>(cert_hostname.ptr);
     backend_configuration.cert_hostname_len = cert_hostname.len;
+  } else if (config.use_ssl.value_or(false)) {
+    backend_config_mask |= BACKEND_CONFIG_CERT_HOSTNAME;
+    if (auto &val = config.host_override) {
+      auto host_override = string_view_to_world_string(*val);
+      backend_configuration.cert_hostname = reinterpret_cast<char *>(host_override.ptr);
+      backend_configuration.cert_hostname_len = host_override.len;
+    } else {
+      backend_configuration.cert_hostname = reinterpret_cast<char *>(target_str.ptr);
+      backend_configuration.cert_hostname_len = target_str.len;
+    }
   }
 
   if (auto &val = config.ca_cert) {
@@ -1412,8 +1495,15 @@ Result<Void> HttpReq::register_dynamic_backend(std::string_view name, std::strin
     backend_configuration.sni_hostname = reinterpret_cast<char *>(sni_hostname.ptr);
     backend_configuration.sni_hostname_len = sni_hostname.len;
   } else if (config.use_ssl.value_or(false)) {
-    backend_configuration.sni_hostname = reinterpret_cast<char *>(target_str.ptr);
-    backend_configuration.sni_hostname_len = target_str.len;
+    backend_config_mask |= BACKEND_CONFIG_SNI_HOSTNAME;
+    if (auto &val = config.host_override) {
+      auto host_override = string_view_to_world_string(*val);
+      backend_configuration.sni_hostname = reinterpret_cast<char *>(host_override.ptr);
+      backend_configuration.sni_hostname_len = host_override.len;
+    } else {
+      backend_configuration.sni_hostname = reinterpret_cast<char *>(target_str.ptr);
+      backend_configuration.sni_hostname_len = target_str.len;
+    }
   }
 
   if (auto &val = config.client_cert) {
@@ -1609,13 +1699,19 @@ Result<HostString> HttpReq::get_uri() const {
   fastly::fastly_host_error err;
   fastly::fastly_world_string uri;
   uri.ptr = static_cast<uint8_t *>(cabi_malloc(URI_MAX_LEN, 1));
-  if (!convert_result(fastly::req_uri_get(this->handle, reinterpret_cast<char *>(uri.ptr),
-                                          URI_MAX_LEN, &uri.len),
-                      &err)) {
+
+  auto status =
+      fastly::req_uri_get(this->handle, reinterpret_cast<char *>(uri.ptr), URI_MAX_LEN, &uri.len);
+  if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    uri.ptr = static_cast<uint8_t *>(cabi_realloc(uri.ptr, URI_MAX_LEN, 1, uri.len));
+    status =
+        fastly::req_uri_get(this->handle, reinterpret_cast<char *>(uri.ptr), uri.len, &uri.len);
+  }
+
+  if (!convert_result(status, &err)) {
     cabi_free(uri.ptr);
     res.emplace_err(err);
   } else {
-    uri.ptr = static_cast<uint8_t *>(cabi_realloc(uri.ptr, URI_MAX_LEN, 1, uri.len));
     res.emplace(make_host_string(uri));
   }
 
@@ -1890,6 +1986,36 @@ Result<std::optional<HostBytes>> HttpReq::http_req_downstream_tls_ja3_md5() {
   return res;
 }
 
+// http-req-downstream-client-sni: func() -> result<option<string>, error>
+Result<std::optional<HostString>> HttpReq::http_req_downstream_client_sni() {
+  TRACE_CALL()
+  Result<std::optional<HostString>> res;
+
+  fastly::fastly_host_error err;
+  fastly::fastly_world_string ret;
+  auto default_size = 128;
+  ret.ptr = static_cast<uint8_t *>(cabi_malloc(default_size, 4));
+  auto status =
+      fastly::http_downstream_tls_client_servername(this->handle, ret.ptr, default_size, &ret.len);
+  if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, default_size, 4, ret.len));
+    status =
+        fastly::http_downstream_tls_client_servername(this->handle, ret.ptr, ret.len, &ret.len);
+  }
+  if (!convert_result(status, &err)) {
+    cabi_free(ret.ptr);
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(make_host_string(ret));
+  }
+
+  return res;
+}
+
 // http-req-downstream-tls-ja4: func() -> result<option<string>, error>
 Result<std::optional<HostString>> HttpReq::http_req_downstream_tls_ja4() {
   TRACE_CALL()
@@ -1975,6 +2101,101 @@ Result<std::optional<HostString>> HttpReq::http_req_downstream_client_oh_fingerp
     res.emplace(make_host_string(ret));
   }
 
+  return res;
+}
+
+Result<bool> HttpReq::http_req_downstream_bot_analyzed() {
+  TRACE_CALL()
+  Result<bool> res;
+  uint32_t bot_analyzed{0};
+  auto status{fastly::http_downstream_bot_analyzed(this->handle, &bot_analyzed)};
+  fastly::fastly_host_error err;
+  if (!convert_result(status, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace((bot_analyzed & 1) != 0);
+  }
+  return res;
+}
+
+Result<bool> HttpReq::http_req_downstream_bot_detected() {
+  TRACE_CALL()
+  Result<bool> res;
+  uint32_t bot_detected{0};
+  auto status{fastly::http_downstream_bot_detected(this->handle, &bot_detected)};
+  fastly::fastly_host_error err;
+  if (!convert_result(status, &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace((bot_detected & 1) != 0);
+  }
+  return res;
+}
+
+Result<std::optional<HostString>> HttpReq::http_req_downstream_bot_name() {
+  TRACE_CALL()
+  Result<std::optional<HostString>> res;
+  fastly::fastly_host_error err;
+  fastly::fastly_world_string ret;
+  uint32_t initial_buf_len{32};
+  uint32_t buf_len{initial_buf_len};
+  ret.ptr = static_cast<uint8_t *>(cabi_malloc(32, 1));
+
+  auto status = fastly::http_downstream_bot_name(this->handle, ret.ptr, 32, &ret.len);
+  if (status == FASTLY_HOST_ERROR_BUFFER_LEN) {
+    buf_len = ret.len;
+    ret.len = 0;
+    ret.ptr = static_cast<uint8_t *>(cabi_realloc(ret.ptr, initial_buf_len, 1, buf_len));
+    status = fastly::http_downstream_bot_name(this->handle, ret.ptr, buf_len, &ret.len);
+  }
+
+  if (!convert_result(status, &err)) {
+    cabi_free(ret.ptr);
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(make_host_string(ret));
+  }
+
+  return res;
+}
+
+Result<std::optional<uint32_t>> HttpReq::http_req_downstream_bot_category_kind() {
+  TRACE_CALL()
+  Result<std::optional<uint32_t>> res;
+  uint32_t bot_category_kind{0};
+  auto status{fastly::http_downstream_bot_category_kind(this->handle, &bot_category_kind)};
+  fastly::fastly_host_error err;
+  if (!convert_result(status, &err)) {
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace(bot_category_kind);
+  }
+  return res;
+}
+
+Result<std::optional<bool>> HttpReq::http_req_downstream_bot_verified() {
+  TRACE_CALL()
+  Result<std::optional<bool>> res;
+  uint32_t bot_verified{0};
+  auto status{fastly::http_downstream_bot_verified(this->handle, &bot_verified)};
+  fastly::fastly_host_error err;
+  if (!convert_result(status, &err)) {
+    if (error_is_optional_none(err)) {
+      res.emplace(std::nullopt);
+    } else {
+      res.emplace_err(err);
+    }
+  } else {
+    res.emplace((bot_verified & 1) != 0);
+  }
   return res;
 }
 
@@ -2259,6 +2480,11 @@ FastlyCacheWriteOptionsOwned to_fastly_cache_write_options(const HttpCacheWriteO
     result.mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS;
   }
 
+  if (opts->stale_if_error_ns) {
+    result.options->stale_if_error_ns = *opts->stale_if_error_ns;
+    result.mask |= FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_IF_ERROR_NS;
+  }
+
   if (opts->surrogate_keys.has_value()) {
     const auto &keys = opts->surrogate_keys.value();
     if (keys.size() == 1) {
@@ -2327,6 +2553,10 @@ from_fastly_cache_write_options(const fastly::fastly_http_cache_write_options &f
 
   if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS) {
     opts->stale_while_revalidate_ns = fastly_opts.stale_while_revalidate_ns;
+  }
+
+  if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_IF_ERROR_NS) {
+    opts->stale_if_error_ns = fastly_opts.stale_if_error_ns;
   }
 
   if (mask & FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS && fastly_opts.surrogate_keys &&
@@ -2442,6 +2672,7 @@ Result<HostString> Request::inspect(const InspectOptions *config) {
   if (!convert_result(fastly::req_inspect(this->req.handle, this->body.handle, inspect_opts_mask,
                                           &opts, ret.ptr, HOSTCALL_BUFFER_LEN, &ret.len),
                       &err)) {
+    cabi_free(ret.ptr);
     res.emplace_err(err);
   } else {
     res.emplace(make_host_string(ret));
@@ -2451,7 +2682,8 @@ Result<HostString> Request::inspect(const InspectOptions *config) {
 
 Result<HttpCacheEntry> HttpCacheEntry::transaction_lookup(const HttpReq &req,
                                                           std::span<uint8_t> override_key) {
-  TRACE_CALL_ARGS(TSV(std::to_string(req.handle)))
+  TRACE_CALL_ARGS(TSV(std::to_string(req.handle)));
+
   uint32_t handle_out;
   fastly::fastly_http_cache_lookup_options opts{};
   uint32_t opts_mask = 0;
@@ -2536,6 +2768,16 @@ HttpCacheEntry::transaction_update_and_return_fresh(const HttpResp &resp,
   return Result<HttpCacheEntry>::ok(HttpCacheEntry(fresh_handle_out));
 }
 
+Result<Void> HttpCacheEntry::transaction_choose_stale() {
+  TRACE_CALL()
+  auto res = fastly::http_cache_transaction_choose_stale(this->handle);
+  if (res != 0) {
+    return Result<Void>::err(host_api::APIError(res));
+  }
+
+  return Result<Void>::ok(Void{});
+}
+
 Result<Void>
 HttpCacheEntry::transaction_record_not_cacheable(uint64_t max_age_ns,
                                                  std::optional<std::string_view> vary_rule) {
@@ -2598,7 +2840,8 @@ HttpCacheEntry::get_suggested_cache_options(const HttpResp &resp) const {
                                 FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_WHILE_REVALIDATE_NS |
                                 FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SURROGATE_KEYS |
                                 FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_LENGTH |
-                                FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA;
+                                FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_SENSITIVE_DATA |
+                                FASTLY_HTTP_CACHE_WRITE_OPTIONS_MASK_STALE_IF_ERROR_NS;
 
   // Allocate initial buffers
   uint8_t *vary_buffer = static_cast<uint8_t *>(cabi_malloc(HOSTCALL_BUFFER_LEN, 4));
@@ -2683,6 +2926,7 @@ Result<CacheState> HttpCacheEntry::get_state() const {
   if (!convert_result(fastly::http_cache_get_state(this->handle, &state), &err)) {
     res.emplace_err(err);
   } else {
+    TRACE_CALL_RET(TSV(std::to_string(state)))
     res.emplace(CacheState{state});
   }
 
@@ -2726,6 +2970,18 @@ Result<uint64_t> HttpCacheEntry::get_stale_while_revalidate_ns() const {
   }
 
   return Result<uint64_t>::ok(swr_out);
+}
+
+Result<uint64_t> HttpCacheEntry::get_stale_if_error_ns() const {
+  TRACE_CALL()
+  uint64_t sie_out;
+  auto res = fastly::http_cache_get_stale_if_error_ns(this->handle, &sie_out);
+
+  if (res != 0) {
+    return Result<uint64_t>::err(host_api::APIError(res));
+  }
+
+  return Result<uint64_t>::ok(sie_out);
 }
 
 Result<uint64_t> HttpCacheEntry::get_age_ns() const {
@@ -2960,10 +3216,10 @@ Result<std::optional<HostString>> Dict::get(std::string_view name) {
                                              name_str.len, reinterpret_cast<char *>(ret.ptr),
                                              DICTIONARY_ENTRY_MAX_LEN, &ret.len),
                       &err)) {
+    cabi_free(ret.ptr);
     if (error_is_optional_none(err)) {
       res.emplace(std::nullopt);
     } else {
-      cabi_free(ret.ptr);
       res.emplace_err(err);
     }
   } else {
@@ -3200,10 +3456,10 @@ Result<std::optional<HostBytes>> Secret::plaintext(uint32_t initial_buf_len) con
   }
 
   if (!succeeded) {
+    JS_free(CONTEXT, ret.ptr);
     if (error_is_optional_none(err)) {
       res.emplace(std::nullopt);
     } else {
-      JS_free(CONTEXT, ret.ptr);
       res.emplace_err(err);
     }
   } else {
@@ -3281,6 +3537,10 @@ bool CacheState::must_insert_or_update() const {
   return this->state & FASTLY_HOST_CACHE_LOOKUP_STATE_MUST_INSERT_OR_UPDATE;
 }
 
+bool CacheState::is_usable_if_error() const {
+  return this->state & FASTLY_HOST_CACHE_LOOKUP_STATE_USABLE_IF_ERROR;
+}
+
 Result<CacheHandle> CacheHandle::lookup(std::string_view key, const CacheLookupOptions &opts) {
   TRACE_CALL()
   Result<CacheHandle> res;
@@ -3333,6 +3593,83 @@ Result<CacheHandle> CacheHandle::transaction_lookup(std::string_view key,
     res.emplace_err(err);
   } else {
     res.emplace(handle);
+  }
+
+  return res;
+}
+
+Result<CacheBusyHandle> CacheBusyHandle::transaction_lookup_async(std::string_view key,
+                                                                  const CacheLookupOptions &opts) {
+  TRACE_CALL()
+  Result<CacheBusyHandle> res;
+
+  auto key_str = string_view_to_world_string(key);
+
+  fastly::fastly_host_error err;
+  CacheBusyHandle::Handle handle;
+  fastly::fastly_host_cache_lookup_options os;
+  memset(&os, 0, sizeof(os));
+
+  uint32_t options_mask = 0;
+  if (opts.request_headers.is_valid()) {
+    os.request_headers = opts.request_headers.handle;
+    options_mask |= FASTLY_CACHE_LOOKUP_OPTIONS_MASK_REQUEST_HEADERS;
+  }
+
+  if (!convert_result(fastly::cache_transaction_lookup_async(reinterpret_cast<char *>(key_str.ptr),
+                                                             key_str.len, options_mask, &os,
+                                                             &handle),
+                      &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(handle);
+  }
+
+  return res;
+}
+
+Result<CacheHandle> CacheBusyHandle::wait() {
+  TRACE_CALL()
+  Result<CacheHandle> res;
+
+  fastly::fastly_host_error err;
+  CacheHandle::Handle handle;
+
+  if (!convert_result(fastly::cache_busy_handle_wait(this->handle, &handle), &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(handle);
+  }
+
+  return res;
+}
+
+Result<bool> CacheBusyHandle::is_ready() const {
+  TRACE_CALL()
+  Result<bool> res;
+
+  fastly::fastly_host_error err;
+  uint32_t is_ready_out;
+
+  if (!convert_result(fastly::async_is_ready(this->handle, &is_ready_out), &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace(is_ready_out != 0);
+  }
+
+  return res;
+}
+
+Result<Void> CacheBusyHandle::close() {
+  TRACE_CALL()
+  Result<Void> res;
+
+  fastly::fastly_host_error err;
+
+  if (!convert_result(fastly::cache_close_busy(this->handle), &err)) {
+    res.emplace_err(err);
+  } else {
+    res.emplace();
   }
 
   return res;
@@ -4603,7 +4940,8 @@ KVStorePendingLookup::wait() {
     res.emplace(std::nullopt);
   } else {
     if (metadata_nwritten > 0) {
-      cabi_realloc(metadata_buf, HOSTCALL_BUFFER_LEN, 1, metadata_nwritten);
+      metadata_buf = reinterpret_cast<uint8_t *>(
+          cabi_realloc(metadata_buf, HOSTCALL_BUFFER_LEN, 1, metadata_nwritten));
       res.emplace(std::make_tuple(body, make_host_bytes(metadata_buf, metadata_nwritten), gen_out));
     } else {
       cabi_free(metadata_buf);

@@ -16,6 +16,7 @@ class ClientInfo final : public builtins::BuiltinNoConstructor<ClientInfo> {
   static bool tls_cipher_openssl_name_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool tls_protocol_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool tls_client_hello_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool tls_client_sni_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool tls_ja3_md5_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool tls_ja4_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool h2_fingerprint_get(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -40,6 +41,7 @@ public:
     OHFingerprint,
     ClientCert,
     ClientRequestId,
+    ClientSNI,
     Count,
   };
   static const JSFunctionSpec static_methods[];
@@ -76,6 +78,7 @@ void dispatch_fetch_event(HandleObject event, double *total_compute);
 
 class FetchEvent final : public builtins::BuiltinNoConstructor<FetchEvent> {
   static bool respondWith(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool handoffRequest(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool client_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool request_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool server_get(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -127,6 +130,7 @@ public:
                            host_api::HttpBody body);
 
   static bool respondWithError(JSContext *cx, JS::HandleObject self);
+  static bool respondWithError(JSContext *cx, JS::HandleObject self, JSObject *pending);
   static bool is_active(JSObject *self);
   static bool is_dispatching(JSObject *self);
   static void start_dispatching(JSObject *self);

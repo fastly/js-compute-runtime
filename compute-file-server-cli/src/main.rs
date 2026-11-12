@@ -482,7 +482,7 @@ async fn create_store(name: &str, token: &str) -> Result<String, Box<dyn std::er
         .header("Content-Type", "application/json")
         .header("Accept", "application/json")
         .header("Fastly-Key", token)
-        .body(format!("{{\"name\":\"{}\"}}", name))
+        .body(serde_json::json!({"name": name}).to_string())
         .send()
         .await?;
     if res.status() == 201 {

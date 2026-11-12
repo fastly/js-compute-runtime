@@ -17,7 +17,7 @@ test('should create output directory, wasm file and return zero exit code', asyn
 
   const { code, stdout, stderr } = await execute(
     process.execPath,
-    `${cli} ${path}/index.js ${path}/my/cool/app.wasm`,
+    `${cli} ${path}/index.js --disable-aot ${path}/my/cool/app.wasm`,
   );
 
   t.is(await exists('./my/cool/app.wasm'), true);

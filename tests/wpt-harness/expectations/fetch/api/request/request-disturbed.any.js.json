@@ -1,6 +1,6 @@
 {
   "Request's body: initial state": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Request without body cannot be disturbed": {
     "status": "PASS"
@@ -12,7 +12,7 @@
     "status": "FAIL"
   },
   "Check creating a new request with a new body from a disturbed request": {
-    "status": "FAIL"
+    "status": "PASS"
   },
   "Input request used for creating new request became disturbed": {
     "status": "FAIL"

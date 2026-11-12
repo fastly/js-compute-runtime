@@ -17,7 +17,7 @@ test('should create wasm file and return zero exit code', async function (t) {
 
   const { code, stdout, stderr } = await execute(
     process.execPath,
-    `${cli} ${path}/index.js`,
+    `${cli} ${path}/index.js --disable-aot`,
   );
 
   t.is(await exists('./bin/main.wasm'), true);

@@ -1,0 +1,34 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# ReadableStreamDefaultController.error()
+
+The **`error()`** method of the
+`ReadableStreamDefaultController` interface causes any future interactions
+with the associated stream to error.
+
+> **Note:** The `error()` method can be called
+> more than once, and can be called when the stream is not readable.
+
+## Syntax
+
+```js
+error(e)
+```
+
+### Parameters
+
+- `e`
+  - : The error you want future interactions to fail with.
+
+### Return value
+
+None (`undefined`).
+
+### Exceptions
+
+- `TypeError`
+  - : Thrown if the source object is not a `ReadableStreamDefaultController`.

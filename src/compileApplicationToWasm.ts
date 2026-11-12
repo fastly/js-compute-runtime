@@ -6,10 +6,10 @@ import {
 } from 'node:child_process';
 import { mkdir, readFile, mkdtemp } from 'node:fs/promises';
 import { rmSync } from 'node:fs';
-import weval from '@bytecodealliance/weval';
-import wizer from '@bytecodealliance/wizer';
+import wasmtime from '@fastly/wasmtime';
 
 import { isDirectory, isFile } from './files.js';
+import { getWevalPath } from './getWevalPath.js';
 import { CompilerContext } from './compilerPipeline.js';
 import { bundleStep } from './compiler-steps/bundle.js';
 import { precompileRegexesStep } from './compiler-steps/precompileRegexes.js';
@@ -34,7 +34,7 @@ export type CompileApplicationToWasmParams = {
   wasmEngine: string;
   enableHttpCache: boolean;
   enableExperimentalHighResolutionTimeMethods: boolean;
-  enableAOT: boolean;
+  disableAOT: boolean;
   aotCache: string;
   enableStackTraces: boolean;
   excludeSources: boolean;
@@ -53,7 +53,7 @@ export async function compileApplicationToWasm(
     wasmEngine,
     enableHttpCache = false,
     enableExperimentalHighResolutionTimeMethods = false,
-    enableAOT = false,
+    disableAOT = false,
     aotCache = '',
     enableStackTraces,
     excludeSources,
@@ -211,8 +211,8 @@ export async function compileApplicationToWasm(
 
     try {
       if (!doBundle) {
-        if (enableAOT) {
-          const wevalPath = wevalBin ?? (await weval());
+        if (!disableAOT) {
+          const wevalPath = wevalBin ?? (await getWevalPath());
 
           const wevalProcess = spawnSync(
             `"${wevalPath}"`,
@@ -232,15 +232,18 @@ export async function compileApplicationToWasm(
           }
           process.exitCode = wevalProcess.status;
         } else {
+          const wasmtimePath = await wasmtime();
           const wizerProcess = spawnSync(
-            `"${wizer}"`,
+            `"${wasmtimePath}"`,
             [
-              '--allow-wasi',
-              `--wasm-bulk-memory=true`,
+              'wizer',
+              '-S cli',
+              '-S inherit-env',
+              '-W bulk-memory',
+              '-W unknown-imports-trap',
               `--dir="${maybeWindowsPath(process.cwd())}"`,
-              '--inherit-env=true',
               '-r _start=wizer.resume',
-              `-o="${output}"`,
+              `-o "${output}"`,
               `"${wasmEngine}"`,
             ],
             spawnOpts,
@@ -252,8 +255,8 @@ export async function compileApplicationToWasm(
         }
       } else {
         spawnOpts.input = `${maybeWindowsPath(input)}${moduleMode ? '' : ' --legacy-script'}`;
-        if (enableAOT) {
-          const wevalPath = wevalBin ?? (await weval());
+        if (!disableAOT) {
+          const wevalPath = wevalBin ?? (await getWevalPath());
 
           const wevalProcess = spawnSync(
             `"${wevalPath}"`,
@@ -274,16 +277,19 @@ export async function compileApplicationToWasm(
           }
           process.exitCode = wevalProcess.status;
         } else {
+          const wasmtimePath = await wasmtime();
           const wizerProcess = spawnSync(
-            `"${wizer}"`,
+            `"${wasmtimePath}"`,
             [
-              '--inherit-env=true',
-              '--allow-wasi',
+              'wizer',
+              '-S inherit-env',
+              '-S cli',
+              '-W bulk-memory',
+              '-W unknown-imports-trap',
               '--dir=.',
               `--dir=${maybeWindowsPath(dirname(input))}`,
               '-r _start=wizer.resume',
-              `--wasm-bulk-memory=true`,
-              `-o="${output}"`,
+              `-o "${output}"`,
               `"${wasmEngine}"`,
             ],
             spawnOpts,

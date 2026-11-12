@@ -1207,7 +1207,7 @@ var Trie = class {
   insert(path, index, pathErrorCheckOnly) {
     const paramAssoc = [];
     const groups = [];
-    for (let i = 0; ; ) {
+    for (let i = 0; ;) {
       let replaced = false;
       path = path.replace(/\{[^}]+\}/g, (m) => {
         const mark = `@\\${i}`;

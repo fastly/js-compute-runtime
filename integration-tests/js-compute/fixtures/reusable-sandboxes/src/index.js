@@ -9,6 +9,7 @@ import { setReusableSandboxOptions } from 'fastly:experimental';
 
 setReusableSandboxOptions({ maxRequests: 9001 });
 
+import './dynamic-backend.js';
 import './interleave.js';
 
 addEventListener('fetch', (event) => {

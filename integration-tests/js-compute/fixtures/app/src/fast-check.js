@@ -8541,7 +8541,7 @@ function pad(value, paddingLength) {
 }
 function smallUintToBase32StringMapper(num) {
   let base32Str = '';
-  for (let remaining = num; remaining !== 0; ) {
+  for (let remaining = num; remaining !== 0;) {
     const next = remaining >> 5;
     const current = remaining - (next << 5);
     base32Str = encodeSymbol(current) + base32Str;

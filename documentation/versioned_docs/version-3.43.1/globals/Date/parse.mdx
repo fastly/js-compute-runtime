@@ -1,0 +1,123 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Date.parse()
+
+The **`Date.parse()`** method parses a string representation of
+a date, and returns the number of milliseconds since January 1, 1970, 00:00:00 UTC or
+`NaN` if the string is unrecognized or, in some cases, contains illegal date
+values (e.g. 2015-02-31).
+
+Only the [ISO 8601 format](https://tc39.es/ecma262/#sec-date-time-string-format) (`YYYY-MM-DDTHH:mm:ss.sssZ`) is explicitly specified to be supported. Other formats are implementation-defined and may not work across all browsers. A library can help if many different formats are to be accommodated.
+
+## Syntax
+
+```js
+Date.parse(dateString)
+```
+
+### Parameters
+
+- `dateString`
+  - : A string representing [a simplification of the ISO 8601 calendar date extended format](#date-time-string-format).
+    (Other formats may be used, but results are implementation-dependent.)
+
+### Return value
+
+A number representing the milliseconds elapsed since January 1, 1970, 00:00:00 UTC and
+the date obtained by parsing the given string representation of a date. If the argument
+doesn't represent a valid date, [`NaN`](../NaN.mdx) is returned.
+
+## Description
+
+The `parse()` method takes a date string (such as
+`"2011-10-10T14:48:00"`) and returns the number of milliseconds since January
+1, 1970, 00:00:00 UTC.
+
+This function is useful for setting date values based on string values, for example in
+conjunction with the [`setTime()`](./prototype/setTime.mdx) method and the
+`Date` object.
+
+### Date Time String Format
+
+The standard string representation of a date time string is a simplification of the ISO
+8601 calendar date extended format.
+(See the section [Date Time String Format](https://tc39.es/ecma262/#sec-date-time-string-format)
+in the ECMAScript specification for more details.)
+
+For example, `"2011-10-10"` (_date-only_ form),
+`"2011-10-10T14:48:00"` (_date-time_ form), or
+`"2011-10-10T14:48:00.000+09:00"` (_date-time_ form with milliseconds
+and time zone) can be passed and will be parsed. When the time zone offset is absent,
+date-only forms are interpreted as a UTC time and date-time forms are interpreted as
+local time.
+
+While time zone specifiers are used during date string parsing to interpret the
+argument, the value returned is always the number of milliseconds between January 1,
+1970 00:00:00 UTC and the point in time represented by the argument or `NaN`.
+
+Because `parse()` is a static method of `Date`, it is called as
+`Date.parse()` rather than as a method of a `Date` instance.
+
+### Fall-back to implementation-specific date formats
+
+> **Note:** This section contains implementation-specific behavior that can be inconsistent
+> across implementations.
+
+The ECMAScript specification states: If the String does not conform to the standard
+format the function may fall back to any implementation–specific heuristics or
+implementation–specific parsing algorithm. Unrecognizable strings or dates containing
+illegal element values in ISO formatted strings shall cause `Date.parse()` to
+return [`NaN`](../NaN.mdx).
+
+However, invalid values in date strings not recognized as simplified ISO format as
+defined by ECMA-262 may or may not result in [`NaN`](../NaN.mdx), depending on the browser
+and values provided, e.g.:
+
+```js
+// Non-ISO string with invalid date values
+new Date("23/25/2014");
+```
+
+will be treated as a local date of 25 November, 2015 in Firefox 30 and an invalid date
+in Safari 7.
+
+However, if the string is recognized as an ISO format string and it contains invalid
+values, it will return [`NaN`](../NaN.mdx):
+
+```js
+// ISO string with invalid values
+new Date("2014-25-23").toISOString();
+// throws "RangeError: invalid date"
+```
+
+SpiderMonkey's implementation-specific heuristic can be found in [`jsdate.cpp`](https://searchfox.org/mozilla-central/source/js/src/jsdate.cpp?rev=64553c483cd1#889).
+The string `"10 06 2014"` is an example of a non-conforming ISO format and
+thus falls back to a custom routine. See also this [rough outline](https://bugzilla.mozilla.org/show_bug.cgi?id=1023155#c6) on
+how the parsing works.
+
+```js
+new Date("10 06 2014");
+```
+
+will be treated as a local date of 6 October, 2014, and not 10 June, 2014.
+
+Other examples:
+
+```js
+new Date("foo-bar 2014").toString();
+// returns: "Invalid Date"
+
+Date.parse("foo-bar 2014");
+// returns: NaN
+```
+
+### Differences in assumed time zone
+
+> **Note:** This section contains implementation-specific behavior that can be inconsistent
+> across implementations.
+
+Given a non-standard date string of `"March 7, 2014"`, `parse()` assumes a local time zone, but given a simplification of the ISO 8601 calendar date extended format such as `"2014-03-07"`, it will assume a time zone of UTC. Therefore `Date` objects produced using those strings may represent different moments in time depending on the version of ECMAScript supported unless the system is set with a local time zone of UTC. This means that two date strings that appear equivalent may result in two different values depending on the format of the string that is being converted.

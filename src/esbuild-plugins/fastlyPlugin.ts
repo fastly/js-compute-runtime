@@ -117,6 +117,7 @@ delete globalThis.Logger.configureConsole;
 export const CacheEntry = globalThis.CacheEntry;
 export const CacheState = globalThis.CacheState;
 export const CoreCache = globalThis.CoreCache;
+export const PendingTransaction = globalThis.PendingTransaction;
 export const SimpleCache = globalThis.SimpleCache;
 export const SimpleCacheEntry = globalThis.SimpleCacheEntry;
 export const TransactionCacheEntry = globalThis.TransactionCacheEntry;

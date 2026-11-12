@@ -3,7 +3,6 @@
 #include "../builtins/fastly.h"
 #include "../host-api/host_api_fastly.h"
 #include "encode.h"
-
 using fastly::FastlyGetErrorMessage;
 
 namespace fastly::common {
@@ -33,7 +32,7 @@ std::optional<uint32_t> parse_and_validate_timeout(JSContext *cx, JS::HandleValu
   return std::round(native_value);
 }
 
-std::optional<std::tuple<const uint8_t *, size_t>>
+std::optional<std::tuple<const uint8_t *, size_t, std::optional<JS::AutoCheckCannotGC>>>
 validate_bytes(JSContext *cx, JS::HandleValue bytes, const char *subsystem) {
   if (!bytes.isObject()) {
     JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_INVALID_BUFFER, subsystem);
@@ -47,24 +46,20 @@ validate_bytes(JSContext *cx, JS::HandleValue bytes, const char *subsystem) {
     return std::nullopt;
   }
 
-  mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
-  uint8_t *buf;
+  const uint8_t *buf;
   size_t length;
+  bool is_shared;
+  std::optional<JS::AutoCheckCannotGC> noGC;
   if (JS_IsArrayBufferViewObject(bytes_obj)) {
-    JS::AutoCheckCannotGC noGC;
-    bool is_shared;
+    noGC.emplace();
     length = JS_GetArrayBufferViewByteLength(bytes_obj);
-    buf = (uint8_t *)JS_GetArrayBufferViewData(bytes_obj, &is_shared, noGC);
+    buf = (const uint8_t *)JS_GetArrayBufferViewData(bytes_obj, &is_shared, *noGC);
     MOZ_ASSERT(!is_shared);
-  } else if (JS::IsArrayBufferObject(bytes_obj)) {
-    bool is_shared;
-    JS::GetArrayBufferLengthAndData(bytes_obj, &length, &is_shared, (uint8_t **)&buf);
   } else {
-    JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr, JSMSG_INVALID_BUFFER, subsystem);
-    return std::nullopt;
+    JS::GetArrayBufferLengthAndData(bytes_obj, &length, &is_shared, (uint8_t **)&buf);
   }
 
-  return std::make_tuple(buf, length);
+  return std::make_tuple(buf, length, std::move(noGC));
 }
 
 } // namespace fastly::common

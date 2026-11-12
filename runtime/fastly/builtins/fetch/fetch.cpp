@@ -8,8 +8,10 @@
 #include "../fastly.h"
 #include "../fetch-event.h"
 #include "../image-optimizer.h"
+#include "./pending-request.h"
 #include "./request-response.h"
 #include "builtin.h"
+#include "decode.h"
 #include "encode.h"
 #include "extension-api.h"
 #include "picosha2.h"
@@ -22,6 +24,7 @@ using fastly::body::FastlyBody;
 using fastly::cache_override::CacheOverride;
 using fastly::fastly::Fastly;
 using fastly::fetch::ENGINE;
+using fastly::fetch::PendingRequest;
 using fastly::fetch::Request;
 using fastly::fetch::RequestOrResponse;
 using fastly::fetch::Response;
@@ -32,11 +35,12 @@ namespace {
 class FetchTask final : public api::AsyncTask {
   Heap<JSObject *> request_;
   Heap<JSObject *> promise_;
+  Heap<JSObject *> metadata_;
 
 public:
   explicit FetchTask(host_api::HttpPendingReq::Handle handle, JS::HandleObject request,
-                     JS::HandleObject promise)
-      : request_(request), promise_(promise) {
+                     JS::HandleObject promise, JS::HandleObject metadata = nullptr)
+      : request_(request), promise_(promise), metadata_(metadata) {
     if (static_cast<int32_t>(handle) < 0)
       abort();
     handle_ = static_cast<int32_t>(handle);
@@ -47,15 +51,26 @@ public:
 
     const RootedObject request(cx, request_);
     const RootedValue promise(cx, JS::ObjectValue(*promise_));
+    JS::RootedObject metadata(cx, metadata_);
+    if (metadata) {
+      PendingRequest::clear_fetch_task(cx, metadata);
+    }
 
     return RequestOrResponse::process_pending_request(cx, handle_, request, promise);
   }
 
-  [[nodiscard]] bool cancel(api::Engine *engine) override { return false; }
+  [[nodiscard]] bool cancel(api::Engine *engine) override {
+    JS::RootedObject metadata(engine->cx(), metadata_);
+    if (metadata) {
+      PendingRequest::clear_fetch_task(engine->cx(), metadata);
+    }
+    return true;
+  }
 
   void trace(JSTracer *trc) override {
     TraceEdge(trc, &request_, "Fetch request");
     TraceEdge(trc, &promise_, "Fetch promise");
+    TraceEdge(trc, &metadata_, "Fetch promise metadata");
   }
 };
 
@@ -82,14 +97,14 @@ JSObject *internal_method_then(JSContext *cx, JS::HandleObject promise, JS::Hand
 JSString *get_backend(JSContext *cx, JS::HandleObject request) {
   RootedString backend(cx, RequestOrResponse::backend(request));
   if (!backend) {
-    if (Fastly::allowDynamicBackends) {
+    if (Fastly::request_state->allow_dynamic_backends) {
       JS::RootedObject dynamicBackend(cx, Backend::create(cx, request));
       if (!dynamicBackend) {
         return nullptr;
       }
       backend.set(Backend::name(cx, dynamicBackend));
     } else {
-      backend = Fastly::defaultBackend;
+      backend = Fastly::request_state->default_backend;
       if (!backend) {
         auto handle = Request::request_handle(request);
 
@@ -120,7 +135,6 @@ bool must_use_guest_caching(JSContext *cx, HandleObject request) {
   return false;
 }
 
-bool http_caching_unsupported = false;
 enum CachingMode { Guest, Host, ImageOptimizer };
 bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_mode) {
   *caching_mode = CachingMode::Guest;
@@ -156,16 +170,19 @@ bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_
   // The WASM service uses cache_on_behalf to insert the result into
   // the service's cache.
   auto image_optimizer_opts =
-      JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ImageOptimizerOptions));
-  if (!image_optimizer_opts.isNullOrUndefined()) {
+      JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ImageOptimizerOptions))
+          .toPrivate();
+  if (image_optimizer_opts) {
     *caching_mode = CachingMode::ImageOptimizer;
     return true;
   }
 
   // If we previously found guest caching unsupported then remember that
-  if (http_caching_unsupported || !fastly::fastly::ENABLE_EXPERIMENTAL_HTTP_CACHE) {
+  using fastly::fastly::Fastly;
+  if (Fastly::request_state->http_caching_unsupported ||
+      !Fastly::request_state->enable_experimental_http_cache) {
     if (must_use_guest_caching(cx, request)) {
-      if (!fastly::fastly::ENABLE_EXPERIMENTAL_HTTP_CACHE) {
+      if (!Fastly::request_state->enable_experimental_http_cache) {
         JS_ReportErrorASCII(cx, "HTTP caching API is not enabled for JavaScript; enable it with "
                                 "the --enable-http-cache flag "
                                 "to the js-compute build command, or contact support for help");
@@ -180,12 +197,17 @@ bool get_caching_mode(JSContext *cx, HandleObject request, CachingMode *caching_
     return true;
   }
 
+  // Ensure that any headers that could change cache behaviour (e.g. due to vary headers) are
+  // committed
+  if (!RequestOrResponse::commit_headers(cx, request))
+    return false;
+
   // Check if we must use host caching by checking if guest caching is unsupported
   auto request_handle = Request::request_handle(request);
   auto res = request_handle.is_cacheable();
   if (auto *err = res.to_err()) {
     if (host_api::error_is_unsupported(*err)) {
-      http_caching_unsupported = true;
+      Fastly::request_state->http_caching_unsupported = true;
       // Guest-side caching is unsupported, so we must use host caching.
       // If we have hooks we must fail since they require guest caching.
       if (must_use_guest_caching(cx, request)) {
@@ -311,12 +333,17 @@ bool fetch_send_body(JSContext *cx, HandleObject request, JS::MutableHandleValue
     pending_handle = res.unwrap();
   }
 
-  // If the request body is streamed, we need to wait for streaming to complete before marking the
-  // request as pending.
-  if (!streaming) {
-    ENGINE->queue_async_task(new FetchTask(pending_handle.handle, request, response_promise));
+  JS::RootedObject metadata(
+      cx, streaming ? PendingRequest::create_promise(cx, response_promise)
+                    : PendingRequest::create_handle(cx, pending_handle.handle, response_promise));
+  if (!metadata) {
+    return false;
   }
-
+  if (!streaming) {
+    auto *task = new FetchTask(pending_handle.handle, request, response_promise, metadata);
+    PendingRequest::set_fetch_task(cx, metadata, task);
+    ENGINE->queue_async_task(task);
+  }
   JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::PendingRequest),
                       JS::Int32Value(pending_handle.handle));
   JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ResponsePromise),
@@ -341,6 +368,44 @@ bool fetch_process_cache_hooks_origin_request(JSContext *cx, JS::HandleObject re
   if (!backend_chars.ptr) {
     RejectPromiseWithPendingError(cx, ret_promise_obj);
     return true;
+  }
+
+  RootedObject cache_override(
+      cx, JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::CacheOverride))
+              .toObjectOrNull());
+  if (cache_override && CacheOverride::beforeSend(cache_override)) {
+    // beforeSend was handed a snapshot of the candidate backend request's actual headers (see
+    // fetch_send_body_with_cache_hooks). commit_headers below can only add/overwrite headers on
+    // that request -- it has no way to express a deletion -- so before running it, remove any
+    // header from the real request that beforeSend deleted from that snapshot, so it isn't left
+    // behind.
+    auto request_handle = Request::request_handle(request);
+    host_api::HttpHeadersReadOnly *current_headers = request_handle.headers();
+    auto entries_res = current_headers->entries();
+    delete current_headers;
+    if (auto *err = entries_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      RejectPromiseWithPendingError(cx, ret_promise_obj);
+      return true;
+    }
+
+    JS::RootedObject headers_obj(cx, Request::headers(cx, request));
+    if (!headers_obj) {
+      return false;
+    }
+
+    auto *writable_headers = request_handle.headers_writable();
+    for (auto &entry : entries_res.unwrap()) {
+      auto &name = std::get<0>(entry);
+      if (!builtins::web::fetch::Headers::lookup(cx, headers_obj, name)) {
+        auto res = writable_headers->remove(name);
+        if (auto *err = res.to_err()) {
+          HANDLE_ERROR(cx, *err);
+          RejectPromiseWithPendingError(cx, ret_promise_obj);
+          return true;
+        }
+      }
+    }
   }
 
   if (!RequestOrResponse::commit_headers(cx, request)) {
@@ -394,12 +459,63 @@ bool fetch_process_cache_hooks_origin_request(JSContext *cx, JS::HandleObject re
 
 bool fetch_process_cache_hooks_before_send_reject(JSContext *cx, JS::HandleObject request,
                                                   JS::HandleValue ret_promise, JS::CallArgs args) {
+  JS::RootedObject ret_promise_obj(cx, &ret_promise.toObject());
+
+  auto maybe_stale = fastly::fetch::try_serve_stale_if_error(cx, request, args.get(0));
+  if (maybe_stale.has_value()) {
+    JS::RootedValue response_val(cx, JS::ObjectValue(*maybe_stale.value()));
+    return JS::ResolvePromise(cx, ret_promise_obj, response_val);
+  }
+
+  // No stale-if-error available, close cache and reject
   if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
     return false;
   }
-  JS::RootedObject ret_promise_obj(cx, &ret_promise.toObject());
   JS::RejectPromise(cx, ret_promise_obj, args.get(0));
   return true;
+}
+
+// Builds a plain, content-only Headers object snapshotting every entry currently on `handle`
+JSObject *create_headers_snapshot(JSContext *cx, host_api::HttpHeadersReadOnly *handle,
+                                  builtins::web::fetch::Headers::HeadersGuard guard) {
+  auto entries_res = handle->entries();
+  delete handle;
+  if (auto *err = entries_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return nullptr;
+  }
+
+  JS::RootedObject entries_arr(cx, JS::NewArrayObject(cx, 0));
+  if (!entries_arr) {
+    return nullptr;
+  }
+  size_t entry_idx = 0;
+  for (auto &entry : entries_res.unwrap()) {
+    JS::RootedString name_str(cx, core::decode_byte_string(cx, std::get<0>(entry)));
+    if (!name_str) {
+      return nullptr;
+    }
+    JS::RootedString value_str(cx, core::decode_byte_string(cx, std::get<1>(entry)));
+    if (!value_str) {
+      return nullptr;
+    }
+
+    JS::RootedValueArray<2> pair(cx);
+    pair[0].setString(name_str);
+    pair[1].setString(value_str);
+    JS::RootedObject pair_arr(cx, JS::NewArrayObject(cx, pair));
+    if (!pair_arr) {
+      return nullptr;
+    }
+
+    JS::RootedValue pair_val(cx, JS::ObjectValue(*pair_arr));
+    if (!JS_SetElement(cx, entries_arr, entry_idx++, pair_val)) {
+      return nullptr;
+    }
+  }
+
+  JS::RootedValue entries_val(cx, JS::ObjectValue(*entries_arr));
+  return builtins::web::fetch::Headers::create(cx, entries_val, guard);
 }
 
 // Sends the request body, applying the beforeSend and afterSend HTTP caching hook lifecycle
@@ -425,11 +541,9 @@ bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
   JS::SetReservedSlot(request, static_cast<uint32_t>(RequestOrResponse::Slots::CacheEntry),
                       JS::Int32Value(cache_entry.handle));
 
-  // Next, if we have a beforeSend hook, we invoke this hook prior to sending to the backend, with
-  // a newly created request object to match this request. This ensures it gets its headers freshly
-  // linked to the new host request correctly without the previous header cache state from the
-  // original request. We lock the body on this request as it is still owned by the initiating
-  // request object. If there is no beforeSend hook, we don't need to create this request.
+  // Next, if we have a beforeSend hook, we invoke this hook prior to sending to the backend. We
+  // lock the body on this request as it is still owned by the initiating request object. If there
+  // is no beforeSend hook, there's nothing to invoke and no need to touch the request's headers.
   RootedObject cache_override(
       cx, JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::CacheOverride))
               .toObjectOrNull());
@@ -440,6 +554,22 @@ bool fetch_send_body_with_cache_hooks(JSContext *cx, HandleObject request,
 
   JS::RootedObject before_send_promise(cx);
   if (before_send) {
+    // Discard whatever Headers view is already cached on `request` and replace it with a fresh
+    // snapshot of that backend request's actual headers, so the hook sees (and can remove) headers
+    // the host added.
+    JS::RootedObject backend_request_headers(
+        cx, create_headers_snapshot(cx, backend_request_handle.headers(),
+                                    builtins::web::fetch::Headers::HeadersGuard::Request));
+    if (!backend_request_headers) {
+      ret_promise.setObject(*PromiseRejectedWithPendingError(cx));
+      return true;
+    }
+    JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::Headers),
+                        JS::ObjectValue(*backend_request_headers));
+    // Force header commits to go through without comparing header generation numbers
+    JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::HeadersGen),
+                        JS::UndefinedValue());
+
     JS::RootedValue ret_val(cx);
     JS::RootedValueArray<1> args(cx);
     args[0].set(JS::ObjectValue(*request));
@@ -844,49 +974,57 @@ std::optional<JSObject *> get_found_response(JSContext *cx, host_api::HttpCacheE
     // Perhaps we can consider making these hostcalls lazy, requires a Response state enum to know
     // we are in a state we can do this and then keeping the cache handle around, where it is not
     // yet clear if holding handles for longer periods on responses is okay.
-    override_cache_options = new host_api::HttpCacheWriteOptions();
+    auto cache_options = std::make_unique<host_api::HttpCacheWriteOptions>();
     auto age_res = cache_entry.get_age_ns();
     if (auto *err = age_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->initial_age_ns = age_res.unwrap();
+    cache_options->initial_age_ns = age_res.unwrap();
     auto max_age_ns = cache_entry.get_max_age_ns();
     if (auto *err = max_age_ns.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->max_age_ns = max_age_ns.unwrap();
+    cache_options->max_age_ns = max_age_ns.unwrap();
     auto swr_res = cache_entry.get_stale_while_revalidate_ns();
     if (auto *err = swr_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->stale_while_revalidate_ns = swr_res.unwrap();
+    cache_options->stale_while_revalidate_ns = swr_res.unwrap();
+    auto sie_res = cache_entry.get_stale_if_error_ns();
+    if (auto *err = sie_res.to_err()) {
+      HANDLE_ERROR(cx, *err);
+      return nullptr;
+    }
+    cache_options->stale_if_error_ns = sie_res.unwrap();
+
     auto length_res = cache_entry.get_length();
     if (auto *err = length_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->length = length_res.unwrap();
+    cache_options->length = length_res.unwrap();
     auto sensitive_res = cache_entry.get_sensitive_data();
     if (auto *err = sensitive_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->sensitive_data = sensitive_res.unwrap();
+    cache_options->sensitive_data = sensitive_res.unwrap();
     auto vary_res = cache_entry.get_vary_rule();
     if (auto *err = vary_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->vary_rule = std::move(vary_res.unwrap());
+    cache_options->vary_rule = std::move(vary_res.unwrap());
     auto surrogate_keys_res = cache_entry.get_surrogate_keys();
     if (auto *err = surrogate_keys_res.to_err()) {
       HANDLE_ERROR(cx, *err);
       return nullptr;
     }
-    override_cache_options->surrogate_keys = std::move(surrogate_keys_res.unwrap());
+    cache_options->surrogate_keys = std::move(surrogate_keys_res.unwrap());
+    override_cache_options = cache_options.release();
   }
   JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::OverrideCacheWriteOptions),
                       JS::PrivateValue(reinterpret_cast<uint32_t>(override_cache_options)));
@@ -910,6 +1048,7 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
   // response process.
   auto cache_write_options = Response::override_cache_options(response_obj);
   MOZ_ASSERT(cache_write_options);
+
   switch (storage_action) {
   case host_api::HttpStorageAction::Insert: {
     auto insert_res = cache_entry.transaction_insert_and_stream_back(
@@ -945,7 +1084,7 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
         return true;
       }
 
-      auto found_response = get_found_response(cx, cache_entry, request, response, false);
+      auto found_response = get_found_response(cx, cache_entry, request, response, true);
       MOZ_ASSERT(found_response.has_value());
       if (!found_response.value()) {
         JSObject *promise = PromiseRejectedWithPendingError(cx);
@@ -981,7 +1120,7 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
       return false;
     }
 
-    auto found_response = get_found_response(cx, cache_entry, request, response, false);
+    auto found_response = get_found_response(cx, cache_entry, request, response, true);
     MOZ_ASSERT(found_response.has_value());
     if (!found_response.value()) {
       JSObject *promise = PromiseRejectedWithPendingError(cx);
@@ -1086,6 +1225,13 @@ bool stream_back_then_handler(JSContext *cx, JS::HandleObject request, JS::Handl
 
 bool stream_back_catch_handler(JSContext *cx, JS::HandleObject request, JS::HandleValue promise_val,
                                JS::CallArgs args) {
+  auto maybe_stale = fastly::fetch::try_serve_stale_if_error(cx, request, args.get(0));
+  if (maybe_stale.has_value()) {
+    args.rval().setObject(*maybe_stale.value());
+    return true;
+  }
+
+  // No stale-if-error available, close cache and fail
   // we follow the Rust implementation calling "close" instead of "transaction_abandon" here
   // this could be reconsidered in future if alternative semantics are required
   if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
@@ -1100,19 +1246,126 @@ bool stream_back_catch_handler(JSContext *cx, JS::HandleObject request, JS::Hand
 
 namespace fastly::fetch {
 
+// Percent-encode a string for use in URL query parameters
+// Encodes all characters except: A-Z a-z 0-9 - _ . ~
+std::string percent_encode(std::string_view input) {
+  static const char *hex_chars = "0123456789ABCDEF";
+  std::string encoded;
+  // Guess at a reasonable string length, assuming some characters will be encoded
+  encoded.reserve(input.size() * 2);
+
+  for (unsigned char c : input) {
+    // Unreserved characters per RFC 3986
+    if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' ||
+        c == '_' || c == '.' || c == '~') {
+      encoded += c;
+    } else {
+      encoded += '%';
+      encoded += hex_chars[c >> 4];
+      encoded += hex_chars[c & 0x0F];
+    }
+  }
+
+  return encoded;
+}
+
 api::Engine *ENGINE;
+
+// Helper function to check for and serve stale-if-error responses when errors occur
+// Returns the stale response if available, or std::nullopt if not
+std::optional<JSObject *> try_serve_stale_if_error(JSContext *cx,
+                                                   JS::HandleObject request_or_response,
+                                                   JS::HandleValue error_val) {
+  auto maybe_cache_entry = RequestOrResponse::cache_entry(request_or_response);
+  if (!maybe_cache_entry.has_value()) {
+    return std::nullopt;
+  }
+
+  auto cache_entry = maybe_cache_entry.value();
+  auto state_res = cache_entry.get_state();
+  if (state_res.is_err()) {
+    return std::nullopt;
+  }
+
+  auto cache_state = state_res.unwrap();
+  if (!cache_state.is_usable_if_error()) {
+    return std::nullopt;
+  }
+
+  // We have a usable stale-if-error response
+  auto chose_stale_res = cache_entry.transaction_choose_stale();
+  if (auto *err = chose_stale_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return std::nullopt;
+  }
+
+  // Determine the request object for get_found_response
+  JS::RootedObject request(cx);
+  if (Request::is_instance(request_or_response)) {
+    request.set(request_or_response);
+  }
+  // If it's a response, we don't have the request handy, but get_found_response can work without it
+
+  JS::RootedValue no_candidate(cx);
+  auto maybe_response = get_found_response(cx, cache_entry, request, no_candidate, false);
+  if (!maybe_response.has_value() || !maybe_response.value()) {
+    return std::nullopt;
+  }
+
+  JS::RootedObject stale_response(cx, maybe_response.value());
+
+  // Store the error as masked error
+  JS_SetReservedSlot(stale_response, static_cast<uint32_t>(Response::Slots::MaskedError),
+                     error_val);
+
+  RequestOrResponse::take_cache_entry(stale_response, true);
+
+  if (request) {
+    if (!Response::add_fastly_cache_headers(cx, stale_response, request, cache_entry,
+                                            "cached response")) {
+      return std::nullopt;
+    }
+  }
+
+  return stale_response;
+}
 
 /**
  * The `fetch` global function
  * https://fetch.spec.whatwg.org/#fetch-method
  */
+bool register_fetch_promise_metadata(JSContext *cx, JS::CallArgs args);
+
+bool mark_guest_cache_miss_if_native(JSContext *cx, JS::HandleObject request,
+                                     JS::HandleValue value) {
+  if (!value.isObject()) {
+    return true;
+  }
+  JS::RootedObject promise(cx, &value.toObject());
+  if (!JS::IsPromiseObject(promise)) {
+    return true;
+  }
+  JS::RootedObject record(cx, PendingRequest::record_for_promise(cx, promise));
+  if (!record) {
+    return !JS_IsExceptionPending(cx);
+  }
+  if (!PendingRequest::is_native(record)) {
+    return true;
+  }
+  return PendingRequest::mark_guest_cache_miss_headers(cx, record, request);
+}
+
 bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-
   REQUEST_HANDLER_ONLY("fetch")
 
+  auto finish = [&]() { return register_fetch_promise_metadata(cx, args); };
+
   if (!args.requireAtLeast(cx, "fetch", 1)) {
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+    if (!ReturnPromiseRejectedWithPendingError(cx, args)) {
+      return false;
+    }
+    return finish();
   }
 
   RootedObject requestInstance(
@@ -1123,7 +1376,10 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
 
   RootedObject request(cx, Request::create(cx, requestInstance, args[0], args.get(1)));
   if (!request) {
-    return ReturnPromiseRejectedWithPendingError(cx, args);
+    if (!ReturnPromiseRejectedWithPendingError(cx, args)) {
+      return false;
+    }
+    return finish();
   }
 
   // Determine if we should use guest-side caching
@@ -1133,9 +1389,15 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   }
   if (caching_mode == CachingMode::Host) {
     DEBUG_LOG("HTTP Cache: Using traditional fetch without cache API")
-    return fetch_send_body<CachingMode::Host>(cx, request, args.rval());
+    if (!fetch_send_body<CachingMode::Host>(cx, request, args.rval())) {
+      return false;
+    }
+    return finish();
   } else if (caching_mode == CachingMode::ImageOptimizer) {
-    return fetch_send_body<CachingMode::ImageOptimizer>(cx, request, args.rval());
+    if (!fetch_send_body<CachingMode::ImageOptimizer>(cx, request, args.rval())) {
+      return false;
+    }
+    return finish();
   }
 
   // Check if request is actually cacheable
@@ -1150,7 +1412,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
         return false;
       }
       args.rval().setObject(*promise);
-      return true;
+      return finish();
     }
     is_cacheable = res.unwrap();
   }
@@ -1158,13 +1420,19 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   // If not cacheable, fallback to non-caching path
   if (!is_cacheable) {
     DEBUG_LOG("HTTP Cache: Request not cacheable, using non-caching fetch")
-    return fetch_send_body<CachingMode::Guest>(cx, request, args.rval());
+    if (!fetch_send_body<CachingMode::Guest>(cx, request, args.rval())) {
+      return false;
+    }
+    if (!mark_guest_cache_miss_if_native(cx, request, args.rval())) {
+      return false;
+    }
+    return finish();
   }
 
   // Lookup in cache
   auto request_handle = Request::request_handle(request);
 
-  // Convert override cache key to span if present
+  // Convert override cache key to hash if present
   std::vector<uint8_t> override_key_hash;
   JS::RootedValue override_cache_key(
       cx, JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::OverrideCacheKey)));
@@ -1176,8 +1444,9 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
                       override_key_hash.begin(), override_key_hash.end());
   }
 
-  auto transaction_res =
+  host_api::Result<host_api::HttpCacheEntry> transaction_res =
       host_api::HttpCacheEntry::transaction_lookup(request_handle, override_key_hash);
+
   if (auto *err = transaction_res.to_err()) {
     DEBUG_LOG("HTTP Cache: Transaction lookup error")
     if (host_api::error_is_limit_exceeded(*err)) {
@@ -1190,7 +1459,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
       return false;
     }
     args.rval().setObject(*promise);
-    return true;
+    return finish();
   }
   host_api::HttpCacheEntry cache_entry = transaction_res.unwrap();
 
@@ -1205,7 +1474,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
       return false;
     }
     args.rval().setObject(*promise);
-    return true;
+    return finish();
   }
   auto cache_state = state_res.unwrap();
   std::string state_str = std::to_string(cache_state.state);
@@ -1219,7 +1488,7 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
       return false;
     }
     args.rval().setObject(*promise);
-    return true;
+    return finish();
   }
 
   if (maybe_response.has_value()) {
@@ -1256,6 +1525,19 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
       }
     }
 
+    if (cache_state.is_usable_if_error()) {
+      // The cached response is a usable stale-if-error response, which implies
+      // that the request collapse leader errored.
+      JS_ReportErrorASCII(cx, "error in request collapse leader");
+      JS::RootedValue exception(cx);
+      if (!JS_GetPendingException(cx, &exception)) {
+        return false;
+      }
+      JS_ClearPendingException(cx);
+      JS_SetReservedSlot(cached_response, static_cast<uint32_t>(Response::Slots::MaskedError),
+                         exception);
+    }
+
     // mark the response cache entry as cached for the cached getter
     RequestOrResponse::take_cache_entry(cached_response, true);
 
@@ -1268,21 +1550,32 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
     JS::RootedValue response_val(cx, JS::ObjectValue(*cached_response));
     args.rval().setObject(*response_promise);
-    return JS::ResolvePromise(cx, response_promise, response_val);
+    if (!JS::ResolvePromise(cx, response_promise, response_val)) {
+      return false;
+    }
+    return finish();
   }
 
   // No valid cached response, need to make backend request
-  if (!cache_state.must_insert_or_update()) {
-    // transaction entry is done
-    if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
-      return false;
-    }
-    // request collapsing has been disabled: pass the original request to the origin without
-    // updating the cache and without caching
-    return fetch_send_body<CachingMode::Guest>(cx, request, args.rval());
-  } else {
+  if (cache_state.must_insert_or_update()) {
+    // We are responsible for fetching/revalidating
     JS::RootedValue stream_back_promise(cx, JS::ObjectValue(*JS::NewPromiseObject(cx, nullptr)));
     if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry, &stream_back_promise)) {
+      JS::RootedValue exception(cx);
+      if (JS_GetPendingException(cx, &exception)) {
+        JS_ClearPendingException(cx);
+      }
+      auto maybe_stale = try_serve_stale_if_error(cx, request, exception);
+      if (maybe_stale.has_value()) {
+        JS::RootedObject cached_response(cx, maybe_stale.value());
+        RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
+        JS::RootedValue response_val(cx, JS::ObjectValue(*cached_response));
+        args.rval().setObject(*response_promise);
+        if (!JS::ResolvePromise(cx, response_promise, response_val)) {
+          return false;
+        }
+        return finish();
+      }
       RequestOrResponse::close_if_cache_entry(cx, request);
       return false;
     }
@@ -1297,12 +1590,47 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
     JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ResponsePromise),
                         JS::ObjectValue(*ret_promise));
     args.rval().setObject(*ret_promise);
+  } else {
+    // Request collapsing has been disabled: pass the original request to the origin without
+    // updating the cache and without caching
+
+    // transaction entry is done
+    if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
+      return false;
+    }
+
+    if (!fetch_send_body<CachingMode::Guest>(cx, request, args.rval())) {
+      return false;
+    }
+    if (!mark_guest_cache_miss_if_native(cx, request, args.rval())) {
+      return false;
+    }
+    return finish();
   }
 
+  return finish();
+}
+
+bool register_fetch_promise_metadata(JSContext *cx, JS::CallArgs args) {
+  if (!args.rval().isObject()) {
+    JS_ReportErrorASCII(cx, "fetch did not produce a response promise");
+    return false;
+  }
+  JS::RootedObject promise(cx, &args.rval().toObject());
+  if (!JS::IsPromiseObject(promise)) {
+    JS_ReportErrorASCII(cx, "fetch did not produce a Promise");
+    return false;
+  }
+  if (!PendingRequest::ensure_promise_record(cx, promise)) {
+    return false;
+  }
   return true;
 }
 
-const JSFunctionSpec methods[] = {JS_FN("fetch", fetch, 2, JSPROP_ENUMERATE), JS_FS_END};
+const JSFunctionSpec methods[] = {
+    JS_FN("fetch", fetch, 2, JSPROP_ENUMERATE),
+    JS_FS_END,
+};
 
 bool install(api::Engine *engine) {
   ENGINE = engine;
@@ -1313,6 +1641,12 @@ bool install(api::Engine *engine) {
     return false;
   }
   if (!Response::init_class(ENGINE->cx(), ENGINE->global())) {
+    return false;
+  }
+  if (!PendingRequest::init_class(ENGINE->cx(), ENGINE->global())) {
+    return false;
+  }
+  if (!PendingRequest::install_promise_helpers(ENGINE->cx(), ENGINE->global())) {
     return false;
   }
   if (!builtins::web::fetch::Headers::init_class(ENGINE->cx(), ENGINE->global())) {

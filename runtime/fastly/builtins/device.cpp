@@ -531,7 +531,7 @@ bool Device::lookup(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
   auto result = std::move(lookup_res.unwrap());
 
-  JS::RootedString device_info_str(cx, JS_NewStringCopyN(cx, result.ptr.release(), result.len));
+  JS::RootedString device_info_str(cx, JS_NewStringCopyN(cx, result.ptr.get(), result.len));
   if (!device_info_str) {
     return false;
   }

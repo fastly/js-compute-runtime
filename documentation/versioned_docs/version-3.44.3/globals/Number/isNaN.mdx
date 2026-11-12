@@ -1,0 +1,32 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Number.isNaN()
+
+The **`Number.isNaN()`** method determines whether the passed value is the number value [`NaN`](../../globals/NaN.mdx), and returns `false` if the input is not of the Number type. It is a more robust version of the original, global `isNaN()` function.
+
+## Syntax
+
+```js
+Number.isNaN(value)
+```
+
+### Parameters
+
+- `value`
+  - : The value to be tested for [`NaN`](../../globals/NaN.mdx).
+
+### Return value
+
+The boolean value `true` if the given value is a number with value [`NaN`](../../globals/NaN.mdx). Otherwise, `false`.
+
+## Description
+
+The function `Number.isNaN()` provides a convenient way to check for equality with `NaN`. Note that you cannot test for equality with `NaN` using either the [`==`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Equality) or [`===`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Strict_equality) operators, because unlike all other value comparisons in JavaScript, these evaluate to `false` whenever one operand is [`NaN`](../../globals/NaN.mdx), even if the other operand is also [`NaN`](../../globals/NaN.mdx).
+
+Since `x !== x` is only true for `NaN` among all possible JavaScript values, `Number.isNaN(x)` can also be replaced with a test for `x !== x`, despite the latter being less readable.
+
+As opposed to the global `isNaN()` function, the `Number.isNaN()` method doesn't force-convert the parameter to a number. This makes it safe to pass values that would normally convert to [`NaN`](../../globals/NaN.mdx) but aren't actually the same value as [`NaN`](../../globals/NaN.mdx). This also means that only values of the Number type that are also [`NaN`](../../globals/NaN.mdx) return `true`.

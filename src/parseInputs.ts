@@ -7,7 +7,7 @@ export type ParsedInputs =
   | 'help'
   | 'version'
   | {
-      enableAOT: boolean;
+      disableAOT: boolean;
       aotCache: string;
       enableHttpCache: boolean;
       enableExperimentalHighResolutionTimeMethods: boolean;
@@ -28,9 +28,9 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
 
   let enableHttpCache = false;
   let enableExperimentalHighResolutionTimeMethods = false;
-  let enableAOT = false;
+  let disableAOT = false;
   let customEngineSet = false;
-  let moduleMode = false;
+  let moduleMode = true;
   let bundle = true;
   let wasmEngine = join(__dirname, '../fastly.wasm');
   let aotCache = join(__dirname, '../fastly-ics.wevalcache');
@@ -81,21 +81,29 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
         enableHttpCache = true;
         break;
       }
-      case '--enable-experimental-top-level-await': {
-        moduleMode = true;
+      // Opt out of the module-mode default, compiling as a classic script.
+      // Named for its most visible effect, but note that it also drops strict
+      // mode and `import.meta` — see printHelp.ts.
+      case '--disable-top-level-await': {
+        moduleMode = false;
         bundle = true;
         break;
       }
-      case '--enable-aot': {
-        enableAOT = true;
+      case '--enable-experimental-top-level-await': {
+        // moduleMode is now the default, so this flag is a no-op. It is kept
+        // so that existing build invocations keep working.
         break;
       }
+      case '--disable-aot': {
+        disableAOT = true;
+        break;
+      }
+      case '--enable-aot':
       case '--enable-experimental-aot': {
         console.error(
-          'Warning: --enable-experimental-aot flag is now --enable-aot. The old flag continues\n' +
-            'to work for now, but please update your build invocation!',
+          'Warning: --enable-aot and --enable-experimental-aot flags are deprecated.\n' +
+            'AOT compilation is now enabled by default, and can be disabled by using the --disable - aot flag.',
         );
-        enableAOT = true;
         break;
       }
       case '-V':
@@ -250,13 +258,13 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
     }
   }
 
-  if (!customEngineSet && enableAOT) {
+  if (!customEngineSet && !disableAOT) {
     wasmEngine = join(__dirname, '../fastly-weval.wasm');
   }
 
-  if (wevalBin && !enableAOT) {
+  if (wevalBin && disableAOT) {
     console.error(
-      'Warning: --weval-bin has no effect without --enable-aot, as weval is only used for AOT compilation',
+      'Warning: --weval-bin has no effect with --disable-aot, as weval is only used for AOT compilation',
     );
   }
 
@@ -265,7 +273,7 @@ export async function parseInputs(cliInputs: string[]): Promise<ParsedInputs> {
     enableHttpCache,
     moduleMode,
     bundle,
-    enableAOT,
+    disableAOT,
     aotCache,
     enableStackTraces,
     excludeSources,

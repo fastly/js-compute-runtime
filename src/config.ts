@@ -5,12 +5,13 @@ const additiveOptionsMap = {
 };
 
 const strictOptionsMap = {
-  enableAOT: '--enable-aot',
+  disableAOT: '--disable-aot',
   aotCache: '--aot-cache',
   enableHttpCache: '--enable-http-cache',
   enableExperimentalHighResolutionTimeMethods:
     '--enable-experimental-high-resolution-time-methods',
   enableExperimentalTopLevelAwait: '--enable-experimental-top-level-await',
+  disableTopLevelAwait: '--disable-top-level-await',
   enableStackTraces: '--enable-stack-traces',
   excludeSources: '--exclude-sources',
   debugIntermediateFiles: '--debug-intermediate-files',
@@ -39,9 +40,7 @@ export async function readConfigFileAndCliArguments(cliArgs: string[]) {
 
     // Wrap in an array if it isn't one already
     const items = (Array.isArray(val) ? val : [val]) as (
-      | string
-      | boolean
-      | object
+      string | boolean | object
     )[];
 
     for (const item of items) {

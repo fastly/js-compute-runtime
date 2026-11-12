@@ -1,4 +1,184 @@
 {
+  "fetch-promise-handoff production buffered miss headers": {
+    "environments": ["compute"],
+    "features": ["http-cache"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fetch-promise-handoff/guest-buffered"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": { "x-cache": "MISS", "x-cache-hits": "0" }
+    }
+  },
+  "fetch-promise-handoff production streamed miss headers": {
+    "environments": ["compute"],
+    "features": ["http-cache"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fetch-promise-handoff/guest-streamed"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": { "x-cache": "MISS", "x-cache-hits": "0" }
+    }
+  },
+  "fetch-promise-handoff production cache fill miss headers": {
+    "environments": ["compute"],
+    "features": ["http-cache"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/fetch-promise-handoff/guest-cache-fill"
+    },
+    "downstream_response": {
+      "status": 200,
+      "headers": { "x-cache": "MISS", "x-cache-hits": "0" }
+    }
+  },
+  "GET /fetch-promise-handoff/respondwith-success": {
+    "environments": ["compute", "viceroy"],
+    "features": ["skip-http-cache"],
+    "downstream_response": {
+      "status": 200,
+      "headers": { "x-respondwith": "success" }
+    }
+  },
+  "GET /fetch-promise-handoff/respondwith-rejection": {
+    "environments": ["compute", "viceroy"],
+    "downstream_response": {
+      "status": 500,
+      "headers": { "x-respondwith-error": "rejected" }
+    }
+  },
+  "GET /fetch-promise-handoff/upload-rejection": {
+    "environments": ["compute", "viceroy"],
+    "downstream_response": { "status": 200, "body": "ok" }
+  },
+  "GET /fetch-promise-handoff/rejected-fetch": {
+    "environments": ["compute", "viceroy"],
+    "downstream_response": {
+      "status": 500,
+      "headers": {
+        "x-promise-error-only": "error-value",
+        "x-promise-any": "any-value",
+        "x-error-append": ["first", "second"],
+        "x-error-remove": null,
+        "x-promise-set": null,
+        "x-promise-append": null
+      }
+    }
+  },
+  "GET /fetch-promise-handoff/http-error": {
+    "environments": ["compute", "viceroy"],
+    "downstream_response": {
+      "status": 500,
+      "headers": {
+        "x-promise-set": "set-value",
+        "x-promise-append": ["first", "second"],
+        "x-promise-any": "any-value",
+        "x-promise-error-only": null
+      }
+    }
+  },
+  "GET /fetch-promise-handoff/validation-errors": {
+    "environments": ["compute", "viceroy"],
+    "downstream_response": { "status": 200 }
+  },
+  "GET /fetch-promise-handoff/host-stream-error": {
+    "environments": ["compute", "viceroy"],
+    "features": ["skip-http-cache"],
+    "downstream_response": {
+      "status": 500,
+      "headers": {
+        "x-promise-error-only": "error-value",
+        "x-promise-any": "any-value",
+        "x-error-append": ["first", "second"],
+        "x-error-remove": null,
+        "x-promise-set": null,
+        "x-promise-append": null
+      }
+    }
+  },
+  "GET /fetch-promise-handoff/guest-stream-error": {
+    "environments": ["compute", "viceroy"],
+    "features": ["http-cache"],
+    "downstream_response": {
+      "status": 500,
+      "headers": {
+        "x-promise-error-only": "error-value",
+        "x-promise-any": "any-value",
+        "x-error-append": ["first", "second"],
+        "x-error-remove": null,
+        "x-promise-set": null,
+        "x-promise-append": null
+      }
+    }
+  },
+  "GET /fetch-promise-handoff/host-buffered": {
+    "environments": ["compute", "viceroy"],
+    "features": ["skip-http-cache"],
+    "downstream_response": {
+      "status": 200,
+      "headers": {
+        "x-promise-set": "set-value",
+        "x-promise-append": ["first", "second"],
+        "x-promise-error-only": null,
+        "access-control-allow-origin": null
+      }
+    }
+  },
+  "GET /fetch-promise-handoff/host-streamed": {
+    "environments": ["compute", "viceroy"],
+    "features": ["skip-http-cache"],
+    "downstream_response": {
+      "status": 200,
+      "headers": {
+        "x-promise-set": "set-value",
+        "x-promise-append": "first, second",
+        "x-promise-error-only": null,
+        "access-control-allow-origin": null
+      }
+    }
+  },
+  "GET /fetch-promise-handoff/guest-buffered": {
+    "environments": ["compute", "viceroy"],
+    "features": ["http-cache"],
+    "downstream_response": {
+      "status": 200,
+      "headers": {
+        "x-promise-set": "set-value",
+        "x-promise-append": ["first", "second"],
+        "x-promise-error-only": null,
+        "access-control-allow-origin": null
+      }
+    }
+  },
+  "GET /fetch-promise-handoff/guest-streamed": {
+    "environments": ["compute", "viceroy"],
+    "features": ["http-cache"],
+    "downstream_response": {
+      "status": 200,
+      "headers": {
+        "x-promise-set": "set-value",
+        "x-promise-append": "first, second",
+        "x-promise-error-only": null,
+        "access-control-allow-origin": null
+      }
+    }
+  },
+  "GET /fetch-promise-handoff/guest-cache-fill": {
+    "environments": ["compute", "viceroy"],
+    "features": ["http-cache"],
+    "downstream_response": {
+      "status": 200,
+      "headers": {
+        "x-promise-set": "set-value",
+        "x-promise-append": "first, second",
+        "x-promise-error-only": null,
+        "access-control-allow-origin": null
+      }
+    }
+  },
   "GET /async-select/hello": {
     "downstream_response": {
       "status": 200,
@@ -35,7 +215,11 @@
   "GET /cache-override/constructor/invalid-mode": {
     "flake": true
   },
+  "GET /cache-override/constructor/negative-ttl": {},
+  "GET /cache-override/constructor/negative-swr": {},
   "GET /cache-override/constructor/valid-mode": {},
+  "GET /cache-override/beforeSend/get": {},
+  "GET /cache-override/afterSend/get": {},
   "GET /cache-override/fetch/mode-none": {},
   "GET /cache-override/fetch/mode-pass": {
     "flake": true
@@ -448,10 +632,16 @@
     "flake": true,
     "environments": ["compute"]
   },
+  "GET /simple-cache/getOrSet/commit-on-success": {
+    "flake": true,
+    "environments": ["compute"]
+  },
+  "GET /simple-cache/getOrSet/transaction-closed-on-reject": {},
   "GET /client/requestId": {},
   "GET /client/tlsJA3MD5": {},
   "GET /client/tlsClientHello": {},
   "GET /client/tlsClientCertificate": {},
+  "GET /client/tlsClientSNI": {},
   "GET /client/tlsCipherOpensslName": {},
   "GET /client/tlsProtocol": {},
   "GET /client/tlsJA4": {},
@@ -1030,6 +1220,192 @@
       "body": "ok"
     }
   },
+  "GET /crypto.subtle.deriveBits": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/length": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/called-as-constructor": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/called-with-wrong-this": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/called-with-no-arguments": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/pbkdf2-import-key": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/pbkdf2-import-key-invalid-usages": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/pbkdf2-import-key-extractable": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/pbkdf2-sha-256": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/pbkdf2-sha-256-partial-length": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/wrong-usage-key": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/wrong-algorithm-key": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/unsupported-algorithm": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/length-not-multiple-of-8": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/zero-iterations": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/aes-cbc-raw": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/aes-cbc-raw-invalid": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/aes-cbc-jwk": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.importKey/aes-cbc-jwk-invalid": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.encrypt/aes-cbc-round-trip": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.encrypt/aes-cbc-empty-plaintext": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.encrypt/aes-128-cbc-known-answer": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.encrypt/aes-256-cbc-known-answer": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.decrypt/aes-128-cbc-known-answer": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.decrypt/aes-256-cbc-known-answer": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.encrypt/wrong-usage-key": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.decrypt/wrong-usage-key": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.encrypt/unsupported-algorithm": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.encrypt/invalid-iv-length": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.decrypt/corrupt-ciphertext": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /crypto.subtle.deriveBits/pbkdf2-aes-cbc-end-to-end": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
   "GET /dictionary/exposed-as-global": {
     "flake": true
   },
@@ -1081,6 +1457,12 @@
   "GET /env": {
     "environments": ["viceroy"]
   },
+  "GET /long-uri": {
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/compute/really_long_uri_exceeding_8192_bytesaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  },
   "GET /createFanoutHandoff": {},
   "GET /createWebsocketHandoff": {},
   "GET /fastly/now": {},
@@ -1118,6 +1500,7 @@
     "environments": ["compute"]
   },
   "GET /includeBytes": {},
+  "GET /includeBytes/sandbox": {},
   "GET /logger": {
     "environments": ["viceroy"],
     "logs": ["ComputeLog :: Hello!"]
@@ -1212,9 +1595,13 @@
   "GET /request/setCacheKey/key-parameter-calls-7.1.17-ToString": {},
   "GET /request/setCacheKey/key-parameter-not-supplied": {},
   "GET /request/setCacheKey/key-valid": {},
+  "GET /request/body/body-from-string-passthrough": {},
+  "GET /request/body/body-property-non-downstream": {},
+  "GET /request/body/body-from-arraybuffer-passthrough": {},
   "GET /request/clone/called-as-constructor": {},
   "GET /request/clone/called-unbound": {},
   "GET /request/clone/valid": {},
+  "GET /request/clone/headers-are-independent": {},
   "GET /request/clone/invalid": {},
   "POST /request/body-async-simple/no-workaround": {
     "environments": ["viceroy", "compute"],
@@ -1312,6 +1699,7 @@
   "GET /clearTimeout/returns-undefined": {},
   "GET /clearTimeout/called-unbound": {},
   "GET /urlsearchparams/sort": {},
+  "GET /urlsearchparams/temp-url": {},
   "GET /random": {},
   "GET /error": {
     "downstream_response": {
@@ -1522,6 +1910,13 @@
     }
   },
   "GET /FastlyBody/append/data-parameter-readablestream-host-backed": {
+    "environments": ["compute"],
+    "downstream_response": {
+      "body": "ok",
+      "status": 200
+    }
+  },
+  "GET /FastlyBody/append/data-parameter-readablestream-cache-entry-backed": {
     "environments": ["compute"],
     "downstream_response": {
       "body": "ok",
@@ -2046,6 +2441,54 @@
   "GET /core-cache/transactionLookup/options-parameter-headers-field-valid-Headers-instance": {
     "environments": ["compute"]
   },
+  "GET /core-cache/transactionLookupAsync/called-as-constructor": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/key-parameter-calls-7.1.17-ToString": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/key-parameter-not-supplied": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/key-parameter-empty-string": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/key-parameter-8135-character-string": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/key-parameter-8136-character-string": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/options-parameter-wrong-type": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/options-parameter-headers-field-wrong-type": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/returns-PendingTransaction": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/wait-resolves-must-insert-or-update": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/pending-reflects-readiness": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/wait-called-twice-throws": {
+    "environments": ["compute"]
+  },
+  "GET /core-cache/transactionLookupAsync/wait-with-timeout-resolves": {
+    "environments": ["compute"]
+  },
+  "GET /pending-transaction/interface": {
+    "environments": ["compute"]
+  },
+  "GET /pending-transaction/constructor/called-as-regular-function": {
+    "environments": ["compute"]
+  },
+  "GET /pending-transaction/constructor/throws": {
+    "environments": ["compute"]
+  },
   "GET /cache-entry/interface": {
     "environments": ["compute"]
   },
@@ -2122,6 +2565,9 @@
     "environments": ["compute"]
   },
   "GET /cache-entry/body/options-end-zero": {
+    "environments": ["compute"]
+  },
+  "GET /cache-entry/body/options-end-before-start": {
     "environments": ["compute"]
   },
   "GET /cache-entry/length/called-as-constructor": {
@@ -2512,6 +2958,12 @@
       "body": "ok"
     }
   },
+  "GET /rate-counter/increment/delta-parameter-too-large": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
   "GET /rate-counter/increment/returns-undefined": {
     "downstream_response": {
       "status": 200,
@@ -2788,6 +3240,12 @@
       "body": "ok"
     }
   },
+  "GET /edge-rate-limiter/checkRate/delta-parameter-too-large": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
   "GET /edge-rate-limiter/checkRate/window-parameter-negative": {
     "downstream_response": {
       "status": 200,
@@ -2819,6 +3277,12 @@
     }
   },
   "GET /edge-rate-limiter/checkRate/limit-parameter-NaN": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /edge-rate-limiter/checkRate/limit-parameter-too-large": {
     "downstream_response": {
       "status": 200,
       "body": "ok"
@@ -3169,6 +3633,7 @@
   "GET /image-optimizer/options/sharpen": {},
   "GET /image-optimizer/options/trim": {},
   "GET /image-optimizer/options/viewbox": {},
+  "GET /image-optimizer/clone-request": {},
   "GET /early-hints/manual-response": {
     "environments": ["compute"],
     "downstream_response": {
@@ -3266,6 +3731,40 @@
   "GET /shielding/invalid-shield": {
     "environments": ["compute"]
   },
+  "GET /stale-if-error/cache-override/constructor-with-staleIfError": {},
+  "GET /stale-if-error/cache-override/constructor-without-staleIfError": {},
+  "GET /stale-if-error/cache-override/set-staleIfError": {},
+  "GET /stale-if-error/response/property-undefined-on-non-cached": {},
+  "GET /stale-if-error/response/setter-throws-on-non-cached": {},
+  "GET /stale-if-error/response/staleIfErrorAvailable-throws-outside-afterSend": {},
+  "GET /stale-if-error/fetch/staleIfErrorAvailable-false-without-staleIfError": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /stale-if-error/fetch/with-cache-override": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /stale-if-error/fetch/staleIfErrorAvailable-after-caching": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /stale-if-error/fetch/with-swr-and-staleIfError": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /stale-if-error/fetch/zero-staleIfError": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /stale-if-error/fetch/serve-stale-on-afterSend-exception": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /stale-if-error/fetch/serve-stale-on-beforeSend-exception": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
   "GET /fastly/security/inspect/invalid-config": {
     "environments": ["viceroy"]
   },
@@ -3328,6 +3827,56 @@
       "method": "POST",
       "pathname": "/proxy-transform-stream/framing",
       "body": "hello world"
+    }
+  },
+  "GET /form-data/boundary-is-content-type-safe": {
+    "downstream_response": {
+      "status": 200,
+      "body": "ok"
+    }
+  },
+  "GET /request/bot-detection/not-a-bot": {
+    "environments": ["viceroy"]
+  },
+  "GET /request/bot-detection/got-a-bot": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/bot-detection/got-a-bot",
+      "body": "hello",
+      "headers": [
+        "X-Fastly-Bot-Analyzed",
+        "true",
+        "X-Fastly-Bot-Detected",
+        "true",
+        "X-Fastly-Bot-Name",
+        "BadBot",
+        "X-Fastly-Bot-Category",
+        "headless",
+        "X-Fastly-Bot-Verified",
+        "true"
+      ]
+    }
+  },
+  "GET /request/bot-detection/verified-false": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/bot-detection/verified-false",
+      "body": "hello",
+      "headers": ["X-Fastly-Bot-Verified", "false"]
+    }
+  },
+  "GET /request/bot-detection/long-bot-name": {
+    "environments": ["viceroy"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/request/bot-detection/long-bot-name",
+      "body": "hello",
+      "headers": [
+        "X-Fastly-Bot-Name",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      ]
     }
   }
 }

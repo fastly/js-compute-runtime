@@ -14,5 +14,10 @@
     "undici": "^8",
     "zx": "^8"
   },
-  "type": "module"
+  "type": "module",
+  "devEngines": {
+    "packageManager": {
+      "name": "npm"
+    }
+  }
 }

@@ -1,0 +1,30 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# console.groupCollapsed()
+
+The **`console.groupCollapsed()`** method creates a new inline group in the Web Console. Unlike `console.group()`,
+however, the new group is created collapsed. The user will need to use the disclosure
+button next to it to expand it, revealing the entries created in the group.
+
+Call `console.groupEnd()` to back out to the parent group.
+
+## Syntax
+
+```js
+groupCollapsed()
+groupCollapsed(label)
+```
+
+### Parameters
+
+- `label` __optional__
+  - : Label for the group.
+
+### Return value
+
+`undefined`.

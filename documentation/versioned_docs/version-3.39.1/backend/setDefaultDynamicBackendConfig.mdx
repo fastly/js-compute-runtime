@@ -58,7 +58,7 @@ The **`setDefaultDynamicBackendConfig()`** allows setting backend configuration 
       - `certificate` _: string_
         - The PEM certificate string.
       - `key` _: SecretStoreEntry_
-        - The `SecretStoreEntry` to use for the key, created via [`SecretStore.prototype.get`](../fastly:secret-store/SecretStore/prototype/get.mdx) or alteratively via [`SecretStore.fromBytes`](../fastly:secret-store/SecretStore/fromBytes.mdx).
+        - The `SecretStoreEntry` to use for the key, created via [`SecretStore.prototype.get`](pathname://../fastly:secret-store/SecretStore/prototype/get.mdx) or alteratively via [`SecretStore.fromBytes`](pathname://../fastly:secret-store/SecretStore/fromBytes.mdx).
     - `httpKeepalive` _: number_ _**optional**_
       - Enable HTTP keepalive, setting the timout in milliseconds.
     - `tcpKeepalive` _: boolean | object_ _**optional**_
@@ -73,7 +73,7 @@ The **`setDefaultDynamicBackendConfig()`** allows setting backend configuration 
 ## Syntax
 
 ```js
-setDefaultDynamicBackendConfig(defaultConfig)
+setDefaultDynamicBackendConfig(defaultConfig);
 ```
 
 ### Return value
@@ -83,7 +83,6 @@ None.
 ## Examples
 
 In this example an explicit Dynamic Backend is created and supplied to the fetch request, with timeouts and TLS options provided from the default backend configuration options.
-
 
 <Fiddle config={{
   "type": "javascript",
@@ -139,8 +138,8 @@ addEventListener("fetch", event => event.respondWith(app(event)));
 
 ```js
 /// <reference types="@fastly/js-compute" />
-import { allowDynamicBackends } from "fastly:experimental";
-import { Backend } from "fastly:backend";
+import { allowDynamicBackends } from 'fastly:experimental';
+import { Backend } from 'fastly:backend';
 allowDynamicBackends(true);
 setDefaultDynamicBackendConfig({
   connectTimeout: 1000,
@@ -148,20 +147,20 @@ setDefaultDynamicBackendConfig({
   betweenBytesTimeout: 10_000,
   useSSL: true,
   sslMinVersion: 1.3,
-  sslMaxVersion: 1.3
+  sslMaxVersion: 1.3,
 });
 async function app() {
   // For any request, return the fastly homepage -- without defining a backend!
   const backend = new Backend({
     name: 'fastly',
     target: 'fastly.com',
-    hostOverride: "www.fastly.com"
+    hostOverride: 'www.fastly.com',
   });
   return fetch('https://www.fastly.com/', {
-    backend // Here we are configuring this request to use the backend from above.
+    backend, // Here we are configuring this request to use the backend from above.
   });
 }
-addEventListener("fetch", event => event.respondWith(app(event)));
+addEventListener('fetch', (event) => event.respondWith(app(event)));
 ```
 
 </Fiddle>

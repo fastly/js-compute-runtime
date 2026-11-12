@@ -1,6 +1,6 @@
 {
   "name": "@fastly/js-compute",
-  "version": "3.41.1",
+  "version": "4.2.0",
   "license": "Apache-2.0",
   "main": "types/index.js",
   "types": "types/index.d.ts",
@@ -44,7 +44,7 @@
     "test:wpt": "tests/wpt-harness/build-wpt-runtime.sh && node ./tests/wpt-harness/run-wpt.mjs -vv",
     "test:wpt:debug": "tests/wpt-harness/build-wpt-runtime.sh --debug-build && node ./tests/wpt-harness/run-wpt.mjs -vv",
     "test:types": "tsd",
-    "clean": "rm -rf dist/ starling.wasm fastly.wasm fastly.debug.wasm fastly-weval.wasm fastly-ics.wevalcache fastly-js-compute-*.tgz",
+    "clean": "rm -rf dist/ starling.wasm fastly.wasm fastly.debug.wasm fastly-weval.wasm fastly-ics.wevalcache fastly-js-compute-*.tgz runtime/fastly/build-debug runtime/fastly/build-release runtime/fastly/build-release-weval",
     "build": "npm run clean && npm run build:cli && npm run build:debug && npm run build:release && npm run build:weval",
     "build:cli": "tsc",
     "build:release": "./runtime/fastly/build-release.sh",
@@ -56,17 +56,18 @@
     "format:check": "prettier --check 'src/**/*.ts' integration-tests"
   },
   "dependencies": {
-    "@bytecodealliance/jco": "^1.7.0",
-    "@bytecodealliance/weval": "^0.3.2",
-    "@bytecodealliance/wizer": "^7.0.5",
+    "@bytecodealliance/jco": "^1.17.9",
+    "@bytecodealliance/weval": "^0.5.1",
+    "@fastly/wasmtime": "file:packages/wasmtime",
     "@jridgewell/remapping": "^2.3.5",
     "@jridgewell/trace-mapping": "^0.3.31",
     "acorn": "^8.13.0",
     "acorn-walk": "^8.3.4",
     "cosmiconfig": "^9.0.1",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.28.1",
     "magic-string": "^0.30.12",
     "picomatch": "^4.0.4",
+    "proper-lockfile": "^4.1.2",
     "regexpu-core": "^6.4.0"
   },
   "devDependencies": {
@@ -74,9 +75,11 @@
     "@jakechampion/cli-testing-library": "^1.0.0",
     "@types/node": "^24.10.1",
     "@types/picomatch": "^4.0.2",
+    "@types/proper-lockfile": "^4.1.4",
     "brittle": "^3.5.2",
     "eslint": "^9.39.1",
     "get-bin-path": "^11.0.0",
+    "npm": "^11.14.1",
     "prettier": "^3.3.3",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
@@ -85,6 +88,9 @@
     "typescript-eslint": "^8.48.1",
     "unified": "^11.0.5"
   },
+  "bundledDependencies": [
+    "@fastly/wasmtime"
+  ],
   "peerDependencies": {
     "typescript": ">=5.9"
   },
@@ -97,5 +103,11 @@
     "compilerOptions": {
       "types": []
     }
-  }
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm"
+    }
+  },
+  "allowScripts": {}
 }

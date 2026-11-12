@@ -1,0 +1,67 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# String.prototype.localeCompare()
+
+The **`localeCompare()`** method returns a number indicating whether a reference string comes before, or after, or is the same as the given string in sort order. In implementations with [`Intl.Collator` API](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Intl/Collator) support, this method simply calls `Intl.Collator`.
+
+## Syntax
+
+```js
+localeCompare(compareString)
+localeCompare(compareString, locales)
+localeCompare(compareString, locales, options)
+```
+
+### Parameters
+
+The `locales` and `options` parameters customize the behavior of the function and let applications specify the language whose formatting conventions should be used.
+
+In implementations that support the [`Intl.Collator` API](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Intl/Collator), these parameters correspond exactly to the [`Intl.Collator()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Intl/Collator/Collator) constructor's parameters. Implementations without `Intl.Collator` support are asked to ignore both parameters, making the comparison result returned entirely implementation-dependent — it's only required to be _consistent_.
+
+- `compareString`
+  - : The string against which the `referenceStr` is compared.
+- `locales` _**optional**_
+
+  - : A string with a BCP 47 language tag, or an array of such strings. Corresponds to the [`locales`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Intl/Collator/Collator#locales) parameter of the `Intl.Collator()` constructor.
+
+    In implementations without `Intl.Collator` support, this parameter is ignored and the host's locale is usually used.
+
+- `options` _**optional**_
+
+  - : An object adjusting the output format. Corresponds to the [`options`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Intl/Collator/Collator#options) parameter of the `Intl.Collator()` constructor.
+
+    In implementations without `Intl.Collator` support, this parameter is ignored.
+
+See the [`Intl.Collator()` constructor](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Intl/Collator/Collator) for details on the `locales` and `options` parameters and how to use them.
+
+### Return value
+
+A **negative** number if `referenceStr` occurs before `compareString`; **positive** if the `referenceStr` occurs after `compareString`; `0` if they are equivalent.
+
+In implementations with `Intl.Collator`, this is equivalent to `new Intl.Collator(locales, options).compare(referenceStr, compareString)`.
+
+## Description
+
+Returns an integer indicating whether the `referenceStr` comes
+before, after or is equivalent to the `compareString`.
+
+- Negative when the `referenceStr` occurs before
+  `compareString`
+- Positive when the `referenceStr` occurs after
+  `compareString`
+- Returns `0` if they are equivalent
+
+> **Warning:** Do not rely on exact return values of `-1` or `1`!
+>
+> Negative and positive integer results vary between browsers (as well as between
+> browser versions) because the W3C specification only mandates negative and positive
+> values. Some browsers may return `-2` or `2`, or even some other
+> negative or positive value.
+
+## Performance
+
+When comparing large numbers of strings, such as in sorting large arrays, it is better to create an [`Intl.Collator`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Intl/Collator) object and use the function provided by its [`compare()`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Intl/Collator/compare) method.

@@ -199,9 +199,10 @@
         "custom": "custom-header",
         "x-cache": true,
         "x-cache-hits": true,
-        "x-served-by": true
-      },
-      "headersExhaustive": true
+        "x-served-by": true,
+        "access-control-allow-credentials": null,
+        "access-control-allow-origin": null
+      }
     }
   },
   "GET /http-cache/after-send-cache": {
@@ -297,7 +298,32 @@
     "environments": ["compute"],
     "features": ["http-cache"]
   },
-  "GET /kv-store-e2e/list": { "flake": true },
+  "GET /http-cache/vary-header": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/if-none-match": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
+  "GET /http-cache/headers-from-hostcall": {
+    "environments": ["compute"],
+    "features": ["http-cache"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/http-cache/headers-from-hostcall",
+      "headers": ["Range", "bytes=0-3"]
+    }
+  },
+  "GET /http-cache/no-header-loss-before-send": {
+    "environments": ["compute"],
+    "features": ["http-cache"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/http-cache/no-header-loss-before-send"
+    }
+  },
+  "GET /kv-store-e2e/list": {},
   "GET /kv-store/exposed-as-global": {},
   "GET /kv-store/interface": { "flake": true },
   "GET /kv-store/constructor/called-as-regular-function": {},
@@ -325,6 +351,7 @@
   "GET /kv-store/put/key-parameter-containing-special-characters": {
     "flake": true
   },
+  "GET /kv-store/put/key-parameter-containing-nul-byte": { "flake": true },
   "GET /kv-store/put/value-parameter-as-undefined": { "flake": true },
   "GET /kv-store/put/value-parameter-not-supplied": { "flake": true },
   "GET /kv-store/put/value-parameter-readablestream-empty": { "flake": true },
@@ -343,6 +370,7 @@
   "GET /kv-store/put/value-parameter-arraybuffer": { "flake": true },
   "GET /kv-store/put/value-parameter-typed-arrays": { "flake": true },
   "GET /kv-store/put/value-parameter-dataview": { "flake": true },
+  "GET /kv-store/put/double-add": { "flake": true },
   "POST /kv-store/put/request-body": {
     "flake": true,
     "environments": ["compute"],

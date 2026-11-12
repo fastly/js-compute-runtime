@@ -132,6 +132,35 @@ public:
   static JSObject *create(JSContext *cx, uint32_t handle);
 };
 
+// export class PendingTransaction {
+//   pending(): boolean;
+//   wait(timeoutMs?: number): Promise<TransactionCacheEntry>;
+// }
+class PendingTransaction : public builtins::BuiltinNoConstructor<PendingTransaction> {
+  // Non-blocking check of whether the transaction lookup has resolved yet.
+  // pending(): boolean;
+  static bool pending(JSContext *cx, unsigned argc, JS::Value *vp);
+
+  // Wait for the transaction lookup to resolve, optionally bounded by a timeout in
+  // milliseconds. If the timeout elapses first, the pending lookup is released host-side
+  // and the returned promise rejects.
+  // wait(timeoutMs?: number): Promise<TransactionCacheEntry>;
+  static bool wait(JSContext *cx, unsigned argc, JS::Value *vp);
+
+public:
+  static constexpr const char *class_name = "PendingTransaction";
+  static const int ctor_length = 0;
+  enum Slots { BusyHandle, Consumed, Count };
+
+  static const JSFunctionSpec static_methods[];
+  static const JSPropertySpec static_properties[];
+  static const JSFunctionSpec methods[];
+  static const JSPropertySpec properties[];
+
+  static host_api::CacheBusyHandle busy_handle(JSObject *self);
+  static JSObject *create(JSContext *cx, uint32_t busy_handle);
+};
+
 class CoreCache : public builtins::BuiltinNoConstructor<CoreCache> {
   // cache-lookup: func(cache-key: string, options: cache-lookup-options) -> result<cache-handle,
   // error> static lookup(key: string, options?: LookupOptions): CacheEntry | null;
@@ -145,6 +174,11 @@ class CoreCache : public builtins::BuiltinNoConstructor<CoreCache> {
   // result<cache-handle, error> static transactionLookup(key: string, optoptions?: LookupOptions):
   // CacheEntry | null;
   static bool transactionLookup(JSContext *cx, unsigned argc, JS::Value *vp);
+
+  // transaction-lookup-async: func(cache-key: string, options: cache-lookup-options) ->
+  // result<cache-busy-handle, error>
+  // static transactionLookupAsync(key: string, options?: LookupOptions): PendingTransaction;
+  static bool transactionLookupAsync(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:
   static constexpr const char *class_name = "CoreCache";

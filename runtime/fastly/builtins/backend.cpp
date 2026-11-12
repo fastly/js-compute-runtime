@@ -612,8 +612,10 @@ bool is_valid_ip(std::string_view ip) {
     format = AF_INET6;
   }
 
+  // Ensure that the IP is NUL-terminated for inet_pton
+  std::string ip_str(ip);
   char octets[sizeof(struct in6_addr)];
-  if (inet_pton(format, ip.data(), octets) != 1) {
+  if (inet_pton(format, ip_str.data(), octets) != 1) {
     return false;
   }
   return true;
@@ -790,8 +792,6 @@ bool validate_target(JSContext *cx, std::string_view target_string) {
 
   return true;
 }
-
-host_api::BackendConfig default_backend_config{};
 
 const uint64_t MAX_BACKEND_TIMEOUT = 0x100000000;
 
@@ -1322,8 +1322,8 @@ bool Backend::health_for_name(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  auto backend = new host_api::Backend(std::move(name));
-  auto res = backend->health();
+  auto backend = host_api::Backend(std::move(name));
+  auto res = backend.health();
   if (auto *err = res.to_err()) {
     HANDLE_ERROR(cx, *err);
     return false;
@@ -1373,9 +1373,9 @@ bool Backend::is_dynamic_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
   auto res = backend->is_dynamic();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setBoolean(false);
+    return true;
   }
   args.rval().setBoolean(res.unwrap());
   return true;
@@ -1388,9 +1388,9 @@ bool Backend::target_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
   auto res = backend->get_host();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   auto str = core::decode(cx, res.unwrap());
   if (!str) {
@@ -1407,9 +1407,9 @@ bool Backend::host_override_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
   auto res = backend->get_override_host();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   auto str = core::decode(cx, res.unwrap());
   if (!str) {
@@ -1426,9 +1426,9 @@ bool Backend::port_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
   auto res = backend->get_port();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   args.rval().setNumber(res.unwrap());
   return true;
@@ -1441,9 +1441,9 @@ bool Backend::connect_timeout_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
   auto res = backend->get_connect_timeout_ms();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   if (!res.unwrap().has_value()) {
     args.rval().setNull();
@@ -1460,9 +1460,9 @@ bool Backend::first_byte_timeout_get(JSContext *cx, unsigned argc, JS::Value *vp
     return true;
   }
   auto res = backend->get_first_byte_timeout_ms();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   if (!res.unwrap().has_value()) {
     args.rval().setNull();
@@ -1479,9 +1479,9 @@ bool Backend::between_bytes_timeout_get(JSContext *cx, unsigned argc, JS::Value 
     return true;
   }
   auto res = backend->get_between_bytes_timeout_ms();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   if (!res.unwrap().has_value()) {
     args.rval().setNull();
@@ -1498,9 +1498,9 @@ bool Backend::http_keepalive_time_get(JSContext *cx, unsigned argc, JS::Value *v
     return true;
   }
   auto res = backend->get_http_keepalive_time();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   args.rval().setNumber(res.unwrap());
   return true;
@@ -1515,9 +1515,9 @@ bool Backend::tcp_keepalive_get(JSContext *cx, unsigned argc, JS::Value *vp) {
   }
 
   auto res = backend->get_tcp_keepalive_enable();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   if (!res.unwrap()) {
     args.rval().setNull();
@@ -1526,9 +1526,9 @@ bool Backend::tcp_keepalive_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     JS::RootedObject tcp_keepalive_obj(cx, JS_NewPlainObject(cx));
     {
       auto res = backend->get_tcp_keepalive_interval();
-      if (auto *err = res.to_err()) {
-        HANDLE_ERROR(cx, *err);
-        return false;
+      if (res.is_err()) {
+        args.rval().setNull();
+        return true;
       }
       JS::RootedValue val(cx, JS_NumberValue(res.unwrap()));
       if (!JS_SetProperty(cx, tcp_keepalive_obj, "intervalSecs", val)) {
@@ -1537,9 +1537,9 @@ bool Backend::tcp_keepalive_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
     {
       auto res = backend->get_tcp_keepalive_time();
-      if (auto *err = res.to_err()) {
-        HANDLE_ERROR(cx, *err);
-        return false;
+      if (res.is_err()) {
+        args.rval().setNull();
+        return true;
       }
       JS::RootedValue val(cx, JS_NumberValue(res.unwrap()));
       if (!JS_SetProperty(cx, tcp_keepalive_obj, "timeSecs", val)) {
@@ -1548,9 +1548,9 @@ bool Backend::tcp_keepalive_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     }
     {
       auto res = backend->get_tcp_keepalive_probes();
-      if (auto *err = res.to_err()) {
-        HANDLE_ERROR(cx, *err);
-        return false;
+      if (res.is_err()) {
+        args.rval().setNull();
+        return true;
       }
       JS::RootedValue val(cx, JS_NumberValue(res.unwrap()));
       if (!JS_SetProperty(cx, tcp_keepalive_obj, "probes", val)) {
@@ -1570,9 +1570,9 @@ bool Backend::is_ssl_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
   auto res = backend->is_ssl();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setBoolean(false);
+    return true;
   }
   args.rval().setBoolean(res.unwrap());
   return true;
@@ -1585,9 +1585,9 @@ bool Backend::tls_min_version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
   auto res = backend->ssl_min_version();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   if (!res.unwrap().has_value()) {
     args.rval().setNull();
@@ -1604,9 +1604,9 @@ bool Backend::tls_max_version_get(JSContext *cx, unsigned argc, JS::Value *vp) {
     return true;
   }
   auto res = backend->ssl_max_version();
-  if (auto *err = res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    return false;
+  if (res.is_err()) {
+    args.rval().setNull();
+    return true;
   }
   if (!res.unwrap().has_value()) {
     args.rval().setNull();
@@ -1664,11 +1664,12 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   // Check if we already constructed an implicit dynamic backend for this host.
   bool found;
   JS::RootedValue already_built_backend(cx);
-  if (!JS_HasProperty(cx, Backend::backends, name_str.c_str(), &found)) {
+  if (!JS_HasProperty(cx, Backend::request_state->backends, name_str.c_str(), &found)) {
     return nullptr;
   }
   if (found) {
-    if (!JS_GetProperty(cx, Backend::backends, name_str.c_str(), &already_built_backend)) {
+    if (!JS_GetProperty(cx, Backend::request_state->backends, name_str.c_str(),
+                        &already_built_backend)) {
       return nullptr;
     }
     JS::RootedObject backend(cx, &already_built_backend.toObject());
@@ -1686,7 +1687,7 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
     return nullptr;
   }
 
-  host_api::BackendConfig backend_config = default_backend_config.clone();
+  host_api::BackendConfig backend_config = request_state->default_backend_config.clone();
 
   auto host_backend = set_backend(cx, backend, name);
   if (!host_backend) {
@@ -1720,14 +1721,14 @@ JSObject *Backend::create(JSContext *cx, JS::HandleObject request) {
   if (auto *err = res.to_err()) {
     if (host_api::error_is_unsupported(*err)) {
       JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                JSMSG_DYNAMIC_BACKENDS_UNSUPPORTED_IMPLICIT, target_string.data(),
+                                JSMSG_DYNAMIC_BACKENDS_UNSUPPORTED, target_string.data(),
                                 url_string.data);
       return nullptr;
     }
     HANDLE_ERROR(cx, *err);
     return nullptr;
   }
-  if (!JS_SetProperty(cx, Backend::backends, name_str.c_str(), backend_val)) {
+  if (!JS_SetProperty(cx, Backend::request_state->backends, name_str.c_str(), backend_val)) {
     return nullptr;
   }
   return backend;
@@ -1779,7 +1780,7 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
-  host_api::BackendConfig backend_config = default_backend_config.clone();
+  host_api::BackendConfig backend_config = request_state->default_backend_config.clone();
   if (!apply_backend_config(cx, backend_config, configuration)) {
     return false;
   }
@@ -1789,8 +1790,7 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
   if (auto *err = res.to_err()) {
     if (host_api::error_is_unsupported(*err)) {
       JS_ReportErrorNumberASCII(cx, FastlyGetErrorMessage, nullptr,
-                                JSMSG_DYNAMIC_BACKENDS_UNSUPPORTED_EXPLICIT,
-                                target_string_slice.data);
+                                JSMSG_DYNAMIC_BACKENDS_UNSUPPORTED, target_string_slice.data);
       return false;
     }
     HANDLE_ERROR(cx, *err);
@@ -1803,8 +1803,10 @@ bool Backend::constructor(JSContext *cx, unsigned argc, JS::Value *vp) {
 void Backend::finalize(JS::GCContext *gcx, JSObject *obj) {
   auto backend = static_cast<host_api::Backend *>(
       JS::GetReservedSlot(obj, Backend::Slots::HostBackend).toPrivate());
-  free(backend);
+  delete backend;
 }
+
+state::RequestStateHolder<Backend::RequestState> Backend::request_state;
 
 bool set_default_backend_config(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
@@ -1817,8 +1819,10 @@ bool set_default_backend_config(JSContext *cx, unsigned argc, JS::Value *vp) {
                               JSMSG_BACKEND_PARAMETER_NOT_OBJECT);
     return false;
   }
+
   RootedObject backend_config_obj(cx, &backend_config_val.toObject());
-  if (!apply_backend_config(cx, default_backend_config, backend_config_obj)) {
+  if (!apply_backend_config(cx, Backend::request_state->default_backend_config,
+                            backend_config_obj)) {
     return false;
   }
   return true;
@@ -1840,25 +1844,23 @@ bool enforce_explicit_backends(JSContext *cx, unsigned argc, JS::Value *vp) {
     if (!backend) {
       return false;
     }
-    Fastly::defaultBackend = backend;
+    Fastly::request_state->default_backend = backend;
   }
-  Fastly::allowDynamicBackends = false;
+  Fastly::request_state->allow_dynamic_backends = false;
   args.rval().setUndefined();
   return true;
 }
 
 bool install(api::Engine *engine) {
-  JS::RootedObject backends(engine->cx(), JS_NewPlainObject(engine->cx()));
-  if (!backends) {
+  if (!Backend::request_state.init(engine->cx())) {
     return false;
   }
-  Backend::backends.init(engine->cx(), backends);
+
   if (!Backend::init_class_impl(engine->cx(), engine->global())) {
     return false;
   }
 
-  RootedObject backend_obj(engine->cx(),
-                           JS_GetConstructor(engine->cx(), BuiltinImpl<Backend>::proto_obj));
+  RootedObject backend_obj(engine->cx(), JS_GetConstructor(engine->cx(), Backend::proto_obj));
   RootedValue backend_val(engine->cx(), ObjectValue(*backend_obj));
   RootedObject backend_ns(engine->cx(), JS_NewObject(engine->cx(), nullptr));
   if (!JS_SetProperty(engine->cx(), backend_ns, "Backend", backend_val)) {

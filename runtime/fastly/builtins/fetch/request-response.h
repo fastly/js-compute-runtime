@@ -112,8 +112,7 @@ public:
 
   static JSObject *create_body_stream(JSContext *cx, JS::HandleObject owner);
 
-  static bool body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self,
-                       bool create_if_undefined);
+  static bool body_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
   static bool backend_get(JSContext *cx, JS::CallArgs args, JS::HandleObject self);
   static JSString *backend(JSObject *obj);
 
@@ -158,6 +157,11 @@ class Request final : public builtins::BuiltinImpl<Request> {
   static bool setCacheKey(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool setManualFramingHeaders(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool clone(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool bot_analyzed_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool bot_detected_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool bot_name_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool bot_category_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool bot_verified_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
 public:
   static constexpr const char *class_name = "Request";
@@ -185,6 +189,7 @@ public:
     AutoDecompressGzip,
     ImageOptimizerOptions,
     Count,
+    BotCategories,
   };
 
   /**
@@ -226,7 +231,7 @@ public:
   static JSObject *create_instance(JSContext *cx);
 };
 
-class Response final : public builtins::FinalizableBuiltinImpl<Response> {
+class Response final : public builtins::BuiltinImpl<Response, builtins::FinalizableClassPolicy> {
   static bool waitUntil(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool ok_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool status_get(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -278,6 +283,7 @@ public:
     SuggestedCacheWriteOptions,
     OverrideCacheWriteOptions,
     CacheBodyTransform,
+    MaskedError, // An error that occured, but was masked by a cached stale-if-error response
     Count,
   };
   static const JSFunctionSpec static_methods[];
@@ -355,14 +361,18 @@ public:
   static bool ttl_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool ttl_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool age_get(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool swr_get(JSContext *cx, unsigned argc, JS::Value *vp);
-  static bool swr_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool staleWhileRevalidate_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool staleWhileRevalidate_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool staleIfError_get(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool staleIfError_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool vary_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool vary_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool surrogateKeys_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool surrogateKeys_set(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool pci_get(JSContext *cx, unsigned argc, JS::Value *vp);
   static bool pci_set(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool staleIfErrorAvailable(JSContext *cx, unsigned argc, JS::Value *vp);
+  static bool maskedError_get(JSContext *cx, unsigned argc, JS::Value *vp);
 
   static void finalize(JS::GCContext *gcx, JSObject *self);
 };

@@ -9,7 +9,7 @@
  * @returns
  */
 
-const compareHeaders = (configHeaders, wasmModuleHeaders, exhaustive) => {
+const compareHeaders = (configHeaders, wasmModuleHeaders) => {
   if (!configHeaders) {
     return;
   }
@@ -36,16 +36,6 @@ const compareHeaders = (configHeaders, wasmModuleHeaders, exhaustive) => {
       }
     }
     configHeaders = combinedHeaders;
-  }
-
-  if (exhaustive) {
-    const configHeaderNames = Object.keys(configHeaders);
-    const wasmHeaderNames = Object.keys(wasmModuleHeaders);
-    if (configHeaderNames.length !== wasmHeaderNames.length) {
-      throw new Error(
-        `[Header names exhaustive check failed]: Expected ${configHeaderNames.length} header names ${configHeaderNames.join(', ')}, got ${wasmHeaderNames.length} header names ${wasmHeaderNames.join(', ')}`,
-      );
-    }
   }
 
   for (let [configHeaderKey, configHeaderValue] of Object.entries(
@@ -76,10 +66,12 @@ const compareHeaders = (configHeaders, wasmModuleHeaders, exhaustive) => {
       }
     } else if (
       configHeaderValue !== true &&
-      wasmModuleHeaderValue !== configHeaderValue
+      (configHeaderValue === null
+        ? wasmModuleHeaderValue != null
+        : wasmModuleHeaderValue !== configHeaderValue)
     ) {
       throw new Error(
-        `[Header Value mismatch] Expected: '${configHeaderKey}: ${configHeaderValue}' (${configHeaderValue.length}), got '${configHeaderKey}: ${wasmModuleHeaderValue}' (${wasmModuleHeaderValue?.length})`,
+        `[Header Value mismatch] Expected: '${configHeaderKey}: ${configHeaderValue}' (${configHeaderValue?.length}), got '${configHeaderKey}: ${wasmModuleHeaderValue}' (${wasmModuleHeaderValue?.length})`,
       );
     }
   }

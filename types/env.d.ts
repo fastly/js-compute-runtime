@@ -8,6 +8,8 @@ declare module 'fastly:env' {
    *
    * @param name The name of the environment variable
    *
+   * @returns The value of the environment variable, or `undefined` if no such environment variable exists.
+   *
    * @example
    * <script async defer src="https://fiddle.fastly.dev/embed.js"></script>
    * In this example we log to stdout the environment variables `FASTLY_HOSTNAME` and `FASTLY_TRACE_ID`.
@@ -57,5 +59,5 @@ declare module 'fastly:env' {
    * ```
    * </noscript>
    */
-  function env(name: string): string;
+  function env(name: string): string | undefined;
 }

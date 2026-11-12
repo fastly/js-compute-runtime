@@ -1,0 +1,26 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Array.prototype.keys()
+
+The **`keys()`** method returns a new **Array
+Iterator** object that contains the keys for each index in the array.
+
+## Syntax
+
+```js
+keys()
+```
+
+### Return value
+
+A new `Array` iterator object.
+
+## Description
+
+When used on sparse arrays, the `keys()` method iterates empty slots as if they have the value `undefined`.
+
+The `keys()` method is generic. It only expects the `this` value to have a `length` property and integer-keyed properties.

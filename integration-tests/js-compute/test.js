@@ -37,6 +37,22 @@ async function sleep(seconds) {
   });
 }
 
+function validateSessionInfo(sessionInfo) {
+  const sandboxIds = [...new Set(sessionInfo.map((i) => i.sandboxId))].sort();
+  let failed = false;
+  for (const info of sessionInfo) {
+    if (sandboxIds[info.expectedSession] !== info.sandboxId) {
+      console.log(
+        `Test ${info.title} had expected session ${info.expectedSession}, which has sandbox id ${sandboxIds[info.expectedSession]}, but the actual sandbox id was ${info.sandboxId}`,
+      );
+      failed = true;
+    }
+  }
+  if (failed) {
+    process.exitCode = 1;
+  }
+}
+
 let args = argv.slice(2);
 
 const local = args.includes('--local');
@@ -114,9 +130,9 @@ const config = TOML.parse(
   ),
 );
 config.name = serviceName;
-if (aot) {
+if (!aot) {
   const buildArgs = config.scripts.build.split(' ');
-  buildArgs.splice(-1, null, '--enable-aot');
+  buildArgs.splice(-1, null, '--disable-aot');
   config.scripts.build = buildArgs.join(' ');
 }
 if (debugBuild) {
@@ -134,6 +150,18 @@ await writeFile(
   TOML.stringify(config),
   'utf-8',
 );
+
+let passed = 0;
+let totalTests = 0;
+const failed = [];
+let sessionInfo = [];
+const green = '\u001b[32m';
+const red = '\u001b[31m';
+const reset = '\u001b[0m';
+const white = '\u001b[39m';
+const info = '\u2139';
+const tick = '\u2714';
+const cross = '\u2716';
 try {
   if (!local) {
     core.startGroup('Delete service if already exists');
@@ -141,8 +169,8 @@ try {
       await zx`fastly service delete --quiet --service-name "${serviceName}" --force --token $FASTLY_API_TOKEN`;
     } catch {}
     core.endGroup();
-    await new Promise((resolve) => setTimeout(resolve, 5000));
     core.startGroup('Build and deploy service');
+    await new Promise((resolve) => setTimeout(resolve, 5000));
     await zx`npm i`;
     await $`fastly compute publish -i ${verbose ? '--verbose' : '--quiet'} --token $FASTLY_API_TOKEN --status-check-off`;
     core.endGroup();
@@ -321,18 +349,14 @@ try {
             ? async (status, headers) => {
                 if (
                   test.downstream_info.status !== undefined &&
-                  test.downstream_info.status != status
+                  test.downstream_info.status != status.statusCode
                 ) {
                   throw new Error(
-                    `[DownstreamInfo: Status mismatch] Expected: ${configResponse.status} - Got: ${status}}`,
+                    `[DownstreamInfo: Status mismatch] Expected: ${test.downstream_info.status} - Got: ${status.statusCode}}`,
                   );
                 }
                 if (headers) {
-                  compareHeaders(
-                    configResponse.headers,
-                    headers,
-                    configResponse.headersExhaustive,
-                  );
+                  compareHeaders(test.downstream_info.headers, headers);
                 }
               }
             : undefined;
@@ -352,6 +376,18 @@ try {
                       body: test.downstream_request.body || undefined,
                     });
                     const bodyChunks = await getBodyChunks(response);
+
+                    if (
+                      test.downstream_response.session !== undefined &&
+                      response.headers['sandbox-id']
+                    ) {
+                      sessionInfo.push({
+                        title,
+                        expectedSession: test.downstream_response.session,
+                        sandboxId: response.headers['sandbox-id'],
+                      });
+                    }
+
                     await compareDownstreamResponse(
                       test.downstream_response,
                       response,
@@ -395,6 +431,7 @@ try {
                       headers: test.downstream_request.headers || undefined,
                       body: test.downstream_request.body || undefined,
                       onInfo: onInfoHandler,
+                      allowH2: false, // Avoid differences between Compute and Viceroy in append cases
                     });
                     const bodyChunks = await getBodyChunks(response);
                     await compareDownstreamResponse(
@@ -429,17 +466,7 @@ try {
 
   core.endGroup();
 
-  console.log('Test results');
   core.startGroup('Test results');
-  let passed = 0;
-  const failed = [];
-  const green = '\u001b[32m';
-  const red = '\u001b[31m';
-  const reset = '\u001b[0m';
-  const white = '\u001b[39m';
-  const info = '\u2139';
-  const tick = '\u2714';
-  const cross = '\u2716';
   for (const result of results) {
     if (result.status === 'fulfilled' || bail) {
       const value = bail ? result : result.value;
@@ -453,30 +480,34 @@ try {
           );
       } else {
         passed += 1;
+        totalTests += 1;
         console.log(green, tick, value.title, reset);
       }
     } else {
+      totalTests += 1;
       console.log(red, cross, result.reason, reset);
       failed.push(result.reason);
     }
   }
   core.endGroup();
-
-  if (failed.length) {
+} finally {
+  validateSessionInfo(sessionInfo);
+  if (failed.length || !passed) {
     process.exitCode = 1;
+    core.notice(`Tests failed.`);
     core.startGroup('Failed tests');
 
     for (const result of failed) {
       console.log(red, cross, result, reset);
     }
+    if (!totalTests) {
+      console.log('No tests passed/ran.');
+    }
 
     core.endGroup();
   }
-  if (!local && failed.length) {
-    core.notice(`Tests failed.`);
-  }
-} finally {
-  if (!local && !skipTeardown) {
+  // No need to tear down the service if what failed was setting it up.
+  if (!local && !skipTeardown && serviceId) {
     const teardownPath = join(__dirname, 'teardown.js');
     if (existsSync(teardownPath)) {
       core.startGroup('Tear down the extra set-up for the service');
@@ -495,7 +526,7 @@ try {
   }
   if (process.exitCode == undefined || process.exitCode == 0) {
     console.log(
-      `All tests passed! Took ${(Date.now() - startTime) / 1000} seconds to complete`,
+      `All ${totalTests} tests passed! Took ${(Date.now() - startTime) / 1000} seconds to complete`,
     );
   } else {
     console.log(`Tests failed!`);

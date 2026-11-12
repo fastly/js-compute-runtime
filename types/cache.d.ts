@@ -283,6 +283,58 @@ declare module 'fastly:cache' {
       key: string,
       options?: LookupOptions,
     ): TransactionCacheEntry;
+
+    /**
+     * Issue a transactional lookup into the cache without blocking, returning a `PendingTransaction`.
+     *
+     * This behaves like `CoreCache.transactionLookup()` (the same request collapsing and
+     * revalidation semantics apply), except that the lookup itself does not block: instead of
+     * returning a `TransactionCacheEntry` directly, it returns a `PendingTransaction` which can
+     * be polled via `PendingTransaction.prototype.pending`, or resolved via
+     * `PendingTransaction.prototype.wait`, optionally bounded by a timeout.
+     *
+     * @param key A cache key which is a string with a length of up to 8,135 that identify a cached item. The cache key may not uniquely identify an item; headers can be used to augment the key when multiple items are associated with the same key.
+     * @param options A set of options to used whilst performing this lookup into the cache.
+     * @throws `TypeError` if the provided `key` is an empty string, cannot be coerced to a string, or is longer than 8,135 characters.
+     */
+    static transactionLookupAsync(
+      key: string,
+      options?: LookupOptions,
+    ): PendingTransaction;
+  }
+
+  /**
+   * A transactional cache lookup issued via {@link CoreCache.transactionLookupAsync} that has
+   * not yet resolved.
+   *
+   * @version 3.46.0
+   */
+  export class PendingTransaction {
+    private constructor();
+
+    /**
+     * Returns `true` if the transaction lookup has not yet resolved.
+     *
+     * This is a non-blocking check, and can be called any number of times before `wait()` is
+     * called.
+     */
+    pending(): boolean;
+
+    /**
+     * Waits for the transaction lookup to resolve, returning a `TransactionCacheEntry` — the
+     * same value that `CoreCache.transactionLookup()` would have returned had it been called
+     * instead.
+     *
+     * If `timeoutMs` is provided and the lookup does not resolve within that many milliseconds,
+     * the returned promise rejects, and the pending lookup is released so that it no longer
+     * holds up e.g. other transactional lookups for the same key.
+     *
+     * `wait()` can only be called once per `PendingTransaction`; calling it again throws.
+     *
+     * @param timeoutMs The maximum number of milliseconds to wait for the lookup to resolve.
+     * @throws If `timeoutMs` elapses before the lookup resolves, or if `wait()` has already been called on this `PendingTransaction`.
+     */
+    wait(timeoutMs?: number): Promise<TransactionCacheEntry>;
   }
 
   /**

@@ -1,0 +1,34 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# `Metadata`
+
+Enumerator options for [`imageOptimizerOptions.metadata`](./imageOptimizerOptions.mdx).
+
+## Constants
+
+- `Copyright` (`"copyright"`) Preserve [copyright notice](https://www.iptc.org/std/photometadata/specification/IPTC-PhotoMetadata#copyright-notice), creator, credit line, licensor, and web statement of rights fields.
+- `C2PA` (`"c2pa"`) Preserve the [C2PA manifest](https://c2pa.org/) and add any transformations performed by Fastly Image Optimizer.
+- `CopyRightAndC2PA` (`"copyright,c2pa"`) Resize and crop the image centrally to exactly fit the specified region.
+
+## Examples
+
+```js
+import { Metadata, Region } from 'fastly:image-optimizer';
+
+addEventListener("fetch", (event) => event.respondWith(handleRequest(event)));
+
+async function handleRequest(event) {
+  return await fetch('https://www.w3.org/Graphics/PNG/text2.png', {
+    imageOptimizerOptions: {
+      region: Region.UsEast,
+      metadata: Metadata.Copyright
+    },
+    backend: 'w3'
+  });
+}
+```
