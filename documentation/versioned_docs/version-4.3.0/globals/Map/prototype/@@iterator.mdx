@@ -1,0 +1,21 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Map.prototype\[Symbol.iterator]()
+
+The **`Symbol.iterator`** method of a `Map` object implements the [iterable protocol](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Iteration_protocols) and allows maps to be consumed by most syntaxes expecting iterables, such as the [spread syntax](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Spread_syntax) and [`for...of`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/for...of) loops. It returns an iterator that yields the key-value pairs of the map.
+
+The initial value of this property is the same function object as the initial value of the [`Map.prototype.entries`](../../../globals/Map/prototype/entries.mdx) property.
+
+## Syntax
+
+```js
+map[Symbol.iterator]()
+```
+
+### Return value
+
+The same return value as [`Map.prototype.entries()`](../../../globals/Map/prototype/entries.mdx): a new iterable iterator object that yields the key-value pairs of the map.

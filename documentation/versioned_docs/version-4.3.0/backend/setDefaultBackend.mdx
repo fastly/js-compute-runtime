@@ -1,0 +1,27 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# setDefaultBackend
+
+Set the default backend to use when dynamic backends are disabled.
+
+For backwards compatibility, unless [`allowDynamicBackends`](./allowDynamicBackends.mdx) has been explicitly called before invoking this function, it will disable dynamic backends when it is called, as if calling `allowDynamicBackends(false)`.
+
+## Syntax
+
+```js
+setDefaultBackend(defaultBackend)
+```
+
+### Parameters
+
+- `defaultBackend` _: string_
+  - A default backend string name to use in `fetch()` requests.
+
+### Return value
+
+`undefined`.
