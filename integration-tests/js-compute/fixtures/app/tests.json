@@ -1220,42 +1220,6 @@
       "body": "ok"
     }
   },
-  "GET /crypto.subtle.detached-buffers": {
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /crypto.subtle.key-algorithm-mutations-do-not-change-key": {
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /crypto.subtle.sign.ecdsa-unknown-curve": {
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /crypto.subtle.sign.ecdsa-symbol-curve": {
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /crypto.subtle.verify.rsa-unknown-hash": {
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
-  "GET /crypto.subtle.verify.rsa-missing-hash": {
-    "downstream_response": {
-      "status": 200,
-      "body": "ok"
-    }
-  },
   "GET /crypto.subtle.deriveBits": {
     "downstream_response": {
       "status": 200,
