@@ -1,0 +1,79 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# decrypt()
+
+The **`decrypt()`** method of the [`SubtleCrypto`](../SubtleCrypto.mdx) interface decrypts some
+encrypted data.
+
+It takes as its arguments a key to decrypt with, some optional extra parameters, and the
+data to decrypt (also known as "ciphertext"). It returns a
+[`Promise`](../../Promise/Promise.mdx) which will be fulfilled with the decrypted data
+(also known as "plaintext").
+
+The ciphertext is typically produced by the corresponding [`encrypt()`](./encrypt.mdx) method.
+
+## Syntax
+
+```js
+decrypt(algorithm, key, data);
+```
+
+### Parameters
+
+- `algorithm`
+  - : An object specifying the algorithm to be used, and any extra parameters as required.
+    The values given for the extra parameters must match those passed into the
+    corresponding [`encrypt()`](./encrypt.mdx) call.
+    - To use [AES-CBC](#aes-cbc), pass an [`AesCbcParams`](./encrypt.mdx#aescbcparams) object.
+- `key`
+  - : A [`CryptoKey`](../../CryptoKey/CryptoKey.mdx) containing the key to be used for decryption.
+    Its `usages` must include `"decrypt"`.
+- `data`
+  - : An `ArrayBuffer`, a TypedArray or a `DataView` object containing the data to be decrypted.
+
+### Return value
+
+A [`Promise`](../../Promise/Promise.mdx) that fulfills with an `ArrayBuffer` containing the plaintext.
+
+### Exceptions
+
+The promise is rejected when one of the following exceptions is encountered:
+
+- `InvalidAccessError`
+  - : Raised when the key is not a key for the requested decryption algorithm, or when its
+    `usages` do not include `"decrypt"`.
+- `NotSupportedError`
+  - : Raised when trying to use an algorithm that is either unknown or isn't supported for
+    decryption.
+- `OperationError`
+  - : Raised when the operation failed for an operation-specific reason, for example because
+    the `iv` is not 16 bytes long, the ciphertext is empty or not a multiple of 16 bytes, or
+    the padding is invalid (which usually means the wrong key or IV was used).
+
+## Supported algorithms
+
+Only AES-CBC is currently supported. AES-CTR, AES-GCM, AES-KW and RSA-OAEP are not yet
+supported and reject with a `NotSupportedError`.
+
+### AES-CBC
+
+See [`encrypt()`](./encrypt.mdx#aes-cbc) for a description of the algorithm and of the
+[`AesCbcParams`](./encrypt.mdx#aescbcparams) object. The ciphertext must be a non-empty
+multiple of 16 bytes, and the PKCS#7 padding is removed from the decrypted data.
+
+## Examples
+
+```js
+// key and iv are the values used in the encrypt() example
+const plaintext = await crypto.subtle.decrypt(
+  { name: 'AES-CBC', iv },
+  key,
+  ciphertext,
+);
+console.log(new TextDecoder().decode(plaintext)); // "hello world"
+```

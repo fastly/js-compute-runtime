@@ -1,5 +1,19 @@
 # Changelog
 
+## 4.3.0 (2026-11-13)
+
+### Added
+
+* **experimental:** deprecate experimental module ([#1622](https://github.com/fastly/js-compute-runtime/issues/1622)) ([014e534](https://github.com/fastly/js-compute-runtime/commit/014e534799645ee7b0a83a17bdd624d9e7cb768f))
+* Request handoff ([#1615](https://github.com/fastly/js-compute-runtime/issues/1615)) ([b276e5a](https://github.com/fastly/js-compute-runtime/commit/b276e5af12527a325ea9584f76c4916e3ca62d2f))
+* **stabilization:** properly stabilize and document formerly 'experimental' APIs into appropriate modules ([#1614](https://github.com/fastly/js-compute-runtime/issues/1614)) ([721876d](https://github.com/fastly/js-compute-runtime/commit/721876d92b5a19c7ea72b44969cf29ed7c14543b))
+
+### Fixed
+
+* **docs:** fix docs compilation issue in previous commit ([#1623](https://github.com/fastly/js-compute-runtime/issues/1623)) ([937d3ce](https://github.com/fastly/js-compute-runtime/commit/937d3ce9753ca323871d0e93bff83da60bc9dd4f))
+* **types:** allow spki and pkcs8 formats in SubtleCrypto.importKey ([#1619](https://github.com/fastly/js-compute-runtime/issues/1619)) ([0c8b811](https://github.com/fastly/js-compute-runtime/commit/0c8b8110042274c937b42ac1da42e0ee7c3ecfd6))
+* various subtleCrypto issues ([#1621](https://github.com/fastly/js-compute-runtime/issues/1621)) ([8c532b4](https://github.com/fastly/js-compute-runtime/commit/8c532b4a1b830ca8010bcdbca165d8d71677f552))
+
 ## 4.2.0 (2026-11-10)
 
 ### Added
