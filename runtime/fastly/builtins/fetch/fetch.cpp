@@ -1535,11 +1535,7 @@ bool fetch_cache_lookup(JSContext *cx, JS::HandleObject request,
   }
 
   if (cache_state.must_insert_or_update()) {
-    JS::RootedObject stream_back_promise_obj(cx, JS::NewPromiseObject(cx, nullptr));
-    if (!stream_back_promise_obj) {
-      return false;
-    }
-    JS::RootedValue stream_back_promise(cx, JS::ObjectValue(*stream_back_promise_obj));
+    JS::RootedValue stream_back_promise(cx);
     if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry, &stream_back_promise)) {
       JS::RootedValue exception(cx);
       if (JS_GetPendingException(cx, &exception)) {
@@ -1559,6 +1555,7 @@ bool fetch_cache_lookup(JSContext *cx, JS::HandleObject request,
       RequestOrResponse::close_if_cache_entry(cx, request);
       return false;
     }
+    JS::RootedObject stream_back_promise_obj(cx, &stream_back_promise.toObject());
     JS::RootedObject ret_promise(
         cx, internal_method_then<stream_back_then_handler, stream_back_catch_handler>(
                 cx, stream_back_promise_obj, request));
