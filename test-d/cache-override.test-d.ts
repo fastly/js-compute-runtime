@@ -19,6 +19,9 @@ import { expectType } from 'tsd';
   );
   expectType<CacheOverride>(new CacheOverride('none', { pci: undefined }));
   expectType<CacheOverride>(new CacheOverride('none', { pci: true }));
+  expectType<CacheOverride>(
+    new CacheOverride('override', { lookupTimeout: 250 }),
+  );
   expectType<CacheOverride>(new CacheOverride('pass', {}));
   expectType<CacheOverride>(new CacheOverride('override', {}));
   const cacheOverride = new CacheOverride('none');
@@ -27,4 +30,5 @@ import { expectType } from 'tsd';
   expectType<number | undefined>(cacheOverride.ttl);
   expectType<number | undefined>(cacheOverride.swr);
   expectType<string | undefined>(cacheOverride.surrogateKey);
+  expectType<number | undefined>(cacheOverride.lookupTimeout);
 }
