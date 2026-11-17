@@ -45,6 +45,7 @@ public:
   static JSObject *create_promise(JSContext *cx, JS::HandleObject promise);
   static JSObject *record_for_promise(JSContext *cx, JS::HandleObject promise);
   static JSObject *ensure_promise_record(JSContext *cx, JS::HandleObject promise);
+  static bool link_promise(JSContext *cx, JS::HandleObject promise, JS::HandleObject source);
   static bool is_native(JSObject *self);
   static JSObject *promise(JSObject *self);
   static bool consume(JSContext *cx, JS::HandleObject self);

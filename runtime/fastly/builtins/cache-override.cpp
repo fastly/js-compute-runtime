@@ -8,12 +8,14 @@
 #include "js/Conversions.h"
 
 #include "../../../StarlingMonkey/runtime/encode.h"
+#include "../common/validations.h"
 #include "cache-override.h"
 #include "fastly.h"
 #include "host_api.h"
 
 using builtins::BuiltinImpl;
 using fastly::FastlyGetErrorMessage;
+using fastly::common::parse_and_validate_timeout;
 
 namespace fastly::cache_override {
 
@@ -90,6 +92,20 @@ void CacheOverride::set_staleIfError(JSObject *self, uint32_t sie) {
   MOZ_ASSERT(is_instance(self));
   MOZ_ASSERT(CacheOverride::mode(self) == CacheOverride::CacheOverrideMode::Override);
   JS::SetReservedSlot(self, CacheOverride::Slots::StaleIfError, JS::Int32Value((int32_t)sie));
+}
+
+JS::Value CacheOverride::lookupTimeout(JSObject *self) {
+  MOZ_ASSERT(is_instance(self));
+  if (CacheOverride::mode(self) != CacheOverride::CacheOverrideMode::Override)
+    return JS::UndefinedValue();
+  return JS::GetReservedSlot(self, Slots::LookupTimeout);
+}
+
+void CacheOverride::set_lookupTimeout(JSObject *self, uint32_t timeout_ms) {
+  MOZ_ASSERT(is_instance(self));
+  MOZ_ASSERT(CacheOverride::mode(self) == CacheOverride::CacheOverrideMode::Override);
+  JS::SetReservedSlot(self, CacheOverride::Slots::LookupTimeout,
+                      JS::NumberValue(static_cast<double>(timeout_ms)));
 }
 
 JS::Value CacheOverride::surrogate_key(JSObject *self) {
@@ -326,6 +342,37 @@ bool CacheOverride::staleIfError_set(JSContext *cx, JS::HandleObject self, JS::H
   return true;
 }
 
+bool CacheOverride::lookupTimeout_get(JSContext *cx, JS::HandleObject self,
+                                      JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    return api::throw_error(cx, api::Errors::WrongReceiver, "lookupTimeout get", "CacheOverride");
+  }
+  rval.set(lookupTimeout(self));
+  return true;
+}
+
+bool CacheOverride::lookupTimeout_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
+                                      JS::MutableHandleValue rval) {
+  if (self == proto_obj) {
+    return api::throw_error(cx, api::Errors::WrongReceiver, "lookupTimeout set", "CacheOverride");
+  }
+  if (!ensure_override(cx, self, "lookupTimeout"))
+    return false;
+
+  if (val.isUndefined()) {
+    JS::SetReservedSlot(self, Slots::LookupTimeout, val);
+  } else {
+    auto timeout_ms =
+        parse_and_validate_timeout(cx, val, "CacheOverride", "lookupTimeout", 0x100000000);
+    if (!timeout_ms) {
+      return false;
+    }
+    set_lookupTimeout(self, *timeout_ms);
+  }
+  rval.set(lookupTimeout(self));
+  return true;
+}
+
 bool CacheOverride::surrogate_key_get(JSContext *cx, JS::HandleObject self,
                                       JS::MutableHandleValue rval) {
   if (self == proto_obj) {
@@ -486,6 +533,8 @@ const JSPropertySpec CacheOverride::properties[] = {
             JSPROP_ENUMERATE),
     JS_PSGS("staleIfError", accessor_get<staleIfError_get>, accessor_set<staleIfError_set>,
             JSPROP_ENUMERATE),
+    JS_PSGS("lookupTimeout", accessor_get<lookupTimeout_get>, accessor_set<lookupTimeout_set>,
+            JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "CacheOverride", JSPROP_READONLY),
     JS_PS_END};
 
@@ -529,6 +578,11 @@ JSObject *CacheOverride::create(JSContext *cx, JS::HandleValue override) {
 
   if (!JS_GetProperty(cx, override_obj, "staleIfError", &val) ||
       !staleIfError_set(cx, self, val, &val)) {
+    return nullptr;
+  }
+
+  if (!JS_GetProperty(cx, override_obj, "lookupTimeout", &val) ||
+      !lookupTimeout_set(cx, self, val, &val)) {
     return nullptr;
   }
 
