@@ -336,6 +336,15 @@ JSObject *PendingRequest::ensure_promise_record(JSContext *cx, JS::HandleObject 
   return create_promise(cx, promise);
 }
 
+bool PendingRequest::link_promise(JSContext *cx, JS::HandleObject promise,
+                                  JS::HandleObject source) {
+  JS::RootedObject record(cx, ensure_promise_record(cx, source));
+  if (!record) {
+    return false;
+  }
+  return associate_promise(cx, promise, record);
+}
+
 bool PendingRequest::is_native(JSObject *self) {
   return JS::GetReservedSlot(self, std::to_underlying(Slots::Handle)).toInt32() >= 0;
 }

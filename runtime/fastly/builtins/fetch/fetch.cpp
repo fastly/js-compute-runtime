@@ -30,6 +30,11 @@ using fastly::fetch::RequestOrResponse;
 using fastly::fetch::Response;
 using fastly::fetch_event::FetchEvent;
 
+namespace fastly::fetch {
+bool fetch_cache_lookup(JSContext *cx, JS::HandleObject request,
+                        host_api::HttpCacheEntry cache_entry, JS::MutableHandleValue ret);
+}
+
 namespace {
 
 class FetchTask final : public api::AsyncTask {
@@ -72,6 +77,101 @@ public:
     TraceEdge(trc, &promise_, "Fetch promise");
     TraceEdge(trc, &metadata_, "Fetch promise metadata");
   }
+};
+
+class GuestCacheLookupTask final : public api::AsyncTask {
+  host_api::HttpCacheEntry cache_entry_;
+  Heap<JSObject *> request_;
+  Heap<JSObject *> promise_;
+  api::AsyncTask *timeout_task_ = nullptr;
+  bool settled_ = false;
+
+public:
+  GuestCacheLookupTask(host_api::HttpCacheEntry cache_entry, JS::HandleObject request,
+                       JS::HandleObject promise)
+      : cache_entry_(cache_entry), request_(request), promise_(promise) {
+    handle_ = static_cast<int32_t>(cache_entry.handle);
+  }
+
+  void set_timeout_task(api::AsyncTask *timeout_task) { timeout_task_ = timeout_task; }
+  bool settled() const { return settled_; }
+
+  [[nodiscard]] bool run(api::Engine *engine) override {
+    settled_ = true;
+    if (timeout_task_) {
+      engine->cancel_async_task(timeout_task_);
+    }
+
+    JSContext *cx = engine->cx();
+    RootedObject request(cx, request_);
+    RootedObject promise(cx, promise_);
+    RootedValue result(cx);
+    if (!fastly::fetch::fetch_cache_lookup(cx, request, cache_entry_, &result)) {
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    if (!result.isObject()) {
+      JS_ReportErrorASCII(cx, "Guest cache lookup did not produce a response promise");
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    RootedObject result_promise(cx, &result.toObject());
+    if (!JS::IsPromiseObject(result_promise)) {
+      JS_ReportErrorASCII(cx, "Guest cache lookup did not produce a response promise");
+      return RejectPromiseWithPendingError(cx, promise);
+    }
+    if (!PendingRequest::link_promise(cx, promise, result_promise)) {
+      return false;
+    }
+    return JS::ResolvePromise(cx, promise, result);
+  }
+
+  [[nodiscard]] bool cancel(api::Engine *engine) override {
+    auto res = cache_entry_.close();
+    if (auto *err = res.to_err()) {
+      HANDLE_ERROR(engine->cx(), *err);
+      return false;
+    }
+    return true;
+  }
+
+  void trace(JSTracer *trc) override {
+    TraceEdge(trc, &request_, "Guest cache lookup request");
+    TraceEdge(trc, &promise_, "Guest cache lookup promise");
+  }
+};
+
+// A host-handle lookup task cannot also carry a deadline, so timeout is raced as a sentinel task.
+class GuestCacheLookupTimeoutTask final : public api::AsyncTask {
+  uint64_t deadline_;
+  Heap<JSObject *> promise_;
+  GuestCacheLookupTask *lookup_task_;
+
+public:
+  GuestCacheLookupTimeoutTask(uint64_t deadline, JS::HandleObject promise,
+                              GuestCacheLookupTask *lookup_task)
+      : deadline_(deadline), promise_(promise), lookup_task_(lookup_task) {
+    handle_ = static_cast<int32_t>(host_api::NEVER_HANDLE);
+  }
+
+  [[nodiscard]] uint64_t deadline() override { return deadline_; }
+
+  [[nodiscard]] bool run(api::Engine *engine) override {
+    if (lookup_task_->settled()) {
+      return true;
+    }
+    if (!engine->cancel_async_task(lookup_task_)) {
+      JS_ReportErrorASCII(engine->cx(), "Could not cancel the timed out guest cache lookup");
+      return false;
+    }
+
+    JSContext *cx = engine->cx();
+    RootedObject promise(cx, promise_);
+    JS_ReportErrorASCII(cx, "HTTP cache lookup timed out");
+    return RejectPromiseWithPendingError(cx, promise);
+  }
+
+  [[nodiscard]] bool cancel(api::Engine *engine) override { return true; }
+
+  void trace(JSTracer *trc) override { TraceEdge(trc, &promise_, "Guest cache lookup timeout"); }
 };
 
 template <InternalMethod then_handler, InternalMethod catch_handler>
@@ -1355,6 +1455,131 @@ bool mark_guest_cache_miss_if_native(JSContext *cx, JS::HandleObject request,
   return PendingRequest::mark_guest_cache_miss_headers(cx, record, request);
 }
 
+bool fetch_cache_lookup(JSContext *cx, JS::HandleObject request,
+                        host_api::HttpCacheEntry cache_entry, JS::MutableHandleValue ret) {
+  auto state_res = cache_entry.get_state();
+  if (auto *err = state_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    JSObject *promise = PromiseRejectedWithPendingError(cx);
+    if (!promise) {
+      return false;
+    }
+    ret.setObject(*promise);
+    return true;
+  }
+  auto cache_state = state_res.unwrap();
+
+  JS::RootedValue no_candidate(cx);
+  auto maybe_response = get_found_response(cx, cache_entry, request, no_candidate, true);
+  if (maybe_response.has_value() && !maybe_response.value()) {
+    JSObject *promise = PromiseRejectedWithPendingError(cx);
+    if (!promise) {
+      return false;
+    }
+    ret.setObject(*promise);
+    return true;
+  }
+
+  if (maybe_response.has_value()) {
+    JS::RootedObject cached_response(cx, maybe_response.value());
+
+    if (cache_state.must_insert_or_update()) {
+      RootedValue background_revalidation_promise(cx);
+      if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry,
+                                            &background_revalidation_promise)) {
+        RequestOrResponse::close_if_cache_entry(cx, request);
+        return false;
+      }
+      JS::RootedObject background_revalidation_promise_obj(
+          cx, &background_revalidation_promise.toObject());
+      JS::RootedObject ret_promise(
+          cx,
+          internal_method_then<background_revalidation_then_handler, background_cleanup_handler>(
+              cx, background_revalidation_promise_obj, request));
+      if (!ret_promise) {
+        RequestOrResponse::close_if_cache_entry(cx, request);
+        return false;
+      }
+      ret.setObject(*ret_promise);
+      JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ResponsePromise),
+                          JS::ObjectValue(*ret_promise));
+      ENGINE->incr_event_loop_interest();
+    } else if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
+      return false;
+    }
+
+    if (cache_state.is_usable_if_error()) {
+      JS_ReportErrorASCII(cx, "error in request collapse leader");
+      JS::RootedValue exception(cx);
+      if (!JS_GetPendingException(cx, &exception)) {
+        return false;
+      }
+      JS_ClearPendingException(cx);
+      JS_SetReservedSlot(cached_response, static_cast<uint32_t>(Response::Slots::MaskedError),
+                         exception);
+    }
+
+    RequestOrResponse::take_cache_entry(cached_response, true);
+    if (!Response::add_fastly_cache_headers(cx, cached_response, request, cache_entry,
+                                            "cached response")) {
+      return false;
+    }
+
+    RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
+    if (!response_promise) {
+      return false;
+    }
+    JS::RootedValue response_val(cx, JS::ObjectValue(*cached_response));
+    ret.setObject(*response_promise);
+    return JS::ResolvePromise(cx, response_promise, response_val);
+  }
+
+  if (cache_state.must_insert_or_update()) {
+    JS::RootedValue stream_back_promise(cx);
+    if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry, &stream_back_promise)) {
+      JS::RootedValue exception(cx);
+      if (JS_GetPendingException(cx, &exception)) {
+        JS_ClearPendingException(cx);
+      }
+      auto maybe_stale = try_serve_stale_if_error(cx, request, exception);
+      if (maybe_stale.has_value()) {
+        JS::RootedObject cached_response(cx, maybe_stale.value());
+        RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
+        if (!response_promise) {
+          return false;
+        }
+        JS::RootedValue response_val(cx, JS::ObjectValue(*cached_response));
+        ret.setObject(*response_promise);
+        return JS::ResolvePromise(cx, response_promise, response_val);
+      }
+      RequestOrResponse::close_if_cache_entry(cx, request);
+      return false;
+    }
+    JS::RootedObject stream_back_promise_obj(cx, &stream_back_promise.toObject());
+    JS::RootedObject ret_promise(
+        cx, internal_method_then<stream_back_then_handler, stream_back_catch_handler>(
+                cx, stream_back_promise_obj, request));
+    if (!ret_promise) {
+      RequestOrResponse::close_if_cache_entry(cx, request);
+      return false;
+    }
+    JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ResponsePromise),
+                        JS::ObjectValue(*ret_promise));
+    ret.setObject(*ret_promise);
+  } else {
+    if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
+      return false;
+    }
+    if (!fetch_send_body<CachingMode::Guest>(cx, request, ret)) {
+      return false;
+    }
+    if (!mark_guest_cache_miss_if_native(cx, request, ret)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   REQUEST_HANDLER_ONLY("fetch")
@@ -1463,151 +1688,35 @@ bool fetch(JSContext *cx, unsigned argc, Value *vp) {
   }
   host_api::HttpCacheEntry cache_entry = transaction_res.unwrap();
 
-  // This forces synchronous lookups, but we should be able to abstract a new CacheLookupTask, which
-  // could be fully async based on its handle as an async select task handle, and then we could
-  // support multiple cache lookups in parallel together.
-  auto state_res = cache_entry.get_state();
-  if (auto *err = state_res.to_err()) {
-    HANDLE_ERROR(cx, *err);
-    JSObject *promise = PromiseRejectedWithPendingError(cx);
-    if (!promise) {
-      return false;
-    }
-    args.rval().setObject(*promise);
-    return finish();
+  JS::RootedObject cache_override(
+      cx, JS::GetReservedSlot(request, static_cast<uint32_t>(Request::Slots::CacheOverride))
+              .toObjectOrNull());
+  JS::RootedValue lookup_timeout(cx);
+  if (cache_override) {
+    lookup_timeout.set(CacheOverride::lookupTimeout(cache_override));
   }
-  auto cache_state = state_res.unwrap();
-  std::string state_str = std::to_string(cache_state.state);
-
-  // Check for usable cached response
-  JS::RootedValue no_candidate(cx);
-  auto maybe_response = get_found_response(cx, cache_entry, request, no_candidate, true);
-  if (maybe_response.has_value() && !maybe_response.value()) {
-    JSObject *promise = PromiseRejectedWithPendingError(cx);
-    if (!promise) {
-      return false;
-    }
-    args.rval().setObject(*promise);
-    return finish();
-  }
-
-  if (maybe_response.has_value()) {
-    JS::RootedObject cached_response(cx, maybe_response.value());
-
-    if (cache_state.must_insert_or_update()) {
-      // Need to start background revalidation
-      // Queue async task to handle background cache revalidation, ensuring it blocks process
-      // completion
-      RootedValue background_revalidation_promise(cx);
-      if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry,
-                                            &background_revalidation_promise)) {
-        RequestOrResponse::close_if_cache_entry(cx, request);
-        return false;
-      }
-      JS::RootedObject background_revalidation_promise_obj(
-          cx, &background_revalidation_promise.toObject());
-      JS::RootedObject ret_promise(
-          cx,
-          internal_method_then<background_revalidation_then_handler, background_cleanup_handler>(
-              cx, background_revalidation_promise_obj, request));
-      if (!ret_promise) {
-        RequestOrResponse::close_if_cache_entry(cx, request);
-        return false;
-      }
-      args.rval().setObject(*ret_promise);
-      JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ResponsePromise),
-                          JS::ObjectValue(*ret_promise));
-      // keep the event loop alive until background revalidation completes or errors
-      ENGINE->incr_event_loop_interest();
-    } else {
-      if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
-        return false;
-      }
-    }
-
-    if (cache_state.is_usable_if_error()) {
-      // The cached response is a usable stale-if-error response, which implies
-      // that the request collapse leader errored.
-      JS_ReportErrorASCII(cx, "error in request collapse leader");
-      JS::RootedValue exception(cx);
-      if (!JS_GetPendingException(cx, &exception)) {
-        return false;
-      }
-      JS_ClearPendingException(cx);
-      JS_SetReservedSlot(cached_response, static_cast<uint32_t>(Response::Slots::MaskedError),
-                         exception);
-    }
-
-    // mark the response cache entry as cached for the cached getter
-    RequestOrResponse::take_cache_entry(cached_response, true);
-
-    // Return cached response regardless of revalidation status
-    if (!Response::add_fastly_cache_headers(cx, cached_response, request, cache_entry,
-                                            "cached response")) {
+  if (!lookup_timeout.isUndefined()) {
+    JS::RootedObject lookup_promise(cx, JS::NewPromiseObject(cx, nullptr));
+    if (!lookup_promise) {
       return false;
     }
 
-    RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
-    JS::RootedValue response_val(cx, JS::ObjectValue(*cached_response));
-    args.rval().setObject(*response_promise);
-    if (!JS::ResolvePromise(cx, response_promise, response_val)) {
-      return false;
-    }
+    uint32_t timeout_ms = static_cast<uint32_t>(lookup_timeout.toNumber());
+    uint64_t deadline =
+        host_api::MonotonicClock::now() + static_cast<uint64_t>(timeout_ms) * 1'000'000;
+    auto *lookup_task = new GuestCacheLookupTask(cache_entry, request, lookup_promise);
+    auto *timeout_task = new GuestCacheLookupTimeoutTask(deadline, lookup_promise, lookup_task);
+    lookup_task->set_timeout_task(timeout_task);
+    ENGINE->queue_async_task(lookup_task);
+    ENGINE->queue_async_task(timeout_task);
+
+    args.rval().setObject(*lookup_promise);
     return finish();
   }
 
-  // No valid cached response, need to make backend request
-  if (cache_state.must_insert_or_update()) {
-    // We are responsible for fetching/revalidating
-    JS::RootedValue stream_back_promise(cx, JS::ObjectValue(*JS::NewPromiseObject(cx, nullptr)));
-    if (!fetch_send_body_with_cache_hooks(cx, request, cache_entry, &stream_back_promise)) {
-      JS::RootedValue exception(cx);
-      if (JS_GetPendingException(cx, &exception)) {
-        JS_ClearPendingException(cx);
-      }
-      auto maybe_stale = try_serve_stale_if_error(cx, request, exception);
-      if (maybe_stale.has_value()) {
-        JS::RootedObject cached_response(cx, maybe_stale.value());
-        RootedObject response_promise(cx, JS::NewPromiseObject(cx, nullptr));
-        JS::RootedValue response_val(cx, JS::ObjectValue(*cached_response));
-        args.rval().setObject(*response_promise);
-        if (!JS::ResolvePromise(cx, response_promise, response_val)) {
-          return false;
-        }
-        return finish();
-      }
-      RequestOrResponse::close_if_cache_entry(cx, request);
-      return false;
-    }
-    JS::RootedObject stream_back_promise_obj(cx, &stream_back_promise.toObject());
-    JS::RootedObject ret_promise(
-        cx, internal_method_then<stream_back_then_handler, stream_back_catch_handler>(
-                cx, stream_back_promise_obj, request));
-    if (!ret_promise) {
-      RequestOrResponse::close_if_cache_entry(cx, request);
-      return false;
-    }
-    JS::SetReservedSlot(request, static_cast<uint32_t>(Request::Slots::ResponsePromise),
-                        JS::ObjectValue(*ret_promise));
-    args.rval().setObject(*ret_promise);
-  } else {
-    // Request collapsing has been disabled: pass the original request to the origin without
-    // updating the cache and without caching
-
-    // transaction entry is done
-    if (!RequestOrResponse::close_if_cache_entry(cx, request)) {
-      return false;
-    }
-
-    if (!fetch_send_body<CachingMode::Guest>(cx, request, args.rval())) {
-      return false;
-    }
-    if (!mark_guest_cache_miss_if_native(cx, request, args.rval())) {
-      return false;
-    }
-    return finish();
+  if (!fetch_cache_lookup(cx, request, cache_entry, args.rval())) {
+    return false;
   }
-
   return finish();
 }
 

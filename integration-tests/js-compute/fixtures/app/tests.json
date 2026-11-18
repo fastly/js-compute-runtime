@@ -217,12 +217,17 @@
   },
   "GET /cache-override/constructor/negative-ttl": {},
   "GET /cache-override/constructor/negative-swr": {},
+  "GET /cache-override/constructor/lookup-timeout": {},
   "GET /cache-override/constructor/valid-mode": {},
   "GET /cache-override/beforeSend/get": {},
   "GET /cache-override/afterSend/get": {},
   "GET /cache-override/fetch/mode-none": {},
   "GET /cache-override/fetch/mode-pass": {
     "flake": true
+  },
+  "GET /cache-override/fetch/lookup-timeout": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
   },
   "GET /cache-override/fetch/null-304-body": {
     "environments": ["compute"],

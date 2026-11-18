@@ -1,5 +1,10 @@
 import { CacheOverride } from 'fastly:cache-override';
-import { assert, assertThrows, assertDoesNotThrow } from './assertions.js';
+import {
+  assert,
+  assertDoesNotThrow,
+  assertRejects,
+  assertThrows,
+} from './assertions.js';
 import { isRunningLocally, routes } from './routes.js';
 
 // CacheOverride constructor
@@ -59,6 +64,20 @@ import { isRunningLocally, routes } from './routes.js';
       },
       TypeError,
       `CacheOverride: swr must be a non-negative integer`,
+    );
+  });
+  routes.set('/cache-override/constructor/lookup-timeout', async () => {
+    const cacheOverride = new CacheOverride('override', { lookupTimeout: 250 });
+    assert(
+      cacheOverride.lookupTimeout,
+      250,
+      'lookupTimeout is measured in milliseconds',
+    );
+    cacheOverride.lookupTimeout = undefined;
+    assert(
+      cacheOverride.lookupTimeout,
+      undefined,
+      'lookupTimeout can be cleared',
     );
   });
   routes.set('/cache-override/constructor/valid-mode', async () => {
@@ -168,6 +187,54 @@ import { isRunningLocally, routes } from './routes.js';
         `CacheOveride('pass'); response.headers.has('x-cache') === false`,
       );
     }
+  });
+  routes.set('/cache-override/fetch/lookup-timeout', async () => {
+    const url = `https://http-me.fastly.dev/now?status=200&lookupTimeout=${Math.random()}`;
+    let signalLeaderStarted;
+    const leaderStarted = new Promise((resolve) => {
+      signalLeaderStarted = resolve;
+    });
+    let releaseLeader;
+    const leaderReleased = new Promise((resolve) => {
+      releaseLeader = resolve;
+    });
+    const firstResponse = fetch(url, {
+      backend: 'httpme',
+      cacheOverride: new CacheOverride('override', {
+        ttl: 60,
+        beforeSend: () => {
+          signalLeaderStarted();
+          return leaderReleased;
+        },
+      }),
+    });
+    try {
+      await Promise.race([
+        leaderStarted,
+        firstResponse.then(() => {
+          throw new Error('the cache leader completed before beforeSend');
+        }),
+      ]);
+      const timedOutResponse = fetch(url, {
+        backend: 'httpme',
+        cacheOverride: new CacheOverride('override', {
+          ttl: 60,
+          lookupTimeout: 0,
+        }),
+      });
+      await assertRejects(
+        () => timedOutResponse,
+        Error,
+        'HTTP cache lookup timed out',
+      );
+    } finally {
+      releaseLeader();
+    }
+    assert(
+      (await firstResponse).status,
+      200,
+      'the cache leader still completes',
+    );
   });
   routes.set('/cache-override/fetch/null-304-body', async (event) => {
     if (isRunningLocally()) return;

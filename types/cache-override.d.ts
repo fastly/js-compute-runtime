@@ -82,6 +82,14 @@ declare module 'fastly:cache-override' {
      */
     pci?: boolean;
     /**
+     * Bound the time, in milliseconds, spent waiting for a guest-side HTTP cache lookup to resolve.
+     * If the timeout expires while waiting for a collapsed request, the fetch rejects without
+     * sending a request to the origin.
+     * 
+     * @version 4.4.0
+     */
+    lookupTimeout?: number;
+    /**
      * Set a [callback function](https://developer.mozilla.org/en-US/docs/Glossary/Callback_function) to be invoked if a
      * request is going all the way to a backend, allowing the request to be modified beforehand.
      *
@@ -204,6 +212,12 @@ declare module 'fastly:cache-override' {
      * for details.
      */
     public pci?: boolean;
+    /**
+     * Bound the time, in milliseconds, spent waiting for a guest-side HTTP cache lookup to resolve.
+     * If the timeout expires while waiting for a collapsed request, the fetch rejects without
+     * sending a request to the origin.
+     */
+    public lookupTimeout?: number;
 
     /**
      * Callback to be invoked if a request is going all the way to a backend, allowing the request to be modified beforehand.

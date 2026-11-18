@@ -39,6 +39,7 @@ public:
     BeforeSend,
     AfterSend,
     StaleIfError,
+    LookupTimeout,
     Count
   };
 
@@ -55,6 +56,8 @@ public:
   static void set_staleWhileRevalidate(JSObject *self, uint32_t swr);
   static JS::Value staleIfError(JSObject *self);
   static void set_staleIfError(JSObject *self, uint32_t sie);
+  static JS::Value lookupTimeout(JSObject *self);
+  static void set_lookupTimeout(JSObject *self, uint32_t timeout_ms);
   static JS::Value surrogate_key(JSObject *self);
   static void set_surrogate_key(JSObject *self, JSString *key);
   static JSObject *clone(JSContext *cx, JS::HandleObject self);
@@ -79,6 +82,9 @@ public:
   static bool staleIfError_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
   static bool staleIfError_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
                                JS::MutableHandleValue rval);
+  static bool lookupTimeout_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
+  static bool lookupTimeout_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
+                                JS::MutableHandleValue rval);
   static bool surrogate_key_get(JSContext *cx, JS::HandleObject self, JS::MutableHandleValue rval);
   static bool surrogate_key_set(JSContext *cx, JS::HandleObject self, JS::HandleValue val,
                                 JS::MutableHandleValue rval);
