@@ -213,6 +213,10 @@
     "environments": ["compute"],
     "features": ["http-cache"]
   },
+  "GET /http-cache/conditional-fresh-hit-ims": {
+    "environments": ["compute"],
+    "features": ["http-cache"]
+  },
   "GET /http-cache/after-send-pass": {
     "environments": ["compute"],
     "features": ["http-cache"]
