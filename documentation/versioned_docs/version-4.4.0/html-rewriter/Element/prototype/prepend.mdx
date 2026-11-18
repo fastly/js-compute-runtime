@@ -1,0 +1,35 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# prepend
+
+The `prepend` method inserts content at the beginning of the element's content.
+
+## Syntax
+
+```js
+element.prepend(content);
+element.prepend(content, options);
+```
+
+### Parameters
+
+- `content` _: string_
+  - The content to insert at the beginning of the element's content.
+
+- `options` _: ElementRewriterOptions_
+  - An optional object that can have the following properties:
+    - `escapeHTML` _: boolean_
+      - If `true`, any HTML markup in `content` will be escaped so it is safe to insert as text.
+
+### Examples
+
+```js
+// Assuming `e` is an Element representing <div>Hello</div>
+e.prepend("Well, ");
+// Result: <div>Well, Hello</div>
+```

@@ -1,0 +1,29 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# FormData.append()
+
+The **`append()`** method of the `FormData` interface appends a new value onto an existing key inside a `FormData` object, or adds the key if it does not already exist.
+
+## Syntax
+
+```js
+append(name, value)
+append(name, value, filename)
+```
+
+### Parameters
+
+- `name`
+  - : The name of the field whose data is contained in `value`.
+- `value`
+  - : The value of the field. This can be a string or a `Blob` (including subclasses such as `File`). If none of these, the value is converted to a string.
+- `filename` _**optional**_
+  - : The filename reported to the server when a `Blob` or `File` is passed as the second parameter. The default filename for `Blob` objects is "blob". The default filename for `File` objects is the file's filename.
+
+### Return value
+
+`undefined`

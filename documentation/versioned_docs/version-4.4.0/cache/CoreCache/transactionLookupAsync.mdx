@@ -1,0 +1,43 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+
+# CoreCache.transactionLookupAsync
+
+Issue a transactional lookup into the cache without blocking, returning a `PendingTransaction`.
+
+This behaves like `CoreCache.transactionLookup()` — the same request collapsing and revalidation semantics apply — except that the lookup itself does not block. Instead of returning a `TransactionCacheEntry` directly, it returns a `PendingTransaction`, which can be polled via `PendingTransaction.prototype.pending`, or resolved via `PendingTransaction.prototype.wait`, optionally bounded by a timeout.
+
+## Syntax
+
+```js
+transactionLookupAsync(key, options)
+```
+
+### Parameters
+
+- `key` _: string_
+  - A cache key which is a string with a length of up to 8,135 that identify a cached item.
+  - The cache key may not uniquely identify an item; headers can be used to augment the key when multiple items are associated with the same key.
+
+- `options` _: object_
+  - `headers` _: HeadersInit_ __optional__
+    - The headers act as additional factors in object selection, and the choice of which headers to factor in is determined during insertion, via the `vary` property within `TransactionInsertOptions`.
+    - A lookup will succeed when there is at least one cached item that matches lookup’s `key`, and all of the lookup’s headers included in the cache items’ `vary` list match the corresponding headers in that cached item.
+    - A typical example is a cached HTTP response, where the request had an "Accept-Encoding" header. In that case, the origin server may or may not decide on a given encoding, and whether that same response is suitable for a request with a different (or missing) Accept-Encoding header is determined by whether Accept-Encoding is listed in Vary header in the origin’s response.
+    - Note: These headers are narrowly useful for implementing cache lookups incorporating the semantics of the HTTP Vary header.
+
+### Return value
+
+Returns an instance of `PendingTransaction`.
+
+### Exceptions
+
+- `TypeError`
+  - If the provided `key`:
+    - Is an empty string
+    - Cannot be coerced to a string
+    - Is longer than 8135 characters

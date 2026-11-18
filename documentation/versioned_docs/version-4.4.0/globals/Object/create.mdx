@@ -1,0 +1,32 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Object.create()
+
+The **`Object.create()`** method creates a new object, using an existing object as the prototype of the newly created object.
+
+## Syntax
+
+```js
+Object.create(proto)
+Object.create(proto, propertiesObject)
+```
+
+### Parameters
+
+- `proto`
+  - : The object which should be the prototype of the newly-created object.
+- `propertiesObject` _**optional**_
+  - : If specified and not [`undefined`](../../globals/undefined.mdx), an object whose [enumerable own properties](https://developer.mozilla.org/docs/Web/JavaScript/Enumerability_and_ownership_of_properties) specify property descriptors to be added to the newly-created object, with the corresponding property names. These properties correspond to the second argument of [`Object.defineProperties()`](../../globals/Object/defineProperties.mdx).
+
+### Return value
+
+A new object with the specified prototype object and properties.
+
+### Exceptions
+
+- [`TypeError`](../../globals/TypeError/TypeError.mdx)
+  - : Thrown if `proto` is neither [`null`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/null) nor an `Object`.
