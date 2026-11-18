@@ -381,6 +381,49 @@ const getTestUrl = (path = `/${Math.random().toString().slice(2)}`) =>
     strictEqual(res.headers.get('Cache-Control'), 'private, no-store');
   });
 
+  // Exercises the guest-side IMS→304 fallback. The host transform already handles If-None-Match
+  // (covered by /http-cache/if-none-match); this route covers only the gap in that transform.
+  routes.set('/http-cache/conditional-fresh-hit-ims', async () => {
+    const url = getTestUrl();
+    const lastModified = 'Fri, 30 Oct 2026 15:19:03 GMT';
+    let backendCalls = 0;
+
+    const cacheOverride = new CacheOverride({
+      beforeSend() {
+        backendCalls++;
+      },
+      afterSend(res) {
+        res.headers.set('Last-Modified', lastModified);
+        res.ttl = 3600;
+        return { cache: true };
+      },
+    });
+
+    const primed = await fetch(url, { cacheOverride });
+    strictEqual(primed.status, 200);
+    strictEqual(backendCalls, 1);
+    strictEqual((await primed.text()).length > 0, true);
+
+    const ims = await fetch(
+      new Request(url, { headers: { 'if-modified-since': lastModified } }),
+      { cacheOverride },
+    );
+    strictEqual(backendCalls, 1);
+    strictEqual(ims.cached, true);
+    strictEqual(ims.status, 304);
+    strictEqual(await ims.text(), '');
+
+    const head = await fetch(
+      new Request(url, {
+        method: 'HEAD',
+        headers: { 'if-modified-since': lastModified },
+      }),
+      { cacheOverride },
+    );
+    strictEqual(backendCalls, 1);
+    strictEqual(head.status, 304);
+  });
+
   routes.set('/http-cache/after-send-cache-expire', async () => {
     const url = getTestUrl();
     let calledAfterSend = false;

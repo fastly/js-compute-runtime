@@ -1455,6 +1455,138 @@ bool mark_guest_cache_miss_if_native(JSContext *cx, JS::HandleObject request,
   return PendingRequest::mark_guest_cache_miss_headers(cx, record, request);
 }
 
+// Parse an IMF-fixdate ("Sun, 06 Nov 1994 08:49:37 GMT") into a sortable 14-digit
+// YYYYMMDDHHMMSS string. Returns false for any other date format (RFC 850, asctime);
+// servers are required to emit IMF-fixdate for Last-Modified per RFC 7231 §7.1.1.1.
+static bool normalize_imf_date(std::string_view s, char out[15]) {
+  if (s.size() != 29)
+    return false;
+  if (s[3] != ',' || s[4] != ' ' || s[7] != ' ' || s[11] != ' ' || s[16] != ' ' ||
+      s[19] != ':' || s[22] != ':' || s[25] != ' ')
+    return false;
+  static const char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+  int mo = -1;
+  std::string_view mo_str = s.substr(8, 3);
+  for (int i = 0; i < 12; i++) {
+    if (mo_str == months[i]) {
+      mo = i + 1;
+      break;
+    }
+  }
+  if (mo < 0)
+    return false;
+  for (int i = 0; i < 4; i++)
+    if (s[12 + i] < '0' || s[12 + i] > '9')
+      return false;
+  for (int i = 0; i < 2; i++)
+    if (s[5 + i] < '0' || s[5 + i] > '9')
+      return false;
+  out[0] = s[12]; out[1] = s[13]; out[2] = s[14]; out[3] = s[15];
+  out[4] = '0' + (mo / 10); out[5] = '0' + (mo % 10);
+  out[6] = s[5]; out[7] = s[6];
+  out[8] = s[17]; out[9] = s[18];
+  out[10] = s[20]; out[11] = s[21];
+  out[12] = s[23]; out[13] = s[24];
+  out[14] = 0;
+  return true;
+}
+
+// Stopgap: on a fresh cache hit with `--enable-http-cache`, the platform returns a stored 200
+// unchanged for a conditional request carrying If-Modified-Since, even when Last-Modified on the
+// stored response satisfies the condition. If-None-Match matching stored ETag is handled
+// correctly on the same path and is intentionally not duplicated here. Remove this function (and
+// its call site below) once the platform handles If-Modified-Since on this path; this is a crude
+// approximation that doesn't strip entity headers from the 304 and only parses IMF-fixdate.
+static bool maybe_rewrite_as_conditional_304(JSContext *cx, JS::HandleObject request,
+                                             JS::HandleObject response) {
+  if (Response::status(response) != 200)
+    return true;
+
+  JS::RootedString method_rs(cx, Request::method(cx, request));
+  if (!method_rs)
+    return false;
+  bool is_get = false;
+  bool is_head = false;
+  if (!JS_StringEqualsLiteral(cx, method_rs, "GET", &is_get))
+    return false;
+  if (!JS_StringEqualsLiteral(cx, method_rs, "HEAD", &is_head))
+    return false;
+  if (!is_get && !is_head)
+    return true;
+
+  auto req_handle = Request::request_handle(request);
+  auto resp_handle = Response::response_handle(response);
+  auto *req_headers = req_handle.headers();
+  auto *resp_headers = resp_handle.headers();
+  if (!req_headers || !resp_headers)
+    return true;
+
+  // Per RFC 9110 §13.1.3, If-Modified-Since must be ignored when If-None-Match is also present,
+  // since the host already resolved INM. Bail so we don't second-guess that decision.
+  auto inm_res = req_headers->get("if-none-match");
+  if (auto *err = inm_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  if (inm_res.unwrap().has_value())
+    return true;
+
+  auto ims_res = req_headers->get("if-modified-since");
+  if (auto *err = ims_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  auto &ims_opt = ims_res.unwrap();
+  if (!ims_opt.has_value() || ims_opt.value().empty())
+    return true;
+
+  auto lm_res = resp_headers->get("last-modified");
+  if (auto *err = lm_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  auto &lm_opt = lm_res.unwrap();
+  if (!lm_opt.has_value() || lm_opt.value().empty())
+    return true;
+
+  char ims_norm[15];
+  char lm_norm[15];
+  if (!normalize_imf_date(std::string_view(ims_opt.value().front()), ims_norm) ||
+      !normalize_imf_date(std::string_view(lm_opt.value().front()), lm_norm))
+    return true;
+
+  // Per RFC 9110 §13.1.3, condition is false iff Last-Modified <= If-Modified-Since.
+  if (std::string_view(lm_norm) > std::string_view(ims_norm))
+    return true;
+
+  auto status_res = resp_handle.set_status(304);
+  if (auto *err = status_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::Status),
+                      JS::Int32Value(304));
+  Response::set_status_message_from_code(cx, response, 304);
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::HasBody), JS::FalseValue());
+
+  auto new_body_res = host_api::HttpBody::make();
+  if (auto *err = new_body_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  auto new_body = new_body_res.unwrap();
+  auto close_res = new_body.close();
+  if (auto *err = close_res.to_err()) {
+    HANDLE_ERROR(cx, *err);
+    return false;
+  }
+  JS::SetReservedSlot(response, static_cast<uint32_t>(Response::Slots::Body),
+                      JS::Int32Value(new_body.handle));
+
+  return true;
+}
+
 bool fetch_cache_lookup(JSContext *cx, JS::HandleObject request,
                         host_api::HttpCacheEntry cache_entry, JS::MutableHandleValue ret) {
   auto state_res = cache_entry.get_state();
@@ -1522,6 +1654,10 @@ bool fetch_cache_lookup(JSContext *cx, JS::HandleObject request,
     RequestOrResponse::take_cache_entry(cached_response, true);
     if (!Response::add_fastly_cache_headers(cx, cached_response, request, cache_entry,
                                             "cached response")) {
+      return false;
+    }
+
+    if (!maybe_rewrite_as_conditional_304(cx, request, cached_response)) {
       return false;
     }
 
