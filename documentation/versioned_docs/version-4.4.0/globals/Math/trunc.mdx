@@ -1,0 +1,30 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Math.trunc()
+
+The **`Math.trunc()`** function returns the integer part of a number by removing any fractional digits.
+
+## Syntax
+
+```js
+Math.trunc(x)
+```
+
+### Parameters
+
+- `x`
+  - : A number.
+
+### Return value
+
+The integer part of `x`.
+
+## Description
+
+Unlike the other three `Math` methods: `Math.floor()`, `Math.ceil()` and `Math.round()`, the way `Math.trunc()` works is very simple. It _truncates_ (cuts off) the dot and the digits to the right of it, no matter whether the argument is a positive or negative number.
+
+Because `trunc()` is a static method of `Math`, you always use it as `Math.trunc()`, rather than as a method of a `Math` object you created (`Math` is not a constructor).

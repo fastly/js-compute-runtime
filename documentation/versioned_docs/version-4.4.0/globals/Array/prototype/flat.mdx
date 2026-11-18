@@ -1,0 +1,35 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Array.prototype.flat
+
+The **`flat()`** method creates a new array with all sub-array
+elements concatenated into it recursively up to the specified depth.
+
+## Syntax
+
+```js
+flat()
+flat(depth)
+```
+
+### Parameters
+
+- `depth` _**optional**_
+  - : The depth level specifying how deep a nested array structure should be flattened.
+    Defaults to 1.
+
+### Return value
+
+A new array with the sub-array elements concatenated into it.
+
+## Description
+
+The `flat()` method is a copying method. It does not alter `this` but instead returns a [shallow copy](https://developer.mozilla.org/docs/Glossary/Shallow_copy) that contains the same elements as the ones from the original array.
+
+The `flat()` method ignores empty slots if the array being flattened is sparse. For example, if `depth` is 1, both empty slots in the root array and in the first level of nested arrays are ignored, but empty slots in further nested arrays are preserved with the arrays themselves.
+
+The `flat()` method is generic. It only expects the `this` value to have a `length` property and integer-keyed properties. However, its elements must be arrays if they are to be flattened.

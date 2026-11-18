@@ -1,5 +1,15 @@
 # Changelog
 
+## 4.4.0 (2026-11-18)
+
+### Added
+
+* **cache:** HTTP cache lookup timeout ([#1626](https://github.com/fastly/js-compute-runtime/issues/1626)) ([af39761](https://github.com/fastly/js-compute-runtime/commit/af397616d6e131ba0e258d22fa4ddaa711af253f))
+
+### Fixed
+
+* **docs:** Remove statements about dynamic backends being disabled by default. ([#1630](https://github.com/fastly/js-compute-runtime/issues/1630)) ([d4a8711](https://github.com/fastly/js-compute-runtime/commit/d4a87112d2c3d7fce1e7355ae32d2a73c013b06a))
+
 ## 4.3.0 (2026-11-13)
 
 ### Added
