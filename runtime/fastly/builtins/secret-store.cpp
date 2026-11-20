@@ -9,6 +9,18 @@ using fastly::common::validate_bytes;
 
 namespace fastly::secret_store {
 
+namespace {
+
+void secure_zero(uint8_t *data, size_t len) {
+  // Cast to volatile pointer to prevent compiler optimizations from removing the zeroing
+  volatile uint8_t *byte = data;
+  while (len-- > 0) {
+    *byte++ = 0;
+  }
+}
+
+} // namespace
+
 host_api::Secret SecretStoreEntry::secret_handle(JSObject *obj) {
   JS::Value val = JS::GetReservedSlot(obj, SecretStoreEntry::Slots::Handle);
   return host_api::Secret(val.toInt32());
@@ -32,6 +44,7 @@ bool SecretStoreEntry::plaintext(JSContext *cx, unsigned argc, JS::Value *vp) {
   JS::RootedString text(
       cx,
       JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(reinterpret_cast<char *>(ret->ptr.get()), ret->len)));
+  secure_zero(ret->ptr.get(), ret->len);
   if (!text) {
     return false;
   }
