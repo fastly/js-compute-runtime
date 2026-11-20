@@ -1,0 +1,31 @@
+diff --git a/builtins/web/timers.cpp b/builtins/web/timers.cpp
+index fe3519b..0c57d6f 100644
+--- a/builtins/web/timers.cpp
++++ b/builtins/web/timers.cpp
+@@ -54,8 +54,9 @@ public:
+     }
+ 
+     handle_ = host_api::MonotonicClock::subscribe(deadline_, true);
+-    
++
+     TIMERS_MAP->timers_.emplace(timer_id_, this);
++    core::EventLoop::incr_event_loop_interest();
+   }
+ 
+   [[nodiscard]] bool run(api::Engine *engine) override {
+@@ -89,6 +90,7 @@ public:
+         engine->queue_async_task(this);
+       } else {
+         TIMERS_MAP->timers_.erase(timer_id_);
++        core::EventLoop::decr_event_loop_interest();
+       }
+     }
+ 
+@@ -123,6 +125,7 @@ public:
+ 
+     ENGINE->cancel_async_task(TIMERS_MAP->timers_[timer_id]);
+     TIMERS_MAP->timers_.erase(timer_id);
++    core::EventLoop::decr_event_loop_interest();
+     return true;
+   }
+ };
