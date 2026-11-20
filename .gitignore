@@ -22,7 +22,7 @@ docs-app/bin/main.wasm
 docs-app/pkg/*.tar.gz
 
 # Local wasmtime install
-/packages/wasmtime/bin
+/vendor/wasmtime/
 
 yarn-error.log
 .vscode
