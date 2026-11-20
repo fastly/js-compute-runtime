@@ -1603,6 +1603,7 @@
   "GET /request/body/body-from-string-passthrough": {},
   "GET /request/body/body-property-non-downstream": {},
   "GET /request/body/body-from-arraybuffer-passthrough": {},
+  "GET /request/body/text-replaces-invalid-utf8": {},
   "GET /request/clone/called-as-constructor": {},
   "GET /request/clone/called-unbound": {},
   "GET /request/clone/valid": {},

@@ -44,6 +44,21 @@ routes.set('/request/body/body-property-non-downstream', () => {
   assert(req.bodyUsed, false, 'req.bodyUsed is false before reading');
 });
 
+// Per the Fetch spec, body.text() runs UTF-8 decode (replacement mode), so
+// invalid byte sequences must be substituted with U+FFFD rather than fail.
+routes.set('/request/body/text-replaces-invalid-utf8', async () => {
+  // 0x48 0x69 ("Hi"), then 0xC3 0x28 (invalid 2-byte sequence), then 0x21 ("!")
+  const bytes = new Uint8Array([0x48, 0x69, 0xc3, 0x28, 0x21]);
+
+  const req = new Request('https://example.com', {
+    method: 'POST',
+    body: bytes.buffer,
+  });
+
+  const text = await req.text();
+  assert(text, 'Hi\uFFFD(!', 'invalid UTF-8 is replaced with U+FFFD');
+});
+
 routes.set('/request/body/body-from-arraybuffer-passthrough', async () => {
   const encoder = new TextEncoder();
   const bytes = encoder.encode('binary body');

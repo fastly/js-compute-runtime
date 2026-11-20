@@ -1122,7 +1122,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1181c94580fa345f50f19d738aaa39c0ed30a600d95cb2d3e23f94266f14fbf"
 dependencies = [
  "phf_shared",
- "rand 0.8.5",
+ "rand 0.8.6",
 ]
 
 [[package]]

@@ -4,6 +4,7 @@
 #include "../../../StarlingMonkey/builtins/web/form-data/form-data-encoder.h"
 #include "../../../StarlingMonkey/builtins/web/form-data/form-data-parser.h"
 #include "../../../StarlingMonkey/builtins/web/form-data/form-data.h"
+#include "rust-encoding.h"
 
 #include "../../../StarlingMonkey/builtins/web/dom-exception.h"
 #include "../../../StarlingMonkey/builtins/web/fetch/fetch-errors.h"
@@ -1293,7 +1294,43 @@ bool RequestOrResponse::parse_body(JSContext *cx, JS::HandleObject self, JS::Uni
 
     result.setObject(*form_data);
   } else {
-    JS::RootedString text(cx, JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(buf.get(), len)));
+    // Per the Fetch spec, body consumption that produces a string runs UTF-8
+    // decode on the bytes, which replaces invalid sequences with U+FFFD rather
+    // than failing.
+    const char *utf8_label = "UTF-8";
+    const auto *encoding = jsencoding::encoding_for_label_no_replacement(
+        reinterpret_cast<const uint8_t *>(utf8_label), 5);
+    auto deleter = [](jsencoding::Decoder *dec) { jsencoding::decoder_free(dec); };
+    std::unique_ptr<jsencoding::Decoder, decltype(deleter)> decoder(
+        jsencoding::encoding_new_decoder_with_bom_removal(encoding), deleter);
+    MOZ_ASSERT(decoder);
+
+    auto src_len = len;
+    auto dst_len = jsencoding::decoder_max_utf16_buffer_length(decoder.get(), src_len);
+    // Refuse a size that would overflow when we add the trailing null slot,
+    // rather than wrapping to a tiny allocation and overflowing on decode.
+    if (dst_len == SIZE_MAX) {
+      JS_ReportOutOfMemory(cx);
+      return RejectPromiseWithPendingError(cx, result_promise);
+    }
+    JS::UniqueTwoByteChars dst(static_cast<char16_t *>(js_pod_malloc<char16_t>(dst_len + 1)));
+    if (!dst) {
+      JS_ReportOutOfMemory(cx);
+      return RejectPromiseWithPendingError(cx, result_promise);
+    }
+    bool had_replacements = false;
+    auto decode_result = jsencoding::decoder_decode_to_utf16(
+        decoder.get(), reinterpret_cast<const uint8_t *>(buf.get()), &src_len,
+        reinterpret_cast<uint16_t *>(dst.get()), &dst_len, true, &had_replacements);
+    // A full decode with a max-sized output buffer must consume the entire
+    // input. Anything else (OUTPUT_FULL, or any other non-INPUT_EMPTY status)
+    // means dst_len / dst contents are not trustworthy — refuse the body.
+    if (decode_result != jsencoding::INPUT_EMPTY) {
+      JS_ReportErrorUTF8(cx, "Failed to decode body as UTF-8");
+      return RejectPromiseWithPendingError(cx, result_promise);
+    }
+
+    JS::RootedString text(cx, JS_NewUCString(cx, std::move(dst), dst_len));
     if (!text) {
       return RejectPromiseWithPendingError(cx, result_promise);
     }
