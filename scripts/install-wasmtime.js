@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { mkdir, chmod, readFile, readdir, rename, rm } from 'node:fs/promises';
-import { createReadStream, createWriteStream } from 'node:fs';
+import { mkdir, chmod, readdir, rename, rm } from 'node:fs/promises';
+import { createReadStream, createWriteStream, existsSync } from 'node:fs';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { dirname, join } from 'node:path';
@@ -9,13 +9,10 @@ import { extract } from 'tar-fs';
 import lzma from 'lzma-native';
 import AdmZip from 'adm-zip';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const binDir = join(__dirname, '..', 'bin');
+const WASMTIME_VERSION = 'v43.0.0';
 
-const packageJson = JSON.parse(
-  await readFile(join(__dirname, '..', 'package.json'), 'utf-8')
-);
-const WASMTIME_VERSION = `v${packageJson.version}`;
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const binDir = join(__dirname, '..', 'vendor', 'wasmtime', 'bin');
 
 function getPlatformInfo() {
   const platform = process.platform;
@@ -83,6 +80,12 @@ async function extractZipWithStrip(archivePath, destDir) {
 async function installWasmtime() {
   try {
     const { file, binary } = getPlatformInfo();
+    const binaryPath = join(binDir, binary);
+
+    if (existsSync(binaryPath)) {
+      return;
+    }
+
     const url = `https://github.com/bytecodealliance/wasmtime/releases/download/${WASMTIME_VERSION}/${file}`;
 
     console.log(`Downloading wasmtime ${WASMTIME_VERSION} for ${process.platform}-${process.arch}...`);
@@ -99,7 +102,6 @@ async function installWasmtime() {
       await extractZipWithStrip(archivePath, binDir);
     }
 
-    const binaryPath = join(binDir, binary);
     if (process.platform !== 'win32') {
       await chmod(binaryPath, 0o755);
     }
