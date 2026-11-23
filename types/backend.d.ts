@@ -51,11 +51,6 @@ declare module 'fastly:backend' {
    *
    * When calling this function, an optional default backend name can be provided.
    *
-   * @note
-   * This is a separate option to the service-level dynamic backend support for Fastly services.
-   * By default, dynamic backends are disabled for Fastly Services, so that even if not using this
-   * function, the service-level security configuration will apply.
-   *
    * @param defaultBackend the name of the default backend to use, when using {@link fetch | fetch()}.
    *
    * @version 3.24.0
@@ -265,10 +260,6 @@ declare module 'fastly:backend' {
 
   /**
    * Class for dynamically creating new [Fastly Backends](https://developer.fastly.com/reference/api/services/backend/).
-   *
-   * **Note**: Dynamic backends are by default disabled at the Fastly service level.
-   * Contact [Fastly Support](https://support.fastly.com/hc/en-us/requests/new?ticket_form_id=360000269711)
-   * to request dynamic backends on Fastly Services.
    *
    * To disable the usage of dynamic backends, see {@link enforceExplicitBackends}.
    *
