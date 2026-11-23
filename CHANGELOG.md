@@ -1,6 +1,6 @@
 # Changelog
 
-## [4.4.0](https://github.com/fastly/js-compute-runtime/compare/v4.3.0...v4.4.0) (2026-11-23)
+## 4.4.0 (2026-11-23)
 
 
 ### Features
