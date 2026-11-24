@@ -20,6 +20,15 @@ routes.set('/timer-after-respond/schedule', () => {
   return new Response('scheduled');
 });
 
-routes.set('/timer-after-respond/check', () => {
+routes.set('/timer-after-respond/check', async () => {
+  // Avoid timing flakiness: the timer scheduled by /schedule may not have fired
+  // yet when /check is requested immediately afterwards.
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const deadline = Date.now() + 100; // bounded wait to keep the test fast
+  while (timerFired === 0 && Date.now() < deadline) {
+    await sleep(1);
+  }
+
   return new Response(String(timerFired));
 });
