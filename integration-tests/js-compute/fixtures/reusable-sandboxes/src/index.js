@@ -11,6 +11,7 @@ setReusableSandboxOptions({ maxRequests: 9001 });
 
 import './dynamic-backend.js';
 import './interleave.js';
+import './timer-after-respond.js';
 
 addEventListener('fetch', (event) => {
   // Ensure these reusable sandboxes tests are running locally so that
