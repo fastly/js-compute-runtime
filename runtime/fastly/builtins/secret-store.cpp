@@ -3,6 +3,7 @@
 #include "../common/validations.h"
 #include "../host-api/host_api_fastly.h"
 #include "fastly.h"
+#include <cstring>
 
 using fastly::FastlyGetErrorMessage;
 using fastly::common::validate_bytes;
@@ -11,13 +12,21 @@ namespace fastly::secret_store {
 
 namespace {
 
-void secure_zero(uint8_t *data, size_t len) {
-  // Cast to volatile pointer to prevent compiler optimizations from removing the zeroing
-  volatile uint8_t *byte = data;
-  while (len-- > 0) {
-    *byte++ = 0;
+class ScopedSecretZero {
+  uint8_t *data_;
+  size_t len_;
+
+public:
+  ScopedSecretZero(uint8_t *data, size_t len) : data_(data), len_(len) {}
+  ScopedSecretZero(const ScopedSecretZero &) = delete;
+  ScopedSecretZero &operator=(const ScopedSecretZero &) = delete;
+
+  ~ScopedSecretZero() {
+    if (len_ != 0) {
+      explicit_bzero(data_, len_);
+    }
   }
-}
+};
 
 } // namespace
 
@@ -41,10 +50,10 @@ bool SecretStoreEntry::plaintext(JSContext *cx, unsigned argc, JS::Value *vp) {
     return false;
   }
 
+  ScopedSecretZero zero_secret(ret->ptr.get(), ret->len);
   JS::RootedString text(
       cx,
       JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(reinterpret_cast<char *>(ret->ptr.get()), ret->len)));
-  secure_zero(ret->ptr.get(), ret->len);
   if (!text) {
     return false;
   }
