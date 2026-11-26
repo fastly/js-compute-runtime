@@ -1,3 +1,5 @@
+// This test verifies that a reusable sandbox is retired successfully after its idle timeout.
+
 import assert from 'node:assert/strict';
 import { execFileSync, spawn } from 'node:child_process';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -13,20 +15,22 @@ let serverError;
 
 try {
   const wasm = join(directory, 'main.wasm');
+  const cli = fileURLToPath(
+    new URL('../../dist/cli/js-compute-runtime-cli.js', import.meta.url),
+  );
+  const flags = [
+    ...(process.argv.includes('--debug-build') ? ['--debug-build'] : []),
+    ...(process.argv.includes('--aot') ? [] : ['--disable-aot']),
+  ];
+  const testFile = fileURLToPath(
+    new URL('./fixtures/reusable-sandboxes/idle-timeout.js', import.meta.url),
+  );
   execFileSync(
     process.execPath,
     [
-      fileURLToPath(
-        new URL('../../dist/cli/js-compute-runtime-cli.js', import.meta.url),
-      ),
-      ...(process.argv.includes('--debug-build') ? ['--debug-build'] : []),
-      ...(process.argv.includes('--aot') ? [] : ['--disable-aot']),
-      fileURLToPath(
-        new URL(
-          './fixtures/reusable-sandboxes/idle-timeout.js',
-          import.meta.url,
-        ),
-      ),
+      cli,
+      ...flags,
+      testFile,
       wasm,
     ],
     { stdio: 'inherit' },
