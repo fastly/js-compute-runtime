@@ -6,7 +6,7 @@ import {
 } from 'node:child_process';
 import { mkdir, readFile, mkdtemp } from 'node:fs/promises';
 import { rmSync } from 'node:fs';
-import wasmtime from '@fastly/wasmtime';
+import { fileURLToPath } from 'node:url';
 
 import { isDirectory, isFile } from './files.js';
 import { getWevalPath } from './getWevalPath.js';
@@ -26,6 +26,13 @@ const maybeWindowsPath =
 
 async function getTmpDir() {
   return await mkdtemp(normalize(tmpdir() + sep));
+}
+
+async function wasmtime(): Promise<string> {
+  const binary = process.platform === 'win32' ? 'wasmtime.exe' : 'wasmtime';
+  return fileURLToPath(
+    new URL(`../vendor/wasmtime/bin/${binary}`, import.meta.url),
+  );
 }
 
 export type CompileApplicationToWasmParams = {
