@@ -426,6 +426,10 @@ jobs:
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
 
+    - name: Test Reusable Sandbox Idle Retirement
+      if: matrix.platform == 'viceroy'
+      run: node integration-tests/js-compute/reusable-sandbox-idle.test.js${{ matrix.profile == 'weval' && ' --aot' || '' }}
+
   sdktest-debug:
     concurrency:
       group: ${{ github.head_ref }}--sdktest-debug-${{matrix.platform}}
@@ -500,3 +504,7 @@ jobs:
       run: SUFFIX_STRING=debug-${{ github.run_id }}-${{ github.run_attempt }} node integration-tests/js-compute/test.js --ci --serial --fixture=reusable-sandboxes --debug-build${{ matrix.platform == 'viceroy' && ' --local' || '' }}${{ matrix.features == 'http-cache' && ' --http-cache' || '' }}
       env:
         FASTLY_API_TOKEN: ${{ secrets.FASTLY_API_TOKEN }}
+
+    - name: Test Reusable Sandbox Idle Retirement
+      if: matrix.platform == 'viceroy'
+      run: node integration-tests/js-compute/reusable-sandbox-idle.test.js --debug-build
