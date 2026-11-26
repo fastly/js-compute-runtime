@@ -170,5 +170,30 @@
       "status": 200,
       "session": 2
     }
+  },
+
+  "session #3, request #0: GET /timer-after-respond/schedule": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/timer-after-respond/schedule"
+    },
+    "downstream_response": {
+      "status": 200,
+      "session": 3,
+      "body": "scheduled"
+    }
+  },
+  "session #3, request #1: GET /timer-after-respond/check": {
+    "environments": ["compute"],
+    "downstream_request": {
+      "method": "GET",
+      "pathname": "/timer-after-respond/check"
+    },
+    "downstream_response": {
+      "status": 200,
+      "session": 3,
+      "body": "1"
+    }
   }
 }
