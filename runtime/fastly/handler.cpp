@@ -209,7 +209,7 @@ int main(int argc, const char *argv[]) {
     auto next = host_api::HttpReqPromise::downstream_next(options);
     if (next.is_err()) {
       if (fastly::runtime::ENGINE->debug_logging_enabled()) {
-        printf("HOSTCALL: downstream_next() failed with code %hhu\n", *req.to_err());
+        printf("HOSTCALL: downstream_next() failed with code %hhu\n", *next.to_err());
       }
       HANDLE_ERROR(ENGINE->cx(), *next.to_err());
       return 1;
@@ -217,6 +217,9 @@ int main(int argc, const char *argv[]) {
 
     req = next.unwrap().wait();
     if (req.is_err()) {
+      if (*req.to_err() == FASTLY_HOST_ERROR_OPTIONAL_NONE) {
+        break;
+      }
       HANDLE_ERROR(ENGINE->cx(), *req.to_err());
       return 1;
     }
