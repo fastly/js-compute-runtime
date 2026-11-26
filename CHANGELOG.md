@@ -1,14 +1,19 @@
 # Changelog
 
+## 4.4.1 (2026-11-26)
+
+### Fixed
+
+* Exit with status 0 when reusable sandbox tears down ([#1643](https://github.com/fastly/js-compute-runtime/issues/1643)) ([8a150dc](https://github.com/fastly/js-compute-runtime/commit/8a150dcee54ada6074874961938b4da988c13c6c))
+* **interest:** keep event loop alive while there's still timers ([#1633](https://github.com/fastly/js-compute-runtime/issues/1633)) ([51da314](https://github.com/fastly/js-compute-runtime/commit/51da314c957a1ccd30e01d491860039212ff02de))
+
 ## 4.4.0 (2026-11-23)
 
-
-### Features
+### Added
 
 * **cache:** HTTP cache lookup timeout ([#1626](https://github.com/fastly/js-compute-runtime/issues/1626)) ([af39761](https://github.com/fastly/js-compute-runtime/commit/af397616d6e131ba0e258d22fa4ddaa711af253f))
 
-
-### Bug Fixes
+### Fixed
 
 * **deps:** bump rust url used by starlingmonkey ([#1634](https://github.com/fastly/js-compute-runtime/issues/1634)) ([5abc75b](https://github.com/fastly/js-compute-runtime/commit/5abc75b92bb40797a1a198515be8d700db196721))
 * **docs:** Remove statements about dynamic backends being disabled by default. ([#1630](https://github.com/fastly/js-compute-runtime/issues/1630)) ([d4a8711](https://github.com/fastly/js-compute-runtime/commit/d4a87112d2c3d7fce1e7355ae32d2a73c013b06a))

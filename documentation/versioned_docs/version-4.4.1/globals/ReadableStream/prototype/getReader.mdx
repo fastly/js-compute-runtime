@@ -1,0 +1,42 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# ReadableStream.getReader()
+
+The **`getReader()`** method of the `ReadableStream` interface creates a reader and locks the stream to it.
+While the stream is locked, no other reader can be acquired until this one is released.
+
+## Syntax
+
+```js
+getReader()
+getReader(options)
+```
+
+### Parameters
+
+- `options` _**optional**_
+
+  - : An object containing the following properties:
+
+    - `mode` _**optional**_
+
+      - : A property that specifies the type of reader to create.
+        Values can be:
+
+        - `"byob"`, which results in a `ReadableStreamBYOBReader` being created that can read readable byte streams (streams that support zero-copy transfer from an underlying byte source to the reader when internal stream buffers are empty).
+        - `undefined` (or not specified at all — this is the default), which results in a `ReadableStreamDefaultReader` being created that can read individual chunks from a stream.
+
+### Return value
+
+A `ReadableStreamDefaultReader` or `ReadableStreamBYOBReader` object instance, depending on the `mode` value.
+
+### Exceptions
+
+- `RangeError`
+  - : Thrown if the provided mode value is not `"byob"` or `undefined`.
+- `TypeError`
+  - : Thrown if the stream you are trying to create a reader for is already locked, or not a `ReadableStream`.

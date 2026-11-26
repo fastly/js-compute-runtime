@@ -1,0 +1,46 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# Array.prototype.slice()
+
+The **`slice()`** method returns a [shallow copy](https://developer.mozilla.org/docs/Glossary/Shallow_copy) of a portion of
+an array into a new array object selected from `start` to `end`
+(`end` not included) where `start` and `end` represent
+the index of items in that array. The original array will not be modified.
+
+## Syntax
+
+```js
+slice()
+slice(start)
+slice(start, end)
+```
+
+### Parameters
+
+- `start` _**optional**_
+  - : Zero-based index at which to start extraction, converted to an integer.
+    - Negative index counts back from the end of the array — if `start < 0`, `start + array.length` is used.
+    - If `start < -array.length` or `start` is omitted, `0` is used.
+    - If `start >= array.length`, nothing is extracted.
+- `end` _**optional**_
+  - : Zero-based index at which to end extraction, converted to an integer. `slice()` extracts up to but not including `end`.
+    - Negative index counts back from the end of the array — if `end < 0`, `end + array.length` is used.
+    - If `end < -array.length`, `0` is used.
+    - If `end >= array.length` or `end` is omitted, `array.length` is used, causing all elements until the end to be extracted.
+    - If `end` is positioned before or at `start` after normalization, nothing is extracted.
+
+### Return value
+
+A new array containing the extracted elements.
+
+## Description
+
+The `slice()` method is a copying method. It does not alter `this` but instead returns a [shallow copy](https://developer.mozilla.org/docs/Glossary/Shallow_copy) that contains some of the same elements as the ones from the original array.
+
+The `slice()` method preserves empty slots. If the sliced portion is sparse, the returned array is sparse as well.
+
+The `slice()` method is generic. It only expects the `this` value to have a `length` property and integer-keyed properties.
