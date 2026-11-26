@@ -1,37 +1,41 @@
 #!/usr/bin/env node
-import { mkdir, chmod, readdir, rename, rm } from 'node:fs/promises';
+import {
+  mkdir,
+  chmod,
+  mkdtemp,
+  readFile,
+  readdir,
+  rename,
+  rm,
+} from 'node:fs/promises';
 import { createReadStream, createWriteStream, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { extract } from 'tar-fs';
-import lzma from 'lzma-native';
+import xz from 'xz-decompress';
 import AdmZip from 'adm-zip';
-
-const WASMTIME_VERSION = 'v43.0.0';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const binDir = join(__dirname, '..', 'vendor', 'wasmtime', 'bin');
 
-function getPlatformInfo() {
-  const platform = process.platform;
-  const arch = process.arch;
-
+function getPlatformInfo(platform, arch) {
   if (platform === 'darwin' && arch === 'x64') {
-    return { file: `wasmtime-${WASMTIME_VERSION}-x86_64-macos.tar.xz`, binary: 'wasmtime' };
+    return { archive: 'x86_64-macos.tar.xz', binary: 'wasmtime' };
   }
   if (platform === 'darwin' && arch === 'arm64') {
-    return { file: `wasmtime-${WASMTIME_VERSION}-aarch64-macos.tar.xz`, binary: 'wasmtime' };
+    return { archive: 'aarch64-macos.tar.xz', binary: 'wasmtime' };
   }
   if (platform === 'linux' && arch === 'x64') {
-    return { file: `wasmtime-${WASMTIME_VERSION}-x86_64-linux.tar.xz`, binary: 'wasmtime' };
+    return { archive: 'x86_64-linux.tar.xz', binary: 'wasmtime' };
   }
   if (platform === 'linux' && arch === 'arm64') {
-    return { file: `wasmtime-${WASMTIME_VERSION}-aarch64-linux.tar.xz`, binary: 'wasmtime' };
+    return { archive: 'aarch64-linux.tar.xz', binary: 'wasmtime' };
   }
   if (platform === 'win32' && arch === 'x64') {
-    return { file: `wasmtime-${WASMTIME_VERSION}-x86_64-windows.zip`, binary: 'wasmtime.exe' };
+    return { archive: 'x86_64-windows.zip', binary: 'wasmtime.exe' };
   }
 
   throw new Error(`Unsupported platform: ${platform}-${arch}`);
@@ -48,11 +52,12 @@ async function downloadFile(url, dest) {
 
 async function extractTarXz(archivePath, destDir) {
   await pipeline(
-    createReadStream(archivePath),
-    lzma.createDecompressor(),
+    Readable.fromWeb(
+      new xz.XzReadableStream(Readable.toWeb(createReadStream(archivePath))),
+    ),
     extract(destDir, {
       strip: 1,
-    })
+    }),
   );
 }
 
@@ -77,41 +82,81 @@ async function extractZipWithStrip(archivePath, destDir) {
   await rm(tempDir, { recursive: true });
 }
 
-async function installWasmtime() {
-  try {
-    const { file, binary } = getPlatformInfo();
-    const binaryPath = join(binDir, binary);
+export async function installWasmtime({
+  destination = binDir,
+  platform = process.platform,
+  arch = process.arch,
+} = {}) {
+  const { archive, binary } = getPlatformInfo(platform, arch);
+  const binaryPath = join(destination, binary);
 
-    if (existsSync(binaryPath)) {
-      return;
+  if (existsSync(binaryPath)) {
+    if (platform !== 'win32') {
+      await chmod(binaryPath, 0o755);
     }
+    return;
+  }
 
-    const url = `https://github.com/bytecodealliance/wasmtime/releases/download/${WASMTIME_VERSION}/${file}`;
+  const { wasmtime } = JSON.parse(
+    await readFile(join(__dirname, '..', 'package.json'), 'utf8'),
+  );
+  const version = `v${wasmtime.version}`;
+  const expectedHash = wasmtime.sha256[archive];
+  if (!expectedHash) {
+    throw new Error(`No Wasmtime checksum configured for ${archive}`);
+  }
+  const file = `wasmtime-${version}-${archive}`;
+  const url = `https://github.com/bytecodealliance/wasmtime/releases/download/${version}/${file}`;
 
-    console.log(`Downloading wasmtime ${WASMTIME_VERSION} for ${process.platform}-${process.arch}...`);
+  console.log(`Downloading wasmtime ${version} for ${platform}-${arch}...`);
 
-    await mkdir(binDir, { recursive: true });
-
-    const archivePath = join(binDir, file);
+  await mkdir(destination, { recursive: true });
+  const tempDir = await mkdtemp(join(destination, '.wasmtime-install-'));
+  try {
+    const archivePath = join(tempDir, file);
     await downloadFile(url, archivePath);
+    const hash = createHash('sha256');
+    for await (const chunk of createReadStream(archivePath)) {
+      hash.update(chunk);
+    }
+    if (hash.digest('hex') !== expectedHash) {
+      throw new Error(`SHA-256 checksum mismatch for ${file}`);
+    }
 
     console.log('Extracting...');
     if (file.endsWith('.tar.xz')) {
-      await extractTarXz(archivePath, binDir);
-    } else if (file.endsWith('.zip')) {
-      await extractZipWithStrip(archivePath, binDir);
+      await extractTarXz(archivePath, tempDir);
+    } else {
+      await extractZipWithStrip(archivePath, tempDir);
     }
 
-    if (process.platform !== 'win32') {
-      await chmod(binaryPath, 0o755);
+    const extractedBinary = join(tempDir, binary);
+    if (platform !== 'win32') {
+      await chmod(extractedBinary, 0o755);
     }
+    await rename(extractedBinary, binaryPath);
 
     console.log('✓ wasmtime installed successfully');
-  } catch (error) {
-    console.error('Failed to install wasmtime:', error.message);
-    console.error('You may need to install wasmtime manually: https://wasmtime.dev/');
-    process.exit(1);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
   }
 }
 
-installWasmtime();
+if (
+  process.argv[1] &&
+  resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
+  if (process.env.FASTLY_SKIP_WASMTIME_INSTALL === '1') {
+    console.log(
+      'Skipping Wasmtime installation (FASTLY_SKIP_WASMTIME_INSTALL=1).',
+    );
+  } else {
+    installWasmtime().catch((error) => {
+      console.error('Failed to install wasmtime:', error.message);
+      console.error(
+        'See the Wasmtime installation instructions in the @fastly/js-compute README.',
+      );
+      process.exitCode = 1;
+    });
+  }
+}

@@ -21,6 +21,16 @@
     "type": "git",
     "url": "https://github.com/fastly/js-compute-runtime"
   },
+  "wasmtime": {
+    "version": "43.0.0",
+    "sha256": {
+      "aarch64-linux.tar.xz": "1cbec3240f7ee7a7d4bd5bc6248e66035f53d31cdb987bca8a57cb129bc539d9",
+      "aarch64-macos.tar.xz": "abee7cf0f459f189b8a27f41bc3f645c0569198fdc52bc87fbe0a3b5bb83074f",
+      "x86_64-linux.tar.xz": "e75a4933253fbc7b027c670b699490f163e3c86784f1db66581ae80fc0eb652c",
+      "x86_64-macos.tar.xz": "57b4cf9de7f2f250ca6f5d14e0f1d063e19766add3842b7c888260a746e9ca51",
+      "x86_64-windows.zip": "3d8b9dcfadbd7317a65b981d8a197f5dfd2373cbd5c7f6c86bd5287ce90c719b"
+    }
+  },
   "bin": {
     "js-compute": "dist/cli/js-compute-runtime-cli.js",
     "js-compute-runtime": "dist/cli/js-compute-runtime-cli.js"
@@ -67,12 +77,12 @@
     "adm-zip": "^0.6.1",
     "cosmiconfig": "^9.0.1",
     "esbuild": "^0.28.1",
-    "lzma-native": "^8.0.6",
     "magic-string": "^0.30.12",
     "picomatch": "^4.0.4",
     "proper-lockfile": "^4.1.2",
     "regexpu-core": "^6.4.0",
-    "tar-fs": "^3.1.2"
+    "tar-fs": "^3.1.2",
+    "xz-decompress": "^0.2.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

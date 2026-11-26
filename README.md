@@ -10,6 +10,21 @@ We recommend using the [Fastly CLI](https://github.com/fastly/cli) to create, bu
 
 [Detailed documentation for JavaScript Fastly Compute services](https://developer.fastly.com/learning/compute/javascript/) is also available on Fastly Developer Hub.
 
+### Wasmtime installation
+
+The package downloads a pinned, SHA-256-verified Wasmtime release during installation.
+The version and release-asset checksums are recorded together in `package.json`.
+Set `FASTLY_SKIP_WASMTIME_INSTALL=1` to skip this download when installing offline.
+To install Wasmtime later, unset that variable and run:
+
+```sh
+node node_modules/@fastly/js-compute/scripts/install-wasmtime.js
+```
+
+Alternatively, place a compatible Wasmtime binary at
+`node_modules/@fastly/js-compute/vendor/wasmtime/bin/wasmtime` (or `wasmtime.exe` on
+Windows). Wasmtime is required when building with `--disable-aot`.
+
 ## Usage
 
 ### JavaScript Examples
