@@ -136,7 +136,7 @@ export async function installWasmtime({
     }
     await rename(extractedBinary, binaryPath);
 
-    console.log('✓ wasmtime installed successfully');
+    console.log('wasmtime installed successfully');
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }
