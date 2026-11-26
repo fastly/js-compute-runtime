@@ -1,0 +1,15 @@
+diff --git a/builtins/web/blob.cpp b/builtins/web/blob.cpp
+index 344bd7b..af23475 100644
+--- a/builtins/web/blob.cpp
++++ b/builtins/web/blob.cpp
+@@ -346,6 +346,10 @@ bool Blob::text(JSContext *cx, HandleObject self, MutableHandleValue rval) {
+   auto src_len = src->length();
+   auto dst_len = jsencoding::decoder_max_utf16_buffer_length(decoder.get(), src_len);
+ 
++  if (dst_len == SIZE_MAX) {
++    JS_ReportOutOfMemory(cx);
++    return false;
++  }
+   JS::UniqueTwoByteChars dst(static_cast<char16_t *>(js_pod_malloc<char16_t>(dst_len + 1)));
+   if (!dst) {
+     JS_ReportOutOfMemory(cx);
