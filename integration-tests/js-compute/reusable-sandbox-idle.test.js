@@ -25,16 +25,9 @@ try {
   const testFile = fileURLToPath(
     new URL('./fixtures/reusable-sandboxes/idle-timeout.js', import.meta.url),
   );
-  execFileSync(
-    process.execPath,
-    [
-      cli,
-      ...flags,
-      testFile,
-      wasm,
-    ],
-    { stdio: 'inherit' },
-  );
+  execFileSync(process.execPath, [cli, ...flags, testFile, wasm], {
+    stdio: 'inherit',
+  });
 
   server = spawn('viceroy', ['serve', '-v', '--addr', '127.0.0.1:0', wasm], {
     env: { ...process.env, RUST_LOG: 'info' },
