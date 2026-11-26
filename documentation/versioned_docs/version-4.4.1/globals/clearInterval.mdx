@@ -1,0 +1,35 @@
+---
+hide_title: false
+hide_table_of_contents: false
+pagination_next: null
+pagination_prev: null
+---
+# clearInterval()
+
+The global **`clearInterval()`** method cancels a timed, repeating action which
+was previously established by a call to `setInterval()`.
+If the parameter provided does not identify a previously established action,
+this method does nothing.
+
+## Syntax
+
+```js
+clearInterval(intervalID)
+```
+
+### Parameters
+
+- `intervalID`
+  - : The identifier of the repeated action you want to cancel. This ID was returned by
+    the corresponding call to `setInterval()`.
+
+It's worth noting that the pool of IDs used by
+`setInterval()` and
+`setTimeout()` are shared, which
+means you can technically use `clearInterval()` and
+`clearTimeout()` interchangeably.
+However, for clarity, you should avoid doing so.
+
+### Return value
+
+None `undefined`.
