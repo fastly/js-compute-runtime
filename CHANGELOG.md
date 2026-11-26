@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.4.1](https://github.com/fastly/js-compute-runtime/compare/v4.4.0...v4.4.1) (2026-11-26)
+
+
+### Bug Fixes
+
+* Exit with status 0 when reusable sandbox tears down ([#1643](https://github.com/fastly/js-compute-runtime/issues/1643)) ([8a150dc](https://github.com/fastly/js-compute-runtime/commit/8a150dcee54ada6074874961938b4da988c13c6c))
+* **interest:** keep event loop alive while there's still timers ([#1633](https://github.com/fastly/js-compute-runtime/issues/1633)) ([51da314](https://github.com/fastly/js-compute-runtime/commit/51da314c957a1ccd30e01d491860039212ff02de))
+
 ## 4.4.0 (2026-11-23)
 
 
